@@ -13,7 +13,10 @@ export async function proxy(request: NextRequest) {
     return new Response("pong", { status: 200 });
   }
 
-  if (pathname.startsWith("/api/auth")) {
+  if (
+    pathname.startsWith("/api/auth") ||
+    pathname.startsWith("/api/debug-db")
+  ) {
     return NextResponse.next();
   }
 
