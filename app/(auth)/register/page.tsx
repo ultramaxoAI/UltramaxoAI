@@ -26,18 +26,18 @@ export default function Page() {
   // biome-ignore lint/correctness/useExhaustiveDependencies: router and updateSession are stable refs
   useEffect(() => {
     if (state.status === "user_exists") {
-      toast({ type: "error", description: "Account already exists!" });
+      toast({ type: "error", description: "Akun sudah ada!" });
     } else if (state.status === "password_mismatch") {
-      toast({ type: "error", description: "Passwords do not match!" });
+      toast({ type: "error", description: "Kata sandi tidak cocok!" });
     } else if (state.status === "failed") {
-      toast({ type: "error", description: "Failed to create account!" });
+      toast({ type: "error", description: "Gagal membuat akun!" });
     } else if (state.status === "invalid_data") {
       toast({
         type: "error",
-        description: "Failed validating your submission!",
+        description: "Gagal memvalidasi data Anda!",
       });
     } else if (state.status === "success") {
-      toast({ type: "success", description: "Account created successfully!" });
+      toast({ type: "success", description: "Akun berhasil dibuat!" });
 
       setIsSuccessful(true);
       updateSession();
@@ -59,22 +59,22 @@ export default function Page() {
       <div className="flex w-full max-w-sm flex-col gap-8 relative z-10 animate-in fade-in zoom-in duration-500">
         <div className="flex flex-col items-center justify-center gap-3 px-4 text-center">
           <h1 className="font-bold text-3xl tracking-tight text-white">
-            Create Identity
+            Daftar Akun
           </h1>
           <p className="text-zinc-500 text-sm font-medium">
-            Join Ultramaxo AI and start your journey
+            Bergabunglah dengan Ultramaxo AI dan mulai petualanganmu
           </p>
         </div>
 
         <AuthForm action={handleSubmit} type="register">
-          <SubmitButton isSuccessful={isSuccessful}>Construct Account</SubmitButton>
+          <SubmitButton isSuccessful={isSuccessful}>Buat Akun Sekarang</SubmitButton>
           <p className="mt-6 text-center text-zinc-500 text-xs font-medium">
-            {"Already have an account? "}
+            {"Sudah punya akun? "}
             <Link
               className="text-zinc-200 hover:text-primary transition-colors underline underline-offset-4"
               href="/login"
             >
-              Initialize access
+              Masuk sekarang
             </Link>
           </p>
         </AuthForm>

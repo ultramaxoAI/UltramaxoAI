@@ -29,12 +29,12 @@ export default function Page() {
     if (state.status === "failed") {
       toast({
         type: "error",
-        description: "Invalid credentials!",
+        description: "Username atau kata sandi salah!",
       });
     } else if (state.status === "invalid_data") {
       toast({
         type: "error",
-        description: "Failed validating your submission!",
+        description: "Gagal memvalidasi data Anda!",
       });
     } else if (state.status === "success") {
       setIsSuccessful(true);
@@ -57,22 +57,22 @@ export default function Page() {
       <div className="flex w-full max-w-sm flex-col gap-8 relative z-10 animate-in fade-in zoom-in duration-500">
         <div className="flex flex-col items-center justify-center gap-3 px-4 text-center">
           <h1 className="font-bold text-3xl tracking-tight text-white">
-            Welcome Back
+            Selamat Datang
           </h1>
           <p className="text-zinc-500 text-sm font-medium">
-            Enter your username and password to access your account
+            Masukkan username dan kata sandi untuk masuk ke akun Anda
           </p>
         </div>
         
         <AuthForm action={handleSubmit} defaultEmail="" type="login">
-          <SubmitButton isSuccessful={isSuccessful}>Sign In</SubmitButton>
+          <SubmitButton isSuccessful={isSuccessful}>Masuk Sekarang</SubmitButton>
           <p className="mt-6 text-center text-zinc-500 text-xs font-medium">
-            {"New to Ultramaxo? "}
+            {"Baru di Ultramaxo? "}
             <Link
               className="text-zinc-200 hover:text-primary transition-colors underline underline-offset-4"
               href="/register"
             >
-              Construct your account
+              Buat akun Anda
             </Link>
           </p>
         </AuthForm>

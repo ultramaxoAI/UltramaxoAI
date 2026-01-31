@@ -18,7 +18,7 @@ export function AuthForm({
   defaultEmail?: string;
 }) {
   return (
-    <div className="flex flex-col gap-6 w-full max-w-sm mx-auto p-8 rounded-3xl border border-white/10 bg-white/5 backdrop-blur-xl shadow-2xl relative overflow-hidden group">
+    <div className="flex flex-col gap-6 w-full max-w-sm mx-auto p-8 rounded-3xl border border-white/10 bg-black/40 backdrop-blur-2xl shadow-2xl relative overflow-hidden group border-zinc-800">
       {/* Background Glow Effect */}
       <div className="absolute -top-24 -left-24 size-48 bg-primary/20 rounded-full blur-3xl group-hover:bg-primary/30 transition-all duration-500" />
       <div className="absolute -bottom-24 -right-24 size-48 bg-zinc-500/10 rounded-full blur-3xl group-hover:bg-zinc-500/20 transition-all duration-500" />
@@ -33,14 +33,14 @@ export function AuthForm({
               className="font-medium text-zinc-400 text-xs uppercase tracking-wider ml-1"
               htmlFor="username"
             >
-              Username
+              Nama Pengguna
             </Label>
             <Input
               autoComplete="username"
-              className="bg-zinc-900/50 border-zinc-800 focus:border-primary/50 focus:ring-primary/20 transition-all text-md md:text-sm h-12 rounded-xl"
+              className="bg-zinc-950/50 border-zinc-800 focus:border-primary/50 focus:ring-primary/20 transition-all text-md md:text-sm h-12 rounded-xl text-white placeholder:text-zinc-600"
               id="username"
               name="username"
-              placeholder="putra_alghifa"
+              placeholder="Masukan nama pengguna"
               required
               type="text"
             />
@@ -52,16 +52,16 @@ export function AuthForm({
             className="font-medium text-zinc-400 text-xs uppercase tracking-wider ml-1"
             htmlFor={type === "login" ? "username" : "email"}
           >
-            {type === "login" ? "Username" : "Email Address"}
+            {type === "login" ? "Nama Pengguna" : "Alamat Email"}
           </Label>
           <Input
             autoComplete={type === "login" ? "username" : "email"}
             autoFocus={type === "login"}
-            className="bg-zinc-900/50 border-zinc-800 focus:border-primary/50 focus:ring-primary/20 transition-all text-md md:text-sm h-12 rounded-xl"
+            className="bg-zinc-950/50 border-zinc-800 focus:border-primary/50 focus:ring-primary/20 transition-all text-md md:text-sm h-12 rounded-xl text-white placeholder:text-zinc-600"
             defaultValue={defaultEmail}
             id={type === "login" ? "username" : "email"}
             name={type === "login" ? "username" : "email"}
-            placeholder={type === "login" ? "Your username" : "user@example.com"}
+            placeholder={type === "login" ? "Contoh: admin_putra" : "nama@email.com"}
             required
             type={type === "login" ? "text" : "email"}
           />
@@ -73,7 +73,7 @@ export function AuthForm({
               className="font-medium text-zinc-400 text-xs uppercase tracking-wider"
               htmlFor="password"
             >
-              Password
+              Kata Sandi
             </Label>
             {type === "login" && (
               <a
@@ -81,15 +81,15 @@ export function AuthForm({
                 className="text-[10px] uppercase tracking-widest text-zinc-500 hover:text-primary transition-colors font-bold"
                 onClick={(e) => {
                   e.preventDefault();
-                  alert("Fitur lupa password sedang dalam pengembangan.");
+                  alert("Fitur lupa kata sandi sedang dalam pengembangan.");
                 }}
               >
-                Forgot?
+                Lupa?
               </a>
             )}
           </div>
           <Input
-            className="bg-zinc-900/50 border-zinc-800 focus:border-primary/50 focus:ring-primary/20 transition-all text-md md:text-sm h-12 rounded-xl"
+            className="bg-zinc-950/50 border-zinc-800 focus:border-primary/50 focus:ring-primary/20 transition-all text-md md:text-sm h-12 rounded-xl text-white"
             id="password"
             name="password"
             required
@@ -103,10 +103,10 @@ export function AuthForm({
               className="font-medium text-zinc-400 text-xs uppercase tracking-wider ml-1"
               htmlFor="confirmPassword"
             >
-              Confirm Password
+              Konfirmasi Kata Sandi
             </Label>
             <Input
-              className="bg-zinc-900/50 border-zinc-800 focus:border-primary/50 focus:ring-primary/20 transition-all text-md md:text-sm h-12 rounded-xl"
+              className="bg-zinc-950/50 border-zinc-800 focus:border-primary/50 focus:ring-primary/20 transition-all text-md md:text-sm h-12 rounded-xl text-white"
               id="confirmPassword"
               name="confirmPassword"
               required
@@ -123,8 +123,8 @@ export function AuthForm({
           <span className="w-full border-t border-zinc-800" />
         </div>
         <div className="relative flex justify-center text-[10px] uppercase tracking-[0.2em] font-bold">
-          <span className="bg-transparent px-4 text-zinc-500">
-            Social Access
+          <span className="bg-[#09090b]/80 backdrop-blur-sm px-4 text-zinc-500">
+            Akses Sosial
           </span>
         </div>
       </div>
