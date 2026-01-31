@@ -6,13 +6,18 @@ import { DUMMY_PASSWORD } from "@/lib/constants";
 import { createGuestUser, getUser } from "@/lib/db/queries";
 import { authConfig } from "./auth.config";
 
-export type UserType = "guest" | "regular";
+export type UserType = "guest" | "regular" | "pro";
+
+// ... (omitted lines not being replaced, waiting for tool to handle context)
+
+        return { ...user, type: user.isPro ? "pro" : "regular" };
 
 declare module "next-auth" {
   interface Session extends DefaultSession {
     user: {
       id: string;
       type: UserType;
+      role: "user" | "admin";
     } & DefaultSession["user"];
   }
 
@@ -20,6 +25,7 @@ declare module "next-auth" {
     id?: string;
     email?: string | null;
     type: UserType;
+    role: "user" | "admin";
   }
 }
 
@@ -27,6 +33,7 @@ declare module "next-auth/jwt" {
   interface JWT extends DefaultJWT {
     id: string;
     type: UserType;
+    role: "user" | "admin";
   }
 }
 
@@ -61,7 +68,11 @@ export const {
           return null;
         }
 
-        return { ...user, type: "regular" };
+        return {
+          ...user,
+          type: user.isPro ? "pro" : "regular",
+          role: user.role as "user" | "admin",
+        };
       },
     }),
     Credentials({
@@ -69,7 +80,7 @@ export const {
       credentials: {},
       async authorize() {
         const [guestUser] = await createGuestUser();
-        return { ...guestUser, type: "guest" };
+        return { ...guestUser, type: "guest", role: "user" };
       },
     }),
   ],
@@ -78,6 +89,7 @@ export const {
       if (user) {
         token.id = user.id as string;
         token.type = user.type;
+        token.role = user.role;
       }
 
       return token;
@@ -86,6 +98,7 @@ export const {
       if (session.user) {
         session.user.id = token.id;
         session.user.type = token.type;
+        session.user.role = token.role;
       }
 
       return session;

@@ -2,6 +2,7 @@ import type { InferSelectModel } from "drizzle-orm";
 import {
   boolean,
   foreignKey,
+  integer,
   json,
   pgTable,
   primaryKey,
@@ -11,10 +12,16 @@ import {
   varchar,
 } from "drizzle-orm/pg-core";
 
-export const user = pgTable("User", {
+export const user = pgTable("profiles", {
   id: uuid("id").primaryKey().notNull().defaultRandom(),
   email: varchar("email", { length: 64 }).notNull(),
   password: varchar("password", { length: 64 }),
+  isPro: boolean("isPro").notNull().default(false),
+  limitCount: integer("limitCount").notNull().default(0),
+  proExpiresAt: timestamp("proExpiresAt"),
+  role: varchar("role", { enum: ["user", "admin"] })
+    .default("user")
+    .notNull(),
 });
 
 export type User = InferSelectModel<typeof user>;
@@ -168,3 +175,18 @@ export const stream = pgTable(
 );
 
 export type Stream = InferSelectModel<typeof stream>;
+
+export const redeemCode = pgTable("redeem_codes", {
+  id: uuid("id").primaryKey().notNull().defaultRandom(),
+  code: varchar("code", { length: 50 }).notNull().unique(),
+  type: varchar("type", { enum: ["PRO", "CREDIT"] }).notNull(),
+  value: integer("value").default(0),
+  durationMonths: integer("durationMonths").default(0),
+  isUsed: boolean("isUsed").notNull().default(false),
+  usedBy: uuid("usedBy").references(() => user.id),
+  usedAt: timestamp("usedAt"),
+  expiresAt: timestamp("expiresAt"),
+  createdAt: timestamp("createdAt").notNull().defaultNow(),
+});
+
+export type RedeemCode = InferSelectModel<typeof redeemCode>;

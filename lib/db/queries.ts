@@ -29,6 +29,7 @@ import {
   suggestion,
   type User,
   user,
+  redeemCode,
   vote,
 } from "./schema";
 import { generateHashedPassword } from "./utils";
@@ -598,5 +599,67 @@ export async function getStreamIdsByChatId({ chatId }: { chatId: string }) {
       "bad_request:database",
       "Failed to get stream ids by chat id"
     );
+  }
+}
+
+export async function redeemVoucher({ userId, code }: { userId: string; code: string }) {
+  try {
+    const [voucher] = await db
+      .select()
+      .from(redeemCode)
+      .where(and(eq(redeemCode.code, code), eq(redeemCode.isUsed, false)));
+
+    if (!voucher) {
+      return { error: "Voucher tidak valid atau sudah digunakan." };
+    }
+
+    if (voucher.expiresAt && voucher.expiresAt < new Date()) {
+       return { error: "Voucher sudah kadaluarsa." };
+    }
+
+    const [currentUser] = await db.select().from(user).where(eq(user.id, userId));
+    if (!currentUser) return { error: "User tidak ditemukan." };
+
+    const updates: Partial<User> = {};
+    if (voucher.type === "PRO") {
+      const months = voucher.durationMonths || 1;
+      const currentExpiry = currentUser.proExpiresAt ? new Date(currentUser.proExpiresAt) : new Date();
+      const nextExpiry = new Date(Math.max(currentExpiry.getTime(), Date.now()));
+      nextExpiry.setMonth(nextExpiry.getMonth() + months);
+      
+      updates.isPro = true;
+      updates.limitCount = 99999;
+      updates.proExpiresAt = nextExpiry;
+    } else {
+      const add = voucher.value || 0;
+      updates.limitCount = (currentUser.limitCount || 0) + add;
+    }
+
+    await db.update(user).set(updates).where(eq(user.id, userId));
+    await db.update(redeemCode).set({
+      isUsed: true,
+      usedBy: userId,
+      usedAt: new Date(),
+    }).where(eq(redeemCode.id, voucher.id));
+
+    return { success: true, ...updates };
+
+  } catch (error) {
+    console.error("Redeem voucher error:", error);
+    throw new ChatSDKError("bad_request:database", "Failed to redeem voucher");
+  }
+}
+
+export async function createVoucher(data: { code: string; type: "PRO" | "CREDIT"; value?: number; durationMonths?: number }) {
+  try {
+     await db.insert(redeemCode).values({
+       ...data,
+       isUsed: false,
+       createdAt: new Date(),
+     });
+     return { success: true };
+  } catch (error) {
+     console.error("Create voucher error:", error);
+     return { error: "Failed to create voucher (Code might already exist)" };
   }
 }
