@@ -75,14 +75,14 @@ export const VercelIcon = ({ size = 17 }) => {
   );
 };
 
-export const GitIcon = () => {
+export const GitIcon = ({ size = 16 }: { size?: number }) => {
   return (
     <svg
-      height="16"
+      height={size}
       strokeLinejoin="round"
       style={{ color: "currentcolor" }}
       viewBox="0 0 16 16"
-      width="16"
+      width={size}
     >
       <g clipPath="url(#clip0_872_3147)">
         <path

@@ -1,4 +1,3 @@
-import Form from "next/form";
 import { Input } from "./ui/input";
 import { Label } from "./ui/label";
 import { signIn } from "next-auth/react";
@@ -18,134 +17,153 @@ export function AuthForm({
   defaultEmail?: string;
 }) {
   return (
-    <div className="flex flex-col gap-6 w-full max-w-sm mx-auto p-8 rounded-3xl border border-white/10 bg-black/40 backdrop-blur-2xl shadow-2xl relative overflow-hidden group border-zinc-800">
-      {/* Background Glow Effect */}
-      <div className="absolute -top-24 -left-24 size-48 bg-primary/20 rounded-full blur-3xl group-hover:bg-primary/30 transition-all duration-500" />
-      <div className="absolute -bottom-24 -right-24 size-48 bg-zinc-500/10 rounded-full blur-3xl group-hover:bg-zinc-500/20 transition-all duration-500" />
+    <div className="relative w-full mx-auto">
+      <div className="flex flex-col gap-8 w-full p-10 rounded-[2rem] border border-white/5 bg-[#18181b] shadow-2xl relative z-10 mx-auto">
+        <div className="flex flex-col gap-1.5">
+          <h1 className="text-2xl font-bold tracking-tight text-white">
+            {type === "login" ? "Sign in" : "Sign up"}
+          </h1>
+          <p className="text-zinc-500 text-[13px] leading-relaxed">
+            {type === "login"
+              ? "Welcome back! Please enter your details."
+              : "Create an account to get started."}
+          </p>
+        </div>
 
-      <Form
-        action={action}
-        className="flex flex-col gap-5 relative z-10"
-      >
-        {type === "register" && (
+        <form
+          action={action}
+          className="flex flex-col gap-6 w-full"
+          method="POST"
+          onKeyDown={(e) => {
+            if (e.key === "Enter" && e.target instanceof HTMLInputElement) {
+              e.currentTarget.requestSubmit();
+            }
+          }}
+        >
+          {type === "register" && (
+            <div className="flex flex-col gap-2">
+              <Label
+                className="font-medium text-zinc-400 text-sm ml-1"
+                htmlFor="username"
+              >
+                Username
+              </Label>
+              <Input
+                autoComplete="username"
+                className="bg-zinc-900 border-zinc-800 focus:border-zinc-700 focus:ring-1 focus:ring-zinc-700 transition-all text-sm h-11 rounded-xl text-white placeholder:text-zinc-600 w-full px-4"
+                id="username"
+                name="username"
+                placeholder="johndoe"
+                required
+                type="text"
+              />
+            </div>
+          )}
+
           <div className="flex flex-col gap-2">
             <Label
-              className="font-medium text-zinc-400 text-xs uppercase tracking-wider ml-1"
-              htmlFor="username"
+              className="font-medium text-zinc-400 text-sm ml-1"
+              htmlFor={type === "login" ? "username" : "email"}
             >
-              Nama Pengguna
+              {type === "login" ? "Email or Username" : "Email Address"}
             </Label>
             <Input
-              autoComplete="username"
-              className="bg-zinc-950/50 border-zinc-800 focus:border-primary/50 focus:ring-primary/20 transition-all text-md md:text-sm h-12 rounded-xl text-white placeholder:text-zinc-600"
-              id="username"
-              name="username"
-              placeholder="Masukan nama pengguna"
+              autoComplete={type === "login" ? "username" : "email"}
+              autoFocus={type === "login"}
+              className="bg-zinc-900 border-zinc-800 focus:border-zinc-700 focus:ring-1 focus:ring-zinc-700 transition-all text-sm h-11 rounded-xl text-white placeholder:text-zinc-600 w-full px-4"
+              defaultValue={defaultEmail}
+              id={type === "login" ? "username" : "email"}
+              name={type === "login" ? "username" : "email"}
+              placeholder={type === "login" ? "your@email.com or johndoe" : "name@email.com"}
               required
-              type="text"
+              type={type === "login" ? "text" : "email"}
             />
           </div>
-        )}
 
-        <div className="flex flex-col gap-2">
-          <Label
-            className="font-medium text-zinc-400 text-xs uppercase tracking-wider ml-1"
-            htmlFor={type === "login" ? "username" : "email"}
-          >
-            {type === "login" ? "Nama Pengguna" : "Alamat Email"}
-          </Label>
-          <Input
-            autoComplete={type === "login" ? "username" : "email"}
-            autoFocus={type === "login"}
-            className="bg-zinc-950/50 border-zinc-800 focus:border-primary/50 focus:ring-primary/20 transition-all text-md md:text-sm h-12 rounded-xl text-white placeholder:text-zinc-600"
-            defaultValue={defaultEmail}
-            id={type === "login" ? "username" : "email"}
-            name={type === "login" ? "username" : "email"}
-            placeholder={type === "login" ? "Contoh: admin_putra" : "nama@email.com"}
-            required
-            type={type === "login" ? "text" : "email"}
-          />
-        </div>
-
-        <div className="flex flex-col gap-2">
-          <div className="flex justify-between items-center ml-1">
-            <Label
-              className="font-medium text-zinc-400 text-xs uppercase tracking-wider"
-              htmlFor="password"
-            >
-              Kata Sandi
-            </Label>
-            {type === "login" && (
-              <a
-                href="#"
-                className="text-[10px] uppercase tracking-widest text-zinc-500 hover:text-primary transition-colors font-bold"
-                onClick={(e) => {
-                  e.preventDefault();
-                  alert("Fitur lupa kata sandi sedang dalam pengembangan.");
-                }}
-              >
-                Lupa?
-              </a>
-            )}
-          </div>
-          <Input
-            className="bg-zinc-950/50 border-zinc-800 focus:border-primary/50 focus:ring-primary/20 transition-all text-md md:text-sm h-12 rounded-xl text-white"
-            id="password"
-            name="password"
-            required
-            type="password"
-          />
-        </div>
-
-        {type === "register" && (
           <div className="flex flex-col gap-2">
-            <Label
-              className="font-medium text-zinc-400 text-xs uppercase tracking-wider ml-1"
-              htmlFor="confirmPassword"
-            >
-              Konfirmasi Kata Sandi
-            </Label>
+            <div className="flex justify-between items-center ml-1">
+              <Label
+                className="font-medium text-zinc-400 text-sm"
+                htmlFor="password"
+              >
+                Password
+              </Label>
+              {type === "login" && (
+                <a
+                  href="#"
+                  className="text-xs text-zinc-400 hover:text-white transition-colors font-medium"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    alert("Forgot password feature is under development.");
+                  }}
+                >
+                  Forgot password?
+                </a>
+              )}
+            </div>
             <Input
-              className="bg-zinc-950/50 border-zinc-800 focus:border-primary/50 focus:ring-primary/20 transition-all text-md md:text-sm h-12 rounded-xl text-white"
-              id="confirmPassword"
-              name="confirmPassword"
+              className="bg-zinc-900 border-zinc-800 focus:border-zinc-700 focus:ring-1 focus:ring-zinc-700 transition-all text-sm h-11 rounded-xl text-white w-full px-4"
+              id="password"
+              name="password"
               required
+              placeholder="••••••••"
               type="password"
             />
           </div>
-        )}
 
-        <div className="mt-4">{children}</div>
-      </Form>
+          {type === "register" && (
+            <div className="flex flex-col gap-2">
+              <Label
+                className="font-medium text-zinc-400 text-sm ml-1"
+                htmlFor="confirmPassword"
+              >
+                Confirm Password
+              </Label>
+              <Input
+                className="bg-zinc-900 border-zinc-800 focus:border-zinc-700 focus:ring-1 focus:ring-zinc-700 transition-all text-sm h-11 rounded-xl text-white w-full px-4"
+                id="confirmPassword"
+                name="confirmPassword"
+                required
+                placeholder="••••••••"
+                type="password"
+              />
+            </div>
+          )}
 
-      <div className="relative z-10">
-        <div className="absolute inset-0 flex items-center">
-          <span className="w-full border-t border-zinc-800" />
+          <div className="mt-2 flex flex-col gap-4">
+            {children}
+          </div>
+        </form>
+
+        <div className="relative">
+          <div className="absolute inset-0 flex items-center">
+            <span className="w-full border-t border-zinc-800" />
+          </div>
+          <div className="relative flex justify-center text-xs">
+            <span className="bg-[#18181b] px-4 text-zinc-500">
+              or
+            </span>
+          </div>
         </div>
-        <div className="relative flex justify-center text-[10px] uppercase tracking-[0.2em] font-bold">
-          <span className="bg-[#09090b]/80 backdrop-blur-sm px-4 text-zinc-500">
-            Akses Sosial
-          </span>
-        </div>
-      </div>
 
-      <div className="grid grid-cols-2 gap-4 relative z-10 mb-2">
-        <button
-          onClick={() => signIn("github", { callbackUrl: "/" })}
-          className="flex w-full items-center justify-center gap-3 rounded-xl border border-zinc-800 bg-zinc-950/50 py-3 text-xs font-bold uppercase tracking-widest text-zinc-400 hover:bg-zinc-900 hover:text-zinc-200 hover:border-zinc-700 transition-all active:scale-95"
-          type="button"
-        >
-          <GitIcon />
-          <span>GitHub</span>
-        </button>
-        <button
-          onClick={() => signIn("google", { callbackUrl: "/" })}
-          className="flex w-full items-center justify-center gap-3 rounded-xl border border-zinc-800 bg-zinc-950/50 py-3 text-xs font-bold uppercase tracking-widest text-zinc-400 hover:bg-zinc-900 hover:text-zinc-200 hover:border-zinc-700 transition-all active:scale-95"
-          type="button"
-        >
-          <LogoGoogle />
-          <span>Google</span>
-        </button>
+        <div className="flex flex-col gap-3 relative z-10">
+          <button
+            onClick={() => signIn("google", { callbackUrl: "/" })}
+            className="flex w-full items-center justify-center gap-3 rounded-xl border border-zinc-800 bg-transparent py-2.5 text-sm font-semibold text-white hover:bg-zinc-800 transition-all active:scale-[0.98]"
+            type="button"
+          >
+            <LogoGoogle size={18} />
+            <span>Continue with Google</span>
+          </button>
+          <button
+            onClick={() => signIn("github", { callbackUrl: "/" })}
+            className="flex w-full items-center justify-center gap-3 rounded-xl border border-zinc-800 bg-transparent py-2.5 text-sm font-semibold text-white hover:bg-zinc-800 transition-all active:scale-[0.98]"
+            type="button"
+          >
+            <GitIcon size={18} />
+            <span>Continue with GitHub</span>
+          </button>
+        </div>
       </div>
     </div>
   );

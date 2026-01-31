@@ -73,6 +73,9 @@ export function Chat({
   const [input, setInput] = useState<string>("");
   const [showCreditCardAlert, setShowCreditCardAlert] = useState(false);
   const [currentModelId, setCurrentModelId] = useState(initialChatModel);
+  const [wormgptEnabled, setWormgptEnabled] = useState(false);
+  const [deepThinkingEnabled, setDeepThinkingEnabled] = useState(false);
+  const [webSearchEnabled, setWebSearchEnabled] = useState(false);
   const currentModelIdRef = useRef(currentModelId);
 
   useEffect(() => {
@@ -128,6 +131,9 @@ export function Chat({
               : { message: lastMessage }),
             selectedChatModel: currentModelIdRef.current,
             selectedVisibilityType: visibilityType,
+            wormgptEnabled,
+            deepThinkingEnabled,
+            webSearchEnabled,
             ...request.body,
           },
         };
@@ -225,6 +231,12 @@ export function Chat({
               setMessages={setMessages}
               status={status}
               stop={stop}
+              wormgptEnabled={wormgptEnabled}
+              setWormgptEnabled={setWormgptEnabled}
+              deepThinkingEnabled={deepThinkingEnabled}
+              setDeepThinkingEnabled={setDeepThinkingEnabled}
+              webSearchEnabled={webSearchEnabled}
+              setWebSearchEnabled={setWebSearchEnabled}
             />
           ) : (
             <div className="flex w-full items-center justify-center p-4">

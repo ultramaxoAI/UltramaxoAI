@@ -29,12 +29,12 @@ export default function Page() {
     if (state.status === "failed") {
       toast({
         type: "error",
-        description: "Username atau kata sandi salah!",
+        description: "Invalid username or password!",
       });
     } else if (state.status === "invalid_data") {
       toast({
         type: "error",
-        description: "Gagal memvalidasi data Anda!",
+        description: "Failed to validate your data!",
       });
     } else if (state.status === "success") {
       setIsSuccessful(true);
@@ -43,36 +43,19 @@ export default function Page() {
     }
   }, [state.status]);
 
-  const handleSubmit = (formData: FormData) => {
-    formAction(formData);
-  };
-
   return (
-    <div className="flex h-dvh w-screen items-center justify-center bg-[#09090b] relative overflow-hidden">
-      {/* Background radial gradients for depth */}
-      <div className="absolute top-0 left-0 w-full h-full bg-[radial-gradient(circle_at_50%_50%,rgba(24,24,27,1)_0%,rgba(9,9,11,1)_100%)] z-0" />
-      <div className="absolute -top-[10%] -left-[10%] w-[40%] h-[40%] bg-primary/10 rounded-full blur-[120px] z-0" />
-      <div className="absolute -bottom-[10%] -right-[10%] w-[40%] h-[40%] bg-zinc-500/5 rounded-full blur-[120px] z-0" />
-
-      <div className="flex w-full max-w-sm flex-col gap-8 relative z-10 animate-in fade-in zoom-in duration-500">
-        <div className="flex flex-col items-center justify-center gap-3 px-4 text-center">
-          <h1 className="font-bold text-3xl tracking-tight text-white">
-            Selamat Datang
-          </h1>
-          <p className="text-zinc-500 text-sm font-medium">
-            Masukkan username dan kata sandi untuk masuk ke akun Anda
-          </p>
-        </div>
+    <div className="flex min-h-screen w-full items-center justify-center bg-black relative overflow-hidden py-8">
+      <div className="flex w-full max-w-[440px] flex-col gap-10 relative z-10 animate-in fade-in slide-in-from-bottom-4 duration-1000 px-6">
         
-        <AuthForm action={handleSubmit} defaultEmail="" type="login">
-          <SubmitButton isSuccessful={isSuccessful}>Masuk Sekarang</SubmitButton>
-          <p className="mt-6 text-center text-zinc-500 text-xs font-medium">
-            {"Baru di Ultramaxo? "}
+        <AuthForm action={formAction} defaultEmail="" type="login">
+          <SubmitButton isSuccessful={isSuccessful}>Sign In</SubmitButton>
+          <p className="mt-6 text-center text-zinc-500 text-sm">
+            Don't have an account?{" "}
             <Link
-              className="text-zinc-200 hover:text-primary transition-colors underline underline-offset-4"
+              className="text-white hover:text-zinc-300 transition-colors font-semibold"
               href="/register"
             >
-              Buat akun Anda
+              Register here
             </Link>
           </p>
         </AuthForm>

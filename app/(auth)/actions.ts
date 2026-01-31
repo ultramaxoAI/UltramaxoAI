@@ -1,9 +1,7 @@
 "use server";
 
 import { z } from "zod";
-
 import { createUser, getUser } from "@/lib/db/queries";
-
 import { signIn } from "./auth";
 
 const authFormSchema = z.object({
@@ -27,14 +25,20 @@ export const login = async (
       password: formData.get("password"),
     });
 
-    await signIn("credentials", {
+    const result = await signIn("credentials", {
       username: validatedData.username,
       password: validatedData.password,
       redirect: false,
     });
 
+    if (result?.error) {
+      console.error("Login failed:", result.error);
+      return { status: "failed" };
+    }
+
     return { status: "success" };
   } catch (error) {
+    console.error("Unexpected login error:", error);
     if (error instanceof z.ZodError) {
       return { status: "invalid_data" };
     }

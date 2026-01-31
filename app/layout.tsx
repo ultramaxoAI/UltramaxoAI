@@ -56,8 +56,8 @@ export default function RootLayout({
   return (
     <html
       className={`${geist.variable} ${geistMono.variable}`}
-      // `next-themes` injects an extra classname to the body element to avoid
-      // visual flicker before hydration. Hence the `suppressHydrationWarning`
+      // \`next-themes\` injects an extra classname to the body element to avoid
+      // visual flicker before hydration. Hence the \`suppressHydrationWarning\`
       // prop is necessary to avoid the React hydration mismatch warning.
       // https://github.com/pacocoursey/next-themes?tab=readme-ov-file#with-app
       lang="en"

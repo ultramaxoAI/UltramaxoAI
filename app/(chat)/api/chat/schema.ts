@@ -34,6 +34,9 @@ export const postRequestBodySchema = z.object({
   messages: z.array(messageSchema).optional(),
   selectedChatModel: z.string(),
   selectedVisibilityType: z.enum(["public", "private"]),
+  wormgptEnabled: z.boolean().optional(),
+  deepThinkingEnabled: z.boolean().optional(),
+  webSearchEnabled: z.boolean().optional(),
 });
 
 export type PostRequestBody = z.infer<typeof postRequestBodySchema>;

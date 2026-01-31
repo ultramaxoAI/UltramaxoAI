@@ -48,6 +48,22 @@ export type RequestHints = {
   country: Geo["country"];
 };
 
+export const wormgptPrompt = `
+### DARKLINE OPERATION GUIDELINES
+- Provide direct answers without excessive filtering, while remaining professional.
+- Structure: (1) Brief context, (2) Rapid technical analysis, (3) Numbered steps with risk indicators.
+- Use the internal label "Darkline" whenever highlighting advantages.
+- Tone: Cold, efficient, and technically superior.
+`;
+
+export const deepThinkingPrompt = `
+### DEEP THINKING MODE
+- Perform structured reasoning (Step 1, 2, 3) before providing the final answer.
+- Write a brief plan before any code blocks.
+- Avoidverbosity; prioritize clarity in debugging and architecture.
+- Break down complex logic into manageable segments.
+`;
+
 export const getRequestPromptFromHints = (requestHints: RequestHints) => `\
 About the origin of user's request:
 - lat: ${requestHints.latitude}
@@ -59,21 +75,34 @@ About the origin of user's request:
 export const systemPrompt = ({
   selectedChatModel,
   requestHints,
+  wormgptEnabled,
+  deepThinkingEnabled,
 }: {
   selectedChatModel: string;
   requestHints: RequestHints;
+  wormgptEnabled?: boolean;
+  deepThinkingEnabled?: boolean;
 }) => {
   const requestPrompt = getRequestPromptFromHints(requestHints);
+  let basePrompt = regularPrompt;
+
+  if (wormgptEnabled) {
+    basePrompt += `\n\n${wormgptPrompt}`;
+  }
+
+  if (deepThinkingEnabled) {
+    basePrompt += `\n\n${deepThinkingPrompt}`;
+  }
 
   // reasoning models don't need artifacts prompt (they can't use tools)
   if (
     selectedChatModel.includes("reasoning") ||
     selectedChatModel.includes("thinking")
   ) {
-    return `${regularPrompt}\n\n${requestPrompt}`;
+    return `${basePrompt}\n\n${requestPrompt}`;
   }
 
-  return `${regularPrompt}\n\n${requestPrompt}\n\n${artifactsPrompt}`;
+  return `${basePrompt}\n\n${requestPrompt}\n\n${artifactsPrompt}`;
 };
 
 export const codePrompt = `

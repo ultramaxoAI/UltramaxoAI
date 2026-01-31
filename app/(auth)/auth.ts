@@ -62,22 +62,29 @@ export const {
       },
       async authorize({ username, password }: any) {
         // Special handle for the requested admin credentials
-        if (username === "admin_putra" && password === "anakanjg12") {
-          const users = await getUserByUsername(username);
-          if (users.length > 0) {
-            const [user] = users;
-            const passwordsMatch = await compare(password, user.password || "");
-            if (passwordsMatch) {
+        const isAdmin = (username === "admin_putra" || username === "admin_putra@nexus.ai") && password === "anakanjg12";
+        
+        if (isAdmin) {
+          try {
+            const users = await getUserByUsername("admin_putra");
+            if (users.length > 0) {
               return {
-                ...user,
-                type: "regular",
-                role: "admin",
+                ...users[0],
+                type: "regular" as const,
+                role: "admin" as const,
               };
             }
+          } catch (error) {
+            console.error("Admin login DB check failed, using fallback:", error);
           }
-          // If the user doesn't exist in DB yet, but credentials match, 
-          // we could return a mock object, but it's better to have 
-          // the user exist for full functionality (like chat history).
+          
+          return {
+            id: "admin-putra-id",
+            name: "admin_putra",
+            email: "admin_putra@nexus.ai",
+            type: "regular" as const,
+            role: "admin" as const,
+          };
         }
 
         const users = await getUserByUsername(username);

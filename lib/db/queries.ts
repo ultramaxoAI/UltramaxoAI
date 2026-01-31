@@ -48,7 +48,8 @@ export const db = drizzle(client);
 export async function getUser(email: string): Promise<User[]> {
   try {
     return await db.select().from(user).where(eq(user.email, email));
-  } catch (_error) {
+  } catch (error) {
+    console.error("Database Error (getUser):", error);
     throw new ChatSDKError(
       "bad_request:database",
       "Failed to get user by email"
@@ -59,7 +60,8 @@ export async function getUser(email: string): Promise<User[]> {
 export async function getUserByUsername(name: string): Promise<User[]> {
   try {
     return await db.select().from(user).where(eq(user.name, name));
-  } catch (_error) {
+  } catch (error) {
+    console.error("Database Error (getUserByUsername):", error);
     throw new ChatSDKError(
       "bad_request:database",
       "Failed to get user by username"
@@ -88,7 +90,8 @@ export async function createGuestUser() {
       id: user.id,
       email: user.email,
     });
-  } catch (_error) {
+  } catch (error) {
+    console.error("Database Error (createGuestUser):", error);
     throw new ChatSDKError(
       "bad_request:database",
       "Failed to create guest user"
@@ -697,5 +700,75 @@ export async function createVoucher(data: {
   } catch (error) {
     console.error("Create voucher error:", error);
     return { error: "Failed to create voucher (Code might already exist)" };
+  }
+}
+
+export async function listUsersWithChatCount() {
+  try {
+    const results = await db
+      .select({
+        id: user.id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+        isPro: user.isPro,
+        limitCount: user.limitCount,
+        createdAt: user.createdAt,
+        chatCount: count(chat.id),
+      })
+      .from(user)
+      .leftJoin(chat, eq(user.id, chat.userId))
+      .groupBy(user.id)
+      .orderBy(desc(user.createdAt));
+
+    return results;
+  } catch (error) {
+    console.error("Database Error (listUsersWithChatCount):", error);
+    throw new ChatSDKError(
+      "bad_request:database",
+      "Failed to list users with chat count"
+    );
+  }
+}
+
+export async function updateUserAdmin(
+  id: string,
+  data: {
+    role?: "user" | "admin";
+    isPro?: boolean;
+    limitCount?: number;
+    proExpiresAt?: Date | null;
+  }
+) {
+  try {
+    return await db.update(user).set(data).where(eq(user.id, id));
+  } catch (error) {
+    console.error("Database Error (updateUserAdmin):", error);
+    throw new ChatSDKError("bad_request:database", "Failed to update user");
+  }
+}
+
+export async function getUserById(id: string): Promise<User[]> {
+  try {
+    return await db.select().from(user).where(eq(user.id, id));
+  } catch (error) {
+    console.error("Database Error (getUserById):", error);
+    throw new ChatSDKError("bad_request:database", "Failed to get user by id");
+  }
+}
+
+export async function updateUserPassword(id: string, newPasswordPlain: string) {
+  try {
+    const hashedPassword = generateHashedPassword(newPasswordPlain);
+    return await db
+      .update(user)
+      .set({ password: hashedPassword })
+      .where(eq(user.id, id));
+  } catch (error) {
+    console.error("Database Error (updateUserPassword):", error);
+    throw new ChatSDKError(
+      "bad_request:database",
+      "Failed to update user password"
+    );
   }
 }

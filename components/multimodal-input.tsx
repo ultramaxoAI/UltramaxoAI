@@ -15,6 +15,7 @@ import {
   useState,
 } from "react";
 import { toast } from "sonner";
+import { SparklesIcon, CpuIcon, GlobeIcon } from "lucide-react";
 import { useLocalStorage, useWindowSize } from "usehooks-ts";
 import {
   ModelSelector,
@@ -53,6 +54,29 @@ function setCookie(name: string, value: string) {
   document.cookie = `${name}=${encodeURIComponent(value)}; path=/; max-age=${maxAge}`;
 }
 
+export interface MultimodalInputProps {
+  chatId: string;
+  input: string;
+  setInput: Dispatch<SetStateAction<string>>;
+  status: UseChatHelpers<ChatMessage>["status"];
+  stop: () => void;
+  attachments: Attachment[];
+  setAttachments: Dispatch<SetStateAction<Attachment[]>>;
+  messages: UIMessage[];
+  setMessages: UseChatHelpers<ChatMessage>["setMessages"];
+  sendMessage: UseChatHelpers<ChatMessage>["sendMessage"];
+  className?: string;
+  selectedVisibilityType: VisibilityType;
+  selectedModelId: string;
+  onModelChange?: (modelId: string) => void;
+  wormgptEnabled: boolean;
+  setWormgptEnabled: Dispatch<SetStateAction<boolean>>;
+  deepThinkingEnabled: boolean;
+  setDeepThinkingEnabled: Dispatch<SetStateAction<boolean>>;
+  webSearchEnabled: boolean;
+  setWebSearchEnabled: Dispatch<SetStateAction<boolean>>;
+}
+
 function PureMultimodalInput({
   chatId,
   input,
@@ -68,22 +92,13 @@ function PureMultimodalInput({
   selectedVisibilityType,
   selectedModelId,
   onModelChange,
-}: {
-  chatId: string;
-  input: string;
-  setInput: Dispatch<SetStateAction<string>>;
-  status: UseChatHelpers<ChatMessage>["status"];
-  stop: () => void;
-  attachments: Attachment[];
-  setAttachments: Dispatch<SetStateAction<Attachment[]>>;
-  messages: UIMessage[];
-  setMessages: UseChatHelpers<ChatMessage>["setMessages"];
-  sendMessage: UseChatHelpers<ChatMessage>["sendMessage"];
-  className?: string;
-  selectedVisibilityType: VisibilityType;
-  selectedModelId: string;
-  onModelChange?: (modelId: string) => void;
-}) {
+  wormgptEnabled,
+  setWormgptEnabled,
+  deepThinkingEnabled,
+  setDeepThinkingEnabled,
+  webSearchEnabled,
+  setWebSearchEnabled,
+}: MultimodalInputProps) {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const { width } = useWindowSize();
 
@@ -388,6 +403,44 @@ function PureMultimodalInput({
               onModelChange={onModelChange}
               selectedModelId={selectedModelId}
             />
+            <div className="flex items-center gap-0.5 ml-1">
+              <Button
+                variant="ghost"
+                size="icon"
+                className={cn(
+                  "size-8 rounded-lg transition-all",
+                  wormgptEnabled ? "bg-zinc-100 text-black dark:bg-zinc-800 dark:text-white" : "text-muted-foreground"
+                )}
+                onClick={() => setWormgptEnabled(!wormgptEnabled)}
+                title="WormGPT Mode"
+              >
+                <SparklesIcon size={14} className={cn(wormgptEnabled && "fill-current")} />
+              </Button>
+              <Button
+                variant="ghost"
+                size="icon"
+                className={cn(
+                  "size-8 rounded-lg transition-all",
+                  deepThinkingEnabled ? "bg-zinc-100 text-black dark:bg-zinc-800 dark:text-white" : "text-muted-foreground"
+                )}
+                onClick={() => setDeepThinkingEnabled(!deepThinkingEnabled)}
+                title="Deep Thinking Mode"
+              >
+                <CpuIcon size={14} />
+              </Button>
+              <Button
+                variant="ghost"
+                size="icon"
+                className={cn(
+                  "size-8 rounded-lg transition-all",
+                  webSearchEnabled ? "bg-zinc-100 text-black dark:bg-zinc-800 dark:text-white" : "text-muted-foreground"
+                )}
+                onClick={() => setWebSearchEnabled(!webSearchEnabled)}
+                title="Web Search"
+              >
+                <GlobeIcon size={14} />
+              </Button>
+            </div>
           </PromptInputTools>
 
           {status === "submitted" ? (
@@ -424,6 +477,15 @@ export const MultimodalInput = memo(
       return false;
     }
     if (prevProps.selectedModelId !== nextProps.selectedModelId) {
+      return false;
+    }
+    if (prevProps.wormgptEnabled !== nextProps.wormgptEnabled) {
+      return false;
+    }
+    if (prevProps.deepThinkingEnabled !== nextProps.deepThinkingEnabled) {
+      return false;
+    }
+    if (prevProps.webSearchEnabled !== nextProps.webSearchEnabled) {
       return false;
     }
 
