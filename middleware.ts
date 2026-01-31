@@ -29,6 +29,17 @@ export async function middleware(request: NextRequest) {
     secureCookie: !isDevelopmentEnvironment,
   });
 
+  // Allow access to home and chat pages without a token
+  if (!token && ["/", "/login", "/register", "/api/auth/guest"].includes(pathname)) {
+    return NextResponse.next();
+  }
+
+  // If it's a chat ID page, we check visibility within the page component, 
+  // but we can allow the middleware to pass for now.
+  if (!token && pathname.startsWith("/chat/")) {
+    return NextResponse.next();
+  }
+
   if (!token) {
     const redirectUrl = encodeURIComponent(request.url);
 

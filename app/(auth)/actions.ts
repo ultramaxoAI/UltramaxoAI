@@ -9,6 +9,8 @@ import { signIn } from "./auth";
 const authFormSchema = z.object({
   email: z.string().email(),
   password: z.string().min(6),
+  username: z.string().min(3).optional(),
+  confirmPassword: z.string().min(6).optional(),
 });
 
 export type LoginActionState = {
@@ -48,6 +50,7 @@ export type RegisterActionState = {
     | "success"
     | "failed"
     | "user_exists"
+    | "password_mismatch"
     | "invalid_data";
 };
 
@@ -59,14 +62,24 @@ export const register = async (
     const validatedData = authFormSchema.parse({
       email: formData.get("email"),
       password: formData.get("password"),
+      username: formData.get("username"),
+      confirmPassword: formData.get("confirmPassword"),
     });
+
+    if (validatedData.password !== validatedData.confirmPassword) {
+      return { status: "password_mismatch" };
+    }
 
     const [user] = await getUser(validatedData.email);
 
     if (user) {
       return { status: "user_exists" } as RegisterActionState;
     }
-    await createUser(validatedData.email, validatedData.password);
+    await createUser(
+      validatedData.email,
+      validatedData.password,
+      validatedData.username
+    );
     await signIn("credentials", {
       email: validatedData.email,
       password: validatedData.password,

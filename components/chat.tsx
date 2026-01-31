@@ -2,6 +2,7 @@
 
 import { useChat } from "@ai-sdk/react";
 import { DefaultChatTransport } from "ai";
+import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import useSWR, { useSWRConfig } from "swr";
@@ -30,6 +31,7 @@ import { Messages } from "./messages";
 import { MultimodalInput } from "./multimodal-input";
 import { getChatHistoryPaginationKey } from "./sidebar-history";
 import { toast } from "./toast";
+import { Button } from "./ui/button";
 import type { VisibilityType } from "./visibility-selector";
 
 export function Chat({
@@ -208,7 +210,7 @@ export function Chat({
         />
 
         <div className="sticky bottom-0 z-1 mx-auto flex w-full max-w-4xl gap-2 border-t-0 bg-background px-2 pb-3 md:px-4 md:pb-4">
-          {!isReadonly && (
+          {!isReadonly ? (
             <MultimodalInput
               attachments={attachments}
               chatId={id}
@@ -224,6 +226,22 @@ export function Chat({
               status={status}
               stop={stop}
             />
+          ) : (
+            <div className="flex w-full items-center justify-center p-4">
+              <div className="flex flex-col items-center gap-2 rounded-xl border border-dashed border-zinc-200 bg-zinc-50/50 p-6 text-center dark:border-zinc-800 dark:bg-zinc-900/50 w-full">
+                <p className="text-sm text-zinc-500 dark:text-zinc-400">
+                  Please sign in to start chatting with Ultramaxo AI.
+                </p>
+                <div className="flex gap-4 mt-2">
+                  <Button asChild size="sm" variant="outline">
+                    <Link href="/login">Sign In</Link>
+                  </Button>
+                  <Button asChild size="sm">
+                    <Link href="/register">Create Account</Link>
+                  </Button>
+                </div>
+              </div>
+            </div>
           )}
         </div>
       </div>

@@ -58,7 +58,7 @@ export default function Page() {
             Use your email and password to sign in
           </p>
         </div>
-        <AuthForm action={handleSubmit} defaultEmail={email}>
+        <AuthForm action={handleSubmit} defaultEmail={email} type="login">
           <SubmitButton isSuccessful={isSuccessful}>Sign in</SubmitButton>
           <p className="mt-4 text-center text-gray-600 text-sm dark:text-zinc-400">
             {"Don't have an account? "}
