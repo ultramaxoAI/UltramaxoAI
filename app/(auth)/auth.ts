@@ -36,6 +36,13 @@ declare module "next-auth/jwt" {
   }
 }
 
+declare module "next-auth/adapters" {
+  interface AdapterUser {
+    type: UserType;
+    role: "user" | "admin";
+  }
+}
+
 export const {
   handlers: { GET, POST },
   auth,
