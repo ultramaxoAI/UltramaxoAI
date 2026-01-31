@@ -2,8 +2,13 @@ import { type NextRequest, NextResponse } from "next/server";
 import { getToken } from "next-auth/jwt";
 import { guestRegex, isDevelopmentEnvironment } from "./lib/constants";
 
-export async function proxy(request: NextRequest) {
+export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
+
+  // Add explicit debug logging to Vercel logs
+  if (pathname.startsWith("/api/debug-db")) {
+    console.log("MIDDLEWARE: Bypassing auth for debug-db route");
+  }
 
   /*
    * Playwright starts the dev server and requires a 200 status to
@@ -13,10 +18,8 @@ export async function proxy(request: NextRequest) {
     return new Response("pong", { status: 200 });
   }
 
-  if (
-    pathname.startsWith("/api/auth") ||
-    pathname.startsWith("/api/debug-db")
-  ) {
+  // ALLOW /api/auth/* AND /api/debug-db explicitly
+  if (pathname.startsWith("/api/auth") || pathname.includes("/api/debug-db")) {
     return NextResponse.next();
   }
 
