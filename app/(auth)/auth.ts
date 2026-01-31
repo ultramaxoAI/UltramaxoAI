@@ -50,7 +50,7 @@ export const {
   signOut,
 } = NextAuth({
   ...authConfig,
-  adapter: DrizzleAdapter(db),
+  adapter: DrizzleAdapter(db) as any,
   session: { strategy: "jwt" },
   providers: [
     Google,
