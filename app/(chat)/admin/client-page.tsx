@@ -11,7 +11,8 @@ import {
   CrownIcon,
   KeyIcon,
   Settings2Icon,
-  LogOutIcon
+  LogOutIcon,
+  Trash2Icon
 } from "lucide-react";
 
 export default function AdminDashboardClient() {
@@ -81,6 +82,25 @@ export default function AdminDashboardClient() {
       }
     } catch (e) {
       toast.error("Update failed");
+    }
+  };
+
+  const handleDeleteUser = async (userId: string) => {
+    if (!confirm("Are you sure you want to delete this user? This action cannot be undone.")) return;
+    
+    try {
+      const res = await fetch(`/api/admin/users?id=${userId}`, {
+        method: 'DELETE',
+      });
+      const data = await res.json();
+      if (data.success) {
+        toast.success("User deleted");
+        fetchUsers();
+      } else {
+        toast.error(data.error || "Delete failed");
+      }
+    } catch (e) {
+      toast.error("Delete failed");
     }
   };
 
@@ -319,6 +339,13 @@ export default function AdminDashboardClient() {
                                 title="Edit Limit"
                               >
                                 <Settings2Icon size={16} />
+                              </button>
+                              <button 
+                                onClick={() => handleDeleteUser(user.id)}
+                                className="p-2.5 rounded-xl bg-zinc-800 hover:bg-red-500/20 text-zinc-400 hover:text-red-400 transition-all shadow-lg border border-zinc-700/50"
+                                title="Delete User"
+                              >
+                                <Trash2Icon size={16} />
                               </button>
                            </div>
                         </td>

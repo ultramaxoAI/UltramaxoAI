@@ -150,9 +150,12 @@ export function SettingsDialog({
                     </div>
                     <div className="flex flex-col gap-1.5 p-4 rounded-2xl bg-zinc-900/50 border border-zinc-800/50">
                       <Label className="text-[10px] font-black uppercase tracking-widest text-zinc-500">Chat Quota</Label>
-                      <div className="flex items-center gap-1.5 text-sm text-white font-bold">
-                        <ZapIcon size={14} className="text-blue-500 fill-blue-500" />
-                        {user?.limitCount?.toLocaleString() || 0}
+                      <div className="flex flex-col gap-0.5">
+                        <div className="flex items-center gap-1.5 text-sm text-white font-bold">
+                          <ZapIcon size={14} className="text-blue-500 fill-blue-500" />
+                          {user?.isPro ? "Unlimited" : `${Math.max(0, 10 - (user?.messageCount || 0))} / 10`}
+                        </div>
+                        <span className="text-[9px] text-zinc-600 font-medium">Resets every 24h</span>
                       </div>
                     </div>
                   </div>

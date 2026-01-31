@@ -6,9 +6,11 @@ import {
   count,
   desc,
   eq,
+  exists,
   gt,
   gte,
   inArray,
+  isNotNull,
   lt,
   type SQL,
 } from "drizzle-orm";
@@ -31,6 +33,7 @@ import {
   type User,
   user,
   vote,
+  verificationToken,
 } from "./schema";
 import { generateHashedPassword } from "./utils";
 
@@ -570,7 +573,18 @@ export async function getMessageCountByUserId({
         and(
           eq(chat.userId, id),
           gte(message.createdAt, twentyFourHoursAgo),
-          eq(message.role, "user")
+          eq(message.role, "user"),
+          // Only count if there's at least one assistant message in the same chat
+          exists(
+            db.select()
+              .from(message)
+              .where(
+                and(
+                  eq(message.chatId, chat.id),
+                  eq(message.role, "assistant")
+                )
+              )
+          )
         )
       )
       .execute();
@@ -770,5 +784,65 @@ export async function updateUserPassword(id: string, newPasswordPlain: string) {
       "bad_request:database",
       "Failed to update user password"
     );
+  }
+}
+
+export async function upsertVerificationCode(email: string, code: string) {
+  try {
+    const expires = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes from now
+
+    // Delete existing tokens for this email
+    await db.delete(verificationToken).where(eq(verificationToken.identifier, email));
+
+    // Insert new token
+    return await db.insert(verificationToken).values({
+      identifier: email,
+      token: code,
+      expires,
+    });
+  } catch (error) {
+    console.error("Database Error (upsertVerificationCode):", error);
+    throw new ChatSDKError("bad_request:database", "Failed to upsert verification code");
+  }
+}
+
+export async function verifyVerificationCode(email: string, code: string) {
+  try {
+    const results = await db
+      .select()
+      .from(verificationToken)
+      .where(
+        and(
+          eq(verificationToken.identifier, email),
+          eq(verificationToken.token, code)
+        )
+      );
+
+    if (results.length === 0) return false;
+
+    const token = results[0];
+    const now = new Date();
+
+    if (now > token.expires) {
+      // Clean up expired token
+      await db.delete(verificationToken).where(eq(verificationToken.identifier, email));
+      return false;
+    }
+
+    // Code is valid, consume it
+    await db.delete(verificationToken).where(eq(verificationToken.identifier, email));
+    return true;
+  } catch (error) {
+    console.error("Database Error (verifyVerificationCode):", error);
+    throw new ChatSDKError("bad_request:database", "Failed to verify code");
+  }
+}
+
+export async function deleteUserById(id: string) {
+  try {
+    return await db.delete(user).where(eq(user.id, id));
+  } catch (error) {
+    console.error("Database Error (deleteUserById):", error);
+    throw new ChatSDKError("bad_request:database", "Failed to delete user");
   }
 }

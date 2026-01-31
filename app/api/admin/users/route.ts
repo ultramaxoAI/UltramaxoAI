@@ -1,5 +1,5 @@
 import { auth } from "@/app/(auth)/auth";
-import { listUsersWithChatCount, updateUserAdmin } from "@/lib/db/queries";
+import { deleteUserById, listUsersWithChatCount, updateUserAdmin } from "@/lib/db/queries";
 import { NextResponse } from "next/server";
 
 export async function GET() {
@@ -35,6 +35,29 @@ export async function PATCH(request: Request) {
     return NextResponse.json({ success: true });
   } catch (error) {
     console.error("API Error (admin/users/PATCH):", error);
-    return NextResponse.json({ error: "Failed to update user" }, { status: 500 });
+    return NextResponse.json({ error: "Gagal memperbarui user" }, { status: 500 });
+  }
+}
+
+export async function DELETE(request: Request) {
+  const session = await auth();
+  if (session?.user?.role !== "admin") {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  try {
+    const { searchParams } = new URL(request.url);
+    const id = searchParams.get("id");
+
+    if (!id) {
+      return NextResponse.json({ error: "Missing ID" }, { status: 400 });
+    }
+
+    await deleteUserById(id);
+
+    return NextResponse.json({ success: true });
+  } catch (error) {
+    console.error("API Error (admin/users/DELETE):", error);
+    return NextResponse.json({ error: "Gagal menghapus user" }, { status: 500 });
   }
 }

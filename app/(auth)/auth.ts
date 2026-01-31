@@ -7,6 +7,8 @@ import GitHub from "next-auth/providers/github";
 import { DrizzleAdapter } from "@auth/drizzle-adapter";
 import { DUMMY_PASSWORD } from "@/lib/constants";
 import { createGuestUser, db, getUser, getUserByUsername } from "@/lib/db/queries";
+import { user as userTable } from "@/lib/db/schema";
+import { eq } from "drizzle-orm";
 import { authConfig } from "./auth.config";
 
 export type UserType = "guest" | "regular" | "pro";
@@ -53,8 +55,14 @@ export const {
   adapter: DrizzleAdapter(db) as any,
   session: { strategy: "jwt" },
   providers: [
-    Google,
-    GitHub,
+    Google({
+      clientId: process.env.AUTH_GOOGLE_ID,
+      clientSecret: process.env.AUTH_GOOGLE_SECRET,
+    }),
+    GitHub({
+      clientId: process.env.AUTH_GITHUB_ID,
+      clientSecret: process.env.AUTH_GITHUB_SECRET,
+    }),
     Credentials({
       credentials: {
         username: { label: "Username", type: "text" },
@@ -141,6 +149,22 @@ export const {
       }
 
       return session;
+    },
+  },
+  events: {
+    async linkAccount({ user, profile }: any) {
+      // Sync name from Google/GitHub if available
+      if (profile?.name || profile?.login) {
+        await db.update(userTable)
+          .set({ name: profile.name || profile.login })
+          .where(eq(userTable.id, user.id as string));
+      }
+    },
+    async createUser({ user }) {
+      // Default type and role for new OAuth users
+      await db.update(userTable)
+        .set({ role: "user", isPro: false })
+        .where(eq(userTable.id, user.id as string));
     },
   },
 });

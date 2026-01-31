@@ -36,6 +36,11 @@ export default function Page() {
         type: "error",
         description: "Failed to validate your data!",
       });
+    } else if (state.status === "invalid_code") {
+      toast({
+        type: "error",
+        description: "Kode verifikasi salah atau kedaluwarsa!",
+      });
     } else if (state.status === "success") {
       toast({ type: "success", description: "Account created successfully!" });
 

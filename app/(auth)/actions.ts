@@ -1,7 +1,7 @@
 "use server";
 
 import { z } from "zod";
-import { createUser, getUser } from "@/lib/db/queries";
+import { createUser, getUser, verifyVerificationCode } from "@/lib/db/queries";
 import { signIn } from "./auth";
 
 const authFormSchema = z.object({
@@ -9,6 +9,7 @@ const authFormSchema = z.object({
   username: z.string().min(3).optional(),
   password: z.string().min(6),
   confirmPassword: z.string().min(6).optional(),
+  code: z.string().length(6).optional(),
 });
 
 export type LoginActionState = {
@@ -55,7 +56,8 @@ export type RegisterActionState = {
     | "failed"
     | "user_exists"
     | "password_mismatch"
-    | "invalid_data";
+    | "invalid_data"
+    | "invalid_code";
 };
 
 export const register = async (
@@ -68,7 +70,18 @@ export const register = async (
       password: formData.get("password"),
       username: formData.get("username"),
       confirmPassword: formData.get("confirmPassword"),
+      code: formData.get("code"),
     });
+
+    if (!validatedData.code) {
+      return { status: "invalid_code" };
+    }
+
+    // Verify code first
+    const isCodeValid = await verifyVerificationCode(validatedData.email!, validatedData.code);
+    if (!isCodeValid) {
+      return { status: "invalid_code" };
+    }
 
     if (validatedData.password !== validatedData.confirmPassword) {
       return { status: "password_mismatch" };
