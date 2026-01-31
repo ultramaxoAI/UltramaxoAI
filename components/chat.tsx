@@ -275,6 +275,12 @@ export function Chat({
         status={status}
         stop={stop}
         votes={votes}
+        wormgptEnabled={wormgptEnabled}
+        setWormgptEnabled={setWormgptEnabled}
+        deepThinkingEnabled={deepThinkingEnabled}
+        setDeepThinkingEnabled={setDeepThinkingEnabled}
+        webSearchEnabled={webSearchEnabled}
+        setWebSearchEnabled={setWebSearchEnabled}
       />
 
       <AlertDialog

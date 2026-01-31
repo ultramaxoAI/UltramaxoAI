@@ -69,6 +69,12 @@ function PureArtifact({
   isReadonly,
   selectedVisibilityType,
   selectedModelId,
+  wormgptEnabled,
+  setWormgptEnabled,
+  deepThinkingEnabled,
+  setDeepThinkingEnabled,
+  webSearchEnabled,
+  setWebSearchEnabled,
 }: {
   addToolApprovalResponse: UseChatHelpers<ChatMessage>["addToolApprovalResponse"];
   chatId: string;
@@ -86,6 +92,12 @@ function PureArtifact({
   isReadonly: boolean;
   selectedVisibilityType: VisibilityType;
   selectedModelId: string;
+  wormgptEnabled: boolean;
+  setWormgptEnabled: Dispatch<SetStateAction<boolean>>;
+  deepThinkingEnabled: boolean;
+  setDeepThinkingEnabled: Dispatch<SetStateAction<boolean>>;
+  webSearchEnabled: boolean;
+  setWebSearchEnabled: Dispatch<SetStateAction<boolean>>;
 }) {
   const { artifact, setArtifact, metadata, setMetadata } = useArtifact();
 
@@ -348,6 +360,12 @@ function PureArtifact({
                     setMessages={setMessages}
                     status={status}
                     stop={stop}
+                    wormgptEnabled={wormgptEnabled}
+                    setWormgptEnabled={setWormgptEnabled}
+                    deepThinkingEnabled={deepThinkingEnabled}
+                    setDeepThinkingEnabled={setDeepThinkingEnabled}
+                    webSearchEnabled={webSearchEnabled}
+                    setWebSearchEnabled={setWebSearchEnabled}
                   />
                 </div>
               </div>

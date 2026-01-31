@@ -1,4 +1,4 @@
-import { gateway } from "@ai-sdk/gateway";
+import { groq } from "@ai-sdk/groq";
 import {
   customProvider,
   extractReasoningMiddleware,
@@ -6,57 +6,32 @@ import {
 } from "ai";
 import { isTestEnvironment } from "../constants";
 
-const THINKING_SUFFIX_REGEX = /-thinking$/;
+export const getLanguageModel = (modelId: string) => {
+  // Use DeepSeek R1 Distill Llama 70B for both models
+  const groqModelId = "deepseek-r1-distill-llama-70b";
 
-export const myProvider = isTestEnvironment
-  ? (() => {
-      const {
-        artifactModel,
-        chatModel,
-        reasoningModel,
-        titleModel,
-      } = require("./models.mock");
-      return customProvider({
-        languageModels: {
-          "chat-model": chatModel,
-          "chat-model-reasoning": reasoningModel,
-          "title-model": titleModel,
-          "artifact-model": artifactModel,
-        },
-      });
-    })()
-  : null;
-
-export function getLanguageModel(modelId: string) {
-  if (isTestEnvironment && myProvider) {
-    return myProvider.languageModel(modelId);
+  if (modelId.includes("wormgpt")) {
+    // We can add specific system behavior or different parameters for WormGPT here if needed
+    return groq(groqModelId);
   }
 
-  const isReasoningModel =
-    modelId.includes("reasoning") || modelId.endsWith("-thinking");
-
-  if (isReasoningModel) {
-    const gatewayModelId = modelId.replace(THINKING_SUFFIX_REGEX, "");
-
-    return wrapLanguageModel({
-      model: gateway.languageModel(gatewayModelId),
-      middleware: extractReasoningMiddleware({ tagName: "thinking" }),
-    });
+  if (modelId.includes("ultraagent")) {
+    return groq(groqModelId);
   }
 
-  return gateway.languageModel(modelId);
-}
+  // Fallback for other potential IDs (like the original ones if still being used somewhere)
+  if (modelId.startsWith("groq/")) {
+      return groq(groqModelId);
+  }
+
+  // Default fallback to Groq/DeepSeek
+  return groq(groqModelId);
+};
 
 export function getTitleModel() {
-  if (isTestEnvironment && myProvider) {
-    return myProvider.languageModel("title-model");
-  }
-  return gateway.languageModel("google/gemini-2.5-flash-lite");
+  return groq("deepseek-r1-distill-llama-70b");
 }
 
 export function getArtifactModel() {
-  if (isTestEnvironment && myProvider) {
-    return myProvider.languageModel("artifact-model");
-  }
-  return gateway.languageModel("anthropic/claude-haiku-4.5");
+  return groq("deepseek-r1-distill-llama-70b");
 }
