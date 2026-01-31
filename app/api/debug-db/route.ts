@@ -1,8 +1,6 @@
 import { NextResponse } from "next/server";
 import postgres from "postgres";
 
-export const dynamic = "force-dynamic";
-
 export async function GET() {
   const vars = {
     hasPostgresUrl: !!process.env.POSTGRES_URL,
