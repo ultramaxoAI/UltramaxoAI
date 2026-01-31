@@ -2,8 +2,11 @@ import { compare } from "bcrypt-ts";
 import NextAuth, { type DefaultSession } from "next-auth";
 import type { DefaultJWT } from "next-auth/jwt";
 import Credentials from "next-auth/providers/credentials";
+import Google from "next-auth/providers/google";
+import GitHub from "next-auth/providers/github";
+import { DrizzleAdapter } from "@auth/drizzle-adapter";
 import { DUMMY_PASSWORD } from "@/lib/constants";
-import { createGuestUser, getUser } from "@/lib/db/queries";
+import { createGuestUser, getUser, db } from "@/lib/db/queries";
 import { authConfig } from "./auth.config";
 
 export type UserType = "guest" | "regular" | "pro";
@@ -40,7 +43,11 @@ export const {
   signOut,
 } = NextAuth({
   ...authConfig,
+  adapter: DrizzleAdapter(db),
+  session: { strategy: "jwt" },
   providers: [
+    Google,
+    GitHub,
     Credentials({
       credentials: {},
       async authorize({ email, password }: any) {
