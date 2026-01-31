@@ -113,7 +113,7 @@ export default function AdminDashboardClient() {
   return (
     <div className="flex min-h-screen bg-[#09090b] text-zinc-100 font-sans">
       {/* Sidebar */}
-      <aside className="w-64 border-r border-zinc-800 flex flex-col p-6 gap-8 bg-[#0c0c0e]">
+      <aside className="w-56 border-r border-zinc-800 flex flex-col p-4 gap-6 bg-[#0c0c0e] shrink-0">
         <div className="flex items-center gap-3 px-2">
           <div className="size-8 rounded-lg bg-white flex items-center justify-center">
             <Settings2Icon className="text-black size-5" />
@@ -147,7 +147,7 @@ export default function AdminDashboardClient() {
       </aside>
 
       {/* Main Content */}
-      <main className="flex-1 flex flex-col p-10 gap-10 overflow-y-auto">
+      <main className="flex-1 flex flex-col p-6 gap-8 overflow-y-auto min-w-0">
         <header className="flex flex-col gap-1">
           <h1 className="text-4xl font-bold tracking-tight text-white capitalize">
             {activeTab} Management
@@ -253,12 +253,12 @@ export default function AdminDashboardClient() {
                 <table className="w-full text-left">
                   <thead>
                     <tr className="border-b border-zinc-800 bg-zinc-900/30">
-                      <th className="p-6 text-xs font-bold text-zinc-500 uppercase tracking-widest">User</th>
-                      <th className="p-6 text-xs font-bold text-zinc-500 uppercase tracking-widest">Chats</th>
-                      <th className="p-6 text-xs font-bold text-zinc-500 uppercase tracking-widest">Limit</th>
-                      <th className="p-6 text-xs font-bold text-zinc-500 uppercase tracking-widest">Plan</th>
-                      <th className="p-6 text-xs font-bold text-zinc-500 uppercase tracking-widest">Status</th>
-                      <th className="p-6 text-xs font-bold text-zinc-500 uppercase tracking-widest text-right">Actions</th>
+                      <th className="p-4 text-xs font-bold text-zinc-500 uppercase tracking-widest whitespace-nowrap">User</th>
+                      <th className="p-4 text-xs font-bold text-zinc-500 uppercase tracking-widest whitespace-nowrap">Chats</th>
+                      <th className="p-4 text-xs font-bold text-zinc-500 uppercase tracking-widest whitespace-nowrap">Limit</th>
+                      <th className="p-4 text-xs font-bold text-zinc-500 uppercase tracking-widest whitespace-nowrap">Plan</th>
+                      <th className="p-4 text-xs font-bold text-zinc-500 uppercase tracking-widest whitespace-nowrap">Status</th>
+                      <th className="p-4 text-xs font-bold text-zinc-500 uppercase tracking-widest text-right whitespace-nowrap">Actions</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-zinc-800/50">
@@ -277,51 +277,51 @@ export default function AdminDashboardClient() {
                       </tr>
                     ) : filteredUsers.map(user => (
                       <tr key={user.id} className="hover:bg-zinc-800/20 transition-colors group">
-                        <td className="p-6">
-                          <div className="flex items-center gap-4">
-                            <div className="size-10 rounded-full bg-zinc-800 flex items-center justify-center font-bold text-zinc-400">
+                        <td className="p-4">
+                          <div className="flex items-center gap-3">
+                            <div className="size-8 rounded-full bg-zinc-800 flex items-center justify-center font-bold text-zinc-400 shrink-0">
                               {user.name?.[0]?.toUpperCase() || user.email?.[0]?.toUpperCase()}
                             </div>
-                            <div className="flex flex-col">
-                              <span className="font-bold text-white text-sm">{user.name || "Unnamed"}</span>
-                              <span className="text-zinc-500 text-xs">{user.email}</span>
+                            <div className="flex flex-col min-w-0">
+                              <span className="font-bold text-white text-sm truncate max-w-[120px]">{user.name || "Unnamed"}</span>
+                              <span className="text-zinc-500 text-xs truncate max-w-[150px]">{user.email}</span>
                             </div>
                           </div>
                         </td>
-                        <td className="p-6">
+                        <td className="p-4">
                           <div className="flex items-center gap-2 text-zinc-300 font-medium">
                             <MessageSquareIcon size={14} className="text-zinc-500" />
                             <span>{user.chatCount || 0}</span>
                           </div>
                         </td>
-                        <td className="p-6">
+                        <td className="p-4">
                           <span className="text-zinc-300 font-medium">{user.limitCount}</span>
                         </td>
-                        <td className="p-6">
+                        <td className="p-4">
                            {user.isPro ? (
-                             <span className="px-3 py-1 bg-yellow-400/10 text-yellow-400 text-[10px] font-black uppercase tracking-widest border border-yellow-400/20 rounded-full flex items-center gap-1.5 w-fit">
+                             <span className="px-2.5 py-0.5 bg-yellow-400/10 text-yellow-400 text-[10px] font-black uppercase tracking-widest border border-yellow-400/20 rounded-full flex items-center gap-1.5 w-fit">
                                <CrownIcon size={10} />
                                PRO
                              </span>
                            ) : (
-                             <span className="px-3 py-1 bg-zinc-800 text-zinc-500 text-[10px] font-black uppercase tracking-widest rounded-full w-fit">
+                             <span className="px-2.5 py-0.5 bg-zinc-800 text-zinc-500 text-[10px] font-black uppercase tracking-widest rounded-full w-fit">
                                FREE
                              </span>
                            )}
                         </td>
-                        <td className="p-6">
+                        <td className="p-4">
                           {user.role === 'admin' ? (
-                            <span className="px-3 py-1 bg-blue-400/10 text-blue-400 text-[10px] font-black uppercase tracking-widest border border-blue-400/20 rounded-full flex items-center gap-1.5 w-fit">
+                            <span className="px-2.5 py-0.5 bg-blue-400/10 text-blue-400 text-[10px] font-black uppercase tracking-widest border border-blue-400/20 rounded-full flex items-center gap-1.5 w-fit">
                               <KeyIcon size={10} />
                               ADMIN
                             </span>
                           ) : (
-                            <span className="px-3 py-1 bg-zinc-800 text-zinc-500 text-[10px] font-black uppercase tracking-widest rounded-full w-fit">
+                            <span className="px-2.5 py-0.5 bg-zinc-800 text-zinc-500 text-[10px] font-black uppercase tracking-widest rounded-full w-fit">
                               USER
                             </span>
                           )}
                         </td>
-                        <td className="p-6 text-right">
+                        <td className="p-4 text-right">
                            <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
                               <button 
                                 onClick={() => handleUpdateUser(user.id, { isPro: !user.isPro, limitCount: !user.isPro ? 99999 : 0 })}
