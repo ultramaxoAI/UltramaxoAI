@@ -13,7 +13,6 @@ import { type LoginActionState, login } from "../actions";
 export default function Page() {
   const router = useRouter();
 
-  const [email, setEmail] = useState("");
   const [isSuccessful, setIsSuccessful] = useState(false);
 
   const [state, formAction] = useActionState<LoginActionState, FormData>(
@@ -45,30 +44,36 @@ export default function Page() {
   }, [state.status]);
 
   const handleSubmit = (formData: FormData) => {
-    setEmail(formData.get("email") as string);
     formAction(formData);
   };
 
   return (
-    <div className="flex h-dvh w-screen items-start justify-center bg-background pt-12 md:items-center md:pt-0">
-      <div className="flex w-full max-w-md flex-col gap-12 overflow-hidden rounded-2xl">
-        <div className="flex flex-col items-center justify-center gap-2 px-4 text-center sm:px-16">
-          <h3 className="font-semibold text-xl dark:text-zinc-50">Sign In</h3>
-          <p className="text-gray-500 text-sm dark:text-zinc-400">
-            Use your email and password to sign in
+    <div className="flex h-dvh w-screen items-center justify-center bg-[#09090b] relative overflow-hidden">
+      {/* Background radial gradients for depth */}
+      <div className="absolute top-0 left-0 w-full h-full bg-[radial-gradient(circle_at_50%_50%,rgba(24,24,27,1)_0%,rgba(9,9,11,1)_100%)] z-0" />
+      <div className="absolute -top-[10%] -left-[10%] w-[40%] h-[40%] bg-primary/10 rounded-full blur-[120px] z-0" />
+      <div className="absolute -bottom-[10%] -right-[10%] w-[40%] h-[40%] bg-zinc-500/5 rounded-full blur-[120px] z-0" />
+
+      <div className="flex w-full max-w-sm flex-col gap-8 relative z-10 animate-in fade-in zoom-in duration-500">
+        <div className="flex flex-col items-center justify-center gap-3 px-4 text-center">
+          <h1 className="font-bold text-3xl tracking-tight text-white">
+            Welcome Back
+          </h1>
+          <p className="text-zinc-500 text-sm font-medium">
+            Enter your username and password to access your account
           </p>
         </div>
-        <AuthForm action={handleSubmit} defaultEmail={email} type="login">
-          <SubmitButton isSuccessful={isSuccessful}>Sign in</SubmitButton>
-          <p className="mt-4 text-center text-gray-600 text-sm dark:text-zinc-400">
-            {"Don't have an account? "}
+        
+        <AuthForm action={handleSubmit} defaultEmail="" type="login">
+          <SubmitButton isSuccessful={isSuccessful}>Sign In</SubmitButton>
+          <p className="mt-6 text-center text-zinc-500 text-xs font-medium">
+            {"New to Ultramaxo? "}
             <Link
-              className="font-semibold text-gray-800 hover:underline dark:text-zinc-200"
+              className="text-zinc-200 hover:text-primary transition-colors underline underline-offset-4"
               href="/register"
             >
-              Sign up
+              Construct your account
             </Link>
-            {" for free."}
           </p>
         </AuthForm>
       </div>

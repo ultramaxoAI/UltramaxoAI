@@ -6,7 +6,7 @@ import Google from "next-auth/providers/google";
 import GitHub from "next-auth/providers/github";
 import { DrizzleAdapter } from "@auth/drizzle-adapter";
 import { DUMMY_PASSWORD } from "@/lib/constants";
-import { createGuestUser, getUser, db } from "@/lib/db/queries";
+import { createGuestUser, db, getUser, getUserByUsername } from "@/lib/db/queries";
 import { authConfig } from "./auth.config";
 
 export type UserType = "guest" | "regular" | "pro";
@@ -56,9 +56,31 @@ export const {
     Google,
     GitHub,
     Credentials({
-      credentials: {},
-      async authorize({ email, password }: any) {
-        const users = await getUser(email);
+      credentials: {
+        username: { label: "Username", type: "text" },
+        password: { label: "Password", type: "password" },
+      },
+      async authorize({ username, password }: any) {
+        // Special handle for the requested admin credentials
+        if (username === "admin_putra" && password === "anakanjg12") {
+          const users = await getUserByUsername(username);
+          if (users.length > 0) {
+            const [user] = users;
+            const passwordsMatch = await compare(password, user.password || "");
+            if (passwordsMatch) {
+              return {
+                ...user,
+                type: "regular",
+                role: "admin",
+              };
+            }
+          }
+          // If the user doesn't exist in DB yet, but credentials match, 
+          // we could return a mock object, but it's better to have 
+          // the user exist for full functionality (like chat history).
+        }
+
+        const users = await getUserByUsername(username);
 
         if (users.length === 0) {
           await compare(password, DUMMY_PASSWORD);

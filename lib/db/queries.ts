@@ -56,6 +56,17 @@ export async function getUser(email: string): Promise<User[]> {
   }
 }
 
+export async function getUserByUsername(name: string): Promise<User[]> {
+  try {
+    return await db.select().from(user).where(eq(user.name, name));
+  } catch (_error) {
+    throw new ChatSDKError(
+      "bad_request:database",
+      "Failed to get user by username"
+    );
+  }
+}
+
 export async function createUser(email: string, password: string, name?: string) {
   const hashedPassword = generateHashedPassword(password);
 

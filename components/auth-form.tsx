@@ -18,22 +18,26 @@ export function AuthForm({
   defaultEmail?: string;
 }) {
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-6 w-full max-w-sm mx-auto p-8 rounded-3xl border border-white/10 bg-white/5 backdrop-blur-xl shadow-2xl relative overflow-hidden group">
+      {/* Background Glow Effect */}
+      <div className="absolute -top-24 -left-24 size-48 bg-primary/20 rounded-full blur-3xl group-hover:bg-primary/30 transition-all duration-500" />
+      <div className="absolute -bottom-24 -right-24 size-48 bg-zinc-500/10 rounded-full blur-3xl group-hover:bg-zinc-500/20 transition-all duration-500" />
+
       <Form
         action={action}
-        className="flex flex-col gap-4 px-4 sm:px-16"
+        className="flex flex-col gap-5 relative z-10"
       >
         {type === "register" && (
           <div className="flex flex-col gap-2">
             <Label
-              className="font-normal text-zinc-600 dark:text-zinc-400"
+              className="font-medium text-zinc-400 text-xs uppercase tracking-wider ml-1"
               htmlFor="username"
             >
               Username
             </Label>
             <Input
               autoComplete="username"
-              className="bg-muted text-md md:text-sm h-11"
+              className="bg-zinc-900/50 border-zinc-800 focus:border-primary/50 focus:ring-primary/20 transition-all text-md md:text-sm h-12 rounded-xl"
               id="username"
               name="username"
               placeholder="putra_alghifa"
@@ -45,28 +49,28 @@ export function AuthForm({
 
         <div className="flex flex-col gap-2">
           <Label
-            className="font-normal text-zinc-600 dark:text-zinc-400"
-            htmlFor="email"
+            className="font-medium text-zinc-400 text-xs uppercase tracking-wider ml-1"
+            htmlFor={type === "login" ? "username" : "email"}
           >
-            Email Address
+            {type === "login" ? "Username" : "Email Address"}
           </Label>
           <Input
-            autoComplete="email"
+            autoComplete={type === "login" ? "username" : "email"}
             autoFocus={type === "login"}
-            className="bg-muted text-md md:text-sm h-11"
+            className="bg-zinc-900/50 border-zinc-800 focus:border-primary/50 focus:ring-primary/20 transition-all text-md md:text-sm h-12 rounded-xl"
             defaultValue={defaultEmail}
-            id="email"
-            name="email"
-            placeholder="user@example.com"
+            id={type === "login" ? "username" : "email"}
+            name={type === "login" ? "username" : "email"}
+            placeholder={type === "login" ? "Your username" : "user@example.com"}
             required
-            type="email"
+            type={type === "login" ? "text" : "email"}
           />
         </div>
 
         <div className="flex flex-col gap-2">
-          <div className="flex justify-between items-center">
+          <div className="flex justify-between items-center ml-1">
             <Label
-              className="font-normal text-zinc-600 dark:text-zinc-400"
+              className="font-medium text-zinc-400 text-xs uppercase tracking-wider"
               htmlFor="password"
             >
               Password
@@ -74,18 +78,18 @@ export function AuthForm({
             {type === "login" && (
               <a
                 href="#"
-                className="text-xs text-zinc-500 hover:text-zinc-800 dark:hover:text-zinc-200 transition-colors"
+                className="text-[10px] uppercase tracking-widest text-zinc-500 hover:text-primary transition-colors font-bold"
                 onClick={(e) => {
                   e.preventDefault();
                   alert("Fitur lupa password sedang dalam pengembangan.");
                 }}
               >
-                Forgot password?
+                Forgot?
               </a>
             )}
           </div>
           <Input
-            className="bg-muted text-md md:text-sm h-11"
+            className="bg-zinc-900/50 border-zinc-800 focus:border-primary/50 focus:ring-primary/20 transition-all text-md md:text-sm h-12 rounded-xl"
             id="password"
             name="password"
             required
@@ -96,13 +100,13 @@ export function AuthForm({
         {type === "register" && (
           <div className="flex flex-col gap-2">
             <Label
-              className="font-normal text-zinc-600 dark:text-zinc-400"
+              className="font-medium text-zinc-400 text-xs uppercase tracking-wider ml-1"
               htmlFor="confirmPassword"
             >
               Confirm Password
             </Label>
             <Input
-              className="bg-muted text-md md:text-sm h-11"
+              className="bg-zinc-900/50 border-zinc-800 focus:border-primary/50 focus:ring-primary/20 transition-all text-md md:text-sm h-12 rounded-xl"
               id="confirmPassword"
               name="confirmPassword"
               required
@@ -111,24 +115,24 @@ export function AuthForm({
           </div>
         )}
 
-        <div className="mt-2">{children}</div>
+        <div className="mt-4">{children}</div>
       </Form>
 
-      <div className="relative px-4 sm:px-16">
-        <div className="absolute inset-0 flex items-center px-4 sm:px-16">
-          <span className="w-full border-t border-zinc-200 dark:border-zinc-800" />
+      <div className="relative z-10">
+        <div className="absolute inset-0 flex items-center">
+          <span className="w-full border-t border-zinc-800" />
         </div>
-        <div className="relative flex justify-center text-xs uppercase">
-          <span className="bg-background px-2 text-zinc-500">
-            Or continue with
+        <div className="relative flex justify-center text-[10px] uppercase tracking-[0.2em] font-bold">
+          <span className="bg-transparent px-4 text-zinc-500">
+            Social Access
           </span>
         </div>
       </div>
 
-      <div className="grid grid-cols-2 gap-4 px-4 sm:px-16 mb-4">
+      <div className="grid grid-cols-2 gap-4 relative z-10 mb-2">
         <button
           onClick={() => signIn("github", { callbackUrl: "/" })}
-          className="flex w-full items-center justify-center gap-2 rounded-lg border border-zinc-200 bg-white px-4 py-2 text-sm font-medium text-zinc-700 hover:bg-zinc-50 hover:shadow-sm dark:border-zinc-800 dark:bg-zinc-950 dark:text-zinc-300 dark:hover:bg-zinc-900 transition-all"
+          className="flex w-full items-center justify-center gap-3 rounded-xl border border-zinc-800 bg-zinc-950/50 py-3 text-xs font-bold uppercase tracking-widest text-zinc-400 hover:bg-zinc-900 hover:text-zinc-200 hover:border-zinc-700 transition-all active:scale-95"
           type="button"
         >
           <GitIcon />
@@ -136,7 +140,7 @@ export function AuthForm({
         </button>
         <button
           onClick={() => signIn("google", { callbackUrl: "/" })}
-          className="flex w-full items-center justify-center gap-2 rounded-lg border border-zinc-200 bg-white px-4 py-2 text-sm font-medium text-zinc-700 hover:bg-zinc-50 hover:shadow-sm dark:border-zinc-800 dark:bg-zinc-950 dark:text-zinc-300 dark:hover:bg-zinc-900 transition-all"
+          className="flex w-full items-center justify-center gap-3 rounded-xl border border-zinc-800 bg-zinc-950/50 py-3 text-xs font-bold uppercase tracking-widest text-zinc-400 hover:bg-zinc-900 hover:text-zinc-200 hover:border-zinc-700 transition-all active:scale-95"
           type="button"
         >
           <LogoGoogle />

@@ -7,9 +7,9 @@ import { createUser, getUser } from "@/lib/db/queries";
 import { signIn } from "./auth";
 
 const authFormSchema = z.object({
-  email: z.string().email(),
-  password: z.string().min(6),
+  email: z.string().email().optional(),
   username: z.string().min(3).optional(),
+  password: z.string().min(6),
   confirmPassword: z.string().min(6).optional(),
 });
 
@@ -23,12 +23,12 @@ export const login = async (
 ): Promise<LoginActionState> => {
   try {
     const validatedData = authFormSchema.parse({
-      email: formData.get("email"),
+      username: formData.get("username"),
       password: formData.get("password"),
     });
 
     await signIn("credentials", {
-      email: validatedData.email,
+      username: validatedData.username,
       password: validatedData.password,
       redirect: false,
     });
@@ -70,18 +70,19 @@ export const register = async (
       return { status: "password_mismatch" };
     }
 
-    const [user] = await getUser(validatedData.email);
+    const [user] = await getUser(validatedData.email!);
 
     if (user) {
       return { status: "user_exists" } as RegisterActionState;
     }
     await createUser(
-      validatedData.email,
+      validatedData.email!,
       validatedData.password,
       validatedData.username
     );
     await signIn("credentials", {
       email: validatedData.email,
+      username: validatedData.username,
       password: validatedData.password,
       redirect: false,
     });
