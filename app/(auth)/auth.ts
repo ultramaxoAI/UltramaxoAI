@@ -8,10 +8,6 @@ import { authConfig } from "./auth.config";
 
 export type UserType = "guest" | "regular" | "pro";
 
-// ... (omitted lines not being replaced, waiting for tool to handle context)
-
-        return { ...user, type: user.isPro ? "pro" : "regular" };
-
 declare module "next-auth" {
   interface Session extends DefaultSession {
     user: {
