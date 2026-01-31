@@ -40,6 +40,10 @@ export async function PATCH(request: Request) {
 
     const user = users[0];
 
+    if (!user.password) {
+      return NextResponse.json({ error: "Akun ini tidak memiliki password (login via Google/GitHub)" }, { status: 400 });
+    }
+
     // Check current password
     const isPasswordValid = await compare(currentPassword, user.password);
     if (!isPasswordValid) {
