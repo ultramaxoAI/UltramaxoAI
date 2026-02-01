@@ -215,7 +215,11 @@ export function Chat({
           votes={votes}
         />
 
-        <div className={`sticky bottom-0 z-1 mx-auto flex w-full gap-2 border-t-0 bg-background px-2 pb-3 md:px-4 md:pb-4 transition-all duration-500 ease-in-out ${\n          messages.length === 0 \n            ? 'max-w-3xl' \n            : 'max-w-4xl'\n        }`}>
+        <div className={`sticky bottom-0 z-1 mx-auto flex w-full gap-2 border-t-0 bg-background px-2 pb-3 md:px-4 md:pb-4 transition-all duration-500 ease-in-out ${
+          messages.length === 0 
+            ? 'max-w-3xl' 
+            : 'max-w-4xl'
+        }`}>
           {!isReadonly ? (
             <MultimodalInput
               attachments={attachments}
