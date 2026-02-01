@@ -13,7 +13,7 @@ import { CrossSmallIcon, TerminalWindowIcon } from "./icons";
 import { Button } from "./ui/button";
 
 export type ConsoleOutputContent = {
-  type: "text" | "image";
+  type: "text" | "image" | "html";
   value: string;
 };
 
@@ -171,9 +171,17 @@ export function Console({ consoleOutputs, setConsoleOutputs }: ConsoleProps) {
                           src={content.value}
                         />
                       </picture>
+                    ) : content.type === "html" ? (
+                      <iframe
+                        key={`${consoleOutput.id}-${contentIndex}`}
+                        className="w-full min-h-100 rounded-md border border-zinc-200 dark:border-zinc-700 bg-white"
+                        sandbox="allow-scripts allow-same-origin"
+                        srcDoc={content.value}
+                        title="HTML Output"
+                      />
                     ) : (
                       <div
-                        className="w-full whitespace-pre-line break-words"
+                        className="w-full whitespace-pre-line wrap-break-word"
                         key={`${consoleOutput.id}-${contentIndex}`}
                       >
                         {content.value}

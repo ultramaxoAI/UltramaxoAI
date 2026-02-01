@@ -73,14 +73,19 @@ export const register = async (
       code: formData.get("code"),
     });
 
-    if (!validatedData.code) {
-      return { status: "invalid_code" };
-    }
+    // Only verify code if email verification is enabled
+    const emailVerificationEnabled = process.env.ENABLE_EMAIL_VERIFICATION === "true";
+    
+    if (emailVerificationEnabled) {
+      if (!validatedData.code) {
+        return { status: "invalid_code" };
+      }
 
-    // Verify code first
-    const isCodeValid = await verifyVerificationCode(validatedData.email!, validatedData.code);
-    if (!isCodeValid) {
-      return { status: "invalid_code" };
+      // Verify code first
+      const isCodeValid = await verifyVerificationCode(validatedData.email!, validatedData.code);
+      if (!isCodeValid) {
+        return { status: "invalid_code" };
+      }
     }
 
     if (validatedData.password !== validatedData.confirmPassword) {

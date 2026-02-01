@@ -74,7 +74,6 @@ export function AuthForm({
         <form
           action={action}
           className="flex flex-col gap-6 w-full"
-          method="POST"
           onKeyDown={(e) => {
             if (e.key === "Enter" && e.target instanceof HTMLInputElement) {
               e.currentTarget.requestSubmit();

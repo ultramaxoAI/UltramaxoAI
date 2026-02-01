@@ -59,6 +59,11 @@ export function DocumentPreview({
   }, [artifact.documentId, setArtifact]);
 
   if (artifact.isVisible) {
+    // For code artifacts, don't show any inline preview - just open the artifact
+    if (result?.kind === "code" || args?.kind === "code") {
+      return null;
+    }
+
     if (result) {
       return (
         <DocumentToolResult
@@ -81,6 +86,10 @@ export function DocumentPreview({
   }
 
   if (isDocumentsFetching) {
+    // For code artifacts, don't show loading skeleton in chat
+    if (result?.kind === "code" || args?.kind === "code") {
+      return null;
+    }
     return <LoadingSkeleton artifactKind={result.kind ?? args.kind} />;
   }
 
@@ -98,7 +107,16 @@ export function DocumentPreview({
       : null;
 
   if (!document) {
+    // For code artifacts, don't show loading skeleton in chat
+    if (artifact.kind === "code") {
+      return null;
+    }
     return <LoadingSkeleton artifactKind={artifact.kind} />;
+  }
+
+  // For code artifacts, never show inline preview - artifact view only
+  if (document.kind === "code") {
+    return null;
   }
 
   return (

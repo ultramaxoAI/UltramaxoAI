@@ -12,13 +12,14 @@ import { createResumableStreamContext } from "resumable-stream";
 import { auth, type UserType } from "@/app/(auth)/auth";
 import { entitlementsByUserType } from "@/lib/ai/entitlements";
 import { type RequestHints, systemPrompt } from "@/lib/ai/prompts";
-import { getLanguageModel } from "@/lib/ai/providers";
+import { getLanguageModel, markKeyFailed, resetFailureTracking } from "@/lib/ai/providers";
 import { createDocument } from "@/lib/ai/tools/create-document";
 import { getWeather } from "@/lib/ai/tools/get-weather";
 import { requestSuggestions } from "@/lib/ai/tools/request-suggestions";
 import { updateDocument } from "@/lib/ai/tools/update-document";
 import { webSearch } from "@/lib/ai/tools/web-search";
 import { isProductionEnvironment } from "@/lib/constants";
+import { checkRateLimit, getClientIp } from "@/lib/rateLimiter";
 import {
   createStreamId,
   deleteChatById,
@@ -93,6 +94,18 @@ export async function POST(request: Request) {
       return new ChatSDKError("unauthorized:chat").toResponse();
     }
 
+    // Per-account rate limiting: 10 chat requests per minute per user
+    const clientIp = getClientIp(request);
+    const userKey = `user:${session.user.id}:chat`;
+    const ipKey = `ip:${clientIp}:chat`;
+
+    const userRate = checkRateLimit(userKey, 10, 60_000); // 10 requests per minute
+    const ipRate = checkRateLimit(ipKey, 30, 60_000);
+
+    if (!userRate.allowed || !ipRate.allowed) {
+      return new ChatSDKError("rate_limit:chat").toResponse();
+    }
+
     const dbUser = await expireProIfNeeded(session.user.id);
     const userType: UserType =
       session.user.role === "admin"
@@ -101,14 +114,8 @@ export async function POST(request: Request) {
           ? "pro"
           : "regular";
 
-    const messageCount = await getMessageCountByUserId({
-      id: session.user.id,
-      differenceInHours: 24,
-    });
-
-    if (messageCount > entitlementsByUserType[userType].maxMessagesPerDay) {
-      return new ChatSDKError("rate_limit:chat").toResponse();
-    }
+    // No daily message limit - users can chat unlimited in conversations
+    // Only rate limited by requests per minute (10/min)
 
     const isToolApprovalFlow = Boolean(messages);
 
@@ -171,51 +178,74 @@ export async function POST(request: Request) {
     const stream = createUIMessageStream({
       originalMessages: isToolApprovalFlow ? uiMessages : undefined,
       execute: async ({ writer: dataStream }) => {
-        const result = streamText({
-          model: getLanguageModel(selectedChatModel),
-          system: systemPrompt({
-            selectedChatModel,
-            requestHints,
-            wormgptEnabled,
-            deepThinkingEnabled,
-          }),
-          messages: modelMessages,
-          stopWhen: stepCountIs(5),
-          experimental_activeTools: isReasoningModel
-            ? []
-            : [
-                "getWeather",
-                "createDocument",
-                "updateDocument",
-                "requestSuggestions",
-                "webSearch",
-              ],
-          providerOptions: isReasoningModel
-            ? {
-                anthropic: {
-                  thinking: { type: "enabled", budgetTokens: 10_000 },
-                },
-              }
-            : undefined,
-          tools: {
-            getWeather,
-            createDocument: createDocument({ session, dataStream }),
-            updateDocument: updateDocument({ session, dataStream }),
-            requestSuggestions: requestSuggestions({ session, dataStream }),
-            webSearch,
-          },
-          experimental_telemetry: {
-            isEnabled: isProductionEnvironment,
-            functionId: "stream-text",
-          },
-        });
+        try {
+          const result = streamText({
+            model: getLanguageModel(selectedChatModel),
+            system: systemPrompt({
+              selectedChatModel,
+              requestHints,
+              wormgptEnabled,
+              deepThinkingEnabled,
+            }),
+            messages: modelMessages,
+            stopWhen: stepCountIs(5),
+            experimental_activeTools: isReasoningModel
+              ? []
+              : [
+                  "getWeather",
+                  "createDocument",
+                  "updateDocument",
+                  "requestSuggestions",
+                  "webSearch",
+                ],
+            providerOptions: isReasoningModel
+              ? {
+                  anthropic: {
+                    thinking: { type: "enabled", budgetTokens: 10_000 },
+                  },
+                }
+              : undefined,
+            tools: {
+              getWeather,
+              createDocument: createDocument({ session, dataStream }),
+              updateDocument: updateDocument({ session, dataStream }),
+              requestSuggestions: requestSuggestions({ session, dataStream }),
+              webSearch,
+            },
+            experimental_telemetry: {
+              isEnabled: isProductionEnvironment,
+              functionId: "stream-text",
+            },
+          });
 
-        dataStream.merge(result.toUIMessageStream({ sendReasoning: true }));
+          dataStream.merge(result.toUIMessageStream({ sendReasoning: true }));
 
-        if (titlePromise) {
-          const title = await titlePromise;
-          dataStream.write({ type: "data-chat-title", data: title });
-          updateChatTitleById({ chatId: id, title });
+          if (titlePromise) {
+            const title = await titlePromise;
+            dataStream.write({ type: "data-chat-title", data: title });
+            updateChatTitleById({ chatId: id, title });
+          }
+        } catch (error: any) {
+          console.error("[Chat API] Error during streaming:", error);
+          
+          // Check if error is rate limit or API error
+          const isRateLimit = error?.message?.includes('rate limit') || 
+                              error?.message?.includes('429') ||
+                              error?.statusCode === 429;
+          
+          const isApiError = error?.message?.includes('API') || 
+                            error?.statusCode >= 500;
+
+          if (isRateLimit || isApiError) {
+            console.log("[Chat API] Marking current key as failed, will use backup on retry");
+            // Mark as failed - next request will use different key
+            markKeyFailed('primary'); // Will auto-switch based on tracking
+            
+            // Reset after 60 seconds
+            setTimeout(() => resetFailureTracking(), 60000);
+          }
+          
+          throw error;
         }
       },
       generateId: generateUUID,

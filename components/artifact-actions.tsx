@@ -46,15 +46,19 @@ function PureArtifactActions({
   };
 
   return (
-    <div className="flex flex-row gap-1">
+    <div className="flex flex-row gap-2">
       {artifactDefinition.actions.map((action) => (
         <Tooltip key={action.description}>
           <TooltipTrigger asChild>
             <Button
-              className={cn("h-fit dark:hover:bg-zinc-700", {
-                "p-2": !action.label,
-                "px-2 py-1.5": action.label,
-              })}
+              className={cn(
+                "h-fit transition-all hover:scale-105",
+                {
+                  "p-2.5": !action.label,
+                  "px-3 py-2": action.label,
+                },
+                action.label && "bg-primary text-primary-foreground hover:bg-primary/90"
+              )}
               disabled={
                 isLoading || artifact.status === "streaming"
                   ? true
@@ -73,10 +77,10 @@ function PureArtifactActions({
                   setIsLoading(false);
                 }
               }}
-              variant="outline"
+              variant={action.label ? "default" : "outline"}
             >
               {action.icon}
-              {action.label}
+              {action.label && <span className="ml-1.5 font-medium">{action.label}</span>}
             </Button>
           </TooltipTrigger>
           <TooltipContent>{action.description}</TooltipContent>

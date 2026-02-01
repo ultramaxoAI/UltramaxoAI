@@ -116,14 +116,18 @@ export async function saveChat({
   visibility: VisibilityType;
 }) {
   try {
-    return await db.insert(chat).values({
+    console.log('saveChat attempting insert:', { id, userId, title, visibility });
+    const result = await db.insert(chat).values({
       id,
       createdAt: new Date(),
       userId,
       title,
       visibility,
     });
-  } catch (_error) {
+    console.log('saveChat insert success');
+    return result;
+  } catch (error) {
+    console.error('saveChat database error:', error);
     throw new ChatSDKError("bad_request:database", "Failed to save chat");
   }
 }

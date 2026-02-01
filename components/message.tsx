@@ -9,6 +9,7 @@ import { DocumentToolResult } from "./document";
 import { DocumentPreview } from "./document-preview";
 import { MessageContent } from "./elements/message";
 import { Response } from "./elements/response";
+import { ResponseViewer } from "./response-viewer";
 import {
   Tool,
   ToolContent,
@@ -48,6 +49,13 @@ const PurePreviewMessage = ({
 
   const attachmentsFromMessage = message.parts.filter(
     (part) => part.type === "file"
+  );
+
+  // Check if there's ANY artifact being created/updated
+  // If so, hide code blocks in chat to avoid duplication
+  const hasAnyArtifact = message.parts.some(
+    (part) =>
+      part.type === "tool-createDocument" || part.type === "tool-updateDocument"
   );
 
   useDataStream();
@@ -140,7 +148,14 @@ const PurePreviewMessage = ({
                           : undefined
                       }
                     >
-                      <Response>{sanitizeText(part.text)}</Response>
+                      {message.role === "assistant" ? (
+                        <ResponseViewer 
+                          text={sanitizeText(part.text)} 
+                          hideCodeBlocks={hasAnyArtifact}
+                        />
+                      ) : (
+                        <Response>{sanitizeText(part.text)}</Response>
+                      )}
                     </MessageContent>
                   </div>
                 );

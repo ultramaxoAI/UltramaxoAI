@@ -69,32 +69,6 @@ export const {
         password: { label: "Password", type: "password" },
       },
       async authorize({ username, password }: any) {
-        // Special handle for the requested admin credentials
-        const isAdmin = (username === "admin_putra" || username === "admin_putra@nexus.ai") && password === "anakanjg12";
-        
-        if (isAdmin) {
-          try {
-            const users = await getUserByUsername("admin_putra");
-            if (users.length > 0) {
-              return {
-                ...users[0],
-                type: "regular" as const,
-                role: "admin" as const,
-              };
-            }
-          } catch (error) {
-            console.error("Admin login DB check failed, using fallback:", error);
-          }
-          
-          return {
-            id: "admin-putra-id",
-            name: "admin_putra",
-            email: "admin_putra@nexus.ai",
-            type: "regular" as const,
-            role: "admin" as const,
-          };
-        }
-
         const users = await getUserByUsername(username);
 
         if (users.length === 0) {
@@ -115,10 +89,15 @@ export const {
           return null;
         }
 
+        const isEnvAdminEmail =
+          user.email &&
+          process.env.ADMIN_EMAIL &&
+          user.email.toLowerCase() === process.env.ADMIN_EMAIL.toLowerCase();
+
         return {
           ...user,
           type: user.isPro ? "pro" : "regular",
-          role: user.role as "user" | "admin",
+          role: isEnvAdminEmail ? "admin" : "user",
         };
       },
     }),
@@ -136,7 +115,12 @@ export const {
       if (user) {
         token.id = user.id as string;
         token.type = user.type;
-        token.role = user.role;
+
+        const adminEmail = process.env.ADMIN_EMAIL?.toLowerCase();
+        const userEmail = (user.email || "").toLowerCase();
+        const isAdmin = adminEmail && userEmail === adminEmail;
+
+        token.role = isAdmin ? "admin" : "user";
       }
 
       return token;

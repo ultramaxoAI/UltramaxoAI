@@ -1,5 +1,5 @@
 import { toast } from "sonner";
-import { CodeEditor } from "@/components/code-editor";
+import { CodeEditor, type SupportedLanguage } from "@/components/code-editor";
 import {
   Console,
   type ConsoleOutput,
@@ -15,6 +15,30 @@ import {
   UndoIcon,
 } from "@/components/icons";
 import { generateUUID } from "@/lib/utils";
+
+function getFileIcon(filename: string) {
+  const ext = filename.split('.').pop()?.toLowerCase();
+  const iconClass = "w-4 h-4";
+  
+  switch (ext) {
+    case 'js':
+    case 'jsx':
+      return <span className={iconClass} style={{ color: '#f7df1e' }}>📜</span>;
+    case 'ts':
+    case 'tsx':
+      return <span className={iconClass} style={{ color: '#3178c6' }}>📘</span>;
+    case 'py':
+      return <span className={iconClass} style={{ color: '#3776ab' }}>🐍</span>;
+    case 'html':
+      return <span className={iconClass} style={{ color: '#e34c26' }}>🌐</span>;
+    case 'css':
+      return <span className={iconClass} style={{ color: '#264de4' }}>🎨</span>;
+    case 'json':
+      return <span className={iconClass}>📋</span>;
+    default:
+      return <span className={iconClass}>📄</span>;
+  }
+}
 
 const OUTPUT_HANDLERS = {
   matplotlib: `
@@ -62,40 +86,287 @@ function detectRequiredHandlers(code: string): string[] {
   return handlers;
 }
 
+// Detect language from code
+function detectCodeLanguage(code: string): SupportedLanguage {
+  const lowerCode = code.toLowerCase();
+
+  if (
+    /^(import|from|def|class|if __name__|print\()/m.test(code) ||
+    lowerCode.includes("import numpy") ||
+    lowerCode.includes("import pandas")
+  ) {
+    return "python";
+  }
+
+  if (
+    /^(const|let|var|import|export|function|class)/m.test(code) ||
+    code.includes("console.log")
+  ) {
+    if (code.includes(": string") || code.includes("interface ")) {
+      return "typescript";
+    }
+    return "javascript";
+  }
+
+  if (/<html|<div|<body|<!DOCTYPE/i.test(code)) {
+    return "html";
+  }
+
+  return "text";
+}
+
+// Parse code into files if it contains multiple file markers
+function parseCodeFiles(code: string): Array<{ name: string; content: string; language: SupportedLanguage }> {
+  // Check for file markers like "// filename.js" or "# filename.py" or "<!-- filename.html -->"
+  const fileMarkerRegex = /(?:\/\/|#|<!--)\s*(?:file:|filename:)?\s*([^\s\n]+\.[a-z]+)/gi;
+  const matches = Array.from(code.matchAll(fileMarkerRegex));
+
+  if (matches.length === 0) {
+    // Check if it's HTML with inline CSS/JS - auto-split it
+    if (/<html|<!DOCTYPE/i.test(code)) {
+      return extractHtmlFiles(code);
+    }
+    
+    // Single file
+    const language = detectCodeLanguage(code);
+    return [{
+      name: getDefaultFileName(language),
+      content: code,
+      language
+    }];
+  }
+
+  // Multiple files
+  const files: Array<{ name: string; content: string; language: SupportedLanguage }> = [];
+  
+  for (let i = 0; i < matches.length; i++) {
+    const match = matches[i];
+    const fileName = match[1];
+    const startIndex = match.index! + match[0].length;
+    const endIndex = i < matches.length - 1 ? matches[i + 1].index! : code.length;
+    const content = code.substring(startIndex, endIndex).trim();
+    
+    const language = detectCodeLanguage(content);
+    files.push({ name: fileName, content, language });
+  }
+
+  return files;
+}
+
+// Extract HTML, CSS, and JS from a single HTML file with inline styles/scripts
+function extractHtmlFiles(html: string): Array<{ name: string; content: string; language: SupportedLanguage }> {
+  const files: Array<{ name: string; content: string; language: SupportedLanguage }> = [];
+  
+  // Extract inline CSS
+  const styleRegex = /<style[^>]*>([\s\S]*?)<\/style>/gi;
+  const styleMatches = Array.from(html.matchAll(styleRegex));
+  let extractedCSS = '';
+  
+  if (styleMatches.length > 0) {
+    extractedCSS = styleMatches.map(m => m[1].trim()).join('\n\n');
+    // Remove style tags from HTML
+    html = html.replace(styleRegex, '');
+  }
+  
+  // Extract inline JavaScript
+  const scriptRegex = /<script[^>]*>([\s\S]*?)<\/script>/gi;
+  const scriptMatches = Array.from(html.matchAll(scriptRegex));
+  let extractedJS = '';
+  
+  if (scriptMatches.length > 0) {
+    extractedJS = scriptMatches
+      .map(m => m[1].trim())
+      .filter(js => js && !js.includes('src=')) // Skip external scripts
+      .join('\n\n');
+    // Remove inline script tags from HTML
+    html = html.replace(/<script(?![^>]*src=)[^>]*>[\s\S]*?<\/script>/gi, '');
+  }
+  
+  // Add link to CSS if we extracted any
+  if (extractedCSS) {
+    html = html.replace(
+      '</head>',
+      '    <link rel="stylesheet" href="style.css">\n</head>'
+    );
+  }
+  
+  // Add script tag if we extracted any JS
+  if (extractedJS) {
+    html = html.replace(
+      '</body>',
+      '    <script src="script.js"></script>\n</body>'
+    );
+  }
+  
+  // Add HTML file
+  files.push({
+    name: 'index.html',
+    content: html.trim(),
+    language: 'html'
+  });
+  
+  // Add CSS file if exists
+  if (extractedCSS) {
+    files.push({
+      name: 'style.css',
+      content: extractedCSS,
+      language: 'css'
+    });
+  }
+  
+  // Add JS file if exists
+  if (extractedJS) {
+    files.push({
+      name: 'script.js',
+      content: extractedJS,
+      language: 'javascript'
+    });
+  }
+  
+  return files;
+}
+
+function getDefaultFileName(language: SupportedLanguage): string {
+  switch (language) {
+    case "python": return "main.py";
+    case "javascript": return "index.js";
+    case "typescript": return "index.ts";
+    case "html": return "index.html";
+    case "css": return "style.css";
+    default: return "code.txt";
+  }
+}
+
 type Metadata = {
   outputs: ConsoleOutput[];
+  language?: SupportedLanguage;
+  files?: Array<{ name: string; content: string; language: SupportedLanguage }>;
+  activeFileIndex?: number;
+};
+
+async function executeJavaScript(
+  code: string,
+  outputCallback: (content: ConsoleOutputContent) => void
+): Promise<void> {
+  const originalLog = console.log;
+  const originalError = console.error;
+  const originalWarn = console.warn;
+
+  try {
+    // Override console methods
+    console.log = (...args: any[]) => {
+      outputCallback({
+        type: "text",
+        value: args.map((arg) => String(arg)).join(" "),
+      });
+    };
+
+    console.error = (...args: any[]) => {
+      outputCallback({
+        type: "text",
+        value: `Error: ${args.map((arg) => String(arg)).join(" ")}`,
+      });
+    };
+
+    console.warn = (...args: any[]) => {
+      outputCallback({
+        type: "text",
+        value: `Warning: ${args.map((arg) => String(arg)).join(" ")}`,
+      });
+    };
+
+    // Execute code
+    // eslint-disable-next-line no-eval
+    await eval(`(async () => { ${code} })()`);
+  } catch (error: any) {
+    outputCallback({
+      type: "text",
+      value: `Error: ${error.message}`,
+    });
+    throw error;
+  } finally {
+    // Restore console methods
+    console.log = originalLog;
+    console.error = originalError;
+    console.warn = originalWarn;
+  }
+}
+
+type Metadata = {
+  outputs: ConsoleOutput[];
+  language?: SupportedLanguage;
+  files?: Array<{ name: string; content: string; language: SupportedLanguage }>;
+  activeFileIndex?: number;
 };
 
 export const codeArtifact = new Artifact<"code", Metadata>({
   kind: "code",
   description:
-    "Useful for code generation; Code execution is only available for python code.",
+    "Useful for code generation; Code execution is available for Python, JavaScript, TypeScript, HTML, CSS and more.",
   initialize: ({ setMetadata }) => {
     setMetadata({
       outputs: [],
+      language: undefined,
+      files: [],
+      activeFileIndex: 0,
     });
   },
-  onStreamPart: ({ streamPart, setArtifact }) => {
+  onStreamPart: ({ streamPart, setArtifact, setMetadata }) => {
     if (streamPart.type === "data-codeDelta") {
       setArtifact((draftArtifact) => ({
         ...draftArtifact,
         content: streamPart.data,
-        isVisible:
-          draftArtifact.status === "streaming" &&
-          draftArtifact.content.length > 300 &&
-          draftArtifact.content.length < 310
-            ? true
-            : draftArtifact.isVisible,
+        // Make artifact visible immediately when code starts streaming
+        isVisible: true,
         status: "streaming",
       }));
+
+      // Parse files and detect language when enough content is available
+      if (streamPart.data.length > 50) {
+        const files = parseCodeFiles(streamPart.data);
+        const detectedLang = files[0]?.language || detectCodeLanguage(streamPart.data);
+        setMetadata((metadata) => ({
+          ...metadata,
+          language: detectedLang,
+          files,
+        }));
+      }
     }
   },
-  content: ({ metadata, setMetadata, ...props }) => {
+  content: ({ metadata, setMetadata, content, ...props }) => {
+    const files = metadata?.files || parseCodeFiles(content);
+    const activeFileIndex = metadata?.activeFileIndex || 0;
+    const activeFile = files[activeFileIndex] || files[0];
+    const detectedLanguage = activeFile?.language || metadata?.language || detectCodeLanguage(content);
+
     return (
       <>
-        <div className="px-1">
-          <CodeEditor {...props} />
-        </div>
+        {files.length > 1 && (
+          <div className="border-b border-border bg-muted/30">
+            <div className="flex gap-1 p-2 overflow-x-auto">
+              {files.map((file, index) => (
+                <button
+                  key={index}
+                  onClick={() => setMetadata({ ...metadata, activeFileIndex: index })}
+                  className={`px-3 py-1.5 text-sm rounded-md flex items-center gap-2 whitespace-nowrap transition-colors ${
+                    index === activeFileIndex
+                      ? 'bg-background text-foreground font-medium shadow-sm'
+                      : 'text-muted-foreground hover:text-foreground hover:bg-background/50'
+                  }`}
+                >
+                  {getFileIcon(file.name)}
+                  <span>{file.name}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+        
+        <CodeEditor 
+          {...props} 
+          content={activeFile?.content || content}
+          language={detectedLanguage}
+        />
 
         {metadata?.outputs && (
           <Console
@@ -116,9 +387,15 @@ export const codeArtifact = new Artifact<"code", Metadata>({
       icon: <PlayIcon size={18} />,
       label: "Run",
       description: "Execute code",
-      onClick: async ({ content, setMetadata }) => {
+      onClick: async ({ content, setMetadata, metadata }) => {
         const runId = generateUUID();
         const outputContent: ConsoleOutputContent[] = [];
+        
+        const files = metadata?.files || parseCodeFiles(content);
+        const activeFileIndex = metadata?.activeFileIndex || 0;
+        const activeFile = files[activeFileIndex] || files[0];
+        const codeToRun = activeFile?.content || content;
+        const language = activeFile?.language || metadata?.language || detectCodeLanguage(content);
 
         setMetadata((metadata) => ({
           ...metadata,
@@ -133,66 +410,127 @@ export const codeArtifact = new Artifact<"code", Metadata>({
         }));
 
         try {
-          // @ts-expect-error - loadPyodide is not defined
-          const currentPyodideInstance = await globalThis.loadPyodide({
-            indexURL: "https://cdn.jsdelivr.net/pyodide/v0.23.4/full/",
-          });
+          // JavaScript/TypeScript execution
+          if (
+            language === "javascript" ||
+            language === "typescript" ||
+            language === "jsx" ||
+            language === "tsx"
+          ) {
+            await executeJavaScript(codeToRun, (output) => {
+              outputContent.push(output);
+            });
 
-          currentPyodideInstance.setStdout({
-            batched: (output: string) => {
-              outputContent.push({
-                type: output.startsWith("data:image/png;base64")
-                  ? "image"
-                  : "text",
-                value: output,
-              });
-            },
-          });
-
-          await currentPyodideInstance.loadPackagesFromImports(content, {
-            messageCallback: (message: string) => {
-              setMetadata((metadata) => ({
-                ...metadata,
-                outputs: [
-                  ...metadata.outputs.filter((output) => output.id !== runId),
-                  {
-                    id: runId,
-                    contents: [{ type: "text", value: message }],
-                    status: "loading_packages",
-                  },
-                ],
-              }));
-            },
-          });
-
-          const requiredHandlers = detectRequiredHandlers(content);
-          for (const handler of requiredHandlers) {
-            if (OUTPUT_HANDLERS[handler as keyof typeof OUTPUT_HANDLERS]) {
-              await currentPyodideInstance.runPythonAsync(
-                OUTPUT_HANDLERS[handler as keyof typeof OUTPUT_HANDLERS]
-              );
-
-              if (handler === "matplotlib") {
-                await currentPyodideInstance.runPythonAsync(
-                  "setup_matplotlib_output()"
-                );
-              }
-            }
+            setMetadata((metadata) => ({
+              ...metadata,
+              outputs: [
+                ...metadata.outputs.filter((output) => output.id !== runId),
+                {
+                  id: runId,
+                  contents: outputContent,
+                  status: "completed",
+                },
+              ],
+            }));
+            return;
           }
 
-          await currentPyodideInstance.runPythonAsync(content);
+          // HTML execution - display in iframe
+          if (language === "html") {
+            outputContent.push({
+              type: "text",
+              value: "✓ HTML rendered below",
+            });
 
-          setMetadata((metadata) => ({
-            ...metadata,
-            outputs: [
-              ...metadata.outputs.filter((output) => output.id !== runId),
-              {
-                id: runId,
-                contents: outputContent,
-                status: "completed",
+            setMetadata((metadata) => ({
+              ...metadata,
+              outputs: [
+                ...metadata.outputs.filter((output) => output.id !== runId),
+                {
+                  id: runId,
+                  contents: [
+                    ...outputContent,
+                    {
+                      type: "html",
+                      value: codeToRun,
+                    },
+                  ],
+                  status: "completed",
+                },
+              ],
+            }));
+            return;
+          }
+
+          // Python execution
+          if (language === "python") {
+            // @ts-expect-error - loadPyodide is not defined
+            const currentPyodideInstance = await globalThis.loadPyodide({
+              indexURL: "https://cdn.jsdelivr.net/pyodide/v0.23.4/full/",
+            });
+
+            currentPyodideInstance.setStdout({
+              batched: (output: string) => {
+                outputContent.push({
+                  type: output.startsWith("data:image/png;base64")
+                    ? "image"
+                    : "text",
+                  value: output,
+                });
               },
-            ],
-          }));
+            });
+
+            await currentPyodideInstance.loadPackagesFromImports(content, {
+              messageCallback: (message: string) => {
+                setMetadata((metadata) => ({
+                  ...metadata,
+                  outputs: [
+                    ...metadata.outputs.filter((output) => output.id !== runId),
+                    {
+                      id: runId,
+                      contents: [{ type: "text", value: message }],
+                      status: "loading_packages",
+                    },
+                  ],
+                }));
+              },
+            });
+
+            const requiredHandlers = detectRequiredHandlers(codeToRun);
+            for (const handler of requiredHandlers) {
+              if (OUTPUT_HANDLERS[handler as keyof typeof OUTPUT_HANDLERS]) {
+                await currentPyodideInstance.runPythonAsync(
+                  OUTPUT_HANDLERS[handler as keyof typeof OUTPUT_HANDLERS]
+                );
+
+                if (handler === "matplotlib") {
+                  await currentPyodideInstance.runPythonAsync(
+                    "setup_matplotlib_output()"
+                  );
+                }
+              }
+            }
+
+            await currentPyodideInstance.runPythonAsync(codeToRun);
+
+            setMetadata((metadata) => ({
+              ...metadata,
+              outputs: [
+                ...metadata.outputs.filter((output) => output.id !== runId),
+                {
+                  id: runId,
+                  contents: outputContent,
+                  status: "completed",
+                },
+              ],
+            }));
+            return;
+          }
+
+          // Unsupported language
+          throw new Error(
+            `Execution not supported for ${language}. Currently supports: Python, JavaScript, TypeScript, HTML.`
+          );
         } catch (error: any) {
           setMetadata((metadata) => ({
             ...metadata,

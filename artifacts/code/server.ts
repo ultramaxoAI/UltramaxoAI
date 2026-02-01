@@ -1,5 +1,4 @@
-import { streamObject } from "ai";
-import { z } from "zod";
+import { streamText } from "ai";
 import { codePrompt, updateDocumentPrompt } from "@/lib/ai/prompts";
 import { getArtifactModel } from "@/lib/ai/providers";
 import { createDocumentHandler } from "@/lib/artifacts/server";
@@ -9,32 +8,20 @@ export const codeDocumentHandler = createDocumentHandler<"code">({
   onCreateDocument: async ({ title, dataStream }) => {
     let draftContent = "";
 
-    const { fullStream } = streamObject({
+    const { textStream } = streamText({
       model: getArtifactModel(),
-      system: codePrompt,
+      system: `${codePrompt}\n\nGenerate ONLY the code, no explanations, no markdown formatting, no \`\`\` blocks. Just the raw code.`,
       prompt: title,
-      schema: z.object({
-        code: z.string(),
-      }),
     });
 
-    for await (const delta of fullStream) {
-      const { type } = delta;
-
-      if (type === "object") {
-        const { object } = delta;
-        const { code } = object;
-
-        if (code) {
-          dataStream.write({
-            type: "data-codeDelta",
-            data: code ?? "",
-            transient: true,
-          });
-
-          draftContent = code;
-        }
-      }
+    for await (const delta of textStream) {
+      draftContent += delta;
+      
+      dataStream.write({
+        type: "data-codeDelta",
+        data: draftContent,
+        transient: true,
+      });
     }
 
     return draftContent;
@@ -42,32 +29,20 @@ export const codeDocumentHandler = createDocumentHandler<"code">({
   onUpdateDocument: async ({ document, description, dataStream }) => {
     let draftContent = "";
 
-    const { fullStream } = streamObject({
+    const { textStream } = streamText({
       model: getArtifactModel(),
-      system: updateDocumentPrompt(document.content, "code"),
+      system: `${updateDocumentPrompt(document.content, "code")}\n\nGenerate ONLY the code, no explanations, no markdown formatting, no \`\`\` blocks. Just the raw code.`,
       prompt: description,
-      schema: z.object({
-        code: z.string(),
-      }),
     });
 
-    for await (const delta of fullStream) {
-      const { type } = delta;
-
-      if (type === "object") {
-        const { object } = delta;
-        const { code } = object;
-
-        if (code) {
-          dataStream.write({
-            type: "data-codeDelta",
-            data: code ?? "",
-            transient: true,
-          });
-
-          draftContent = code;
-        }
-      }
+    for await (const delta of textStream) {
+      draftContent += delta;
+      
+      dataStream.write({
+        type: "data-codeDelta",
+        data: draftContent,
+        transient: true,
+      });
     }
 
     return draftContent;

@@ -1,4 +1,4 @@
-export const DEFAULT_CHAT_MODEL = "groq/llama-3.1-70b-versatile";
+export const DEFAULT_CHAT_MODEL = "groq/llama-3.3-70b-versatile";
 
 export type ChatModel = {
   id: string;
@@ -9,16 +9,10 @@ export type ChatModel = {
 
 export const chatModels: ChatModel[] = [
   {
-    id: "groq/llama-3.1-8b-instant",
-    name: "Llama 3.1 8B Instant",
+    id: "groq/llama-3.3-70b-versatile",
+    name: "UltraAgent",
     provider: "groq",
-    description: "Fast response model for everyday tasks",
-  },
-  {
-    id: "groq/llama-3.1-70b-versatile",
-    name: "Llama 3.1 70B Versatile",
-    provider: "groq",
-    description: "Stronger reasoning and coding performance",
+    description: "Advanced AI with superior reasoning and coding capabilities",
   },
 ];
 
