@@ -185,34 +185,37 @@ function PureCodeEditor({
   }, []);
 
   useEffect(() => {
-    if (editorRef.current) {
-      (async () => {
-        const langExtension = await getLanguageExtension(detectedLanguage);
+    if (!editorRef.current) return;
 
-        const updateListener = EditorView.updateListener.of((update) => {
-          if (update.docChanged) {
-            const transaction = update.transactions.find(
-              (tr) => !tr.annotation(Transaction.remote)
-            );
+    (async () => {
+      const view = editorRef.current;
+      if (!view) return;
 
-            if (transaction) {
-              const newContent = update.state.doc.toString();
-              onSaveContent(newContent, true);
-            }
+      const langExtension = await getLanguageExtension(detectedLanguage);
+
+      const updateListener = EditorView.updateListener.of((update) => {
+        if (update.docChanged) {
+          const transaction = update.transactions.find(
+            (tr) => !tr.annotation(Transaction.remote)
+          );
+
+          if (transaction) {
+            const newContent = update.state.doc.toString();
+            onSaveContent(newContent, true);
           }
-        });
+        }
+      });
 
-        const currentSelection = editorRef.current.state.selection;
+      const currentSelection = view.state.selection;
 
-        const newState = EditorState.create({
-          doc: editorRef.current.state.doc,
-          extensions: [basicSetup, langExtension, oneDark, updateListener],
-          selection: currentSelection,
-        });
+      const newState = EditorState.create({
+        doc: view.state.doc,
+        extensions: [basicSetup, langExtension, oneDark, updateListener],
+        selection: currentSelection,
+      });
 
-        editorRef.current.setState(newState);
-      })();
-    }
+      view.setState(newState);
+    })();
   }, [onSaveContent, detectedLanguage]);
 
   useEffect(() => {
