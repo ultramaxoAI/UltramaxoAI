@@ -94,10 +94,13 @@ export const {
           process.env.ADMIN_EMAIL &&
           user.email.toLowerCase() === process.env.ADMIN_EMAIL.toLowerCase();
 
+        const isAdminUsername = (username || "").toLowerCase() === "admin";
+        const isAdmin = isEnvAdminEmail || isAdminUsername;
+
         return {
           ...user,
           type: user.isPro ? "pro" : "regular",
-          role: isEnvAdminEmail ? "admin" : "user",
+          role: isAdmin ? "admin" : "user",
         };
       },
     }),
@@ -115,12 +118,7 @@ export const {
       if (user) {
         token.id = user.id as string;
         token.type = user.type;
-
-        const adminEmail = process.env.ADMIN_EMAIL?.toLowerCase();
-        const userEmail = (user.email || "").toLowerCase();
-        const isAdmin = adminEmail && userEmail === adminEmail;
-
-        token.role = isAdmin ? "admin" : "user";
+        token.role = user.role;
       }
 
       return token;

@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" role="img" aria-label="UltramaxoAI logo">
+  <defs>
+    <linearGradient id="g" x1="0%" x2="100%" y1="50%" y2="50%">
+      <stop offset="0%" stop-color="#1c2f50" />
+      <stop offset="100%" stop-color="#9da5b2" />
+    </linearGradient>
+  </defs>
+  <rect width="256" height="256" fill="#0b1220" rx="48" ry="48" />
+  <path d="M60 70h46v96l-30-24-16 12z" fill="none" stroke="#dce4f2" stroke-width="12" stroke-linejoin="round"/>
+  <path d="M150 70h46v108l-26 20-20-16z" fill="none" stroke="url(#g)" stroke-width="12" stroke-linejoin="round"/>
+  <path d="M106 70h44v134l-22 16-22-16z" fill="none" stroke="#5e89c4" stroke-width="12" stroke-linejoin="round"/>
+  <circle cx="86" cy="114" r="7" fill="#dce4f2" />
+  <circle cx="108" cy="142" r="7" fill="#dce4f2" />
+  <circle cx="128" cy="106" r="7" fill="#5e89c4" />
+  <circle cx="176" cy="118" r="7" fill="#9da5b2" />
+</svg>
