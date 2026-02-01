@@ -251,7 +251,7 @@ export default function AdminDashboardClient() {
                </div>
             </section>
           </div>
-        ) : (
+        ) : activeTab === 'users' ? (
           <div className="flex flex-col gap-6">
             <div className="flex justify-between items-center bg-[#121214] border border-zinc-800/50 rounded-2xl p-2 px-6">
               <div className="flex items-center gap-3 flex-1 max-w-md">
