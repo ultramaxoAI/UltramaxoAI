@@ -4,8 +4,6 @@ import { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Bot } from 'lucide-react';
 
-export const dynamic = 'force-dynamic';
-
 function ResetPasswordContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
