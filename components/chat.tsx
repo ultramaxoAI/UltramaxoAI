@@ -195,35 +195,96 @@ export function Chat({
 
   return (
     <>
-      <div className="overscroll-behavior-contain flex h-dvh min-w-0 touch-pan-y flex-col bg-background">
+      <div className={`overscroll-behavior-contain flex h-dvh min-w-0 touch-pan-y flex-col bg-background ${
+        messages.length === 0 ? 'chat-empty' : 'chat-started'
+      }`}>
         <ChatHeader
           chatId={id}
           isReadonly={isReadonly}
           selectedVisibilityType={initialVisibilityType}
         />
 
+        {/* Container that centers content when empty, scrolls when filled */}
         <div className={`flex flex-1 flex-col overflow-hidden transition-all duration-500 ease-in-out ${
-          messages.length === 0 ? 'justify-center' : ''
+          messages.length === 0 ? 'items-center justify-center' : ''
         }`}>
-          <Messages
-            addToolApprovalResponse={addToolApprovalResponse}
-            chatId={id}
-            isArtifactVisible={isArtifactVisible}
-            isReadonly={isReadonly}
-            messages={messages}
-            regenerate={regenerate}
-            selectedModelId={initialChatModel}
-            setMessages={setMessages}
-            status={status}
-            votes={votes}
-          />
+          {messages.length > 0 && (
+            <Messages
+              addToolApprovalResponse={addToolApprovalResponse}
+              chatId={id}
+              isArtifactVisible={isArtifactVisible}
+              isReadonly={isReadonly}
+              messages={messages}
+              regenerate={regenerate}
+              selectedModelId={initialChatModel}
+              setMessages={setMessages}
+              status={status}
+              votes={votes}
+            />
+          )}
+
+          {/* Centered greeting + input container for empty state */}
+          {messages.length === 0 && (
+            <div className="w-full max-w-3xl px-4 space-y-12">
+              <Messages
+                addToolApprovalResponse={addToolApprovalResponse}
+                chatId={id}
+                isArtifactVisible={isArtifactVisible}
+                isReadonly={isReadonly}
+                messages={messages}
+                regenerate={regenerate}
+                selectedModelId={initialChatModel}
+                setMessages={setMessages}
+                status={status}
+                votes={votes}
+              />
+
+              {!isReadonly ? (
+                <MultimodalInput
+                  attachments={attachments}
+                  chatId={id}
+                  input={input}
+                  messages={messages}
+                  onModelChange={setCurrentModelId}
+                  selectedModelId={currentModelId}
+                  selectedVisibilityType={visibilityType}
+                  sendMessage={sendMessage}
+                  setAttachments={setAttachments}
+                  setInput={setInput}
+                  setMessages={setMessages}
+                  status={status}
+                  stop={stop}
+                  wormgptEnabled={wormgptEnabled}
+                  setWormgptEnabled={setWormgptEnabled}
+                  deepThinkingEnabled={deepThinkingEnabled}
+                  setDeepThinkingEnabled={setDeepThinkingEnabled}
+                  webSearchEnabled={webSearchEnabled}
+                  setWebSearchEnabled={setWebSearchEnabled}
+                />
+              ) : (
+                <div className="flex w-full items-center justify-center p-4">
+                  <div className="flex flex-col items-center gap-2 rounded-xl border border-dashed border-zinc-200 bg-zinc-50/50 p-6 text-center dark:border-zinc-800 dark:bg-zinc-900/50 w-full">
+                    <p className="text-sm text-zinc-500 dark:text-zinc-400">
+                      Please sign in to start chatting with Ultramaxo AI.
+                    </p>
+                    <div className="flex gap-4 mt-2">
+                      <Button asChild size="sm" variant="outline">
+                        <Link href="/login">Sign In</Link>
+                      </Button>
+                      <Button asChild size="sm">
+                        <Link href="/register">Create Account</Link>
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
         </div>
 
-        <div className={`mx-auto w-full transition-all duration-500 ease-in-out px-2 pb-3 md:px-4 md:pb-4 ${
-          messages.length === 0 
-            ? 'max-w-3xl' 
-            : 'max-w-4xl'
-        }`}>
+        {/* Bottom input for active chat state */}
+        {messages.length > 0 && (
+          <div className={`mx-auto w-full transition-all duration-500 ease-in-out px-2 pb-3 md:px-4 md:pb-4 max-w-4xl`}>
           {!isReadonly ? (
             <MultimodalInput
               attachments={attachments}
@@ -264,6 +325,7 @@ export function Chat({
             </div>
           )}
         </div>
+        )}
       </div>
 
       <Artifact
