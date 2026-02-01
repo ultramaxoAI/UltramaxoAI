@@ -146,6 +146,20 @@ export function Chat({
       mutate(unstable_serialize(getChatHistoryPaginationKey));
     },
     onError: (error) => {
+      // Log detailed error on client side
+      console.error("=== CLIENT CHAT ERROR ===");
+      console.error("Error Type:", error instanceof Error ? error.constructor.name : typeof error);
+      console.error("Error Message:", error instanceof Error ? error.message : String(error));
+      console.error("Error Stack:", error instanceof Error ? error.stack : "N/A");
+      console.error("Chat ID:", id);
+      console.error("Current Model:", currentModelId);
+      console.error("Messages Count:", messages.length);
+      
+      if (error && typeof error === 'object') {
+        console.error("Error Details:", JSON.stringify(error, Object.getOwnPropertyNames(error), 2));
+      }
+      console.error("=== END CLIENT ERROR ===");
+
       if (error instanceof ChatSDKError) {
         if (
           error.message?.includes("AI Gateway requires a valid credit card")
@@ -157,6 +171,12 @@ export function Chat({
             description: error.message,
           });
         }
+      } else {
+        // Show generic error for non-ChatSDKError
+        toast({
+          type: "error",
+          description: "Terjadi kesalahan saat berkomunikasi dengan AI. Silakan coba lagi.",
+        });
       }
     },
   });

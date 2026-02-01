@@ -267,6 +267,24 @@ export async function POST(request: Request) {
   } catch (error) {
     const vercelId = request.headers.get("x-vercel-id");
 
+    // Log detailed error information
+    console.error("=== AI CHAT ERROR ===");
+    console.error("Vercel ID:", vercelId);
+    console.error("Error Type:", error instanceof Error ? error.constructor.name : typeof error);
+    console.error("Error Message:", error instanceof Error ? error.message : String(error));
+    console.error("Error Stack:", error instanceof Error ? error.stack : "N/A");
+    
+    // Log request context
+    console.error("Request Body:", JSON.stringify(requestBody, null, 2));
+    console.error("Selected Model:", requestBody?.selectedChatModel);
+    console.error("Chat ID:", requestBody?.id);
+    
+    // Log any additional error details
+    if (error && typeof error === 'object') {
+      console.error("Error Details:", JSON.stringify(error, Object.getOwnPropertyNames(error), 2));
+    }
+    console.error("=== END ERROR LOG ===");
+
     if (error instanceof ChatSDKError) {
       return error.toResponse();
     }
