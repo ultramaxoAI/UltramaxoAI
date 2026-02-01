@@ -292,13 +292,6 @@ async function executeJavaScript(
   }
 }
 
-type Metadata = {
-  outputs: ConsoleOutput[];
-  language?: SupportedLanguage;
-  files?: Array<{ name: string; content: string; language: SupportedLanguage }>;
-  activeFileIndex?: number;
-};
-
 export const codeArtifact = new Artifact<"code", Metadata>({
   kind: "code",
   description:
