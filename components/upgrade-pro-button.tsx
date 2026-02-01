@@ -28,10 +28,10 @@ interface UpgradeProButtonProps {
 }
 
 const PLANS = [
-  { id: "pro-1", name: "Pro - 1 Bulan", months: 1, price: 50000 },
-  { id: "pro-3", name: "Pro - 3 Bulan", months: 3, price: 135000 },
-  { id: "pro-6", name: "Pro - 6 Bulan", months: 6, price: 240000 },
-  { id: "pro-12", name: "Pro - 12 Bulan", months: 12, price: 450000 },
+  { id: "pro-1", name: "Pro - 1 Bulan", months: 1, price: 15000, originalPrice: 20000 },
+  { id: "pro-3", name: "Pro - 3 Bulan", months: 3, price: 40500, originalPrice: 60000 },
+  { id: "pro-6", name: "Pro - 6 Bulan", months: 6, price: 75000, originalPrice: 120000 },
+  { id: "pro-12", name: "Pro - 12 Bulan", months: 12, price: 135000, originalPrice: 240000 },
 ];
 
 export function UpgradeProButton({ user }: UpgradeProButtonProps) {
@@ -90,7 +90,7 @@ export function UpgradeProButton({ user }: UpgradeProButtonProps) {
     <>
       <Button
         onClick={() => setOpen(true)}
-        className="w-full bg-gradient-to-r from-yellow-500 to-amber-500 hover:from-yellow-600 hover:to-amber-600 text-white font-semibold"
+        className="w-full bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 text-white font-semibold"
         size="sm"
       >
         <CrownIcon className="mr-2 h-4 w-4" />
@@ -101,7 +101,7 @@ export function UpgradeProButton({ user }: UpgradeProButtonProps) {
         <DialogContent className="sm:max-w-[425px]">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
-              <CrownIcon className="h-5 w-5 text-yellow-500" />
+              <CrownIcon className="h-5 w-5 text-blue-500" />
               Upgrade ke Pro
             </DialogTitle>
             <DialogDescription>
@@ -120,7 +120,7 @@ export function UpgradeProButton({ user }: UpgradeProButtonProps) {
                 <SelectContent>
                   {PLANS.map((plan) => (
                     <SelectItem key={plan.id} value={plan.id}>
-                      {plan.name} - Rp {plan.price.toLocaleString("id-ID")}
+                      {plan.name} - <span className="line-through text-muted-foreground">Rp {plan.originalPrice.toLocaleString("id-ID")}</span> <span className="font-bold text-green-600">Rp {plan.price.toLocaleString("id-ID")}</span>
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -145,9 +145,11 @@ export function UpgradeProButton({ user }: UpgradeProButtonProps) {
                   {PLANS.filter((p) => p.id === selectedPlan).map((plan) => (
                     <div key={plan.id}>
                       <p>Durasi: {plan.months} bulan</p>
-                      <p className="font-semibold text-lg text-yellow-600">
-                        Total: Rp {plan.price.toLocaleString("id-ID")}
+                      <p className="text-muted-foreground">Harga Normal: <span className="line-through">Rp {plan.originalPrice.toLocaleString("id-ID")}</span></p>
+                      <p className="font-semibold text-lg text-green-600">
+                        Harga Diskon: Rp {plan.price.toLocaleString("id-ID")}
                       </p>
+                      <p className="text-xs text-green-600 mt-1">Hemat Rp {(plan.originalPrice - plan.price).toLocaleString("id-ID")}!</p>
                     </div>
                   ))}
                 </div>
@@ -166,7 +168,7 @@ export function UpgradeProButton({ user }: UpgradeProButtonProps) {
             <Button
               onClick={handleSubmit}
               disabled={isSubmitting || !selectedPlan}
-              className="bg-gradient-to-r from-yellow-500 to-amber-500 hover:from-yellow-600 hover:to-amber-600"
+              className="bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700"
             >
               {isSubmitting ? "Mengirim..." : "Kirim Request"}
             </Button>
