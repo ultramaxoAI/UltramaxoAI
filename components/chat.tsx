@@ -202,20 +202,24 @@ export function Chat({
           selectedVisibilityType={initialVisibilityType}
         />
 
-        <Messages
-          addToolApprovalResponse={addToolApprovalResponse}
-          chatId={id}
-          isArtifactVisible={isArtifactVisible}
-          isReadonly={isReadonly}
-          messages={messages}
-          regenerate={regenerate}
-          selectedModelId={initialChatModel}
-          setMessages={setMessages}
-          status={status}
-          votes={votes}
-        />
+        <div className={`flex flex-1 flex-col overflow-hidden transition-all duration-500 ease-in-out ${
+          messages.length === 0 ? 'justify-center' : ''
+        }`}>
+          <Messages
+            addToolApprovalResponse={addToolApprovalResponse}
+            chatId={id}
+            isArtifactVisible={isArtifactVisible}
+            isReadonly={isReadonly}
+            messages={messages}
+            regenerate={regenerate}
+            selectedModelId={initialChatModel}
+            setMessages={setMessages}
+            status={status}
+            votes={votes}
+          />
+        </div>
 
-        <div className={`sticky bottom-0 z-1 mx-auto flex w-full gap-2 border-t-0 bg-background px-2 pb-3 md:px-4 md:pb-4 transition-all duration-500 ease-in-out ${
+        <div className={`mx-auto w-full transition-all duration-500 ease-in-out px-2 pb-3 md:px-4 md:pb-4 ${
           messages.length === 0 
             ? 'max-w-3xl' 
             : 'max-w-4xl'

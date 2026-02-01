@@ -44,15 +44,15 @@ function PureMessages({
   useDataStream();
 
   return (
-    <div className="relative flex-1">
+    <div className={`relative flex-1 ${
+      messages.length === 0 ? 'flex items-center justify-center' : ''
+    }`}>
       <div
-        className="absolute inset-0 touch-pan-y overflow-y-auto"
+        className={messages.length === 0 ? 'w-full' : 'absolute inset-0 touch-pan-y overflow-y-auto'}
         ref={messagesContainerRef}
       >
-        <div className={`mx-auto flex min-w-0 max-w-4xl flex-col gap-4 px-2 md:px-4 transition-all duration-500 ease-in-out ${
-          messages.length === 0 
-            ? 'h-full items-center justify-center py-0' 
-            : 'py-4 md:gap-6'
+        <div className={`mx-auto flex min-w-0 max-w-4xl flex-col gap-4 px-2 md:px-4 ${
+          messages.length > 0 ? 'py-4 md:gap-6' : ''
         }`}>
           {messages.length === 0 && <Greeting />}
 
