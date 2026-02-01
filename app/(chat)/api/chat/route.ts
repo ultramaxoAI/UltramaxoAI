@@ -53,6 +53,22 @@ export { getStreamContext };
 export async function POST(request: Request) {
   let requestBody: PostRequestBody;
 
+  // Check if GROQ_API_KEY is set
+  if (!process.env.GROQ_API_KEY) {
+    console.error("=== CONFIGURATION ERROR ===");
+    console.error("GROQ_API_KEY is not set in environment variables");
+    console.error("Please add GROQ_API_KEY to your Vercel environment variables");
+    console.error("=== END CONFIGURATION ERROR ===");
+    
+    return new Response(
+      JSON.stringify({
+        error: "AI service not configured. Please contact administrator.",
+        code: "missing_api_key"
+      }),
+      { status: 500, headers: { "Content-Type": "application/json" } }
+    );
+  }
+
   try {
     const json = await request.json();
     requestBody = postRequestBodySchema.parse(json);

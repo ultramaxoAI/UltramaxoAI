@@ -10,6 +10,12 @@ export const getLanguageModel = (modelId: string) => {
   const normalized = modelId.toLowerCase();
 
   console.log("[AI Provider] Getting language model:", { modelId, normalized });
+  console.log("[AI Provider] GROQ_API_KEY exists:", !!process.env.GROQ_API_KEY);
+  
+  if (!process.env.GROQ_API_KEY) {
+    console.error("[AI Provider] CRITICAL: GROQ_API_KEY not found in environment");
+    throw new Error("GROQ_API_KEY is not configured. Please add it to environment variables.");
+  }
 
   try {
     if (normalized.includes("llama-3.1-8b")) {
