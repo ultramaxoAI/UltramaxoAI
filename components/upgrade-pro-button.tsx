@@ -38,9 +38,8 @@ export function UpgradeProButton({ user }: UpgradeProButtonProps) {
   const [open, setOpen] = useState(false);
   const [selectedPlan, setSelectedPlan] = useState<string>("");
   const [note, setNote] = useState("");
-  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleSubmit = async () => {
+  const handleSubmit = () => {
     if (!selectedPlan) {
       toast.error("Pilih paket Pro terlebih dahulu");
       return;
@@ -49,36 +48,25 @@ export function UpgradeProButton({ user }: UpgradeProButtonProps) {
     const plan = PLANS.find((p) => p.id === selectedPlan);
     if (!plan) return;
 
-    setIsSubmitting(true);
+    // Create WhatsApp message
+    const message = `Halo, saya ingin upgrade ke paket Pro:\n\n` +
+      `📦 Paket: ${plan.name}\n` +
+      `💰 Harga: Rp ${plan.price.toLocaleString("id-ID")}\n` +
+      `⏱️ Durasi: ${plan.months} bulan\n` +
+      `👤 Email: ${user.email}\n` +
+      (note ? `\n📝 Catatan: ${note}` : "");
 
-    try {
-      const response = await fetch("/api/user/upgrade-request", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          planId: plan.id,
-          months: plan.months,
-          price: plan.price,
-          note,
-        }),
-      });
+    // Encode message for URL
+    const encodedMessage = encodeURIComponent(message);
+    const whatsappUrl = `https://wa.me/6285191689131?text=${encodedMessage}`;
 
-      if (!response.ok) {
-        const data = await response.json();
-        throw new Error(data.error || "Gagal mengirim request");
-      }
-
-      toast.success("Request upgrade Pro berhasil dikirim!");
-      setOpen(false);
-      setSelectedPlan("");
-      setNote("");
-    } catch (error: any) {
-      toast.error(error.message || "Gagal mengirim request upgrade");
-    } finally {
-      setIsSubmitting(false);
-    }
+    // Open WhatsApp in new tab
+    window.open(whatsappUrl, "_blank");
+    
+    toast.success("Membuka WhatsApp...");
+    setOpen(false);
+    setSelectedPlan("");
+    setNote("");
   };
 
   // Don't show button if user is already pro
@@ -161,16 +149,15 @@ export function UpgradeProButton({ user }: UpgradeProButtonProps) {
             <Button
               variant="outline"
               onClick={() => setOpen(false)}
-              disabled={isSubmitting}
             >
               Batal
             </Button>
             <Button
               onClick={handleSubmit}
-              disabled={isSubmitting || !selectedPlan}
+              disabled={!selectedPlan}
               className="bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700"
             >
-              {isSubmitting ? "Mengirim..." : "Kirim Request"}
+              Beli Sekarang
             </Button>
           </DialogFooter>
         </DialogContent>
