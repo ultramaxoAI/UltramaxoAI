@@ -29,6 +29,7 @@ import { guestRegex } from "@/lib/constants";
 import { LoaderIcon } from "./icons";
 import { toast } from "./toast";
 import { SettingsDialog } from "./settings-dialog";
+import { UpgradeProButton } from "./upgrade-pro-button";
 
 export function SidebarUserNav({ user }: { user: User }) {
   const router = useRouter();
@@ -41,6 +42,12 @@ export function SidebarUserNav({ user }: { user: User }) {
 
   return (
     <>
+      {!isGuest && data?.user && (
+        <div className="px-2 pb-2">
+          <UpgradeProButton user={data.user} />
+        </div>
+      )}
+      
       <SidebarMenu>
         <SidebarMenuItem>
           <DropdownMenu>

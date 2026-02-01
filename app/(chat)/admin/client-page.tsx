@@ -16,8 +16,9 @@ import {
 } from "lucide-react";
 
 export default function AdminDashboardClient() {
-  const [activeTab, setActiveTab] = useState<'vouchers' | 'users'>('vouchers');
+  const [activeTab, setActiveTab] = useState<'vouchers' | 'users' | 'upgrade-requests'>('vouchers');
   const [users, setUsers] = useState<any[]>([]);
+  const [upgradeRequests, setUpgradeRequests] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   
@@ -42,9 +43,24 @@ export default function AdminDashboardClient() {
     }
   };
 
+  const fetchUpgradeRequests = async () => {
+    setLoading(true);
+    try {
+      const res = await fetch('/api/admin/upgrade-requests');
+      const data = await res.json();
+      if (data.requests) setUpgradeRequests(data.requests);
+    } catch (e) {
+      toast.error("Failed to fetch upgrade requests");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
     if (activeTab === 'users') {
       fetchUsers();
+    } else if (activeTab === 'upgrade-requests') {
+      fetchUpgradeRequests();
     }
   }, [activeTab]);
 
@@ -135,6 +151,13 @@ export default function AdminDashboardClient() {
           >
             <UsersIcon size={18} />
             <span className="text-sm font-medium">Users</span>
+          </button>
+          <button 
+            onClick={() => setActiveTab('upgrade-requests')}
+            className={`flex items-center gap-3 px-4 py-2.5 rounded-xl transition-all ${activeTab === 'upgrade-requests' ? 'bg-zinc-800 text-white shadow-lg' : 'text-zinc-500 hover:text-white hover:bg-zinc-800/50'}`}
+          >
+            <CrownIcon size={18} />
+            <span className="text-sm font-medium">Upgrade Requests</span>
           </button>
         </nav>
 
@@ -356,7 +379,132 @@ export default function AdminDashboardClient() {
               </div>
             </div>
           </div>
-        )}
+        ) : activeTab === 'upgrade-requests' ? (
+          <div className="flex flex-col gap-6">
+            <div className="bg-[#121214] border border-zinc-800/50 rounded-3xl shadow-2xl overflow-hidden">
+              <div className="overflow-x-auto">
+                <table className="w-full text-left">
+                  <thead>
+                    <tr className="bg-zinc-900/50 border-b border-zinc-800">
+                      <th className="p-4 text-zinc-500 text-xs font-bold uppercase tracking-widest">User</th>
+                      <th className="p-4 text-zinc-500 text-xs font-bold uppercase tracking-widest">Plan</th>
+                      <th className="p-4 text-zinc-500 text-xs font-bold uppercase tracking-widest">Duration</th>
+                      <th className="p-4 text-zinc-500 text-xs font-bold uppercase tracking-widest">Price</th>
+                      <th className="p-4 text-zinc-500 text-xs font-bold uppercase tracking-widest">Status</th>
+                      <th className="p-4 text-zinc-500 text-xs font-bold uppercase tracking-widest">Date</th>
+                      <th className="p-4 text-zinc-500 text-xs font-bold uppercase tracking-widest text-right">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {loading ? (
+                      <tr>
+                        <td colSpan={7} className="p-8 text-center text-zinc-500">
+                          Loading upgrade requests...
+                        </td>
+                      </tr>
+                    ) : upgradeRequests.length === 0 ? (
+                      <tr>
+                        <td colSpan={7} className="p-8 text-center text-zinc-500">
+                          No upgrade requests yet
+                        </td>
+                      </tr>
+                    ) : upgradeRequests.map(req => (
+                      <tr key={req.id} className="hover:bg-zinc-800/20 transition-colors group border-b border-zinc-800/30">
+                        <td className="p-4">
+                          <div className="flex flex-col">
+                            <span className="font-bold text-white text-sm">{req.username || "Unnamed"}</span>
+                            <span className="text-zinc-500 text-xs">{req.email}</span>
+                          </div>
+                        </td>
+                        <td className="p-4">
+                          <span className="text-zinc-300 font-medium text-sm">{req.planId}</span>
+                        </td>
+                        <td className="p-4">
+                          <span className="text-zinc-300 font-medium">{req.months} bulan</span>
+                        </td>
+                        <td className="p-4">
+                          <span className="text-yellow-400 font-bold">Rp {req.price?.toLocaleString('id-ID')}</span>
+                        </td>
+                        <td className="p-4">
+                          {req.status === 'approved' ? (
+                            <span className="px-2.5 py-0.5 bg-green-400/10 text-green-400 text-[10px] font-black uppercase tracking-widest border border-green-400/20 rounded-full w-fit">
+                              Approved
+                            </span>
+                          ) : req.status === 'rejected' ? (
+                            <span className="px-2.5 py-0.5 bg-red-400/10 text-red-400 text-[10px] font-black uppercase tracking-widest border border-red-400/20 rounded-full w-fit">
+                              Rejected
+                            </span>
+                          ) : (
+                            <span className="px-2.5 py-0.5 bg-yellow-400/10 text-yellow-400 text-[10px] font-black uppercase tracking-widest border border-yellow-400/20 rounded-full w-fit">
+                              Pending
+                            </span>
+                          )}
+                        </td>
+                        <td className="p-4">
+                          <span className="text-zinc-500 text-xs">
+                            {new Date(req.createdAt).toLocaleDateString('id-ID')}
+                          </span>
+                        </td>
+                        <td className="p-4 text-right">
+                          {req.status === 'pending' && (
+                            <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                              <button 
+                                onClick={async () => {
+                                  try {
+                                    const res = await fetch('/api/admin/upgrade-requests', {
+                                      method: 'PATCH',
+                                      headers: { 'Content-Type': 'application/json' },
+                                      body: JSON.stringify({ id: req.id, status: 'approved' }),
+                                    });
+                                    const data = await res.json();
+                                    if (data.success) {
+                                      toast.success("Request approved and user upgraded!");
+                                      fetchUpgradeRequests();
+                                    } else {
+                                      toast.error(data.error || "Approval failed");
+                                    }
+                                  } catch (e) {
+                                    toast.error("Approval failed");
+                                  }
+                                }}
+                                className="px-3 py-1.5 rounded-lg bg-green-500/20 hover:bg-green-500/30 text-green-400 text-xs font-bold transition-all border border-green-500/30"
+                              >
+                                Approve
+                              </button>
+                              <button 
+                                onClick={async () => {
+                                  try {
+                                    const res = await fetch('/api/admin/upgrade-requests', {
+                                      method: 'PATCH',
+                                      headers: { 'Content-Type': 'application/json' },
+                                      body: JSON.stringify({ id: req.id, status: 'rejected' }),
+                                    });
+                                    const data = await res.json();
+                                    if (data.success) {
+                                      toast.success("Request rejected");
+                                      fetchUpgradeRequests();
+                                    } else {
+                                      toast.error(data.error || "Rejection failed");
+                                    }
+                                  } catch (e) {
+                                    toast.error("Rejection failed");
+                                  }
+                                }}
+                                className="px-3 py-1.5 rounded-lg bg-red-500/20 hover:bg-red-500/30 text-red-400 text-xs font-bold transition-all border border-red-500/30"
+                              >
+                                Reject
+                              </button>
+                            </div>
+                          )}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        ) : null}
       </main>
     </div>
   );
