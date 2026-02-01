@@ -7,31 +7,27 @@ import {
 import { isTestEnvironment } from "../constants";
 
 export const getLanguageModel = (modelId: string) => {
-  // Use DeepSeek R1 Distill Llama 70B for both models
-  const groqModelId = "deepseek-r1-distill-llama-70b";
+  const normalized = modelId.toLowerCase();
 
-  if (modelId.includes("wormgpt")) {
-    // We can add specific system behavior or different parameters for WormGPT here if needed
-    return groq(groqModelId);
+  if (normalized.includes("llama-3.1-8b")) {
+    return groq("llama-3.1-8b-instant");
   }
 
-  if (modelId.includes("ultraagent")) {
-    return groq(groqModelId);
+  if (normalized.includes("llama-3.1-70b")) {
+    return groq("llama-3.1-70b-versatile");
   }
 
-  // Fallback for other potential IDs (like the original ones if still being used somewhere)
-  if (modelId.startsWith("groq/")) {
-      return groq(groqModelId);
+  if (normalized.startsWith("groq/")) {
+    return groq("llama-3.1-70b-versatile");
   }
 
-  // Default fallback to Groq/DeepSeek
-  return groq(groqModelId);
+  return groq("llama-3.1-70b-versatile");
 };
 
 export function getTitleModel() {
-  return groq("deepseek-r1-distill-llama-70b");
+  return groq("llama-3.1-8b-instant");
 }
 
 export function getArtifactModel() {
-  return groq("deepseek-r1-distill-llama-70b");
+  return groq("llama-3.1-70b-versatile");
 }

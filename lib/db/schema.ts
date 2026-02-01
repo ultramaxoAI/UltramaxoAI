@@ -259,4 +259,36 @@ export const redeemCode = pgTable("redeem_codes", {
   createdAt: timestamp("createdAt").notNull().defaultNow(),
 });
 
+export const purchaseRequest = pgTable("purchase_requests", {
+  id: uuid("id").primaryKey().notNull().defaultRandom(),
+  userId: uuid("userId")
+    .notNull()
+    .references(() => user.id, { onDelete: "cascade" }),
+  username: text("username"),
+  email: text("email"),
+  planId: text("planId").notNull(),
+  months: integer("months").notNull().default(1),
+  price: integer("price").notNull().default(0),
+  method: text("method").notNull().default("manual"),
+  status: text("status").notNull().default("pending"),
+  note: text("note"),
+  createdAt: timestamp("createdAt").notNull().defaultNow(),
+  updatedAt: timestamp("updatedAt").notNull().defaultNow(),
+});
+
+export type PurchaseRequest = InferSelectModel<typeof purchaseRequest>;
+
+export const passwordResetToken = pgTable("password_reset_token", {
+  id: uuid("id").primaryKey().notNull().defaultRandom(),
+  userId: uuid("userId")
+    .notNull()
+    .references(() => user.id, { onDelete: "cascade" }),
+  email: text("email").notNull(),
+  token: text("token").notNull().unique(),
+  expiresAt: timestamp("expiresAt").notNull(),
+  createdAt: timestamp("createdAt").notNull().defaultNow(),
+});
+
+export type PasswordResetToken = InferSelectModel<typeof passwordResetToken>;
+
 export type RedeemCode = InferSelectModel<typeof redeemCode>;

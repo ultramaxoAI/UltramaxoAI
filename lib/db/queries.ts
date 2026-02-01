@@ -26,6 +26,8 @@ import {
   type DBMessage,
   document,
   message,
+  passwordResetToken,
+  purchaseRequest,
   redeemCode,
   type Suggestion,
   stream,
@@ -703,6 +705,7 @@ export async function createVoucher(data: {
   type: "PRO" | "CREDIT";
   value?: number;
   durationMonths?: number;
+  expiresAt?: Date | null;
 }) {
   try {
     await db.insert(redeemCode).values({
@@ -835,6 +838,238 @@ export async function verifyVerificationCode(email: string, code: string) {
   } catch (error) {
     console.error("Database Error (verifyVerificationCode):", error);
     throw new ChatSDKError("bad_request:database", "Failed to verify code");
+  }
+}
+
+export async function setEmailVerified(email: string) {
+  try {
+    return await db
+      .update(user)
+      .set({ emailVerified: new Date() })
+      .where(eq(user.email, email));
+  } catch (error) {
+    console.error("Database Error (setEmailVerified):", error);
+    throw new ChatSDKError("bad_request:database", "Failed to set email verified");
+  }
+}
+
+export async function createPasswordResetTokenForEmail(email: string) {
+  try {
+    const [foundUser] = await db.select().from(user).where(eq(user.email, email));
+    if (!foundUser) return null;
+
+    const token = generateUUID();
+    const expiresAt = new Date(Date.now() + 60 * 60 * 1000);
+
+    await db
+      .delete(passwordResetToken)
+      .where(eq(passwordResetToken.userId, foundUser.id));
+
+    await db.insert(passwordResetToken).values({
+      userId: foundUser.id,
+      email: foundUser.email,
+      token,
+      expiresAt,
+      createdAt: new Date(),
+    });
+
+    return { token, userId: foundUser.id, email: foundUser.email };
+  } catch (error) {
+    console.error("Database Error (createPasswordResetTokenForEmail):", error);
+    throw new ChatSDKError(
+      "bad_request:database",
+      "Failed to create password reset token"
+    );
+  }
+}
+
+export async function consumePasswordResetToken(token: string) {
+  try {
+    const [row] = await db
+      .select()
+      .from(passwordResetToken)
+      .where(eq(passwordResetToken.token, token));
+
+    if (!row) return null;
+
+    if (row.expiresAt < new Date()) {
+      await db
+        .delete(passwordResetToken)
+        .where(eq(passwordResetToken.id, row.id));
+      return null;
+    }
+
+    await db
+      .delete(passwordResetToken)
+      .where(eq(passwordResetToken.id, row.id));
+
+    return { userId: row.userId, email: row.email };
+  } catch (error) {
+    console.error("Database Error (consumePasswordResetToken):", error);
+    throw new ChatSDKError(
+      "bad_request:database",
+      "Failed to consume password reset token"
+    );
+  }
+}
+
+function computeProExpiry(current: Date | null, months: number) {
+  const now = new Date();
+  const base = current ?? now;
+  const start = base.getTime() > now.getTime() ? base : now;
+  const next = new Date(start);
+  next.setMonth(next.getMonth() + Math.max(1, months));
+  return next;
+}
+
+export async function createPurchaseRequest(data: {
+  userId: string;
+  username?: string | null;
+  email?: string | null;
+  planId: string;
+  months?: number;
+  price?: number;
+  method?: string;
+  note?: string | null;
+}) {
+  try {
+    const months = Math.max(1, Number(data.months) || 1);
+    const price = Math.max(0, Number(data.price) || 0);
+
+    const [created] = await db
+      .insert(purchaseRequest)
+      .values({
+        userId: data.userId,
+        username: data.username || null,
+        email: data.email || null,
+        planId: data.planId,
+        months,
+        price,
+        method: data.method || "manual",
+        status: "pending",
+        note: data.note || null,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      })
+      .returning();
+
+    return created;
+  } catch (error) {
+    console.error("Database Error (createPurchaseRequest):", error);
+    throw new ChatSDKError(
+      "bad_request:database",
+      "Failed to create purchase request"
+    );
+  }
+}
+
+export async function listPurchaseRequestsByUserId(userId: string) {
+  try {
+    return await db
+      .select()
+      .from(purchaseRequest)
+      .where(eq(purchaseRequest.userId, userId))
+      .orderBy(desc(purchaseRequest.createdAt));
+  } catch (error) {
+    console.error("Database Error (listPurchaseRequestsByUserId):", error);
+    throw new ChatSDKError(
+      "bad_request:database",
+      "Failed to list purchase requests"
+    );
+  }
+}
+
+export async function listPurchaseRequestsAdmin() {
+  try {
+    return await db
+      .select()
+      .from(purchaseRequest)
+      .orderBy(desc(purchaseRequest.createdAt));
+  } catch (error) {
+    console.error("Database Error (listPurchaseRequestsAdmin):", error);
+    throw new ChatSDKError(
+      "bad_request:database",
+      "Failed to list purchase requests"
+    );
+  }
+}
+
+export async function updatePurchaseRequestStatus({
+  id,
+  status,
+}: {
+  id: string;
+  status: "pending" | "paid" | "approved" | "rejected";
+}) {
+  try {
+    const [requestRow] = await db
+      .select()
+      .from(purchaseRequest)
+      .where(eq(purchaseRequest.id, id));
+
+    if (!requestRow) {
+      throw new ChatSDKError("not_found:database", "Purchase request not found");
+    }
+
+    if (status === "approved") {
+      const [currentUser] = await db
+        .select()
+        .from(user)
+        .where(eq(user.id, requestRow.userId));
+
+      if (currentUser) {
+        const nextExpiry = computeProExpiry(
+          currentUser.proExpiresAt ?? null,
+          Number(requestRow.months) || 1
+        );
+
+        await db.update(user).set({
+          isPro: true,
+          limitCount: 99_999,
+          proExpiresAt: nextExpiry,
+        }).where(eq(user.id, currentUser.id));
+      }
+    }
+
+    const [updated] = await db
+      .update(purchaseRequest)
+      .set({ status, updatedAt: new Date() })
+      .where(eq(purchaseRequest.id, id))
+      .returning();
+
+    return updated;
+  } catch (error) {
+    console.error("Database Error (updatePurchaseRequestStatus):", error);
+    if (error instanceof ChatSDKError) throw error;
+    throw new ChatSDKError(
+      "bad_request:database",
+      "Failed to update purchase request"
+    );
+  }
+}
+
+export async function expireProIfNeeded(userId: string) {
+  try {
+    const [currentUser] = await db.select().from(user).where(eq(user.id, userId));
+    if (!currentUser) return null;
+
+    if (currentUser.isPro && currentUser.proExpiresAt) {
+      const now = new Date();
+      if (currentUser.proExpiresAt < now) {
+        await db.update(user)
+          .set({ isPro: false, proExpiresAt: null })
+          .where(eq(user.id, userId));
+        return { ...currentUser, isPro: false, proExpiresAt: null };
+      }
+    }
+
+    return currentUser;
+  } catch (error) {
+    console.error("Database Error (expireProIfNeeded):", error);
+    throw new ChatSDKError(
+      "bad_request:database",
+      "Failed to check pro expiration"
+    );
   }
 }
 

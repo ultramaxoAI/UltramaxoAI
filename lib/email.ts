@@ -67,3 +67,35 @@ export async function sendVerificationEmail(email: string, code: string) {
   `;
   return sendResendEmail(email, "🔐 Kode Verifikasi Ultramaxo AI", html);
 }
+
+export async function sendPasswordResetEmail(email: string, resetUrl: string) {
+  const html = `
+    <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background: linear-gradient(135deg, #000000 0%, #1a1a1a 100%); color: white; border-radius: 20px;">
+      <div style="background: #111; border-radius: 16px; padding: 40px; border: 1px solid #333;">
+        <div style="text-align: center; margin-bottom: 30px;">
+          <h1 style="color: #fff; margin: 0; font-size: 28px; font-weight: 700;">Reset Password</h1>
+        </div>
+
+        <p style="color: #ccc; font-size: 16px; line-height: 1.6; margin-bottom: 24px;">
+          Kami menerima permintaan reset password untuk akun Ultramaxo AI Anda. Klik tombol di bawah untuk melanjutkan.
+        </p>
+
+        <div style="text-align: center; margin: 32px 0;">
+          <a href="${resetUrl}" style="display: inline-block; background: #fff; color: #000; padding: 12px 24px; border-radius: 999px; text-decoration: none; font-weight: 700;">Reset Password</a>
+        </div>
+
+        <p style="color: #888; font-size: 14px; line-height: 1.6; margin-top: 24px;">
+          Link ini akan kedaluwarsa dalam <strong>1 jam</strong>. Jika Anda tidak meminta reset password, abaikan email ini.
+        </p>
+
+        <hr style="border: none; border-top: 1px solid #333; margin: 32px 0;">
+
+        <p style="color: #666; font-size: 12px; text-align: center; margin: 0;">
+          Email otomatis dari Ultramaxo AI • Jangan reply email ini
+        </p>
+      </div>
+    </div>
+  `;
+
+  return sendResendEmail(email, "🔐 Reset Password Ultramaxo AI", html);
+}

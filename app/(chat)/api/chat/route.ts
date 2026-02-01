@@ -22,6 +22,7 @@ import { isProductionEnvironment } from "@/lib/constants";
 import {
   createStreamId,
   deleteChatById,
+  expireProIfNeeded,
   getChatById,
   getMessageCountByUserId,
   getMessagesByChatId,
@@ -76,7 +77,13 @@ export async function POST(request: Request) {
       return new ChatSDKError("unauthorized:chat").toResponse();
     }
 
-    const userType: UserType = session.user.type;
+    const dbUser = await expireProIfNeeded(session.user.id);
+    const userType: UserType =
+      session.user.role === "admin"
+        ? "pro"
+        : dbUser?.isPro
+          ? "pro"
+          : "regular";
 
     const messageCount = await getMessageCountByUserId({
       id: session.user.id,

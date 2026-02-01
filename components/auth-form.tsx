@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { Input } from "./ui/input";
 import { Label } from "./ui/label";
 import { signIn } from "next-auth/react";
@@ -162,16 +163,12 @@ export function AuthForm({
                 Password
               </Label>
               {type === "login" && (
-                <a
-                  href="#"
+                <Link
+                  href="/forgot-password"
                   className="text-xs text-zinc-400 hover:text-white transition-colors font-medium"
-                  onClick={(e) => {
-                    e.preventDefault();
-                    alert("Forgot password feature is under development.");
-                  }}
                 >
                   Forgot password?
-                </a>
+                </Link>
               )}
             </div>
             <Input
