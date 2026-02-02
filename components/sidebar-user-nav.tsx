@@ -30,6 +30,7 @@ import { LoaderIcon } from "./icons";
 import { toast } from "./toast";
 import { SettingsDialog } from "./settings-dialog";
 import { UpgradeProButton } from "./upgrade-pro-button";
+import { ProfileEditDialog } from "./profile-edit-dialog";
 
 export function SidebarUserNav({ user }: { user: User }) {
   const router = useRouter();
@@ -100,6 +101,12 @@ export function SidebarUserNav({ user }: { user: User }) {
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
                 </>
+              )}
+
+              {!isGuest && (
+                <DropdownMenuItem asChild>
+                  <ProfileEditDialog />
+                </DropdownMenuItem>
               )}
 
               <DropdownMenuItem

@@ -234,6 +234,12 @@ export async function POST(request: Request) {
         } catch (error: any) {
           console.error("[Chat API] Error during streaming:", error);
           
+          // Check if error is Invalid API Key
+          const isInvalidKey = error?.message?.includes('Invalid API Key') ||
+                              error?.message?.includes('invalid_api_key') ||
+                              error?.message?.includes('Unauthorized') ||
+                              error?.statusCode === 401;
+          
           // Check if error is rate limit or API error
           const isRateLimit = error?.message?.includes('rate limit') || 
                               error?.message?.includes('429') ||
@@ -241,6 +247,16 @@ export async function POST(request: Request) {
           
           const isApiError = error?.message?.includes('API') || 
                             error?.statusCode >= 500;
+
+          if (isInvalidKey) {
+            console.error("[Chat API] Invalid API Key detected - switching to backup key");
+            markKeyFailed('primary');
+            // Reset after 30 seconds for invalid key
+            setTimeout(() => resetFailureTracking(), 30000);
+            
+            // Throw more specific error
+            throw new Error("Invalid API Key. Silakan hubungi administrator untuk mengecek konfigurasi API key.");
+          }
 
           if (isRateLimit || isApiError) {
             console.log("[Chat API] Marking current key as failed, will use backup on retry");

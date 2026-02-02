@@ -6,14 +6,16 @@ import { groq, createGroq } from "@ai-sdk/groq";
 
 type GroqProvider = typeof groq;
 
-const primaryApiKey = process.env.GROQ_API_KEY_1 || process.env.GROQ_API_KEY;
-const secondaryApiKey = process.env.GROQ_API_KEY_2;
+// Validate and clean API keys (remove empty strings)
+const primaryApiKey = (process.env.GROQ_API_KEY_1 || process.env.GROQ_API_KEY || '').trim();
+const secondaryApiKey = (process.env.GROQ_API_KEY_2 || '').trim();
 
-const groqPrimary: GroqProvider = primaryApiKey
+// Only create clients if we have valid non-empty keys
+const groqPrimary: GroqProvider = primaryApiKey && primaryApiKey.length > 0
   ? createGroq({ apiKey: primaryApiKey })
   : groq;
 
-const groqSecondary: GroqProvider | null = secondaryApiKey
+const groqSecondary: GroqProvider | null = secondaryApiKey && secondaryApiKey.length > 0
   ? createGroq({ apiKey: secondaryApiKey })
   : null;
 
@@ -21,13 +23,16 @@ let usePrimaryNext = true;
 let lastFailedKey: 'primary' | 'secondary' | null = null;
 
 function getGroqClient(): GroqProvider {
-  const hasPrimaryEnv = !!process.env.GROQ_API_KEY || !!process.env.GROQ_API_KEY_1;
-  const hasSecondaryEnv = !!process.env.GROQ_API_KEY_2;
+  // Check for non-empty API keys
+  const hasPrimaryEnv = primaryApiKey && primaryApiKey.length > 0;
+  const hasSecondaryEnv = secondaryApiKey && secondaryApiKey.length > 0;
 
   if (!hasPrimaryEnv && !hasSecondaryEnv) {
-    console.error("[AI Provider] CRITICAL: No Groq API key found in environment");
+    console.error("[AI Provider] CRITICAL: No valid Groq API key found");
+    console.error("[AI Provider] Primary key:", primaryApiKey ? 'exists but empty' : 'not set');
+    console.error("[AI Provider] Secondary key:", secondaryApiKey ? 'exists but empty' : 'not set');
     throw new Error(
-      "GROQ_API_KEY or GROQ_API_KEY_1/2 is not configured. Please add it to environment variables.",
+      "GROQ_API_KEY or GROQ_API_KEY_1/2 is not configured properly. Please add it to environment variables.",
     );
   }
 
