@@ -1,71 +1,100 @@
-<a href="https://chat.vercel.ai/">
-  <img alt="Next.js 14 and App Router-ready AI chatbot." src="app/(chat)/opengraph-image.png">
-  <h1 align="center">Chat SDK</h1>
-</a>
+<div align="center">
+  <h1>🚀 UltramaxoAI</h1>
+  <p>Advanced AI-powered chatbot with code workspace, artifacts, and multimodal support</p>
+</div>
 
 <p align="center">
-    Chat SDK is a free, open-source template built with Next.js and the AI SDK that helps you quickly build powerful chatbot applications.
-</p>
-
-<p align="center">
-  <a href="https://chat-sdk.dev"><strong>Read Docs</strong></a> ·
   <a href="#features"><strong>Features</strong></a> ·
-  <a href="#model-providers"><strong>Model Providers</strong></a> ·
-  <a href="#deploy-your-own"><strong>Deploy Your Own</strong></a> ·
-  <a href="#running-locally"><strong>Running locally</strong></a>
+  <a href="#tech-stack"><strong>Tech Stack</strong></a> ·
+  <a href="#getting-started"><strong>Getting Started</strong></a> ·
+  <a href="#deployment"><strong>Deployment</strong></a>
 </p>
 <br/>
 
 ## Features
 
-- [Next.js](https://nextjs.org) App Router
-  - Advanced routing for seamless navigation and performance
-  - React Server Components (RSCs) and Server Actions for server-side rendering and increased performance
-- [AI SDK](https://ai-sdk.dev/docs/introduction)
-  - Unified API for generating text, structured objects, and tool calls with LLMs
-  - Hooks for building dynamic chat and generative user interfaces
-  - Supports xAI (default), OpenAI, Fireworks, and other model providers
-- [shadcn/ui](https://ui.shadcn.com)
-  - Styling with [Tailwind CSS](https://tailwindcss.com)
-  - Component primitives from [Radix UI](https://radix-ui.com) for accessibility and flexibility
-- Data Persistence
-  - [Neon Serverless Postgres](https://vercel.com/marketplace/neon) for saving chat history and user data
-  - [Vercel Blob](https://vercel.com/storage/blob) for efficient file storage
-- [Auth.js](https://authjs.dev)
-  - Simple and secure authentication
+- 🤖 **Groq-Powered AI** - Ultra-fast responses using Llama 3.3 70B
+- 💬 **Advanced Chat** - Real-time streaming with message history
+- 📝 **Code Workspace** - Built-in code editor with syntax highlighting
+- 🎨 **Artifacts** - Create and edit documents, images, and sheets
+- 🔐 **User Authentication** - Secure login with NextAuth.js
+- 💳 **Pro Subscription** - Redeem codes for premium features
+- 🌓 **Dark Mode** - Beautiful UI with theme support
+- 📱 **Responsive Design** - Works on desktop and mobile
 
-## Model Providers
+## Tech Stack
 
-This template uses the [Vercel AI Gateway](https://vercel.com/docs/ai-gateway) to access multiple AI models through a unified interface. The default configuration includes [xAI](https://x.ai) models (`grok-2-vision-1212`, `grok-3-mini`) routed through the gateway.
+- **Framework**: [Next.js 14](https://nextjs.org) with App Router
+- **AI**: [AI SDK](https://ai-sdk.dev) + [Groq](https://groq.com) (Llama 3.3 70B)
+- **Database**: PostgreSQL (Neon/Supabase)
+- **Auth**: [NextAuth.js](https://authjs.dev)
+- **Styling**: [Tailwind CSS](https://tailwindcss.com) + [shadcn/ui](https://ui.shadcn.com)
+- **Deployment**: Vercel
 
-### AI Gateway Authentication
+## Getting Started
+## Getting Started
 
-**For Vercel deployments**: Authentication is handled automatically via OIDC tokens.
+### Prerequisites
 
-**For non-Vercel deployments**: You need to provide an AI Gateway API key by setting the `AI_GATEWAY_API_KEY` environment variable in your `.env.local` file.
+- Node.js 18+ and pnpm
+- PostgreSQL database (Neon, Supabase, or local)
+- [Groq API Key](https://console.groq.com/keys)
 
-With the [AI SDK](https://ai-sdk.dev/docs/introduction), you can also switch to direct LLM providers like [OpenAI](https://openai.com), [Anthropic](https://anthropic.com), [Cohere](https://cohere.com/), and [many more](https://ai-sdk.dev/providers/ai-sdk-providers) with just a few lines of code.
+### Installation
 
-## Deploy Your Own
+1. Clone the repository:
+```bash
+git clone https://github.com/yourusername/ultramaxo.git
+cd ultramaxo
+```
 
-You can deploy your own version of the Next.js AI Chatbot to Vercel with one click:
-
-[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/templates/next.js/nextjs-ai-chatbot)
-
-## Running locally
-
-You will need to use the environment variables [defined in `.env.example`](.env.example) to run Next.js AI Chatbot. It's recommended you use [Vercel Environment Variables](https://vercel.com/docs/projects/environment-variables) for this, but a `.env` file is all that is necessary.
-
-> Note: You should not commit your `.env` file or it will expose secrets that will allow others to control access to your various AI and authentication provider accounts.
-
-1. Install Vercel CLI: `npm i -g vercel`
-2. Link local instance with Vercel and GitHub accounts (creates `.vercel` directory): `vercel link`
-3. Download your environment variables: `vercel env pull`
-
+2. Install dependencies:
 ```bash
 pnpm install
-pnpm db:migrate # Setup database or apply latest database changes
+```
+
+3. Set up environment variables (copy from `.env.example`):
+```bash
+cp .env.example .env.local
+```
+
+4. Configure your `.env.local` file with required variables:
+- `AUTH_SECRET` - Generate with: `openssl rand -base64 32`
+- `POSTGRES_URL` - Your database connection string
+- `GROQ_API_KEY` - Your Groq API key
+- `NEXT_PUBLIC_APP_URL` - Your app URL (e.g., https://ultramaxo.tech)
+
+5. Run database migrations:
+```bash
+pnpm db:migrate
+```
+
+6. Start the development server:
+```bash
 pnpm dev
 ```
 
-Your app template should now be running on [localhost:3000](http://localhost:3000).
+Your app should now be running on [http://localhost:3000](http://localhost:3000)!
+
+## Deployment
+
+### Deploy to Vercel
+
+1. Push your code to GitHub
+2. Import your repository on [Vercel](https://vercel.com)
+3. Add environment variables in Vercel dashboard
+4. Deploy!
+
+### Environment Variables
+
+See [.env.example](.env.example) for all required environment variables.
+
+## License
+
+MIT
+
+---
+
+<div align="center">
+  <p>Built with ❤️ using Next.js and Groq AI</p>
+</div>
