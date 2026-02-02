@@ -3,7 +3,7 @@
 import type { UseChatHelpers } from "@ai-sdk/react";
 import type { UIMessage } from "ai";
 import equal from "fast-deep-equal";
-import { CheckIcon } from "lucide-react";
+import { CheckIcon, PlusIcon, ImageIcon, FileTextIcon, CodeIcon, FolderIcon } from "lucide-react";
 import {
   type ChangeEvent,
   type Dispatch,
@@ -28,6 +28,13 @@ import {
   ModelSelectorName,
   ModelSelectorTrigger,
 } from "@/components/ai-elements/model-selector";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import {
   chatModels,
   DEFAULT_CHAT_MODEL,
@@ -383,53 +390,100 @@ function PureMultimodalInput({
         </div>
         <PromptInputToolbar className="border-top-0! border-t-0! p-0 shadow-none dark:border-0 dark:border-transparent!">
           <PromptInputTools className="gap-0 sm:gap-0.5">
-            <AttachmentsButton
-              fileInputRef={fileInputRef}
-              selectedModelId={selectedModelId}
-              status={status}
-            />
+            {/* Dropdown Menu All-in-One - Kiri (Gemini Style) */}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  className="size-8 rounded-lg p-1.5 transition-colors hover:bg-accent"
+                  data-testid="all-options-button"
+                  variant="ghost"
+                  title="Options"
+                >
+                  <PlusIcon size={18} className="text-muted-foreground" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="start" className="w-56">
+                {/* Mode Settings */}
+                <DropdownMenuItem
+                  onClick={() => setWormgptEnabled(!wormgptEnabled)}
+                  className="cursor-pointer"
+                >
+                  <SparklesIcon className={cn("mr-2 h-4 w-4", wormgptEnabled && "fill-current")} />
+                  <span>WormGPT Mode</span>
+                  {wormgptEnabled && <CheckIcon className="ml-auto h-4 w-4" />}
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  onClick={() => setDeepThinkingEnabled(!deepThinkingEnabled)}
+                  className="cursor-pointer"
+                >
+                  <CpuIcon className="mr-2 h-4 w-4" />
+                  <span>Deep Thinking</span>
+                  {deepThinkingEnabled && <CheckIcon className="ml-auto h-4 w-4" />}
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  onClick={() => setWebSearchEnabled(!webSearchEnabled)}
+                  className="cursor-pointer"
+                >
+                  <GlobeIcon className="mr-2 h-4 w-4" />
+                  <span>Web Search</span>
+                  {webSearchEnabled && <CheckIcon className="ml-auto h-4 w-4" />}
+                </DropdownMenuItem>
+                
+                <DropdownMenuSeparator />
+                
+                {/* File Upload Options */}
+                <DropdownMenuItem
+                  onClick={() => fileInputRef.current?.click()}
+                  className="cursor-pointer"
+                  disabled={status !== "ready"}
+                >
+                  <FileTextIcon className="mr-2 h-4 w-4" />
+                  <span>Upload files</span>
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  onClick={() => {
+                    if (fileInputRef.current && status === "ready") {
+                      fileInputRef.current.accept = "image/*";
+                      fileInputRef.current.click();
+                      setTimeout(() => {
+                        if (fileInputRef.current) {
+                          fileInputRef.current.accept = "image/*,text/plain,application/pdf,application/json";
+                        }
+                      }, 100);
+                    }
+                  }}
+                  className="cursor-pointer"
+                  disabled={status !== "ready"}
+                >
+                  <ImageIcon className="mr-2 h-4 w-4" />
+                  <span>Photos</span>
+                </DropdownMenuItem>
+                <DropdownMenuItem disabled className="opacity-50">
+                  <FolderIcon className="mr-2 h-4 w-4" />
+                  <span>Add from Drive</span>
+                </DropdownMenuItem>
+                <DropdownMenuItem disabled className="opacity-50">
+                  <CodeIcon className="mr-2 h-4 w-4" />
+                  <span>Import code</span>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+
+            {/* Model Selector - Samping Kanan + */}
             <ModelSelectorCompact
               onModelChange={onModelChange}
               selectedModelId={selectedModelId}
             />
-            <div className="flex items-center gap-0.5 ml-1">
-              <Button
-                variant="ghost"
-                size="icon"
-                className={cn(
-                  "size-8 rounded-lg transition-all",
-                  wormgptEnabled ? "bg-zinc-100 text-black dark:bg-zinc-800 dark:text-white" : "text-muted-foreground"
-                )}
-                onClick={() => setWormgptEnabled(!wormgptEnabled)}
-                title="WormGPT Mode"
-              >
-                <SparklesIcon size={14} className={cn(wormgptEnabled && "fill-current")} />
-              </Button>
-              <Button
-                variant="ghost"
-                size="icon"
-                className={cn(
-                  "size-8 rounded-lg transition-all",
-                  deepThinkingEnabled ? "bg-zinc-100 text-black dark:bg-zinc-800 dark:text-white" : "text-muted-foreground"
-                )}
-                onClick={() => setDeepThinkingEnabled(!deepThinkingEnabled)}
-                title="Deep Thinking Mode"
-              >
-                <CpuIcon size={14} />
-              </Button>
-              <Button
-                variant="ghost"
-                size="icon"
-                className={cn(
-                  "size-8 rounded-lg transition-all",
-                  webSearchEnabled ? "bg-zinc-100 text-black dark:bg-zinc-800 dark:text-white" : "text-muted-foreground"
-                )}
-                onClick={() => setWebSearchEnabled(!webSearchEnabled)}
-                title="Web Search"
-              >
-                <GlobeIcon size={14} />
-              </Button>
-            </div>
+
+            <input
+              className="pointer-events-none fixed left-0 top-0 size-0.5 opacity-0"
+              ref={fileInputRef}
+              type="file"
+              onChange={handleFileChange}
+              multiple
+              accept="image/*,text/plain,application/pdf,application/json"
+              data-testid="file-input"
+            />
           </PromptInputTools>
 
           {status === "submitted" ? (
