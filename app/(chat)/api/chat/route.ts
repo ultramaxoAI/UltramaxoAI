@@ -184,90 +184,115 @@ export async function POST(request: Request) {
     const stream = createUIMessageStream({
       originalMessages: isToolApprovalFlow ? uiMessages : undefined,
       execute: async ({ writer: dataStream }) => {
-        try {
-          const result = streamText({
-            model: getLanguageModel(selectedChatModel),
-            system: systemPrompt({
-              selectedChatModel,
-              requestHints,
-              wormgptEnabled,
-              deepThinkingEnabled,
-            }),
-            messages: modelMessages,
-            stopWhen: stepCountIs(5),
-            experimental_activeTools: isReasoningModel
-              ? []
-              : [
-                  "getWeather",
-                  "createDocument",
-                  "updateDocument",
-                  "requestSuggestions",
-                  "webSearch",
-                ],
-            providerOptions: isReasoningModel
-              ? {
-                  anthropic: {
-                    thinking: { type: "enabled", budgetTokens: 10_000 },
-                  },
-                }
-              : undefined,
-            tools: {
-              getWeather,
-              createDocument: createDocument({ session, dataStream }),
-              updateDocument: updateDocument({ session, dataStream }),
-              requestSuggestions: requestSuggestions({ session, dataStream }),
-              webSearch,
-            },
-            experimental_telemetry: {
-              isEnabled: isProductionEnvironment,
-              functionId: "stream-text",
-            },
-          });
-
-          dataStream.merge(result.toUIMessageStream({ sendReasoning: true }));
-
-          if (titlePromise) {
-            const title = await titlePromise;
-            dataStream.write({ type: "data-chat-title", data: title });
-            updateChatTitleById({ chatId: id, title });
-          }
-        } catch (error: any) {
-          console.error("[Chat API] Error during streaming:", error);
-          
-          // Check if error is Invalid API Key
-          const isInvalidKey = error?.message?.includes('Invalid API Key') ||
-                              error?.message?.includes('invalid_api_key') ||
-                              error?.message?.includes('Unauthorized') ||
-                              error?.statusCode === 401;
-          
-          // Check if error is rate limit or API error
-          const isRateLimit = error?.message?.includes('rate limit') || 
-                              error?.message?.includes('429') ||
-                              error?.statusCode === 429;
-          
-          const isApiError = error?.message?.includes('API') || 
-                            error?.statusCode >= 500;
-
-          if (isInvalidKey) {
-            console.error("[Chat API] Invalid API Key detected - switching to backup key");
-            markKeyFailed('primary');
-            // Reset after 30 seconds for invalid key
-            setTimeout(() => resetFailureTracking(), 30000);
+        let retryCount = 0;
+        const maxRetries = 2;
+        
+        while (retryCount <= maxRetries) {
+          try {
+            // Disable tools on retry to avoid function call errors
+            const useTools = retryCount === 0 && !isReasoningModel;
             
-            // Throw more specific error
-            throw new Error("Invalid API Key. Silakan hubungi administrator untuk mengecek konfigurasi API key.");
-          }
-
-          if (isRateLimit || isApiError) {
-            console.log("[Chat API] Marking current key as failed, will use backup on retry");
-            // Mark as failed - next request will use different key
-            markKeyFailed('primary'); // Will auto-switch based on tracking
+            if (retryCount > 0) {
+              console.log(`[Chat API] Retry attempt ${retryCount}/${maxRetries} without tools`);
+            }
             
-            // Reset after 60 seconds
-            setTimeout(() => resetFailureTracking(), 60000);
+            const result = streamText({
+              model: getLanguageModel(selectedChatModel),
+              system: systemPrompt({
+                selectedChatModel,
+                requestHints,
+                wormgptEnabled,
+                deepThinkingEnabled,
+              }),
+              messages: modelMessages,
+              stopWhen: stepCountIs(5),
+              experimental_activeTools: useTools
+                ? [
+                    "getWeather",
+                    "createDocument",
+                    "updateDocument",
+                    "requestSuggestions",
+                    "webSearch",
+                  ]
+                : [],
+              providerOptions: isReasoningModel
+                ? {
+                    anthropic: {
+                      thinking: { type: "enabled", budgetTokens: 10_000 },
+                    },
+                  }
+                : undefined,
+              tools: useTools ? {
+                getWeather,
+                createDocument: createDocument({ session, dataStream }),
+                updateDocument: updateDocument({ session, dataStream }),
+                requestSuggestions: requestSuggestions({ session, dataStream }),
+                webSearch,
+              } : {},
+              experimental_telemetry: {
+                isEnabled: isProductionEnvironment,
+                functionId: "stream-text",
+              },
+            });
+
+
+            dataStream.merge(result.toUIMessageStream({ sendReasoning: true }));
+
+            if (titlePromise) {
+              const title = await titlePromise;
+              dataStream.write({ type: "data-chat-title", data: title });
+              updateChatTitleById({ chatId: id, title });
+            }
+            
+            // Success - break retry loop
+            break;
+            
+          } catch (error: any) {
+            console.error(`[Chat API] Error during streaming (attempt ${retryCount + 1}/${maxRetries + 1}):`, error);
+            
+            // Check if error is function call related
+            const isFunctionError = error?.message?.includes('Failed to call a function') ||
+                                   error?.message?.includes('failed_generation') ||
+                                   error?.message?.includes('invalid_request_error') ||
+                                   error?.type === 'invalid_request_error';
+            
+            // Check if error is Invalid API Key
+            const isInvalidKey = error?.message?.includes('Invalid API Key') ||
+                                error?.message?.includes('invalid_api_key') ||
+                                error?.message?.includes('Unauthorized') ||
+                                error?.statusCode === 401;
+            
+            // Check if error is rate limit or API error
+            const isRateLimit = error?.message?.includes('rate limit') || 
+                                error?.message?.includes('429') ||
+                                error?.statusCode === 429;
+            
+            const isApiError = error?.message?.includes('API') || 
+                              error?.statusCode >= 500;
+
+            if (isInvalidKey) {
+              console.error("[Chat API] Invalid API Key detected - switching to backup key");
+              markKeyFailed('primary');
+              setTimeout(() => resetFailureTracking(), 30000);
+              throw new Error("Invalid API Key. Silakan hubungi administrator untuk mengecek konfigurasi API key.");
+            }
+
+            if (isFunctionError && retryCount < maxRetries) {
+              console.log(`[Chat API] Function call failed, retrying without tools (${retryCount + 1}/${maxRetries})`);
+              retryCount++;
+              await new Promise(resolve => setTimeout(resolve, 500)); // Wait 500ms before retry
+              continue; // Retry loop
+            }
+
+            if (isRateLimit || isApiError) {
+              console.log("[Chat API] Marking current key as failed, will use backup on retry");
+              markKeyFailed('primary');
+              setTimeout(() => resetFailureTracking(), 60000);
+            }
+            
+            // If we've exhausted retries or hit non-retryable error, throw
+            throw error;
           }
-          
-          throw error;
         }
       },
       generateId: generateUUID,
