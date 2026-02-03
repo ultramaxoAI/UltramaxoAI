@@ -13,7 +13,7 @@ export const imageDocumentHandler = createDocumentHandler<"image">({
     });
 
     dataStream.write({
-      type: "data-text-delta",
+      type: "data-textDelta",
       data: content,
       transient: true,
     });
@@ -29,7 +29,7 @@ export const imageDocumentHandler = createDocumentHandler<"image">({
     });
 
     dataStream.write({
-      type: "data-text-delta",
+      type: "data-textDelta",
       data: content,
       transient: true,
     });
