@@ -194,6 +194,7 @@ export async function POST(request: Request) {
             
             if (retryCount > 0) {
               console.log(`[Chat API] Retry attempt ${retryCount}/${maxRetries} without tools`);
+            }
             
             const result = streamText({
               model: getLanguageModel(selectedChatModel),
