@@ -181,10 +181,6 @@ export async function POST(request: Request) {
 
     const modelMessages = await convertToModelMessages(uiMessages);
 
-    // Check if model supports tools reliably
-    // Groq Llama models often fail with function calling, so disable tools for them
-    const modelSupportsTools = !selectedChatModel.includes('llama') && !isReasoningModel;
-    
     const stream = createUIMessageStream({
       originalMessages: isToolApprovalFlow ? uiMessages : undefined,
       execute: async ({ writer: dataStream }) => {
@@ -193,15 +189,11 @@ export async function POST(request: Request) {
         
         while (retryCount <= maxRetries) {
           try {
-            // Disable tools if model doesn't support them or on retry
-            const useTools = retryCount === 0 && modelSupportsTools;
+            // Disable tools on retry to avoid function call errors
+            const useTools = retryCount === 0 && !isReasoningModel;
             
             if (retryCount > 0) {
               console.log(`[Chat API] Retry attempt ${retryCount}/${maxRetries} without tools`);
-            }
-            
-            if (!modelSupportsTools && retryCount === 0) {
-              console.log(`[Chat API] Tools disabled for model: ${selectedChatModel} (not reliable for function calling)`);
             
             const result = streamText({
               model: getLanguageModel(selectedChatModel),
@@ -256,12 +248,21 @@ export async function POST(request: Request) {
             
           } catch (error: any) {
             console.error(`[Chat API] Error during streaming (attempt ${retryCount + 1}/${maxRetries + 1}):`, error);
+            console.error(`[Chat API] Error details:`, {
+              message: error?.message,
+              type: error?.type,
+              statusCode: error?.statusCode,
+              cause: error?.cause,
+              stack: error?.stack?.split('\n').slice(0, 3)
+            });
             
             // Check if error is function call related
             const isFunctionError = error?.message?.includes('Failed to call a function') ||
                                    error?.message?.includes('failed_generation') ||
                                    error?.message?.includes('invalid_request_error') ||
-                                   error?.type === 'invalid_request_error';
+                                   error?.message?.includes('tool call validation') ||
+                                   error?.type === 'invalid_request_error' ||
+                                   error?.cause?.message?.includes('tool');
             
             // Check if error is Invalid API Key
             const isInvalidKey = error?.message?.includes('Invalid API Key') ||

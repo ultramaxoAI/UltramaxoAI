@@ -33,13 +33,18 @@ export const getWeather = tool({
   description:
     "Get the current weather at a location. You can provide either coordinates or a city name.",
   inputSchema: z.object({
-    latitude: z.number().optional(),
-    longitude: z.number().optional(),
+    latitude: z.number().optional().describe("Latitude coordinate"),
+    longitude: z.number().optional().describe("Longitude coordinate"),
     city: z
       .string()
-      .describe("City name (e.g., 'San Francisco', 'New York', 'London')")
-      .optional(),
-  }),
+      .optional()
+      .describe("City name (e.g., 'San Francisco', 'New York', 'London')"),
+  }).refine(
+    (data) => (data.city) || (data.latitude !== undefined && data.longitude !== undefined),
+    {
+      message: "Either provide city name OR both latitude and longitude",
+    }
+  ),
   needsApproval: true,
   execute: async (input) => {
     let latitude: number;
