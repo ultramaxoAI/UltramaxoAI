@@ -1,8 +1,11 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useActionState } from 'react';
 import Stepper, { Step } from './ui/stepper';
 import { AuthForm } from './auth-form';
+import { SubmitButton } from './submit-button';
+import { register, type RegisterActionState } from '@/app/(auth)/actions';
+import Link from 'next/link';
 
 export function OnboardingStepper() {
   const [formData, setFormData] = useState({
@@ -11,6 +14,15 @@ export function OnboardingStepper() {
     purpose: '',
     interests: [] as string[],
   });
+
+  const [state, formAction] = useActionState<RegisterActionState, FormData>(
+    register,
+    {
+      status: 'idle',
+    }
+  );
+
+  const [isSuccessful, setIsSuccessful] = useState(false);
 
   const handleFinalComplete = () => {
     // Registration completed
@@ -136,7 +148,15 @@ export function OnboardingStepper() {
             </p>
           </div>
 
-          <AuthForm action="register" />
+          <AuthForm action={formAction} type="register">
+            <SubmitButton isSuccessful={isSuccessful}>Buat Akun</SubmitButton>
+            <p className="mt-4 text-center text-sm text-muted-foreground">
+              Sudah punya akun?{' '}
+              <Link href="/login" className="text-primary hover:underline">
+                Masuk di sini
+              </Link>
+            </p>
+          </AuthForm>
         </div>
       </Step>
     </Stepper>
