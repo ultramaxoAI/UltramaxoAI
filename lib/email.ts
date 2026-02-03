@@ -1,38 +1,55 @@
-const RESEND_API_KEY = process.env.RESEND_API_KEY || "";
-const RESEND_FROM = process.env.RESEND_FROM || "Ultramaxo AI <noreply@send.ultramaxo.tech>";
+import nodemailer from "nodemailer";
 
-async function sendResendEmail(to: string, subject: string, html: string) {
-  if (!RESEND_API_KEY) {
-    console.warn("[email] RESEND_API_KEY not configured; skipping send.");
+// SMTP Configuration dari environment variables
+const SMTP_HOST = process.env.SMTP_HOST || "smtp.gmail.com";
+const SMTP_PORT = parseInt(process.env.SMTP_PORT || "587");
+const SMTP_USER = process.env.SMTP_USER || "";
+const SMTP_PASS = process.env.SMTP_PASS || "";
+const EMAIL_FROM = process.env.EMAIL_FROM || "Ultramaxo AI <noreply@ultramaxo.tech>";
+
+// Create reusable transporter
+let transporter: nodemailer.Transporter | null = null;
+
+function getTransporter() {
+  if (!transporter) {
+    if (!SMTP_USER || !SMTP_PASS) {
+      console.warn("[email] SMTP credentials not configured; email sending disabled.");
+      return null;
+    }
+
+    transporter = nodemailer.createTransport({
+      host: SMTP_HOST,
+      port: SMTP_PORT,
+      secure: SMTP_PORT === 465, // true for 465, false for other ports
+      auth: {
+        user: SMTP_USER,
+        pass: SMTP_PASS,
+      },
+    });
+  }
+  return transporter;
+}
+
+async function sendEmail(to: string, subject: string, html: string) {
+  const transport = getTransporter();
+  
+  if (!transport) {
+    console.warn("[email] Email transport not configured; skipping send.");
     return false;
   }
 
   try {
-    const response = await fetch("https://api.resend.com/emails", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${RESEND_API_KEY}`,
-      },
-      body: JSON.stringify({
-        from: RESEND_FROM,
-        to: [to],
-        subject,
-        html,
-      }),
+    const info = await transport.sendMail({
+      from: EMAIL_FROM,
+      to,
+      subject,
+      html,
     });
 
-    if (!response.ok) {
-      const text = await response.text();
-      console.error("[email] Resend error:", text);
-      return false;
-    }
-
-    const data = await response.json();
-    console.info("[email] Resend sent:", { to, subject, id: data.id });
+    console.info("[email] Email sent:", { to, subject, messageId: info.messageId });
     return true;
   } catch (err) {
-    console.error("[email] Resend exception:", err);
+    console.error("[email] Send error:", err);
     return false;
   }
 }
@@ -65,7 +82,7 @@ export async function sendVerificationEmail(email: string, code: string) {
       </div>
     </div>
   `;
-  return sendResendEmail(email, "🔐 Kode Verifikasi Ultramaxo AI", html);
+  return sendEmail(email, "🔐 Kode Verifikasi Ultramaxo AI", html);
 }
 
 export async function sendPasswordResetEmail(email: string, resetUrl: string) {
@@ -97,5 +114,5 @@ export async function sendPasswordResetEmail(email: string, resetUrl: string) {
     </div>
   `;
 
-  return sendResendEmail(email, "🔐 Reset Password Ultramaxo AI", html);
+  return sendEmail(email, "🔐 Reset Password Ultramaxo AI", html);
 }
