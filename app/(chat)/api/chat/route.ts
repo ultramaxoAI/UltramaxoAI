@@ -181,6 +181,10 @@ export async function POST(request: Request) {
 
     const modelMessages = await convertToModelMessages(uiMessages);
 
+    // Check if model supports tools reliably
+    // Groq Llama models often fail with function calling, so disable tools for them
+    const modelSupportsTools = !selectedChatModel.includes('llama') && !isReasoningModel;
+    
     const stream = createUIMessageStream({
       originalMessages: isToolApprovalFlow ? uiMessages : undefined,
       execute: async ({ writer: dataStream }) => {
@@ -189,12 +193,15 @@ export async function POST(request: Request) {
         
         while (retryCount <= maxRetries) {
           try {
-            // Disable tools on retry to avoid function call errors
-            const useTools = retryCount === 0 && !isReasoningModel;
+            // Disable tools if model doesn't support them or on retry
+            const useTools = retryCount === 0 && modelSupportsTools;
             
             if (retryCount > 0) {
               console.log(`[Chat API] Retry attempt ${retryCount}/${maxRetries} without tools`);
             }
+            
+            if (!modelSupportsTools && retryCount === 0) {
+              console.log(`[Chat API] Tools disabled for model: ${selectedChatModel} (not reliable for function calling)`);
             
             const result = streamText({
               model: getLanguageModel(selectedChatModel),
