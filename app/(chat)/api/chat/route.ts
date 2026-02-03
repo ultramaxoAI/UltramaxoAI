@@ -209,8 +209,8 @@ export async function POST(request: Request) {
               experimental_activeTools: useTools
                 ? [
                     "getWeather",
-                    "createDocument",
-                    "updateDocument",
+                    // "createDocument", // Disabled - Groq has issues with this tool
+                    // "updateDocument", // Disabled - Groq has issues with this tool
                     "requestSuggestions",
                     "webSearch",
                   ]
@@ -224,8 +224,8 @@ export async function POST(request: Request) {
                 : undefined,
               tools: useTools ? {
                 getWeather,
-                createDocument: createDocument({ session, dataStream }),
-                updateDocument: updateDocument({ session, dataStream }),
+                // createDocument: createDocument({ session, dataStream }), // Disabled
+                // updateDocument: updateDocument({ session, dataStream }), // Disabled
                 requestSuggestions: requestSuggestions({ session, dataStream }),
                 webSearch,
               } : {},

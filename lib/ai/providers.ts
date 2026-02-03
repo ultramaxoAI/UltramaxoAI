@@ -97,7 +97,12 @@ export const getLanguageModel = (modelId: string) => {
     throw error;
   }
 };
-
+// Use OpenRouter if available for better stability
+  if (openrouter && hasOpenRouter) {
+    return openrouter("meta-llama/llama-3.3-70b-instruct");
+  }
+  
+  
 export function getTitleModel() {
   const groqClient = getGroqClient();
   return groqClient("llama-3.3-70b-versatile");
