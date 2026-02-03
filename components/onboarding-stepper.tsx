@@ -1,12 +1,10 @@
 'use client';
 
 import { useState } from 'react';
-import { useRouter } from 'next/navigation';
 import Stepper, { Step } from './ui/stepper';
 import { AuthForm } from './auth-form';
 
 export function OnboardingStepper() {
-  const router = useRouter();
   const [formData, setFormData] = useState({
     email: '',
     password: '',
@@ -15,8 +13,8 @@ export function OnboardingStepper() {
   });
 
   const handleFinalComplete = () => {
-    // Redirect to login after successful registration
-    router.push('/login');
+    // Registration completed
+    console.log('Registration completed with data:', formData);
   };
 
   return (
