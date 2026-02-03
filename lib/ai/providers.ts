@@ -8,7 +8,7 @@ type GroqProvider = typeof groq;
 
 // Validate and clean API keys (remove empty strings)
 const primaryApiKey = (process.env.GROQ_API_KEY_1 || process.env.GROQ_API_KEY || '').trim();
-const secondaryApiKey = (process.env.GROQ_API_KEY_2 || '').trim();
+const secondaryApiKey = (process.env.GROQ_API_KEY_2 || process.env.GROQ_API_KEY_3 || '').trim();
 
 // Only create clients if we have valid non-empty keys
 const groqPrimary: GroqProvider = primaryApiKey && primaryApiKey.length > 0
