@@ -45,7 +45,6 @@ export const getWeather = tool({
       message: "Either provide city name OR both latitude and longitude",
     }
   ),
-  needsApproval: true,
   execute: async (input) => {
     let latitude: number;
     let longitude: number;
