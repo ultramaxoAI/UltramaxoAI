@@ -31,52 +31,29 @@ async function geocodeCity(
 
 export const getWeather = tool({
   description:
-    "Get the current weather at a location. You can provide either coordinates or a city name.",
+    "Get the current weather at a location by city name. Always use city name parameter.",
   inputSchema: z.object({
-    latitude: z.number().optional().describe("Latitude coordinate"),
-    longitude: z.number().optional().describe("Longitude coordinate"),
     city: z
       .string()
-      .optional()
-      .describe("City name (e.g., 'San Francisco', 'New York', 'London')"),
-  }).refine(
-    (data) => (data.city) || (data.latitude !== undefined && data.longitude !== undefined),
-    {
-      message: "Either provide city name OR both latitude and longitude",
-    }
-  ),
+      .describe("City name (e.g., 'San Francisco', 'New York', 'London', 'Jakarta')"),
+  }),
   execute: async (input) => {
-    let latitude: number;
-    let longitude: number;
-
-    if (input.city) {
-      const coords = await geocodeCity(input.city);
-      if (!coords) {
-        return {
-          error: `Could not find coordinates for "${input.city}". Please check the city name.`,
-        };
-      }
-      latitude = coords.latitude;
-      longitude = coords.longitude;
-    } else if (input.latitude !== undefined && input.longitude !== undefined) {
-      latitude = input.latitude;
-      longitude = input.longitude;
-    } else {
+    const coords = await geocodeCity(input.city);
+    if (!coords) {
       return {
-        error:
-          "Please provide either a city name or both latitude and longitude coordinates.",
+        error: `Could not find coordinates for "${input.city}". Please check the city name.`,
       };
     }
+    
+    const latitude = coords.latitude;
+    const longitude = coords.longitude;
 
     const response = await fetch(
       `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current=temperature_2m&hourly=temperature_2m&daily=sunrise,sunset&timezone=auto`
     );
 
     const weatherData = await response.json();
-
-    if ("city" in input) {
-      weatherData.cityName = input.city;
-    }
+    weatherData.cityName = input.city;
 
     return weatherData;
   },
