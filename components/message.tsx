@@ -147,6 +147,7 @@ const PurePreviewMessage = ({
                         <ResponseViewer 
                           text={sanitizeText(part.text)} 
                           hideCodeBlocks={hasAnyArtifact}
+                          className={isLoading ? "streaming-cursor" : ""}
                         />
                       ) : (
                         <Response>{sanitizeText(part.text)}</Response>

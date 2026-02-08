@@ -5,6 +5,8 @@ import { Streamdown } from "streamdown";
 import { cn } from "@/lib/utils";
 import remarkMath from "remark-math";
 import rehypeKatex from "rehype-katex";
+import rehypeHighlight from "rehype-highlight";
+import { CodeBlockWrapper } from "./code-block-wrapper";
 import "katex/dist/katex.min.css";
 
 type ResponseProps = ComponentProps<typeof Streamdown>;
@@ -17,7 +19,25 @@ export function Response({ className, children, ...props }: ResponseProps) {
         className
       )}
       remarkPlugins={[remarkMath]}
-      rehypePlugins={[rehypeKatex]}
+      rehypePlugins={[rehypeKatex, rehypeHighlight]}
+      components={{
+        pre({ children, ...props }: any) {
+          const codeElement = children;
+          const className = codeElement?.props?.className || "";
+          const match = /language-(\w+)/.exec(className);
+          const language = match ? match[1] : "";
+
+          if (language) {
+            return (
+              <CodeBlockWrapper language={language}>
+                <pre {...props}>{codeElement}</pre>
+              </CodeBlockWrapper>
+            );
+          }
+
+          return <pre {...props}>{children}</pre>;
+        },
+      }}
       {...props}
     >
       {children}

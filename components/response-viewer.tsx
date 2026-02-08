@@ -255,7 +255,7 @@ export function ResponseViewer({
   return (
     <div className={cn("space-y-3", className)}>
       {/* Normal view: selalu tampil seperti AI biasa */}
-      <Response>{text}</Response>
+      <Response className={className}>{text}</Response>
 
       {/* PERMANENTLY HIDE code blocks explorer - code should appear in artifacts only */}
     </div>
