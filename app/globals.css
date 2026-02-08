@@ -39,7 +39,7 @@
   --app-bg: #ffffff;
   --app-sidebar: #f9fafb;
   --app-input: #f3f4f6;
-  --app-accent: #14b8a6;
+  --app-accent: #52525b;
   --app-text: #111827;
   
   --background: #ffffff;
@@ -56,7 +56,7 @@
   --sidebar-accent: #ffffff;
   --sidebar-accent-foreground: #111827;
   --sidebar-border: #e5e7eb;
-  --sidebar-ring: #14b8a6;
+  --sidebar-ring: #52525b;
   
   /* Soft Glow */
   --shadow-neon: 0 0 40px rgb(255 255 255 / 15%), 0 0 80px rgb(255 255 255 / 10%);
@@ -67,19 +67,19 @@
   --card-foreground: #111827;
   --popover: #ffffff;
   --popover-foreground: #111827;
-  --primary: #14b8a6;
+  --primary: #52525b;
   --primary-foreground: #ffffff;
   --secondary: #f3f4f6;
   --secondary-foreground: #111827;
   --muted: #f3f4f6;
   --muted-foreground: #6b7280;
-  --accent: #14b8a6;
+  --accent: #52525b;
   --accent-foreground: #ffffff;
   --destructive: #ef4444;
   --destructive-foreground: #ffffff;
   --border: #e5e7eb;
   --input: #f3f4f6;
-  --ring: #14b8a6;
+  --ring: #52525b;
   --radius: 0.5rem;
 }
 
@@ -90,7 +90,7 @@
   --app-bg: #18181b;
   --app-sidebar: #09090b;
   --app-input: #3f3f46;
-  --app-accent: #14b8a6;
+  --app-accent: #52525b;
   --app-text: #f4f4f5;
   
   --background: #18181b;
@@ -107,25 +107,25 @@
   --sidebar-accent: #18181b;
   --sidebar-accent-foreground: #f4f4f5;
   --sidebar-border: #27272a;
-  --sidebar-ring: #14b8a6;
+  --sidebar-ring: #52525b;
   
   --card: #3f3f46;
   --card-foreground: #f4f4f5;
   --popover: #3f3f46;
   --popover-foreground: #f4f4f5;
-  --primary: #14b8a6;
+  --primary: #52525b;
   --primary-foreground: #ffffff;
   --secondary: #09090b;
   --secondary-foreground: #f4f4f5;
   --muted: #3f3f46;
   --muted-foreground: #71717a;
-  --accent: #14b8a6;
+  --accent: #52525b;
   --accent-foreground: #ffffff;
   --destructive: #ef4444;
   --destructive-foreground: #ffffff;
   --border: #3f3f46;
   --input: #3f3f46;
-  --ring: #14b8a6;
+  --ring: #52525b;
   --chart-1: hsl(220 70% 50%);
   --chart-2: hsl(160 60% 45%);
   --chart-3: hsl(30 80% 55%);
