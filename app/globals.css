@@ -11,7 +11,7 @@
 @plugin "tailwindcss-animate";
 @plugin "@tailwindcss/typography";
 
-/* UltraMaxo Design Token System */
+/* UltraMaxo Design Token System - ChatGPT Dark Theme */
 :root {
   /* Spacing Scale (8px base) */
   --space-0-5: 2px;
@@ -35,62 +35,97 @@
   --font-size-5xl: 3rem;
   --font-size-6xl: 3.75rem;
   
-  /* Monochrome Colors */
-  --primary: oklch(0.95 0.01 250);
-  --primary-hover: oklch(0.98 0.005 250);
-  --primary-active: oklch(0.90 0.015 250);
-  --background: oklch(0.10 0.005 250);
-  --surface: oklch(0.13 0.005 250);
-  --surface-subtle: oklch(0.18 0.005 250);
-  --foreground: oklch(0.98 0.004 110);
-  --text-secondary: oklch(0.82 0.003 110);
-  --text-muted: oklch(0.60 0.002 110);
+  /* Light Mode (Default) */
+  --app-bg: #ffffff;
+  --app-sidebar: #f9fafb;
+  --app-input: #f3f4f6;
+  --app-accent: #14b8a6;
+  --app-text: #111827;
+  
+  --background: #ffffff;
+  --surface: #f3f4f6;
+  --surface-subtle: #f9fafb;
+  --foreground: #111827;
+  --text-secondary: #374151;
+  --text-muted: #6b7280;
+  
+  --sidebar: #f9fafb;
+  --sidebar-foreground: #111827;
+  --sidebar-primary: #f3f4f6;
+  --sidebar-primary-foreground: #111827;
+  --sidebar-accent: #ffffff;
+  --sidebar-accent-foreground: #111827;
+  --sidebar-border: #e5e7eb;
+  --sidebar-ring: #14b8a6;
   
   /* Soft Glow */
   --shadow-neon: 0 0 40px rgb(255 255 255 / 15%), 0 0 80px rgb(255 255 255 / 10%);
   --shadow-neon-hover: 0 0 60px rgb(255 255 255 / 25%), 0 0 90px rgb(255 255 255 / 15%);
   
-  /* Legacy tokens for compatibility */
-  --card: var(--surface);
-  --card-foreground: var(--foreground);
-  --popover: var(--surface);
-  --popover-foreground: var(--foreground);
-  --primary-foreground: oklch(0.08 0.005 250);
-  --secondary: var(--surface-subtle);
-  --secondary-foreground: var(--foreground);
-  --muted: var(--surface);
-  --muted-foreground: var(--text-muted);
-  --accent: var(--surface-subtle);
-  --accent-foreground: var(--foreground);
-  --destructive: oklch(0.65 0.20 15);
-  --destructive-foreground: var(--foreground);
-  --border: oklch(0.20 0.01 250);
-  --input: var(--surface);
-  --ring: var(--primary);
+  /* Light Mode (Default) */
+  --card: #f3f4f6;
+  --card-foreground: #111827;
+  --popover: #ffffff;
+  --popover-foreground: #111827;
+  --primary: #14b8a6;
+  --primary-foreground: #ffffff;
+  --secondary: #f3f4f6;
+  --secondary-foreground: #111827;
+  --muted: #f3f4f6;
+  --muted-foreground: #6b7280;
+  --accent: #14b8a6;
+  --accent-foreground: #ffffff;
+  --destructive: #ef4444;
+  --destructive-foreground: #ffffff;
+  --border: #e5e7eb;
+  --input: #f3f4f6;
+  --ring: #14b8a6;
   --radius: 0.5rem;
 }
 
-/* Dark theme tokens stay consistent */
+
+/* Dark theme tokens - Reagent Ultra Dark style */
 .dark {
-  --background: oklch(0.10 0.005 250);
-  --foreground: oklch(0.98 0.004 110);
-  --card: oklch(0.13 0.005 250);
-  --card-foreground: oklch(0.98 0.004 110);
-  --popover: oklch(0.13 0.005 250);
-  --popover-foreground: oklch(0.98 0.004 110);
-  --primary: oklch(0.95 0.01 250);
-  --primary-foreground: oklch(0.08 0.005 250);
-  --secondary: oklch(0.18 0.005 250);
-  --secondary-foreground: oklch(0.98 0.004 110);
-  --muted: oklch(0.13 0.005 250);
-  --muted-foreground: oklch(0.60 0.002 110);
-  --accent: oklch(0.18 0.005 250);
-  --accent-foreground: oklch(0.98 0.004 110);
-  --destructive: oklch(0.45 0.02 25);
-  --destructive-foreground: oklch(0.98 0.004 110);
-  --border: oklch(0.20 0.005 250);
-  --input: oklch(0.13 0.005 250);
-  --ring: oklch(0.95 0.01 250);
+  /* Reagent Dark Theme */
+  --app-bg: #18181b;
+  --app-sidebar: #09090b;
+  --app-input: #3f3f46;
+  --app-accent: #14b8a6;
+  --app-text: #f4f4f5;
+  
+  --background: #18181b;
+  --surface: #3f3f46;
+  --surface-subtle: #27272a;
+  --foreground: #f4f4f5;
+  --text-secondary: #d4d4d8;
+  --text-muted: #71717a;
+  
+  --sidebar: #09090b;
+  --sidebar-foreground: #f4f4f5;
+  --sidebar-primary: #18181b;
+  --sidebar-primary-foreground: #f4f4f5;
+  --sidebar-accent: #18181b;
+  --sidebar-accent-foreground: #f4f4f5;
+  --sidebar-border: #27272a;
+  --sidebar-ring: #14b8a6;
+  
+  --card: #3f3f46;
+  --card-foreground: #f4f4f5;
+  --popover: #3f3f46;
+  --popover-foreground: #f4f4f5;
+  --primary: #14b8a6;
+  --primary-foreground: #ffffff;
+  --secondary: #09090b;
+  --secondary-foreground: #f4f4f5;
+  --muted: #3f3f46;
+  --muted-foreground: #71717a;
+  --accent: #14b8a6;
+  --accent-foreground: #ffffff;
+  --destructive: #ef4444;
+  --destructive-foreground: #ffffff;
+  --border: #3f3f46;
+  --input: #3f3f46;
+  --ring: #14b8a6;
   --chart-1: hsl(220 70% 50%);
   --chart-2: hsl(160 60% 45%);
   --chart-3: hsl(30 80% 55%);
@@ -117,6 +152,13 @@
   --radius-lg: var(--radius);
   --radius-md: calc(var(--radius) - 2px);
   --radius-sm: calc(var(--radius) - 4px);
+
+  /* Reagent Color Theme */
+  --color-app-bg: var(--app-bg);
+  --color-app-sidebar: var(--app-sidebar);
+  --color-app-input: var(--app-input);
+  --color-app-accent: var(--app-accent);
+  --color-app-text: var(--app-text);
 
   --color-background: var(--background);
   --color-foreground: var(--foreground);
@@ -225,6 +267,12 @@
 
   html {
     overflow-x: hidden;
+  }
+  
+  /* Dark mode specific overrides */
+  .dark body,
+  .dark html {
+    background-color: #18181b !important;
   }
 }
 
@@ -593,13 +641,193 @@
   }
 }
 
-/* Syntax Highlighting for Code Blocks */
-.hljs {
-  background: #0d1117 !important;
-  color: #c9d1d9 !important;
-  padding: 1rem !important;
-  border-radius: 0.5rem !important;
+/* Syntax Highlighting for Code Blocks - Custom Dark Modern Theme */
+
+/* Inline code styling - abu-abu terang dengan background subtle */
+:not(pre) > code {
+  background: rgba(255, 255, 255, 0.08) !important;
+  color: #e4e4e4 !important;
+  padding: 0.15rem 0.4rem !important;
+  border-radius: 0.25rem !important;
+  font-size: 0.9em !important;
+  font-family: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+}
+
+/* Code block base styling - abu-abu gelap elegan */
+.hljs,
+pre code.hljs {
+  background: #1e1e1e !important;
+  color: #d4d4d4 !important;
+  padding: 1.25rem !important;
+  border-radius: 0.75rem !important;
   overflow-x: auto !important;
+  font-family: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace !important;
+  font-size: 0.9rem !important;
+  line-height: 1.6 !important;
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+}
+
+/* Custom Dark Modern Color Scheme - VS Code Dark+ inspired */
+.hljs-comment,
+.hljs-quote {
+  color: #6a9955;
+  font-style: italic;
+}
+
+.hljs-keyword,
+.hljs-selector-tag,
+.hljs-literal,
+.hljs-section,
+.hljs-link {
+  color: #569cd6;
+  font-weight: 500;
+}
+
+.hljs-string,
+.hljs-doctag {
+  color: #ce9178;
+}
+
+.hljs-title,
+.hljs-name,
+.hljs-type,
+.hljs-attr,
+.hljs-symbol,
+.hljs-bullet,
+.hljs-addition,
+.hljs-variable,
+.hljs-template-tag,
+.hljs-template-variable {
+  color: #4ec9b0;
+}
+
+.hljs-number,
+.hljs-regexp,
+.hljs-built_in {
+  color: #b5cea8;
+}
+
+.hljs-function,
+.hljs-class .hljs-title {
+  color: #dcdcaa;
+}
+
+.hljs-meta {
+  color: #9cdcfe;
+}
+
+.hljs-tag {
+  color: #569cd6;
+}
+
+.hljs-attribute {
+  color: #9cdcfe;
+}
+
+.hljs-deletion {
+  color: #f14c4c;
+  background: rgba(241, 76, 76, 0.1);
+}
+
+.hljs-selector-class,
+.hljs-selector-id {
+  color: #d7ba7d;
+}
+
+.hljs-emphasis {
+  font-style: italic;
+}
+
+.hljs-strong {
+  font-weight: bold;
+  color: #569cd6;
+}
+
+/* Show code block buttons */
+pre:has(code) {
+  position: relative;
+}
+
+pre:has(code) button {
+  display: flex !important;
+  opacity: 1 !important;
+  visibility: visible !important;
+}
+
+.hljs-comment,
+.hljs-quote {
+  color: #6a9955;
+  font-style: italic;
+}
+
+.hljs-keyword,
+.hljs-selector-tag,
+.hljs-literal,
+.hljs-section,
+.hljs-link {
+  color: #569cd6;
+  font-weight: 500;
+}
+
+.hljs-string,
+.hljs-doctag {
+  color: #ce9178;
+}
+
+.hljs-title,
+.hljs-name,
+.hljs-type,
+.hljs-attr,
+.hljs-symbol,
+.hljs-bullet,
+.hljs-addition,
+.hljs-variable,
+.hljs-template-tag,
+.hljs-template-variable {
+  color: #4ec9b0;
+}
+
+.hljs-number,
+.hljs-regexp,
+.hljs-built_in {
+  color: #b5cea8;
+}
+
+.hljs-function,
+.hljs-class .hljs-title {
+  color: #dcdcaa;
+}
+
+.hljs-meta {
+  color: #9cdcfe;
+}
+
+.hljs-tag {
+  color: #569cd6;
+}
+
+.hljs-attribute {
+  color: #9cdcfe;
+}
+
+.hljs-deletion {
+  color: #f14c4c;
+  background: rgba(241, 76, 76, 0.1);
+}
+
+.hljs-selector-class,
+.hljs-selector-id {
+  color: #d7ba7d;
+}
+
+.hljs-emphasis {
+  font-style: italic;
+}
+
+.hljs-strong {
+  font-weight: bold;
+  color: #569cd6;
 }
 
 /* Show code block buttons */
