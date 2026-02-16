@@ -52,6 +52,86 @@ const staggerContainer = {
 };
 
 /* ────────────────────────────────────────────
+   Logo SVG component
+   ──────────────────────────────────────────── */
+const UltramaxoLogo = ({ size = 32 }: { size?: number }) => (
+  <svg
+    className="flex-shrink-0"
+    fill="none"
+    height={size}
+    viewBox="0 0 64 64"
+    width={size}
+    xmlns="http://www.w3.org/2000/svg"
+  >
+    <defs>
+      <linearGradient
+        gradientUnits="userSpaceOnUse"
+        id="logoGrad"
+        x1="0"
+        x2="64"
+        y1="0"
+        y2="64"
+      >
+        <stop offset="0%" stopColor="#a855f7" />
+        <stop offset="50%" stopColor="#818cf8" />
+        <stop offset="100%" stopColor="#93c5fd" />
+      </linearGradient>
+      <radialGradient cx="50%" cy="40%" id="logoBg" r="60%">
+        <stop offset="0%" stopColor="#1e293b" />
+        <stop offset="100%" stopColor="#0f172a" />
+      </radialGradient>
+    </defs>
+    <rect fill="url(#logoBg)" height="64" rx="14" width="64" />
+    {/* Left arm of U */}
+    <path
+      d="M16 14 L16 40 Q16 50 26 50 L32 50"
+      fill="none"
+      stroke="url(#logoGrad)"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth="4"
+    />
+    <path
+      d="M22 14 L22 38 Q22 46 30 46 L32 46"
+      fill="none"
+      opacity="0.7"
+      stroke="url(#logoGrad)"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth="3"
+    />
+    {/* Right arm of U */}
+    <path
+      d="M48 14 L48 40 Q48 50 38 50 L32 50"
+      fill="none"
+      stroke="url(#logoGrad)"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth="4"
+    />
+    <path
+      d="M42 14 L42 38 Q42 46 34 46 L32 46"
+      fill="none"
+      opacity="0.7"
+      stroke="url(#logoGrad)"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      strokeWidth="3"
+    />
+    {/* Circuit nodes */}
+    <circle cx="16" cy="24" fill="#a855f7" r="3" />
+    <circle cx="22" cy="32" fill="#818cf8" r="2.5" />
+    <circle cx="48" cy="24" fill="#93c5fd" r="3" />
+    <circle cx="42" cy="32" fill="#818cf8" r="2.5" />
+    <circle cx="32" cy="50" fill="#c084fc" r="3" />
+    {/* Node inner glow */}
+    <circle cx="16" cy="24" fill="white" opacity="0.6" r="1.5" />
+    <circle cx="48" cy="24" fill="white" opacity="0.6" r="1.5" />
+    <circle cx="32" cy="50" fill="white" opacity="0.6" r="1.5" />
+  </svg>
+);
+
+/* ────────────────────────────────────────────
    Button components
    ──────────────────────────────────────────── */
 const PrimaryButton = ({ children, className = "", ...props }: any) => (
@@ -266,11 +346,9 @@ export default function LandingPage() {
             className="flex items-center gap-2.5 group"
             onClick={() => scrollToSection("#home")}
           >
-            <img
-              alt="Ultramaxo"
-              className="w-8 h-8 rounded-lg object-cover"
-              src="/images/logo-dark.jpg"
-            />
+            <div className="rounded-lg overflow-hidden">
+              <UltramaxoLogo size={32} />
+            </div>
             <span className="font-bold text-base tracking-tight">
               Ultramaxo AI
             </span>
@@ -470,11 +548,9 @@ export default function LandingPage() {
                 {/* Header */}
                 <div className="flex items-center justify-between mb-7">
                   <div className="flex items-center gap-2.5">
-                    <img
-                      alt="Ultramaxo"
-                      className="w-9 h-9 rounded-xl object-cover"
-                      src="/images/logo-dark.jpg"
-                    />
+                    <div className="rounded-xl overflow-hidden">
+                      <UltramaxoLogo size={36} />
+                    </div>
                     <div>
                       <span className="font-semibold text-sm">
                         Ultramaxo AI
@@ -730,11 +806,9 @@ export default function LandingPage() {
             {/* Brand */}
             <div>
               <div className="flex items-center gap-2.5 mb-4">
-                <img
-                  alt="Ultramaxo"
-                  className="w-8 h-8 rounded-lg object-cover"
-                  src="/images/logo-dark.jpg"
-                />
+                <div className="rounded-lg overflow-hidden">
+                  <UltramaxoLogo size={32} />
+                </div>
                 <span className="font-bold text-base">Ultramaxo AI</span>
               </div>
               <p className="text-sm text-gray-500 leading-relaxed">
