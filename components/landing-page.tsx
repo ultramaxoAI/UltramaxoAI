@@ -17,7 +17,6 @@ import {
   MessageSquare,
   Play,
   Shield,
-  Sparkles,
   Twitter,
   Upload,
   X,
@@ -267,9 +266,11 @@ export default function LandingPage() {
             className="flex items-center gap-2.5 group"
             onClick={() => scrollToSection("#home")}
           >
-            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-indigo-500 to-violet-600 flex items-center justify-center shadow-md shadow-indigo-500/30">
-              <Sparkles className="w-4 h-4 text-white" />
-            </div>
+            <img
+              alt="Ultramaxo"
+              className="w-8 h-8 rounded-lg object-cover"
+              src="/images/logo-dark.jpg"
+            />
             <span className="font-bold text-base tracking-tight">
               Ultramaxo AI
             </span>
@@ -469,9 +470,11 @@ export default function LandingPage() {
                 {/* Header */}
                 <div className="flex items-center justify-between mb-7">
                   <div className="flex items-center gap-2.5">
-                    <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-indigo-500 to-violet-600 flex items-center justify-center">
-                      <Sparkles className="w-5 h-5 text-white" />
-                    </div>
+                    <img
+                      alt="Ultramaxo"
+                      className="w-9 h-9 rounded-xl object-cover"
+                      src="/images/logo-dark.jpg"
+                    />
                     <div>
                       <span className="font-semibold text-sm">
                         Ultramaxo AI
@@ -727,9 +730,11 @@ export default function LandingPage() {
             {/* Brand */}
             <div>
               <div className="flex items-center gap-2.5 mb-4">
-                <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-indigo-500 to-violet-600 flex items-center justify-center">
-                  <Sparkles className="w-4 h-4 text-white" />
-                </div>
+                <img
+                  alt="Ultramaxo"
+                  className="w-8 h-8 rounded-lg object-cover"
+                  src="/images/logo-dark.jpg"
+                />
                 <span className="font-bold text-base">Ultramaxo AI</span>
               </div>
               <p className="text-sm text-gray-500 leading-relaxed">
