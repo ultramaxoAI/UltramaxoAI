@@ -268,7 +268,7 @@ export default function LandingPage() {
             <img
               alt="Ultramaxo"
               className="w-8 h-8 rounded-lg"
-              src="/images/logo-mark.svg"
+              src="/favicon.svg"
             />
             <span className="font-bold text-base tracking-tight">
               Ultramaxo AI
@@ -472,7 +472,7 @@ export default function LandingPage() {
                     <img
                       alt="Ultramaxo"
                       className="w-9 h-9 rounded-xl"
-                      src="/images/logo-mark.svg"
+                      src="/favicon.svg"
                     />
                     <div>
                       <span className="font-semibold text-sm">
@@ -734,7 +734,7 @@ export default function LandingPage() {
                 <img
                   alt="Ultramaxo"
                   className="w-8 h-8 rounded-lg"
-                  src="/images/logo-mark.svg"
+                  src="/favicon.svg"
                 />
                 <span className="font-bold text-base">Ultramaxo AI</span>
               </div>
