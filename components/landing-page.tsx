@@ -7,7 +7,6 @@ import {
 } from "framer-motion";
 import {
   ArrowRight,
-  Bot,
   Check,
   ChevronDown,
   Code2,
@@ -266,9 +265,11 @@ export default function LandingPage() {
             className="flex items-center gap-2.5 group"
             onClick={() => scrollToSection("#home")}
           >
-            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-indigo-500 to-violet-600 flex items-center justify-center shadow-md shadow-indigo-500/30">
-              <Bot className="w-4.5 h-4.5 text-white" />
-            </div>
+            <img
+              alt="Ultramaxo"
+              className="w-8 h-8 rounded-lg"
+              src="/images/logo-mark.svg"
+            />
             <span className="font-bold text-base tracking-tight">
               Ultramaxo AI
             </span>
@@ -468,9 +469,11 @@ export default function LandingPage() {
                 {/* Header */}
                 <div className="flex items-center justify-between mb-7">
                   <div className="flex items-center gap-2.5">
-                    <div className="w-9 h-9 rounded-xl bg-indigo-500/15 flex items-center justify-center">
-                      <Bot className="w-5 h-5 text-indigo-400" />
-                    </div>
+                    <img
+                      alt="Ultramaxo"
+                      className="w-9 h-9 rounded-xl"
+                      src="/images/logo-mark.svg"
+                    />
                     <div>
                       <span className="font-semibold text-sm">
                         Ultramaxo AI
@@ -728,9 +731,11 @@ export default function LandingPage() {
             {/* Brand */}
             <div>
               <div className="flex items-center gap-2.5 mb-4">
-                <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-indigo-500 to-violet-600 flex items-center justify-center">
-                  <Bot className="w-4.5 h-4.5 text-white" />
-                </div>
+                <img
+                  alt="Ultramaxo"
+                  className="w-8 h-8 rounded-lg"
+                  src="/images/logo-mark.svg"
+                />
                 <span className="font-bold text-base">Ultramaxo AI</span>
               </div>
               <p className="text-sm text-gray-500 leading-relaxed">
