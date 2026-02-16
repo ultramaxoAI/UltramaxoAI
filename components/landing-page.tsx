@@ -816,7 +816,7 @@ export default function LandingPage() {
           </div>
 
           <div className="border-t border-white/[0.06] pt-7 text-center text-sm text-gray-600">
-            © {new Date().getFullYear()} Ultramaxo AI. All rights reserved.
+            © 2025 Ultramaxo AI. All rights reserved.
           </div>
         </div>
       </footer>
