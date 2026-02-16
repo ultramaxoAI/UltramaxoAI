@@ -1,74 +1,137 @@
 "use client";
-import { AnimatePresence, motion } from "framer-motion";
+import {
+  AnimatePresence,
+  motion,
+  useScroll,
+  useTransform,
+} from "framer-motion";
 import {
   ArrowRight,
   Bot,
-  Brain,
   Check,
   ChevronDown,
   Code2,
   Github,
   Globe,
   Layers,
-  Lock,
   Menu,
   MessageSquare,
   Play,
   Shield,
-  Sparkles,
   Twitter,
-  Unlock,
   Upload,
-  Users,
   X,
   Zap,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useRef, useState } from "react";
 
-// Button Components
+/* ────────────────────────────────────────────
+   Shared animation config
+   ──────────────────────────────────────────── */
+const ease = [0.25, 0.1, 0.25, 1];
+const springLight = {
+  type: "spring" as const,
+  stiffness: 200,
+  damping: 50,
+  mass: 0.8,
+};
+
+const fadeUp = {
+  hidden: { opacity: 0, y: 40, filter: "blur(8px)" },
+  visible: (i = 0) => ({
+    opacity: 1,
+    y: 0,
+    filter: "blur(0px)",
+    transition: { ...springLight, delay: i * 0.12 },
+  }),
+};
+
+const staggerContainer = {
+  hidden: {},
+  visible: { transition: { staggerChildren: 0.12 } },
+};
+
+/* ────────────────────────────────────────────
+   Button components
+   ──────────────────────────────────────────── */
 const PrimaryButton = ({ children, className = "", ...props }: any) => (
-  <button
-    className={`inline-flex items-center justify-center gap-2 rounded-full px-6 py-3 text-sm font-medium bg-linear-to-br from-indigo-500 to-indigo-600 hover:opacity-90 active:scale-95 transition-all ${className}`}
+  <motion.button
+    className={`relative inline-flex items-center justify-center gap-2 rounded-full px-7 py-3.5 text-sm font-semibold
+      bg-gradient-to-r from-indigo-500 via-indigo-600 to-violet-600
+      shadow-[0_0_24px_rgba(99,102,241,0.35)] hover:shadow-[0_0_36px_rgba(99,102,241,0.5)]
+      transition-shadow duration-300 cursor-pointer ${className}`}
+    whileHover={{ scale: 1.04 }}
+    whileTap={{ scale: 0.97 }}
     {...props}
   >
     {children}
-  </button>
+  </motion.button>
 );
 
 const GhostButton = ({ children, className = "", ...props }: any) => (
-  <button
-    className={`inline-flex items-center gap-2 rounded-full px-5 py-2.5 text-sm font-medium border border-white/10 bg-white/3 hover:bg-white/6 backdrop-blur-sm active:scale-95 transition ${className}`}
+  <motion.button
+    className={`inline-flex items-center gap-2 rounded-full px-6 py-3 text-sm font-medium
+      border border-white/10 bg-white/[0.03] hover:bg-white/[0.07] backdrop-blur-sm
+      transition-colors duration-200 cursor-pointer ${className}`}
+    whileHover={{ scale: 1.04 }}
+    whileTap={{ scale: 0.97 }}
     {...props}
   >
     {children}
-  </button>
+  </motion.button>
 );
 
-// Title Component
-const Title = ({ title, heading, description }: any) => (
+/* ────────────────────────────────────────────
+   Section title
+   ──────────────────────────────────────────── */
+const SectionTitle = ({
+  tag,
+  heading,
+  description,
+}: {
+  tag: string;
+  heading: string;
+  description: string;
+}) => (
   <motion.div
-    className="text-center mb-16"
-    initial={{ y: 60, opacity: 0 }}
-    whileInView={{ y: 0, opacity: 1 }}
-    viewport={{ once: true }}
-    transition={{ type: "spring", stiffness: 250, damping: 70, mass: 1 }}
+    className="text-center mb-20 max-w-2xl mx-auto"
+    initial="hidden"
+    variants={fadeUp}
+    viewport={{ once: true, margin: "-60px" }}
+    whileInView="visible"
   >
-    <p className="text-indigo-400 text-sm font-semibold mb-3">{title}</p>
-    <h2 className="text-3xl md:text-4xl font-bold mb-4">{heading}</h2>
-    <p className="text-gray-300 max-w-2xl mx-auto">{description}</p>
+    <span className="inline-block text-indigo-400 text-xs font-semibold tracking-widest uppercase mb-4">
+      {tag}
+    </span>
+    <h2 className="text-3xl md:text-4xl lg:text-[2.75rem] font-bold leading-tight mb-5 text-white">
+      {heading}
+    </h2>
+    <p className="text-gray-400 leading-relaxed text-base md:text-lg">
+      {description}
+    </p>
   </motion.div>
 );
 
+/* ────────────────────────────────────────────
+   Main component
+   ──────────────────────────────────────────── */
 export default function LandingPage() {
   const router = useRouter();
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
-  const [openFaq, setOpenFaq] = useState<number | null>(null);
+  const heroRef = useRef<HTMLDivElement>(null);
+
+  const { scrollYProgress } = useScroll({
+    target: heroRef,
+    offset: ["start start", "end start"],
+  });
+  const heroOpacity = useTransform(scrollYProgress, [0, 1], [1, 0]);
+  const heroScale = useTransform(scrollYProgress, [0, 1], [1, 0.96]);
 
   const navLinks = [
     { name: "Home", href: "#home" },
-    { name: "Features", href: "#features" },
-    { name: "Pricing", href: "#pricing" },
+    { name: "Fitur", href: "#features" },
+    { name: "Harga", href: "#pricing" },
     { name: "FAQ", href: "#faq" },
   ];
 
@@ -78,42 +141,37 @@ export default function LandingPage() {
     if (el) el.scrollIntoView({ behavior: "smooth" });
   };
 
-  const trustedUserImages = [
-    "https://api.dicebear.com/7.x/avataaars/svg?seed=Felix",
-    "https://api.dicebear.com/7.x/avataaars/svg?seed=Aneka",
-    "https://api.dicebear.com/7.x/avataaars/svg?seed=Mia",
-  ];
-
+  /* ───── data ───── */
   const features = [
     {
-      icon: <Zap className="w-6 h-6" />,
-      title: "Ultra Fast AI",
-      desc: "Powered by Groq Llama 3.3 70B dengan inference tercepat di dunia. Response dalam hitungan detik dengan streaming real-time.",
+      icon: <Zap className="w-5 h-5" />,
+      title: "Response Instan",
+      desc: "Jawaban muncul dalam hitungan detik berkat Groq — inferensi AI tercepat saat ini.",
     },
     {
-      icon: <Code2 className="w-6 h-6" />,
-      title: "Code Workspace",
-      desc: "Editor kode terintegrasi dengan syntax highlighting untuk berbagai bahasa pemrograman. Langsung coding dalam chat.",
+      icon: <Code2 className="w-5 h-5" />,
+      title: "Code Editor Langsung",
+      desc: "Tulis, edit, dan jalankan kode langsung di dalam chat tanpa pindah aplikasi.",
     },
     {
-      icon: <Layers className="w-6 h-6" />,
+      icon: <Layers className="w-5 h-5" />,
       title: "Artifacts System",
-      desc: "Buat dan edit dokumen, spreadsheet, gambar, dan kode langsung dalam chat. Export hasil dengan mudah.",
+      desc: "Buat dokumen, spreadsheet, atau gambar langsung dari percakapan — export kapan saja.",
     },
     {
-      icon: <Upload className="w-6 h-6" />,
-      title: "File Upload",
-      desc: "Upload dan analisis file dengan AI. Mendukung berbagai format dokumen dan gambar.",
+      icon: <Upload className="w-5 h-5" />,
+      title: "Upload & Analisis File",
+      desc: "Upload file apapun dan biarkan AI membantu menganalisis isinya secara otomatis.",
     },
     {
-      icon: <MessageSquare className="w-6 h-6" />,
-      title: "Advanced Chat",
-      desc: "Chat history, edit message, regenerate response, dan export conversation. UI intuitif dengan dark mode.",
+      icon: <MessageSquare className="w-5 h-5" />,
+      title: "Chat yang Bisa Diedit",
+      desc: "Edit pesan, regenerate jawaban, dan simpan seluruh riwayat percakapanmu.",
     },
     {
-      icon: <Shield className="w-6 h-6" />,
-      title: "Secure & Private",
-      desc: "Authentication dengan NextAuth.js, data terenkripsi, dan tidak dibagikan ke pihak ketiga.",
+      icon: <Shield className="w-5 h-5" />,
+      title: "Aman & Privat",
+      desc: "Data terenkripsi, autentikasi aman, dan tidak pernah dibagikan ke pihak ketiga.",
     },
   ];
 
@@ -121,38 +179,37 @@ export default function LandingPage() {
     {
       name: "Free",
       price: "Rp 0",
-      credits: "Selamanya",
-      desc: "Cocok untuk mencoba dan eksplorasi",
+      period: "selamanya",
+      desc: "Coba semua fitur dasar tanpa biaya",
       features: [
-        "UltraAgent AI (Groq Llama 3.3 70B)",
-        "Basic chat features",
+        "AI Chat (Groq Llama 3.3 70B)",
+        "Basic code editor",
         "Riwayat chat terbatas",
         "Syntax highlighting",
-        "File upload standar",
+        "Upload file standar",
       ],
       popular: false,
     },
     {
       name: "Pro",
       price: "Custom",
-      credits: "Redeem Code",
-      desc: "Untuk profesional dan power users",
+      period: "per bulan",
+      desc: "Untuk yang butuh lebih — tanpa batas",
       features: [
         "Semua fitur Free",
-        "Unlimited chat",
-        "Riwayat chat tanpa batas",
+        "Chat tanpa limit",
+        "Riwayat chat permanen",
         "Code workspace lengkap",
         "Full artifacts system",
         "Priority support",
-        "Advanced features",
       ],
       popular: true,
     },
     {
       name: "Enterprise",
       price: "Custom",
-      credits: "Hubungi kami",
-      desc: "Untuk organisasi & tim besar",
+      period: "hubungi kami",
+      desc: "Solusi khusus untuk tim dan organisasi",
       features: [
         "Semua fitur Pro",
         "Dedicated support",
@@ -166,301 +223,294 @@ export default function LandingPage() {
 
   const faqData = [
     {
-      question: "Apakah Ultramaxo AI benar-benar gratis?",
-      answer:
-        "Ya! Versi Free menggunakan UltraAgent AI (Groq Llama 3.3 70B) dengan fitur basic chat. Tidak perlu kartu kredit untuk memulai.",
+      q: "Apakah Ultramaxo benar-benar gratis?",
+      a: "Ya. Paket Free bisa langsung dipakai tanpa kartu kredit, tanpa batas waktu. Upgrade kapan saja kalau butuh fitur lebih.",
     },
     {
-      question: "Model AI apa yang digunakan?",
-      answer:
-        "Kami menggunakan Groq Llama 3.3 70B (UltraAgent) dengan inference tercepat di dunia. Groq menyediakan response ultra cepat dengan streaming real-time.",
+      q: "Model AI apa yang dipakai?",
+      a: "Kami menggunakan Llama 3.3 70B lewat Groq — salah satu provider inferensi tercepat di dunia. Hasilnya: response hampir instan.",
     },
     {
-      question: "Apa itu Artifacts System?",
-      answer:
-        "Artifacts memungkinkan Anda membuat dan edit dokumen, spreadsheet, gambar, dan kode langsung dalam chat. Hasil dapat di-export dan dibagikan.",
+      q: "Apa itu Artifacts?",
+      a: "Artifacts memungkinkan kamu membuat dokumen, spreadsheet, dan gambar langsung dari percakapan AI. Hasilnya bisa di-export dan dibagikan.",
     },
     {
-      question: "Bagaimana cara upgrade ke Pro?",
-      answer:
-        "Upgrade ke Pro menggunakan redeem code yang bisa didapatkan melalui admin. Masuk ke Settings > Redeem Code setelah login.",
+      q: "Bagaimana cara upgrade ke Pro?",
+      a: "Redeem kode Pro lewat menu Settings > Redeem Code setelah login. Kode bisa didapatkan dari admin.",
     },
     {
-      question: "Apakah data saya aman?",
-      answer:
-        "Ya! Kami menggunakan NextAuth.js untuk authentication, data terenkripsi, dan tidak membagikan data Anda ke pihak ketiga manapun.",
+      q: "Apakah data saya aman?",
+      a: "Aman. Kami menggunakan NextAuth.js, database terenkripsi, dan tidak pernah membagikan data ke pihak manapun.",
     },
-  ];
-
-  const trustedLogos = [
-    "Startups",
-    "Developers",
-    "Designers",
-    "Students",
-    "Professionals",
   ];
 
   return (
-    <div className="relative min-h-screen overflow-x-hidden bg-gray-950 text-white antialiased">
-      {/* Navbar */}
-      <motion.nav
-        className="fixed top-5 left-0 right-0 z-50 px-4"
-        initial={{ y: -100, opacity: 0 }}
-        animate={{ y: 0, opacity: 1 }}
-        transition={{ type: "spring", stiffness: 250, damping: 70, mass: 1 }}
-      >
-        <div className="max-w-6xl mx-auto flex items-center justify-between bg-black/50 backdrop-blur-md border border-white/10 rounded-2xl p-3">
-          <a href="#home" className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-lg bg-linear-to-br from-indigo-500 to-indigo-600 flex items-center justify-center">
-              <Bot className="w-5 h-5 text-white" />
-            </div>
-            <span className="font-bold text-lg">Ultramaxo AI</span>
-          </a>
+    <div className="relative min-h-screen overflow-x-hidden bg-[#09090b] text-white antialiased">
+      {/* ───── Ambient glow ───── */}
+      <div className="pointer-events-none fixed inset-0 z-0">
+        <div className="absolute -top-32 left-1/2 -translate-x-1/2 w-[800px] h-[500px] rounded-full bg-indigo-600/10 blur-[120px]" />
+        <div className="absolute top-[60%] -right-40 w-[500px] h-[400px] rounded-full bg-violet-600/8 blur-[100px]" />
+      </div>
 
-          <div className="hidden md:flex items-center gap-8 text-sm font-medium text-gray-300">
-            {navLinks.map((link) => (
+      {/* ═══════════════════════════════════════════
+          NAVBAR
+          ═══════════════════════════════════════════ */}
+      <motion.nav
+        animate={{ y: 0, opacity: 1 }}
+        className="fixed top-0 left-0 right-0 z-50 px-4 pt-4"
+        initial={{ y: -80, opacity: 0 }}
+        transition={{ ...springLight, delay: 0.1 }}
+      >
+        <div className="max-w-5xl mx-auto flex items-center justify-between bg-white/[0.04] backdrop-blur-xl border border-white/[0.06] rounded-2xl px-5 py-3 shadow-lg shadow-black/20">
+          <button
+            className="flex items-center gap-2.5 group"
+            onClick={() => scrollToSection("#home")}
+          >
+            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-indigo-500 to-violet-600 flex items-center justify-center shadow-md shadow-indigo-500/30">
+              <Bot className="w-4.5 h-4.5 text-white" />
+            </div>
+            <span className="font-bold text-base tracking-tight">
+              Ultramaxo AI
+            </span>
+          </button>
+
+          <div className="hidden md:flex items-center gap-7 text-sm text-gray-400">
+            {navLinks.map((l) => (
               <button
-                key={link.name}
-                onClick={() => scrollToSection(link.href)}
-                className="hover:text-white transition"
+                className="hover:text-white transition-colors duration-200"
+                key={l.name}
+                onClick={() => scrollToSection(l.href)}
               >
-                {link.name}
+                {l.name}
               </button>
             ))}
           </div>
 
           <div className="hidden md:flex items-center gap-3">
             <button
+              className="text-sm text-gray-400 hover:text-white transition-colors cursor-pointer"
               onClick={() => router.push("/login")}
-              className="text-sm font-medium text-gray-300 hover:text-white transition"
             >
               Masuk
             </button>
-            <PrimaryButton onClick={() => router.push("/register")}>
+            <PrimaryButton
+              className="text-xs px-5 py-2.5"
+              onClick={() => router.push("/register")}
+            >
               Daftar Gratis
             </PrimaryButton>
           </div>
 
           <button
+            className="md:hidden text-gray-300"
             onClick={() => setMobileNavOpen(!mobileNavOpen)}
-            className="md:hidden"
           >
-            <Menu className="w-6 h-6" />
+            <Menu className="w-5 h-5" />
           </button>
         </div>
 
-        {/* Mobile Menu */}
-        <div
-          className={`flex flex-col items-center justify-center gap-6 text-lg font-medium fixed inset-0 bg-black/40 backdrop-blur-md z-50 transition-all duration-300 ${
-            mobileNavOpen ? "translate-x-0" : "translate-x-full"
-          }`}
-        >
-          {navLinks.map((link) => (
-            <button
-              key={link.name}
-              onClick={() => scrollToSection(link.href)}
+        {/* Mobile overlay */}
+        <AnimatePresence>
+          {mobileNavOpen && (
+            <motion.div
+              animate={{ opacity: 1 }}
+              className="fixed inset-0 bg-black/80 backdrop-blur-xl z-50 flex flex-col items-center justify-center gap-7"
+              exit={{ opacity: 0 }}
+              initial={{ opacity: 0 }}
+              transition={{ duration: 0.25 }}
             >
-              {link.name}
-            </button>
-          ))}
-          <button
-            onClick={() => {
-              setMobileNavOpen(false);
-              router.push("/login");
-            }}
-            className="font-medium text-gray-300 hover:text-white transition"
-          >
-            Masuk
-          </button>
-          <PrimaryButton
-            onClick={() => {
-              setMobileNavOpen(false);
-              router.push("/register");
-            }}
-          >
-            Daftar Gratis
-          </PrimaryButton>
-          <button
-            onClick={() => setMobileNavOpen(false)}
-            className="rounded-md bg-white p-2 text-gray-800"
-          >
-            <X className="w-6 h-6" />
-          </button>
-        </div>
-      </motion.nav>
-
-      {/* Hero Section */}
-      <section id="home" className="relative z-10">
-        <div className="max-w-6xl mx-auto px-4 min-h-screen pt-32 md:pt-26 flex items-center justify-center">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-10 items-center">
-            <div className="text-left">
-              <motion.a
-                href="#!"
-                className="inline-flex items-center gap-3 pl-3 pr-4 py-1.5 rounded-full bg-white/10 mb-6"
-                initial={{ y: 60, opacity: 0 }}
-                whileInView={{ y: 0, opacity: 1 }}
-                viewport={{ once: true }}
-                transition={{
-                  type: "spring",
-                  stiffness: 250,
-                  damping: 70,
-                  mass: 1,
+              {navLinks.map((l) => (
+                <button
+                  className="text-xl font-medium text-gray-200 hover:text-white"
+                  key={l.name}
+                  onClick={() => scrollToSection(l.href)}
+                >
+                  {l.name}
+                </button>
+              ))}
+              <button
+                className="text-lg text-gray-400 hover:text-white"
+                onClick={() => {
+                  setMobileNavOpen(false);
+                  router.push("/login");
                 }}
               >
+                Masuk
+              </button>
+              <PrimaryButton
+                onClick={() => {
+                  setMobileNavOpen(false);
+                  router.push("/register");
+                }}
+              >
+                Daftar Gratis
+              </PrimaryButton>
+              <button
+                className="absolute top-6 right-6 p-2 rounded-full bg-white/10"
+                onClick={() => setMobileNavOpen(false)}
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </motion.nav>
+
+      {/* ═══════════════════════════════════════════
+          HERO
+          ═══════════════════════════════════════════ */}
+      <section className="relative z-10" id="home" ref={heroRef}>
+        <motion.div
+          className="max-w-6xl mx-auto px-5 min-h-screen pt-36 md:pt-44 pb-20 flex items-center"
+          style={{ opacity: heroOpacity, scale: heroScale }}
+        >
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center w-full">
+            {/* Left — Copy */}
+            <div>
+              <motion.div
+                animate="visible"
+                className="inline-flex items-center gap-3 px-4 py-2 rounded-full bg-white/[0.06] border border-white/[0.08] mb-8"
+                custom={0}
+                initial="hidden"
+                variants={fadeUp}
+              >
                 <div className="flex -space-x-2">
-                  {trustedUserImages.map((src, i) => (
+                  {["Felix", "Aneka", "Mia"].map((seed, i) => (
                     <img
+                      alt=""
+                      className="w-6 h-6 rounded-full border-2 border-[#09090b]"
                       key={i}
-                      src={src}
-                      alt={`User ${i + 1}`}
-                      className="w-6 h-6 rounded-full border border-black/50"
+                      src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${seed}`}
                     />
                   ))}
                 </div>
-                <span className="text-xs text-gray-200/90">
-                  Powered by Groq AI
+                <span className="text-xs text-gray-300">
+                  Dipercaya developer Indonesia
                 </span>
-              </motion.a>
+              </motion.div>
 
               <motion.h1
-                className="text-4xl md:text-5xl font-bold leading-tight mb-6 max-w-xl"
-                initial={{ y: 60, opacity: 0 }}
-                whileInView={{ y: 0, opacity: 1 }}
-                viewport={{ once: true }}
-                transition={{
-                  type: "spring",
-                  stiffness: 250,
-                  damping: 70,
-                  mass: 1,
-                  delay: 0.1,
-                }}
+                animate="visible"
+                className="text-4xl sm:text-5xl lg:text-6xl font-extrabold leading-[1.1] tracking-tight mb-6"
+                custom={1}
+                initial="hidden"
+                variants={fadeUp}
               >
-                AI Chatbot dengan{" "}
-                <span className="bg-clip-text text-transparent bg-linear-to-r from-indigo-300 to-indigo-400">
-                  Code Workspace & Artifacts
+                AI yang Bantu Kamu{" "}
+                <span className="bg-clip-text text-transparent bg-gradient-to-r from-indigo-400 via-violet-400 to-indigo-300">
+                  Kerja Lebih Cepat
                 </span>
               </motion.h1>
 
               <motion.p
-                className="text-gray-300 max-w-lg mb-8"
-                initial={{ y: 60, opacity: 0 }}
-                whileInView={{ y: 0, opacity: 1 }}
-                viewport={{ once: true }}
-                transition={{
-                  type: "spring",
-                  stiffness: 250,
-                  damping: 70,
-                  mass: 1,
-                  delay: 0.2,
-                }}
+                animate="visible"
+                className="text-gray-400 text-lg leading-relaxed max-w-lg mb-10"
+                custom={2}
+                initial="hidden"
+                variants={fadeUp}
               >
-                Platform AI chatbot dengan Groq Llama 3.3 70B, code editor terintegrasi,
-                dan artifacts system untuk membuat dokumen, spreadsheet, dan gambar.
-                Streaming real-time dengan response ultra cepat.
+                Ultramaxo adalah AI workspace untuk chat, coding, dan bikin
+                dokumen — semua di satu tempat. Response instan, gratis untuk
+                mulai.
               </motion.p>
 
               <motion.div
-                className="flex flex-col sm:flex-row items-center gap-4 mb-8"
-                initial={{ y: 60, opacity: 0 }}
-                whileInView={{ y: 0, opacity: 1 }}
-                viewport={{ once: true }}
-                transition={{
-                  type: "spring",
-                  stiffness: 250,
-                  damping: 70,
-                  mass: 1,
-                  delay: 0.3,
-                }}
+                animate="visible"
+                className="flex flex-col sm:flex-row items-start gap-4 mb-10"
+                custom={3}
+                initial="hidden"
+                variants={fadeUp}
               >
                 <PrimaryButton
+                  className="w-full sm:w-auto py-4 px-8 text-base"
                   onClick={() => router.push("/register")}
-                  className="w-full sm:w-auto py-3 px-7"
                 >
-                  Mulai Gratis Sekarang
-                  <ArrowRight className="w-4 h-4" />
+                  Mulai Gratis <ArrowRight className="w-4 h-4" />
                 </PrimaryButton>
-
-                <GhostButton className="w-full sm:w-auto justify-center py-3 px-5">
-                  <Play className="w-4 h-4" />
-                  Lihat Demo
+                <GhostButton
+                  className="w-full sm:w-auto justify-center py-3.5"
+                  onClick={() => scrollToSection("#features")}
+                >
+                  <Play className="w-4 h-4" /> Lihat Fitur
                 </GhostButton>
               </motion.div>
 
+              {/* Trusted bar */}
               <motion.div
-                className="flex overflow-hidden items-center text-sm text-gray-200 bg-white/10 rounded"
-                initial={{ y: 60, opacity: 0 }}
-                whileInView={{ y: 0, opacity: 1 }}
-                viewport={{ once: true }}
-                transition={{
-                  type: "spring",
-                  stiffness: 250,
-                  damping: 70,
-                  mass: 1,
-                  delay: 0.4,
-                }}
+                animate="visible"
+                className="flex items-center gap-6 text-xs text-gray-500"
+                custom={4}
+                initial="hidden"
+                variants={fadeUp}
               >
-                <div className="animate-marquee whitespace-nowrap py-2.5">
-                  {[...trustedLogos, ...trustedLogos].map((text, i) => (
-                    <span key={i} className="mx-8 inline-flex items-center">
-                      <Sparkles className="w-4 h-4 mr-2 text-indigo-400" />
-                      {text}
-                    </span>
-                  ))}
-                </div>
+                {[
+                  "Groq Powered",
+                  "Open Source Stack",
+                  "End-to-End Encrypted",
+                ].map((t, i) => (
+                  <span className="flex items-center gap-1.5" key={i}>
+                    <Check className="w-3.5 h-3.5 text-indigo-500" />
+                    {t}
+                  </span>
+                ))}
               </motion.div>
             </div>
 
+            {/* Right — Chat preview */}
             <motion.div
-              className="relative"
-              initial={{ y: 60, opacity: 0 }}
-              whileInView={{ y: 0, opacity: 1 }}
-              viewport={{ once: true }}
-              transition={{
-                type: "spring",
-                stiffness: 250,
-                damping: 70,
-                mass: 1,
-                delay: 0.2,
-              }}
+              animate="visible"
+              className="relative hidden lg:block"
+              custom={2}
+              initial="hidden"
+              variants={fadeUp}
             >
-              <div className="rounded-2xl bg-white/5 border border-white/10 p-6 backdrop-blur-lg">
-                <div className="flex items-center justify-between mb-6">
-                  <div className="flex items-center gap-2">
-                    <div className="w-8 h-8 rounded-lg bg-indigo-500/20 flex items-center justify-center">
+              <div className="rounded-2xl bg-white/[0.03] border border-white/[0.08] p-7 backdrop-blur-lg shadow-2xl shadow-black/40">
+                {/* Header */}
+                <div className="flex items-center justify-between mb-7">
+                  <div className="flex items-center gap-2.5">
+                    <div className="w-9 h-9 rounded-xl bg-indigo-500/15 flex items-center justify-center">
                       <Bot className="w-5 h-5 text-indigo-400" />
                     </div>
-                    <span className="font-semibold">Ultramaxo AI</span>
+                    <div>
+                      <span className="font-semibold text-sm">
+                        Ultramaxo AI
+                      </span>
+                      <p className="text-[10px] text-gray-500">
+                        Groq Llama 3.3 70B
+                      </p>
+                    </div>
                   </div>
-                  <span className="px-3 py-1 rounded-full bg-green-500/20 text-green-400 text-xs">
+                  <span className="px-2.5 py-1 rounded-full bg-emerald-500/15 text-emerald-400 text-[10px] font-medium">
                     Online
                   </span>
                 </div>
 
+                {/* Messages */}
                 <div className="space-y-4">
                   <div className="flex justify-end">
-                    <div className="bg-indigo-600/20 border border-indigo-500/30 rounded-2xl rounded-tr-sm px-4 py-3 max-w-[80%]">
-                      <p className="text-sm">
+                    <div className="bg-indigo-600/20 border border-indigo-500/20 rounded-2xl rounded-tr-md px-4 py-3 max-w-[80%]">
+                      <p className="text-sm text-gray-200">
                         Buatkan ringkasan strategi pemasaran Gen Z
                       </p>
                     </div>
                   </div>
-
                   <div className="flex justify-start">
-                    <div className="bg-white/10 border border-white/10 rounded-2xl rounded-tl-sm px-4 py-3 max-w-[80%]">
-                      <p className="text-sm text-gray-300">
-                        Berikut ringkasan strategi pemasaran untuk Gen Z: Fokus
-                        pada konten visual pendek, authenticity, social
-                        commerce, dan community-driven campaigns...
+                    <div className="bg-white/[0.06] border border-white/[0.08] rounded-2xl rounded-tl-md px-4 py-3 max-w-[80%]">
+                      <p className="text-sm text-gray-300 leading-relaxed">
+                        Berikut ringkasan strategi untuk Gen Z: Fokus pada
+                        konten visual pendek, authenticity, social commerce, dan
+                        community-driven campaigns...
                       </p>
                     </div>
                   </div>
                 </div>
 
-                <div className="mt-6 grid grid-cols-3 gap-2">
-                  {["Chat", "Code", "Artifacts"].map((item, i) => (
+                {/* Bottom tabs */}
+                <div className="mt-7 grid grid-cols-3 gap-2">
+                  {["Chat", "Code", "Artifacts"].map((item) => (
                     <div
-                      key={i}
-                      className="bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-center text-xs"
+                      className="bg-white/[0.04] border border-white/[0.06] rounded-lg px-3 py-2 text-center text-xs text-gray-400"
+                      key={item}
                     >
                       {item}
                     </div>
@@ -468,310 +518,358 @@ export default function LandingPage() {
                 </div>
               </div>
 
-              <div className="absolute -top-4 -right-4 bg-indigo-600 rounded-full p-3 shadow-lg">
-                <Zap className="w-6 h-6" />
+              {/* Floating badge */}
+              <div className="absolute -top-3 -right-3 bg-gradient-to-br from-indigo-500 to-violet-600 rounded-xl p-2.5 shadow-lg shadow-indigo-500/30">
+                <Zap className="w-5 h-5" />
               </div>
             </motion.div>
           </div>
-        </div>
+        </motion.div>
       </section>
 
-      {/* Features Section */}
-      <section id="features" className="py-20 2xl:py-32">
-        <div className="max-w-6xl mx-auto px-4">
-          <Title
-            title="Fitur Unggulan"
-            heading="Chat, Code, dan Create dalam satu platform"
-            description="AI chatbot dengan Groq Llama 3.3 70B, code workspace, dan artifacts system untuk produktivitas maksimal."
+      {/* ═══════════════════════════════════════════
+          FEATURES
+          ═══════════════════════════════════════════ */}
+      <section className="relative z-10 py-28 lg:py-36" id="features">
+        <div className="max-w-6xl mx-auto px-5">
+          <SectionTitle
+            description="Chat, code, dan buat konten — tanpa pindah-pindah aplikasi. AI-nya cepat, editor-nya lengkap."
+            heading="Semua yang kamu butuhkan, satu tempat"
+            tag="Fitur Unggulan"
           />
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {features.map((feature, i) => (
+          <motion.div
+            className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5"
+            initial="hidden"
+            variants={staggerContainer}
+            viewport={{ once: true, margin: "-80px" }}
+            whileInView="visible"
+          >
+            {features.map((f, i) => (
               <motion.div
+                className="group relative rounded-2xl p-6 bg-white/[0.02] border border-white/[0.06]
+                  hover:border-indigo-500/30 hover:bg-white/[0.04]
+                  transition-all duration-300"
+                custom={i}
                 key={i}
-                initial={{ y: 100, opacity: 0 }}
-                whileInView={{ y: 0, opacity: 1 }}
-                viewport={{ once: true }}
-                transition={{
-                  type: "spring",
-                  stiffness: 250,
-                  damping: 70,
-                  mass: 1,
-                  delay: 0.1 + i * 0.1,
-                }}
-                className="rounded-2xl p-6 bg-white/3 border border-white/6 hover:border-white/15 hover:-translate-y-1 transition duration-300"
+                variants={fadeUp}
               >
-                <div className="w-12 h-12 rounded-lg bg-violet-900/20 flex items-center justify-center mb-4">
-                  {feature.icon}
+                {/* Hover glow */}
+                <div className="pointer-events-none absolute inset-0 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 bg-[radial-gradient(300px_at_50%_0%,rgba(99,102,241,0.08),transparent)]" />
+
+                <div className="relative z-10">
+                  <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-indigo-500/15 to-violet-500/15 border border-indigo-500/10 flex items-center justify-center mb-5 text-indigo-400 group-hover:scale-110 transition-transform duration-300">
+                    {f.icon}
+                  </div>
+                  <h3 className="text-base font-semibold mb-2 text-white">
+                    {f.title}
+                  </h3>
+                  <p className="text-sm text-gray-400 leading-relaxed">
+                    {f.desc}
+                  </p>
                 </div>
-                <h3 className="text-lg font-semibold mb-2">{feature.title}</h3>
-                <p className="text-gray-300 text-sm leading-relaxed">
-                  {feature.desc}
-                </p>
               </motion.div>
             ))}
-          </div>
+          </motion.div>
         </div>
       </section>
 
-      {/* Pricing Section */}
-      <section id="pricing" className="py-20 bg-white/3 border-t border-white/6">
-        <div className="max-w-6xl mx-auto px-4">
-          <Title
-            title="Harga"
-            heading="Paket yang sesuai dengan kebutuhan Anda"
-            description="Mulai gratis, upgrade kapan saja untuk membuka seluruh fitur premium."
+      {/* ═══════════════════════════════════════════
+          PRICING
+          ═══════════════════════════════════════════ */}
+      <section className="relative z-10 py-28 lg:py-36" id="pricing">
+        {/* Section divider glow */}
+        <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-indigo-500/20 to-transparent" />
+
+        <div className="max-w-5xl mx-auto px-5">
+          <SectionTitle
+            description="Tidak ada biaya tersembunyi. Pakai gratis selama yang kamu mau, upgrade kapan saja untuk fitur penuh."
+            heading="Mulai gratis, upgrade kalau butuh"
+            tag="Harga"
           />
 
-          <div className="grid md:grid-cols-3 gap-6 max-w-5xl mx-auto">
+          <motion.div
+            className="grid md:grid-cols-3 gap-5"
+            initial="hidden"
+            variants={staggerContainer}
+            viewport={{ once: true, margin: "-80px" }}
+            whileInView="visible"
+          >
             {pricingPlans.map((plan, i) => (
               <motion.div
-                key={i}
-                initial={{ y: 150, opacity: 0 }}
-                whileInView={{ y: 0, opacity: 1 }}
-                viewport={{ once: true }}
-                transition={{
-                  type: "spring",
-                  stiffness: 250,
-                  damping: 70,
-                  mass: 1,
-                  delay: 0.1 + i * 0.1,
-                }}
-                className={`relative p-6 rounded-xl border backdrop-blur transition duration-500 hover:scale-102 ${
+                className={`relative rounded-2xl p-7 border backdrop-blur-sm transition-all duration-300 ${
                   plan.popular
-                    ? "border-indigo-500/50 bg-indigo-900/30"
-                    : "border-white/8 bg-indigo-950/30"
+                    ? "border-indigo-500/40 bg-indigo-950/30 shadow-[0_0_40px_rgba(99,102,241,0.1)]"
+                    : "border-white/[0.06] bg-white/[0.02] hover:border-white/[0.12]"
                 }`}
+                custom={i}
+                key={i}
+                transition={{ duration: 0.25 }}
+                variants={fadeUp}
+                whileHover={{ y: -4 }}
               >
                 {plan.popular && (
-                  <p className="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-1 bg-indigo-600 rounded-md text-xs">
+                  <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-4 py-1 bg-gradient-to-r from-indigo-500 to-violet-600 rounded-full text-xs font-medium shadow-lg shadow-indigo-500/25">
                     Paling Populer
-                  </p>
+                  </div>
                 )}
 
-                <div className="mb-6">
-                  <p className="font-semibold">{plan.name}</p>
-                  <div className="flex items-end gap-3 my-2">
-                    <span className="text-3xl font-extrabold">
+                <div className="mb-7">
+                  <p className="font-semibold text-white mb-1">{plan.name}</p>
+                  <div className="flex items-end gap-1.5 mb-2">
+                    <span className="text-3xl font-extrabold text-white">
                       {plan.price}
                     </span>
-                    <span className="text-sm text-gray-400">
-                      / {plan.credits}
+                    <span className="text-sm text-gray-500 mb-1">
+                      / {plan.period}
                     </span>
                   </div>
-                  <p className="text-sm text-gray-300">{plan.desc}</p>
+                  <p className="text-sm text-gray-400">{plan.desc}</p>
                 </div>
 
-                <ul className="space-y-3 mb-6">
+                <ul className="space-y-3 mb-8">
                   {plan.features.map((feat, j) => (
                     <li
+                      className="flex items-start gap-3 text-sm text-gray-300"
                       key={j}
-                      className="flex items-center gap-3 text-sm text-gray-300"
                     >
-                      <Check className="w-4 h-4 text-indigo-400" />
+                      <Check className="w-4 h-4 text-indigo-400 mt-0.5 shrink-0" />
                       {feat}
                     </li>
                   ))}
                 </ul>
 
-                <div>
-                  {plan.popular ? (
-                    <PrimaryButton
-                      onClick={() => router.push("/register")}
-                      className="w-full justify-center"
-                    >
-                      Mulai Sekarang
-                    </PrimaryButton>
-                  ) : (
-                    <GhostButton
-                      onClick={() => router.push("/register")}
-                      className="w-full justify-center"
-                    >
-                      Mulai Sekarang
-                    </GhostButton>
-                  )}
-                </div>
+                {plan.popular ? (
+                  <PrimaryButton
+                    className="w-full justify-center"
+                    onClick={() => router.push("/register")}
+                  >
+                    Mulai Sekarang
+                  </PrimaryButton>
+                ) : (
+                  <GhostButton
+                    className="w-full justify-center"
+                    onClick={() => router.push("/register")}
+                  >
+                    Mulai Sekarang
+                  </GhostButton>
+                )}
               </motion.div>
             ))}
-          </div>
+          </motion.div>
         </div>
       </section>
 
-      {/* FAQ Section */}
-      <section id="faq" className="py-20 2xl:py-32">
-        <div className="max-w-3xl mx-auto px-4">
-          <Title
-            title="FAQ"
-            heading="Pertanyaan yang sering ditanyakan"
-            description="Temukan jawaban atas pertanyaan umum tentang Ultramaxo AI. Ada pertanyaan lain? Hubungi kami."
+      {/* ═══════════════════════════════════════════
+          FAQ
+          ═══════════════════════════════════════════ */}
+      <section className="relative z-10 py-28 lg:py-36" id="faq">
+        <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/[0.06] to-transparent" />
+
+        <div className="max-w-2xl mx-auto px-5">
+          <SectionTitle
+            description="Jawaban singkat untuk hal-hal yang paling sering ditanyakan."
+            heading="Pertanyaan yang sering muncul"
+            tag="FAQ"
           />
 
-          <div className="space-y-3">
+          <motion.div
+            className="space-y-3"
+            initial="hidden"
+            variants={staggerContainer}
+            viewport={{ once: true, margin: "-60px" }}
+            whileInView="visible"
+          >
             {faqData.map((faq, i) => (
-              <motion.details
-                key={i}
-                initial={{ y: 100, opacity: 0 }}
-                whileInView={{ y: 0, opacity: 1 }}
-                viewport={{ once: true }}
-                transition={{
-                  type: "spring",
-                  stiffness: 250,
-                  damping: 70,
-                  mass: 1,
-                  delay: 0.1 + i * 0.1,
-                }}
-                className="group bg-white/6 rounded-xl transition duration-300"
-              >
-                <summary className="flex items-center justify-between p-4 cursor-pointer">
-                  <h4 className="font-medium">{faq.question}</h4>
-                  <ChevronDown className="w-5 h-5 text-gray-300 group-open:rotate-180 transition-transform" />
-                </summary>
-                <p className="p-4 pt-0 text-sm text-gray-300 leading-relaxed">
-                  {faq.answer}
-                </p>
-              </motion.details>
+              <FaqItem answer={faq.a} index={i} key={i} question={faq.q} />
             ))}
-          </div>
+          </motion.div>
         </div>
       </section>
 
-      {/* CTA Section */}
-      <section className="py-20 2xl:pb-32 px-4">
-        <div className="container mx-auto max-w-3xl">
-          <div className="rounded-3xl bg-linear-to-b from-violet-900/20 to-violet-900/5 border border-violet-500/20 p-12 md:p-16 text-center relative overflow-hidden">
-            <div className="relative z-10">
-              <motion.h2
-                className="text-2xl sm:text-4xl font-semibold mb-6"
-                initial={{ y: 60, opacity: 0 }}
-                whileInView={{ y: 0, opacity: 1 }}
-                viewport={{ once: true }}
-                transition={{
-                  type: "spring",
-                  stiffness: 250,
-                  damping: 70,
-                  mass: 1,
-                }}
-              >
-                Siap meningkatkan produktivitas?
-              </motion.h2>
-              <motion.p
-                className="text-slate-400 mb-10 max-w-xl mx-auto"
-                initial={{ y: 60, opacity: 0 }}
-                whileInView={{ y: 0, opacity: 1 }}
-                viewport={{ once: true }}
-                transition={{
-                  type: "spring",
-                  stiffness: 250,
-                  damping: 70,
-                  mass: 1,
-                  delay: 0.2,
-                }}
-              >
-                Bergabunglah dengan ribuan profesional yang sudah menggunakan
-                Ultramaxo AI. Mulai gratis sekarang, tidak perlu kartu kredit.
-              </motion.p>
-              <motion.div
-                initial={{ y: 60, opacity: 0 }}
-                whileInView={{ y: 0, opacity: 1 }}
-                viewport={{ once: true }}
-                transition={{
-                  type: "spring",
-                  stiffness: 250,
-                  damping: 70,
-                  mass: 1,
-                  delay: 0.3,
-                }}
-              >
-                <PrimaryButton
-                  onClick={() => router.push("/register")}
-                  className="px-8 py-3"
-                >
-                  Daftar Gratis{" "}
-                  <ArrowRight className="w-5 h-5" />
-                </PrimaryButton>
-              </motion.div>
-            </div>
+      {/* ═══════════════════════════════════════════
+          CTA
+          ═══════════════════════════════════════════ */}
+      <section className="relative z-10 py-28 lg:py-36 px-5">
+        <motion.div
+          className="max-w-3xl mx-auto rounded-3xl bg-gradient-to-b from-indigo-950/40 to-violet-950/20 border border-indigo-500/15 p-14 md:p-20 text-center relative overflow-hidden"
+          initial="hidden"
+          variants={fadeUp}
+          viewport={{ once: true, margin: "-60px" }}
+          whileInView="visible"
+        >
+          {/* Background glow */}
+          <div className="pointer-events-none absolute -top-20 left-1/2 -translate-x-1/2 w-[400px] h-[200px] rounded-full bg-indigo-500/10 blur-[80px]" />
+
+          <div className="relative z-10">
+            <h2 className="text-2xl sm:text-4xl font-bold mb-5 text-white">
+              Siap kerja lebih cepat dengan AI?
+            </h2>
+            <p className="text-gray-400 mb-10 max-w-md mx-auto leading-relaxed">
+              Bergabung sekarang — gratis, tanpa kartu kredit, langsung bisa
+              pakai.
+            </p>
+            <PrimaryButton
+              className="px-10 py-4 text-base"
+              onClick={() => router.push("/register")}
+            >
+              Daftar Gratis <ArrowRight className="w-5 h-5" />
+            </PrimaryButton>
           </div>
-        </div>
+        </motion.div>
       </section>
 
-      {/* Footer */}
-      <footer className="bg-white/3 border-t border-white/6 py-12">
-        <div className="max-w-6xl mx-auto px-4">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-8">
+      {/* ═══════════════════════════════════════════
+          FOOTER
+          ═══════════════════════════════════════════ */}
+      <footer className="relative z-10 border-t border-white/[0.06] py-14">
+        <div className="max-w-6xl mx-auto px-5">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-10 mb-10">
+            {/* Brand */}
             <div>
-              <div className="flex items-center gap-2 mb-4">
-                <div className="w-8 h-8 rounded-lg bg-linear-to-br from-indigo-500 to-indigo-600 flex items-center justify-center">
-                  <Bot className="w-5 h-5 text-white" />
+              <div className="flex items-center gap-2.5 mb-4">
+                <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-indigo-500 to-violet-600 flex items-center justify-center">
+                  <Bot className="w-4.5 h-4.5 text-white" />
                 </div>
-                <span className="font-bold text-lg">Ultramaxo AI</span>
+                <span className="font-bold text-base">Ultramaxo AI</span>
               </div>
-              <p className="text-sm text-gray-400">
-                AI Chatbot dengan Code Workspace & Artifacts
+              <p className="text-sm text-gray-500 leading-relaxed">
+                AI workspace untuk chat, code, dan buat dokumen.
               </p>
             </div>
 
+            {/* Product */}
             <div>
-              <h4 className="font-semibold mb-4">Produk</h4>
-              <ul className="space-y-2 text-sm text-gray-400">
+              <h4 className="font-semibold text-sm mb-4 text-gray-300">
+                Produk
+              </h4>
+              <ul className="space-y-2.5 text-sm text-gray-500">
                 <li>
-                  <button onClick={() => scrollToSection("#home")}>Home</button>
-                </li>
-                <li>
-                  <button onClick={() => scrollToSection("#features")}>
-                    Features
+                  <button
+                    className="hover:text-gray-300 transition-colors"
+                    onClick={() => scrollToSection("#home")}
+                  >
+                    Home
                   </button>
                 </li>
                 <li>
-                  <button onClick={() => scrollToSection("#pricing")}>
-                    Pricing
+                  <button
+                    className="hover:text-gray-300 transition-colors"
+                    onClick={() => scrollToSection("#features")}
+                  >
+                    Fitur
+                  </button>
+                </li>
+                <li>
+                  <button
+                    className="hover:text-gray-300 transition-colors"
+                    onClick={() => scrollToSection("#pricing")}
+                  >
+                    Harga
                   </button>
                 </li>
               </ul>
             </div>
 
+            {/* Legal */}
             <div>
-              <h4 className="font-semibold mb-4">Legal</h4>
-              <ul className="space-y-2 text-sm text-gray-400">
+              <h4 className="font-semibold text-sm mb-4 text-gray-300">
+                Legal
+              </h4>
+              <ul className="space-y-2.5 text-sm text-gray-500">
                 <li>
-                  <a href="/privacy">Privacy Policy</a>
+                  <a
+                    className="hover:text-gray-300 transition-colors"
+                    href="/privacy"
+                  >
+                    Privacy Policy
+                  </a>
                 </li>
                 <li>
-                  <a href="/terms">Terms of Service</a>
+                  <a
+                    className="hover:text-gray-300 transition-colors"
+                    href="/terms"
+                  >
+                    Terms of Service
+                  </a>
                 </li>
               </ul>
             </div>
 
+            {/* Social */}
             <div>
-              <h4 className="font-semibold mb-4">Connect</h4>
-              <div className="flex gap-3">
-                <a
-                  href="#"
-                  className="w-10 h-10 rounded-lg bg-white/5 hover:bg-white/10 flex items-center justify-center transition"
-                >
-                  <Twitter className="w-5 h-5" />
-                </a>
-                <a
-                  href="#"
-                  className="w-10 h-10 rounded-lg bg-white/5 hover:bg-white/10 flex items-center justify-center transition"
-                >
-                  <Github className="w-5 h-5" />
-                </a>
-                <a
-                  href="#"
-                  className="w-10 h-10 rounded-lg bg-white/5 hover:bg-white/10 flex items-center justify-center transition"
-                >
-                  <Globe className="w-5 h-5" />
-                </a>
+              <h4 className="font-semibold text-sm mb-4 text-gray-300">
+                Connect
+              </h4>
+              <div className="flex gap-2.5">
+                {[Twitter, Github, Globe].map((Icon, i) => (
+                  <a
+                    className="w-9 h-9 rounded-lg bg-white/[0.04] hover:bg-white/[0.08] border border-white/[0.06] flex items-center justify-center transition-colors"
+                    href="#"
+                    key={i}
+                  >
+                    <Icon className="w-4 h-4 text-gray-400" />
+                  </a>
+                ))}
               </div>
             </div>
           </div>
 
-          <div className="border-t border-white/6 pt-6 text-center text-sm text-gray-400">
-            © 2026 Ultramaxo AI. All rights reserved.
+          <div className="border-t border-white/[0.06] pt-7 text-center text-sm text-gray-600">
+            © {new Date().getFullYear()} Ultramaxo AI. All rights reserved.
           </div>
         </div>
       </footer>
     </div>
+  );
+}
+
+/* ────────────────────────────────────────────
+   FAQ accordion item
+   ──────────────────────────────────────────── */
+function FaqItem({
+  index,
+  question,
+  answer,
+}: {
+  index: number;
+  question: string;
+  answer: string;
+}) {
+  const [open, setOpen] = useState(false);
+
+  return (
+    <motion.div
+      className="rounded-xl bg-white/[0.03] border border-white/[0.06] overflow-hidden"
+      custom={index}
+      variants={fadeUp}
+    >
+      <button
+        className="flex items-center justify-between w-full p-5 text-left cursor-pointer"
+        onClick={() => setOpen(!open)}
+      >
+        <h4 className="font-medium text-sm text-gray-200 pr-4">{question}</h4>
+        <motion.div
+          animate={{ rotate: open ? 180 : 0 }}
+          transition={{ duration: 0.25 }}
+        >
+          <ChevronDown className="w-4 h-4 text-gray-500 shrink-0" />
+        </motion.div>
+      </button>
+      <AnimatePresence initial={false}>
+        {open && (
+          <motion.div
+            animate={{ height: "auto", opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            initial={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.25, ease }}
+          >
+            <p className="px-5 pb-5 text-sm text-gray-400 leading-relaxed">
+              {answer}
+            </p>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </motion.div>
   );
 }
