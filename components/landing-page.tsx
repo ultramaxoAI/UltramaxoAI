@@ -146,7 +146,7 @@ export default function LandingPage() {
     {
       icon: <Zap className="w-5 h-5" />,
       title: "Response Instan",
-      desc: "Jawaban muncul dalam hitungan detik berkat Groq — inferensi AI tercepat saat ini.",
+      desc: "Jawaban muncul dalam hitungan detik — UltraAgent dioptimalkan untuk inferensi tercepat.",
     },
     {
       icon: <Code2 className="w-5 h-5" />,
@@ -182,7 +182,7 @@ export default function LandingPage() {
       period: "selamanya",
       desc: "Coba semua fitur dasar tanpa biaya",
       features: [
-        "AI Chat (Groq Llama 3.3 70B)",
+        "AI Chat (UltraAgent)",
         "Basic code editor",
         "Riwayat chat terbatas",
         "Syntax highlighting",
@@ -196,6 +196,7 @@ export default function LandingPage() {
       period: "per bulan",
       desc: "Untuk yang butuh lebih — tanpa batas",
       features: [
+        "AI Chat (UltraAgent Pro)",
         "Semua fitur Free",
         "Chat tanpa limit",
         "Riwayat chat permanen",
@@ -228,7 +229,7 @@ export default function LandingPage() {
     },
     {
       q: "Model AI apa yang dipakai?",
-      a: "Kami menggunakan Llama 3.3 70B lewat Groq — salah satu provider inferensi tercepat di dunia. Hasilnya: response hampir instan.",
+      a: "Kami menggunakan UltraAgent — model AI yang dioptimalkan untuk kecepatan dan akurasi tinggi. Hasilnya: response hampir instan.",
     },
     {
       q: "Apa itu Artifacts?",
@@ -444,7 +445,7 @@ export default function LandingPage() {
                 variants={fadeUp}
               >
                 {[
-                  "Groq Powered",
+                  "UltraAgent Powered",
                   "Open Source Stack",
                   "End-to-End Encrypted",
                 ].map((t, i) => (
@@ -475,9 +476,7 @@ export default function LandingPage() {
                       <span className="font-semibold text-sm">
                         Ultramaxo AI
                       </span>
-                      <p className="text-[10px] text-gray-500">
-                        Groq Llama 3.3 70B
-                      </p>
+                      <p className="text-[10px] text-gray-500">UltraAgent</p>
                     </div>
                   </div>
                   <span className="px-2.5 py-1 rounded-full bg-emerald-500/15 text-emerald-400 text-[10px] font-medium">
