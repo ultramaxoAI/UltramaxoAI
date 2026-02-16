@@ -2,7 +2,6 @@ import { type NextRequest, NextResponse } from "next/server";
 import { getToken } from "next-auth/jwt";
 import { guestRegex, isDevelopmentEnvironment } from "./lib/constants";
 import { securityHeaders } from "./middleware.security";
-import { logger } from "./lib/logger";
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
@@ -27,11 +26,21 @@ export async function middleware(request: NextRequest) {
   });
 
   // Allow access to home and chat pages without a token
-  if (!token && ["/", "/login", "/register", "/api/auth/guest"].includes(pathname)) {
+  if (
+    !token &&
+    [
+      "/",
+      "/login",
+      "/register",
+      "/api/auth/guest",
+      "/privacy",
+      "/terms",
+    ].includes(pathname)
+  ) {
     return NextResponse.next();
   }
 
-  // If it's a chat ID page, we check visibility within the page component, 
+  // If it's a chat ID page, we check visibility within the page component,
   // but we can allow the middleware to pass for now.
   if (!token && pathname.startsWith("/chat/")) {
     return NextResponse.next();
@@ -44,7 +53,7 @@ export async function middleware(request: NextRequest) {
   const isGuest = guestRegex.test(token?.email ?? "");
 
   if (token && !isGuest && ["/login", "/register"].includes(pathname)) {
-    return NextResponse.redirect(new URL("/", request.url));
+    return NextResponse.redirect(new URL("/chat", request.url));
   }
 
   // Apply security headers to all responses
