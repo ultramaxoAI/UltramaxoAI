@@ -17,6 +17,7 @@ import {
   MessageSquare,
   Play,
   Shield,
+  Sparkles,
   Twitter,
   Upload,
   X,
@@ -262,14 +263,15 @@ export default function LandingPage() {
       >
         <div className="max-w-5xl mx-auto flex items-center justify-between bg-white/[0.04] backdrop-blur-xl border border-white/[0.06] rounded-2xl px-5 py-3 shadow-lg shadow-black/20">
           <button
-            className="flex items-center group"
+            className="flex items-center gap-2.5 group"
             onClick={() => scrollToSection("#home")}
           >
-            <img
-              alt="Ultramaxo"
-              className="h-8 w-auto rounded-md bg-white/90 px-1.5 py-0.5"
-              src="/images/logo.jpg"
-            />
+            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-indigo-500 to-violet-600 flex items-center justify-center shadow-md shadow-indigo-500/30">
+              <Sparkles className="w-4 h-4 text-white" />
+            </div>
+            <span className="font-bold text-base tracking-tight">
+              Ultramaxo AI
+            </span>
           </button>
 
           <div className="hidden md:flex items-center gap-7 text-sm text-gray-400">
@@ -466,12 +468,8 @@ export default function LandingPage() {
                 {/* Header */}
                 <div className="flex items-center justify-between mb-7">
                   <div className="flex items-center gap-2.5">
-                    <div className="w-9 h-9 rounded-xl bg-white/90 flex items-center justify-center p-1">
-                      <img
-                        alt="Ultramaxo"
-                        className="w-full h-full object-contain"
-                        src="/images/logo.jpg"
-                      />
+                    <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-indigo-500 to-violet-600 flex items-center justify-center">
+                      <Sparkles className="w-5 h-5 text-white" />
                     </div>
                     <div>
                       <span className="font-semibold text-sm">
@@ -729,12 +727,11 @@ export default function LandingPage() {
           <div className="grid grid-cols-1 md:grid-cols-4 gap-10 mb-10">
             {/* Brand */}
             <div>
-              <div className="flex items-center mb-4">
-                <img
-                  alt="Ultramaxo"
-                  className="h-8 w-auto rounded-md bg-white/90 px-1.5 py-0.5"
-                  src="/images/logo.jpg"
-                />
+              <div className="flex items-center gap-2.5 mb-4">
+                <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-indigo-500 to-violet-600 flex items-center justify-center">
+                  <Sparkles className="w-4 h-4 text-white" />
+                </div>
+                <span className="font-bold text-base">Ultramaxo AI</span>
               </div>
               <p className="text-sm text-gray-500 leading-relaxed">
                 AI workspace untuk chat, code, dan buat dokumen.
