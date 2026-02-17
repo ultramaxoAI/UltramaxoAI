@@ -273,7 +273,7 @@ export default function LandingPage() {
     },
     {
       name: "Pro",
-      price: "Custom",
+      price: "Rp 20.000",
       period: "per bulan",
       desc: "Untuk yang butuh lebih — tanpa batas",
       features: [
@@ -288,10 +288,10 @@ export default function LandingPage() {
       popular: true,
     },
     {
-      name: "Enterprise",
-      price: "Custom",
-      period: "hubungi kami",
-      desc: "Solusi khusus untuk tim dan organisasi",
+      name: "1 Tahun",
+      price: "Rp 120.000",
+      period: "per tahun",
+      desc: "Hemat lebih banyak dengan paket tahunan",
       features: [
         "Semua fitur Pro",
         "Dedicated support",

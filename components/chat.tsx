@@ -4,6 +4,7 @@ import { useChat } from "@ai-sdk/react";
 import { DefaultChatTransport } from "ai";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
+import type { User } from "next-auth";
 import { useEffect, useRef, useState } from "react";
 import useSWR, { useSWRConfig } from "swr";
 import { unstable_serialize } from "swr/infinite";
@@ -31,6 +32,7 @@ export function Chat({
   initialVisibilityType,
   isReadonly,
   autoResume,
+  user,
 }: {
   id: string;
   initialMessages: ChatMessage[];
@@ -38,6 +40,7 @@ export function Chat({
   initialVisibilityType: VisibilityType;
   isReadonly: boolean;
   autoResume: boolean;
+  user?: User;
 }) {
   const router = useRouter();
 
@@ -137,15 +140,27 @@ export function Chat({
     onError: (error) => {
       // Log detailed error on client side
       console.error("=== CLIENT CHAT ERROR ===");
-      console.error("Error Type:", error instanceof Error ? error.constructor.name : typeof error);
-      console.error("Error Message:", error instanceof Error ? error.message : String(error));
-      console.error("Error Stack:", error instanceof Error ? error.stack : "N/A");
+      console.error(
+        "Error Type:",
+        error instanceof Error ? error.constructor.name : typeof error
+      );
+      console.error(
+        "Error Message:",
+        error instanceof Error ? error.message : String(error)
+      );
+      console.error(
+        "Error Stack:",
+        error instanceof Error ? error.stack : "N/A"
+      );
       console.error("Chat ID:", id);
       console.error("Current Model:", currentModelId);
       console.error("Messages Count:", messages.length);
-      
-      if (error && typeof error === 'object') {
-        console.error("Error Details:", JSON.stringify(error, Object.getOwnPropertyNames(error), 2));
+
+      if (error && typeof error === "object") {
+        console.error(
+          "Error Details:",
+          JSON.stringify(error, Object.getOwnPropertyNames(error), 2)
+        );
       }
       console.error("=== END CLIENT ERROR ===");
 
@@ -156,7 +171,8 @@ export function Chat({
           // This is a Groq-based app, not using AI Gateway
           toast({
             type: "error",
-            description: "Terjadi kesalahan dengan layanan AI. Silakan coba lagi.",
+            description:
+              "Terjadi kesalahan dengan layanan AI. Silakan coba lagi.",
           });
         } else {
           toast({
@@ -168,7 +184,8 @@ export function Chat({
         // Show generic error for non-ChatSDKError
         toast({
           type: "error",
-          description: "Terjadi kesalahan saat berkomunikasi dengan AI. Silakan coba lagi.",
+          description:
+            "Terjadi kesalahan saat berkomunikasi dengan AI. Silakan coba lagi.",
         });
       }
     },
@@ -215,13 +232,16 @@ export function Chat({
             chatId={id}
             isReadonly={isReadonly}
             selectedVisibilityType={initialVisibilityType}
+            user={user}
           />
         </div>
 
         {/* Main content area with proper centering - offset untuk header */}
-        <div className={`flex flex-1 flex-col overflow-hidden pt-13 ${
-          messages.length === 0 ? 'items-center justify-center' : ''
-        }`}>
+        <div
+          className={`flex flex-1 flex-col overflow-hidden pt-13 ${
+            messages.length === 0 ? "items-center justify-center" : ""
+          }`}
+        >
           {/* Messages container with centered max-width */}
           {messages.length > 0 && (
             <div className="flex flex-1 flex-col overflow-hidden">
@@ -256,29 +276,7 @@ export function Chat({
                 votes={votes}
               />
 
-              {!isReadonly ? (
-                <MultimodalInput
-                  attachments={attachments}
-                  chatId={id}
-                  input={input}
-                  messages={messages}
-                  onModelChange={setCurrentModelId}
-                  selectedModelId={currentModelId}
-                  selectedVisibilityType={visibilityType}
-                  sendMessage={sendMessage}
-                  setAttachments={setAttachments}
-                  setInput={setInput}
-                  setMessages={setMessages}
-                  status={status}
-                  stop={stop}
-                  wormgptEnabled={wormgptEnabled}
-                  setWormgptEnabled={setWormgptEnabled}
-                  deepThinkingEnabled={deepThinkingEnabled}
-                  setDeepThinkingEnabled={setDeepThinkingEnabled}
-                  webSearchEnabled={webSearchEnabled}
-                  setWebSearchEnabled={setWebSearchEnabled}
-                />
-              ) : (
+              {isReadonly ? (
                 <div className="flex w-full items-center justify-center p-4">
                   <div className="flex flex-col items-center gap-2 rounded-xl border border-dashed border-zinc-200 bg-zinc-50/50 p-6 text-center dark:border-zinc-800 dark:bg-zinc-900/50 w-full">
                     <p className="text-sm text-zinc-500 dark:text-zinc-400">
@@ -294,6 +292,29 @@ export function Chat({
                     </div>
                   </div>
                 </div>
+              ) : (
+                <MultimodalInput
+                  attachments={attachments}
+                  chatId={id}
+                  deepThinkingEnabled={deepThinkingEnabled}
+                  input={input}
+                  messages={messages}
+                  onModelChange={setCurrentModelId}
+                  selectedModelId={currentModelId}
+                  selectedVisibilityType={visibilityType}
+                  sendMessage={sendMessage}
+                  setAttachments={setAttachments}
+                  setDeepThinkingEnabled={setDeepThinkingEnabled}
+                  setInput={setInput}
+                  setMessages={setMessages}
+                  setWebSearchEnabled={setWebSearchEnabled}
+                  setWormgptEnabled={setWormgptEnabled}
+                  status={status}
+                  stop={stop}
+                  user={user}
+                  webSearchEnabled={webSearchEnabled}
+                  wormgptEnabled={wormgptEnabled}
+                />
               )}
             </div>
           )}
@@ -303,45 +324,46 @@ export function Chat({
         {messages.length > 0 && (
           <div className="w-full px-4 pb-4">
             <div className="mx-auto w-full max-w-3xl">
-              {!isReadonly ? (
-                <MultimodalInput
-              attachments={attachments}
-              chatId={id}
-              input={input}
-              messages={messages}
-              onModelChange={setCurrentModelId}
-              selectedModelId={currentModelId}
-              selectedVisibilityType={visibilityType}
-              sendMessage={sendMessage}
-              setAttachments={setAttachments}
-              setInput={setInput}
-              setMessages={setMessages}
-              status={status}
-              stop={stop}
-              wormgptEnabled={wormgptEnabled}
-              setWormgptEnabled={setWormgptEnabled}
-              deepThinkingEnabled={deepThinkingEnabled}
-              setDeepThinkingEnabled={setDeepThinkingEnabled}
-              webSearchEnabled={webSearchEnabled}
-              setWebSearchEnabled={setWebSearchEnabled}
-            />
-          ) : (
-            <div className="flex w-full items-center justify-center p-4">
-              <div className="flex flex-col items-center gap-2 rounded-xl border border-dashed border-zinc-200 bg-zinc-50/50 p-6 text-center dark:border-zinc-800 dark:bg-zinc-900/50 w-full">
-                <p className="text-sm text-zinc-500 dark:text-zinc-400">
-                  Please sign in to start chatting with Ultramaxo AI.
-                </p>
-                <div className="flex gap-4 mt-2">
-                  <Button asChild size="sm" variant="outline">
-                    <Link href="/login">Sign In</Link>
-                  </Button>
-                  <Button asChild size="sm">
-                    <Link href="/register">Create Account</Link>
-                  </Button>
+              {isReadonly ? (
+                <div className="flex w-full items-center justify-center p-4">
+                  <div className="flex flex-col items-center gap-2 rounded-xl border border-dashed border-zinc-200 bg-zinc-50/50 p-6 text-center dark:border-zinc-800 dark:bg-zinc-900/50 w-full">
+                    <p className="text-sm text-zinc-500 dark:text-zinc-400">
+                      Please sign in to start chatting with Ultramaxo AI.
+                    </p>
+                    <div className="flex gap-4 mt-2">
+                      <Button asChild size="sm" variant="outline">
+                        <Link href="/login">Sign In</Link>
+                      </Button>
+                      <Button asChild size="sm">
+                        <Link href="/register">Create Account</Link>
+                      </Button>
+                    </div>
+                  </div>
                 </div>
-              </div>
-            </div>
-          )}
+              ) : (
+                <MultimodalInput
+                  attachments={attachments}
+                  chatId={id}
+                  deepThinkingEnabled={deepThinkingEnabled}
+                  input={input}
+                  messages={messages}
+                  onModelChange={setCurrentModelId}
+                  selectedModelId={currentModelId}
+                  selectedVisibilityType={visibilityType}
+                  sendMessage={sendMessage}
+                  setAttachments={setAttachments}
+                  setDeepThinkingEnabled={setDeepThinkingEnabled}
+                  setInput={setInput}
+                  setMessages={setMessages}
+                  setWebSearchEnabled={setWebSearchEnabled}
+                  setWormgptEnabled={setWormgptEnabled}
+                  status={status}
+                  stop={stop}
+                  user={user}
+                  webSearchEnabled={webSearchEnabled}
+                  wormgptEnabled={wormgptEnabled}
+                />
+              )}
             </div>
           </div>
         )}
@@ -351,6 +373,7 @@ export function Chat({
         addToolApprovalResponse={addToolApprovalResponse}
         attachments={attachments}
         chatId={id}
+        deepThinkingEnabled={deepThinkingEnabled}
         input={input}
         isReadonly={isReadonly}
         messages={messages}
@@ -359,17 +382,16 @@ export function Chat({
         selectedVisibilityType={visibilityType}
         sendMessage={sendMessage}
         setAttachments={setAttachments}
+        setDeepThinkingEnabled={setDeepThinkingEnabled}
         setInput={setInput}
         setMessages={setMessages}
+        setWebSearchEnabled={setWebSearchEnabled}
+        setWormgptEnabled={setWormgptEnabled}
         status={status}
         stop={stop}
         votes={votes}
-        wormgptEnabled={wormgptEnabled}
-        setWormgptEnabled={setWormgptEnabled}
-        deepThinkingEnabled={deepThinkingEnabled}
-        setDeepThinkingEnabled={setDeepThinkingEnabled}
         webSearchEnabled={webSearchEnabled}
-        setWebSearchEnabled={setWebSearchEnabled}
+        wormgptEnabled={wormgptEnabled}
       />
     </>
   );

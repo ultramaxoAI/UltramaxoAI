@@ -29,6 +29,7 @@ async function NewChatPage() {
         initialVisibilityType="private"
         isReadonly={!session}
         key={id}
+        user={session?.user}
       />
       <DataStreamHandler />
     </>

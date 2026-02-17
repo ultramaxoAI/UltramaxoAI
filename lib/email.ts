@@ -1,11 +1,13 @@
 import nodemailer from "nodemailer";
+import { getEmailWrapper } from "./email-wrapper";
 
-// SMTP Configuration dari environment variables
+// SMTP Configuration from environment variables
 const SMTP_HOST = process.env.SMTP_HOST || "smtp.gmail.com";
-const SMTP_PORT = parseInt(process.env.SMTP_PORT || "587");
+const SMTP_PORT = Number.parseInt(process.env.SMTP_PORT || "587");
 const SMTP_USER = process.env.SMTP_USER || "";
 const SMTP_PASS = process.env.SMTP_PASS || "";
-const EMAIL_FROM = process.env.EMAIL_FROM || "Ultramaxo AI <noreply@ultramaxo.tech>";
+const EMAIL_FROM =
+  process.env.EMAIL_FROM || "Ultramaxo AI <noreply@ultramaxo.tech>";
 
 // Create reusable transporter
 let transporter: nodemailer.Transporter | null = null;
@@ -13,14 +15,16 @@ let transporter: nodemailer.Transporter | null = null;
 function getTransporter() {
   if (!transporter) {
     if (!SMTP_USER || !SMTP_PASS) {
-      console.warn("[email] SMTP credentials not configured; email sending disabled.");
+      console.warn(
+        "[email] SMTP credentials not configured; email sending disabled."
+      );
       return null;
     }
 
     transporter = nodemailer.createTransport({
       host: SMTP_HOST,
       port: SMTP_PORT,
-      secure: SMTP_PORT === 465, // true for 465, false for other ports
+      secure: SMTP_PORT === 465,
       auth: {
         user: SMTP_USER,
         pass: SMTP_PASS,
@@ -30,9 +34,12 @@ function getTransporter() {
   return transporter;
 }
 
+// Re-export wrapper for convenience if needed, but primary usage is internal here
+export { getEmailWrapper };
+
 async function sendEmail(to: string, subject: string, html: string) {
   const transport = getTransporter();
-  
+
   if (!transport) {
     console.warn("[email] Email transport not configured; skipping send.");
     return false;
@@ -46,7 +53,11 @@ async function sendEmail(to: string, subject: string, html: string) {
       html,
     });
 
-    console.info("[email] Email sent:", { to, subject, messageId: info.messageId });
+    console.info("[email] Email sent:", {
+      to,
+      subject,
+      messageId: info.messageId,
+    });
     return true;
   } catch (err) {
     console.error("[email] Send error:", err);
@@ -55,64 +66,87 @@ async function sendEmail(to: string, subject: string, html: string) {
 }
 
 export async function sendVerificationEmail(email: string, code: string) {
-  const html = `
-    <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background: linear-gradient(135deg, #000000 0%, #1a1a1a 100%); color: white; border-radius: 20px;">
-      <div style="background: #111; border-radius: 16px; padding: 40px; border: 1px solid #333;">
-        <div style="text-align: center; margin-bottom: 30px;">
-          <h1 style="color: #fff; margin: 0; font-size: 28px; font-weight: 700;">Verifikasi Akun</h1>
-        </div>
-        
-        <p style="color: #ccc; font-size: 16px; line-height: 1.6; margin-bottom: 24px;">
-          Terima kasih telah mendaftar di <strong>Ultramaxo AI</strong>. Gunakan kode verifikasi di bawah untuk mengaktifkan akun Anda:
-        </p>
-        
-        <div style="background: #222; border-radius: 12px; padding: 24px; text-align: center; margin: 32px 0; border: 1px dashed #444;">
-          <div style="font-size: 36px; font-weight: 800; color: #fff; letter-spacing: 8px; font-family: 'Courier New', monospace;">${code}</div>
-        </div>
-        
-        <p style="color: #888; font-size: 14px; line-height: 1.6; margin-top: 24px;">
-          Kode ini akan kedaluwarsa dalam <strong>10 menit</strong>. Jika Anda tidak mendaftar, abaikan email ini.
-        </p>
-        
-        <hr style="border: none; border-top: 1px solid #333; margin: 32px 0;">
-        
-        <p style="color: #666; font-size: 12px; text-align: center; margin: 0;">
-          Email otomatis dari Ultramaxo AI • Jangan reply email ini
-        </p>
-      </div>
+  const content = `
+    <div style="text-align: center; margin-bottom: 30px;">
+      <h1 style="font-size: 28px;">Verifikasi Akun</h1>
+      <p>Terima kasih telah mendaftar di <strong>Ultramaxo AI</strong>. Gunakan kode verifikasi di bawah untuk mengaktifkan akun Anda:</p>
     </div>
+    
+    <div style="background: #27272a; border-radius: 12px; padding: 24px; text-align: center; margin: 32px 0; border: 1px dashed #3f3f46;">
+      <div style="font-size: 36px; font-weight: 800; color: #fff; letter-spacing: 8px; font-family: monospace;">${code}</div>
+    </div>
+    
+    <p style="text-align: center; font-size: 14px; opacity: 0.8;">
+      Kode ini akan kedaluwarsa dalam <strong>10 menit</strong>. Jika Anda tidak mendaftar, abaikan email ini.
+    </p>
   `;
-  return sendEmail(email, "🔐 Kode Verifikasi Ultramaxo AI", html);
+  return sendEmail(
+    email,
+    "🔐 Kode Verifikasi Ultramaxo AI",
+    getEmailWrapper(content)
+  );
 }
 
 export async function sendPasswordResetEmail(email: string, resetUrl: string) {
-  const html = `
-    <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background: linear-gradient(135deg, #000000 0%, #1a1a1a 100%); color: white; border-radius: 20px;">
-      <div style="background: #111; border-radius: 16px; padding: 40px; border: 1px solid #333;">
-        <div style="text-align: center; margin-bottom: 30px;">
-          <h1 style="color: #fff; margin: 0; font-size: 28px; font-weight: 700;">Reset Password</h1>
-        </div>
-
-        <p style="color: #ccc; font-size: 16px; line-height: 1.6; margin-bottom: 24px;">
-          Kami menerima permintaan reset password untuk akun Ultramaxo AI Anda. Klik tombol di bawah untuk melanjutkan.
-        </p>
-
-        <div style="text-align: center; margin: 32px 0;">
-          <a href="${resetUrl}" style="display: inline-block; background: #fff; color: #000; padding: 12px 24px; border-radius: 999px; text-decoration: none; font-weight: 700;">Reset Password</a>
-        </div>
-
-        <p style="color: #888; font-size: 14px; line-height: 1.6; margin-top: 24px;">
-          Link ini akan kedaluwarsa dalam <strong>1 jam</strong>. Jika Anda tidak meminta reset password, abaikan email ini.
-        </p>
-
-        <hr style="border: none; border-top: 1px solid #333; margin: 32px 0;">
-
-        <p style="color: #666; font-size: 12px; text-align: center; margin: 0;">
-          Email otomatis dari Ultramaxo AI • Jangan reply email ini
-        </p>
-      </div>
+  const content = `
+    <div style="text-align: center; margin-bottom: 30px;">
+      <h1 style="font-size: 28px;">Reset Password</h1>
+      <p>Kami menerima permintaan reset password untuk akun Anda. Klik tombol di bawah untuk melanjutkan.</p>
     </div>
+
+    <div style="text-align: center; margin: 32px 0;">
+      <a href="${resetUrl}" class="button">Reset Password</a>
+    </div>
+    
+    <p style="text-align: center; font-size: 14px; opacity: 0.8;">
+      Link ini akan kedaluwarsa dalam <strong>1 jam</strong>. Jika Anda tidak meminta reset password, abaikan email ini.
+    </p>
+  `;
+  return sendEmail(
+    email,
+    "🔑 Reset Password Ultramaxo AI",
+    getEmailWrapper(content)
+  );
+}
+
+export async function sendUpgradeReminderEmail(email: string, name: string) {
+  // Use the template content but inject variables manually here
+  // Ideally, we import from email-templates.ts but avoid circular dep or just keep logic simple
+  const content = `
+    <p>Halo <strong>${name}</strong>,</p>
+
+    <p>Kami melihat Anda sangat aktif menggunakan Ultramaxo AI. Maksimalkan pengalaman Anda dengan fitur <strong>PRO</strong>:</p>
+
+    <ul>
+      <li>✨ Akses Ultra Agent Pro (Lebih Cerdas, Logika Tinggi & Coding Expert)</li>
+      <li>⚡ Respon Lebih Cepat & Prioritas Antrian</li>
+      <li>🎨 Generate Image Tanpa Batas</li>
+      <li>📂 Upload Dokumen & Analisis Data</li>
+    </ul>
+
+    <div style="text-align: center; margin: 32px 0;">
+      <a href="https://ultramaxo.tech/pricing" class="button">UPGRADE SEKARANG</a>
+    </div>
+
+    <p style="text-align: center;">Jangan lewatkan kesempatan untuk meningkatkan produktivitas Anda!</p>
   `;
 
-  return sendEmail(email, "🔐 Reset Password Ultramaxo AI", html);
+  return sendEmail(
+    email,
+    "✨ Unlock Full Potential dengan Ultramaxo PRO!",
+    getEmailWrapper(content)
+  );
+}
+
+export async function sendCustomEmail(
+  email: string,
+  subject: string,
+  body: string
+) {
+  // `body` is expected to be HTML fragment
+  // Replace newlines with <br/> only if it doesn't look like HTML
+  const isHtml = /<[a-z][\s\S]*>/i.test(body);
+  const formattedBody = isHtml ? body : body.replace(/\n/g, "<br/>");
+
+  return sendEmail(email, subject, getEmailWrapper(formattedBody));
 }

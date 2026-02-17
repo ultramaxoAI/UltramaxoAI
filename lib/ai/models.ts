@@ -12,7 +12,14 @@ export const chatModels: ChatModel[] = [
     id: "groq/llama-3.3-70b-versatile",
     name: "UltraAgent",
     provider: "groq",
-    description: "Advanced AI with superior reasoning and coding capabilities",
+    description: "Fast and capable AI assistant for everyday tasks",
+  },
+  {
+    id: "groq/deepseek-r1-distill-llama-70b",
+    name: "UltraAgent Pro",
+    provider: "groq",
+    description:
+      "Advanced AI with superior reasoning, deep thinking, and expert-level coding capabilities",
   },
 ];
 

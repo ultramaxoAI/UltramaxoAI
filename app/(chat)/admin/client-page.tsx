@@ -1,39 +1,42 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
-import { toast } from "sonner";
-import { 
-  UsersIcon, 
-  TicketIcon, 
-  SearchIcon,
-  MessageSquareIcon,
+import {
   CrownIcon,
   KeyIcon,
-  Settings2Icon,
   LogOutIcon,
-  Trash2Icon
+  MessageSquareIcon,
+  SearchIcon,
+  Settings2Icon,
+  TicketIcon,
+  Trash2Icon,
+  UsersIcon,
 } from "lucide-react";
+import { useEffect, useState } from "react";
+import { toast } from "sonner";
+import { EMAIL_TEMPLATES } from "@/lib/email-templates";
+import { getEmailWrapper } from "@/lib/email-wrapper";
 
 export default function AdminDashboardClient() {
-  const [activeTab, setActiveTab] = useState<'vouchers' | 'users' | 'upgrade-requests'>('vouchers');
+  const [activeTab, setActiveTab] = useState<
+    "vouchers" | "users" | "upgrade-requests"
+  >("vouchers");
   const [users, setUsers] = useState<any[]>([]);
   const [upgradeRequests, setUpgradeRequests] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
-  const [searchQuery, setSearchQuery] = useState('');
-  
+  const [searchQuery, setSearchQuery] = useState("");
+
   const [voucherData, setVoucherData] = useState({
-      code: '',
-      type: 'PRO',
-      value: 0,
-      durationMonths: 1
+    code: "",
+    type: "PRO",
+    value: 0,
+    durationMonths: 1,
   });
-  const [voucherMessage, setVoucherMessage] = useState('');
+  const [voucherMessage, setVoucherMessage] = useState("");
 
   const fetchUsers = async () => {
     setLoading(true);
     try {
-      const res = await fetch('/api/admin/users');
+      const res = await fetch("/api/admin/users");
       const data = await res.json();
       if (data.users) setUsers(data.users);
     } catch (e) {
@@ -46,7 +49,7 @@ export default function AdminDashboardClient() {
   const fetchUpgradeRequests = async () => {
     setLoading(true);
     try {
-      const res = await fetch('/api/admin/upgrade-requests');
+      const res = await fetch("/api/admin/upgrade-requests");
       const data = await res.json();
       if (data.requests) setUpgradeRequests(data.requests);
     } catch (e) {
@@ -57,36 +60,36 @@ export default function AdminDashboardClient() {
   };
 
   useEffect(() => {
-    if (activeTab === 'users') {
+    if (activeTab === "users") {
       fetchUsers();
-    } else if (activeTab === 'upgrade-requests') {
+    } else if (activeTab === "upgrade-requests") {
       fetchUpgradeRequests();
     }
   }, [activeTab]);
 
   const handleVoucherSubmit = async () => {
-      try {
-          const res = await fetch('/api/admin/vouchers', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify(voucherData),
-          });
-          const data = await res.json();
-          if (data.error) toast.error(data.error);
-          else {
-              toast.success('Voucher created successfully!');
-              setVoucherData({...voucherData, code: ''}); 
-          }
-      } catch (e) {
-          toast.error('Error creating voucher');
+    try {
+      const res = await fetch("/api/admin/vouchers", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(voucherData),
+      });
+      const data = await res.json();
+      if (data.error) toast.error(data.error);
+      else {
+        toast.success("Voucher created successfully!");
+        setVoucherData({ ...voucherData, code: "" });
       }
+    } catch (e) {
+      toast.error("Error creating voucher");
+    }
   };
 
   const handleUpdateUser = async (userId: string, updates: any) => {
     try {
-      const res = await fetch('/api/admin/users', {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
+      const res = await fetch("/api/admin/users", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ id: userId, ...updates }),
       });
       const data = await res.json();
@@ -102,11 +105,16 @@ export default function AdminDashboardClient() {
   };
 
   const handleDeleteUser = async (userId: string) => {
-    if (!confirm("Are you sure you want to delete this user? This action cannot be undone.")) return;
-    
+    if (
+      !confirm(
+        "Are you sure you want to delete this user? This action cannot be undone."
+      )
+    )
+      return;
+
     try {
       const res = await fetch(`/api/admin/users?id=${userId}`, {
-        method: 'DELETE',
+        method: "DELETE",
       });
       const data = await res.json();
       if (data.success) {
@@ -120,10 +128,84 @@ export default function AdminDashboardClient() {
     }
   };
 
-  const filteredUsers = users.filter(u => 
-    u.email?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    u.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    u.id?.toLowerCase().includes(searchQuery.toLowerCase())
+  /* EMAIL TOOLS STATE */
+  const [emailData, setEmailData] = useState({
+    recipientType: "single", // 'single' | 'all' | 'pro' | 'free'
+    email: "",
+    name: "",
+    type: "upgrade-reminder",
+    subject: "",
+    message: "",
+  });
+  const [selectedTemplate, setSelectedTemplate] = useState("custom");
+
+  // Auto-fill content when template changes
+  useEffect(() => {
+    const template = EMAIL_TEMPLATES.find((t) => t.id === selectedTemplate);
+    if (template && selectedTemplate !== "custom") {
+      setEmailData((prev) => ({
+        ...prev,
+        type: "custom", // Force type to custom so we can edit content
+        subject: template.subject,
+        message: template.body,
+      }));
+    }
+  }, [selectedTemplate]);
+
+  const handleSendEmail = async () => {
+    if (emailData.recipientType === "single" && !emailData.email) {
+      toast.error("Email is required for single recipient");
+      return;
+    }
+
+    if (
+      emailData.recipientType !== "single" &&
+      !confirm(
+        `Are you sure you want to broadcast this email to ${emailData.recipientType.toUpperCase()} users? This action cannot be undone.`
+      )
+    ) {
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const res = await fetch("/api/admin/send-email", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(emailData),
+      });
+      const data = await res.json();
+
+      if (data.success) {
+        if (emailData.recipientType === "single") {
+          toast.success("Email sent successfully!");
+        } else {
+          toast.success(
+            `Broadcast complete! Sent: ${data.meta?.sent}, Failed: ${data.meta?.failed}`
+          );
+        }
+        setEmailData({
+          ...emailData,
+          email: "",
+          name: "",
+          subject: "",
+          message: "",
+        });
+      } else {
+        toast.error(data.error || "Failed to send email");
+      }
+    } catch (e) {
+      toast.error("Error sending email");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const filteredUsers = users.filter(
+    (u) =>
+      u.email?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      u.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      u.id?.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   return (
@@ -138,26 +220,33 @@ export default function AdminDashboardClient() {
         </div>
 
         <nav className="flex flex-col gap-2">
-          <button 
-            onClick={() => setActiveTab('vouchers')}
-            className={`flex items-center gap-3 px-4 py-2.5 rounded-xl transition-all ${activeTab === 'vouchers' ? 'bg-zinc-800 text-white shadow-lg' : 'text-zinc-500 hover:text-white hover:bg-zinc-800/50'}`}
+          <button
+            className={`flex items-center gap-3 px-4 py-2.5 rounded-xl transition-all ${activeTab === "vouchers" ? "bg-zinc-800 text-white shadow-lg" : "text-zinc-500 hover:text-white hover:bg-zinc-800/50"}`}
+            onClick={() => setActiveTab("vouchers")}
           >
             <TicketIcon size={18} />
             <span className="text-sm font-medium">Vouchers</span>
           </button>
-          <button 
-            onClick={() => setActiveTab('users')}
-            className={`flex items-center gap-3 px-4 py-2.5 rounded-xl transition-all ${activeTab === 'users' ? 'bg-zinc-800 text-white shadow-lg' : 'text-zinc-500 hover:text-white hover:bg-zinc-800/50'}`}
+          <button
+            className={`flex items-center gap-3 px-4 py-2.5 rounded-xl transition-all ${activeTab === "users" ? "bg-zinc-800 text-white shadow-lg" : "text-zinc-500 hover:text-white hover:bg-zinc-800/50"}`}
+            onClick={() => setActiveTab("users")}
           >
             <UsersIcon size={18} />
             <span className="text-sm font-medium">Users</span>
           </button>
-          <button 
-            onClick={() => setActiveTab('upgrade-requests')}
-            className={`flex items-center gap-3 px-4 py-2.5 rounded-xl transition-all ${activeTab === 'upgrade-requests' ? 'bg-zinc-800 text-white shadow-lg' : 'text-zinc-500 hover:text-white hover:bg-zinc-800/50'}`}
+          <button
+            className={`flex items-center gap-3 px-4 py-2.5 rounded-xl transition-all ${activeTab === "upgrade-requests" ? "bg-zinc-800 text-white shadow-lg" : "text-zinc-500 hover:text-white hover:bg-zinc-800/50"}`}
+            onClick={() => setActiveTab("upgrade-requests")}
           >
             <CrownIcon size={18} />
             <span className="text-sm font-medium">Upgrade Requests</span>
+          </button>
+          <button
+            className={`flex items-center gap-3 px-4 py-2.5 rounded-xl transition-all ${activeTab === ("email-tools" as any) ? "bg-zinc-800 text-white shadow-lg" : "text-zinc-500 hover:text-white hover:bg-zinc-800/50"}`}
+            onClick={() => setActiveTab("email-tools" as any)}
+          >
+            <MessageSquareIcon size={18} />
+            <span className="text-sm font-medium">Email Tools</span>
           </button>
         </nav>
 
@@ -173,99 +262,129 @@ export default function AdminDashboardClient() {
       <main className="flex-1 flex flex-col p-6 gap-8 overflow-y-auto min-w-0">
         <header className="flex flex-col gap-1">
           <h1 className="text-4xl font-bold tracking-tight text-white capitalize">
-            {activeTab} Management
+            {activeTab.replace("-", " ")} Management
           </h1>
           <p className="text-zinc-500 text-sm">
-            Manage your application's {activeTab} activity and settings.
+            Manage your application's {activeTab.replace("-", " ")} activity and
+            settings.
           </p>
         </header>
 
-        {activeTab === 'vouchers' ? (
+        {activeTab === "vouchers" ? (
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
             <section className="bg-[#121214] border border-zinc-800/50 rounded-3xl p-8 flex flex-col gap-6 shadow-2xl">
               <div className="flex flex-col gap-1.5">
-                <h2 className="text-xl font-bold text-white">Generate Voucher</h2>
-                <p className="text-zinc-500 text-sm">Create a new redeemable code for users.</p>
+                <h2 className="text-xl font-bold text-white">
+                  Generate Voucher
+                </h2>
+                <p className="text-zinc-500 text-sm">
+                  Create a new redeemable code for users.
+                </p>
               </div>
 
               <div className="space-y-5">
                 <div className="space-y-2">
-                  <label className="text-xs font-bold text-zinc-500 uppercase tracking-widest ml-1">Voucher Code</label>
-                  <input 
+                  <label className="text-xs font-bold text-zinc-500 uppercase tracking-widest ml-1">
+                    Voucher Code
+                  </label>
+                  <input
                     className="w-full bg-[#18181b] border border-zinc-800 rounded-2xl p-4 text-sm focus:outline-none focus:ring-2 focus:ring-zinc-700 transition-all placeholder:text-zinc-700"
+                    onChange={(e) =>
+                      setVoucherData({ ...voucherData, code: e.target.value })
+                    }
                     placeholder="e.g. ULTIMA-PRO-2025"
                     value={voucherData.code}
-                    onChange={e => setVoucherData({...voucherData, code: e.target.value})}
                   />
                 </div>
 
                 <div className="space-y-2">
-                  <label className="text-xs font-bold text-zinc-500 uppercase tracking-widest ml-1">Voucher Type</label>
-                  <select 
+                  <label className="text-xs font-bold text-zinc-500 uppercase tracking-widest ml-1">
+                    Voucher Type
+                  </label>
+                  <select
                     className="w-full bg-[#18181b] border border-zinc-800 rounded-2xl p-4 text-sm focus:outline-none appearance-none"
+                    onChange={(e) =>
+                      setVoucherData({ ...voucherData, type: e.target.value })
+                    }
                     value={voucherData.type}
-                    onChange={e => setVoucherData({...voucherData, type: e.target.value})}
                   >
                     <option value="PRO">PRO Subscription</option>
                     <option value="CREDIT">Extra Credits</option>
                   </select>
                 </div>
 
-                {voucherData.type === 'PRO' ? (
+                {voucherData.type === "PRO" ? (
                   <div className="space-y-2 animate-in fade-in slide-in-from-top-2">
-                    <label className="text-xs font-bold text-zinc-500 uppercase tracking-widest ml-1">Duration (Months)</label>
-                    <input 
-                      type="number"
+                    <label className="text-xs font-bold text-zinc-500 uppercase tracking-widest ml-1">
+                      Duration (Months)
+                    </label>
+                    <input
                       className="w-full bg-[#18181b] border border-zinc-800 rounded-2xl p-4 text-sm focus:outline-none"
+                      onChange={(e) =>
+                        setVoucherData({
+                          ...voucherData,
+                          durationMonths: Number.parseInt(e.target.value),
+                        })
+                      }
+                      type="number"
                       value={voucherData.durationMonths}
-                      onChange={e => setVoucherData({...voucherData, durationMonths: parseInt(e.target.value)})}
                     />
                   </div>
                 ) : (
                   <div className="space-y-2 animate-in fade-in slide-in-from-top-2">
-                    <label className="text-xs font-bold text-zinc-500 uppercase tracking-widest ml-1">Credit Amount</label>
-                    <input 
-                      type="number"
+                    <label className="text-xs font-bold text-zinc-500 uppercase tracking-widest ml-1">
+                      Credit Amount
+                    </label>
+                    <input
                       className="w-full bg-[#18181b] border border-zinc-800 rounded-2xl p-4 text-sm focus:outline-none"
+                      onChange={(e) =>
+                        setVoucherData({
+                          ...voucherData,
+                          value: Number.parseInt(e.target.value),
+                        })
+                      }
+                      type="number"
                       value={voucherData.value}
-                      onChange={e => setVoucherData({...voucherData, value: parseInt(e.target.value)})}
                     />
                   </div>
                 )}
-                
-                <button 
-                  onClick={handleVoucherSubmit} 
+
+                <button
                   className="w-full bg-white text-black font-bold py-4 rounded-2xl hover:bg-zinc-200 transition-all active:scale-[0.98] shadow-xl mt-4"
+                  onClick={handleVoucherSubmit}
                 >
                   Create Voucher
                 </button>
               </div>
             </section>
-            
+
             <section className="flex items-center justify-center p-8 bg-[#121214]/30 border border-dashed border-zinc-800 rounded-3xl">
-               <div className="text-center flex flex-col items-center gap-4">
-                  <div className="size-16 rounded-full bg-zinc-800/50 flex items-center justify-center">
-                    <TicketIcon className="text-zinc-600" size={32} />
-                  </div>
-                  <p className="text-zinc-600 text-sm max-w-[200px]">Active vouchers and history will appear here in the next update.</p>
-               </div>
+              <div className="text-center flex flex-col items-center gap-4">
+                <div className="size-16 rounded-full bg-zinc-800/50 flex items-center justify-center">
+                  <TicketIcon className="text-zinc-600" size={32} />
+                </div>
+                <p className="text-zinc-600 text-sm max-w-[200px]">
+                  Active vouchers and history will appear here in the next
+                  update.
+                </p>
+              </div>
             </section>
           </div>
-        ) : activeTab === 'users' ? (
+        ) : activeTab === "users" ? (
           <div className="flex flex-col gap-6">
             <div className="flex justify-between items-center bg-[#121214] border border-zinc-800/50 rounded-2xl p-2 px-6">
               <div className="flex items-center gap-3 flex-1 max-w-md">
-                <SearchIcon size={18} className="text-zinc-500" />
-                <input 
+                <SearchIcon className="text-zinc-500" size={18} />
+                <input
                   className="bg-transparent w-full py-4 text-sm focus:outline-none"
+                  onChange={(e) => setSearchQuery(e.target.value)}
                   placeholder="Search users by name or email..."
                   value={searchQuery}
-                  onChange={e => setSearchQuery(e.target.value)}
                 />
               </div>
-              <button 
-                onClick={fetchUsers}
+              <button
                 className="text-white bg-zinc-800 py-2 px-4 rounded-xl text-xs font-bold hover:bg-zinc-700 transition-all"
+                onClick={fetchUsers}
               >
                 Refresh
               </button>
@@ -276,233 +395,529 @@ export default function AdminDashboardClient() {
                 <table className="w-full text-left">
                   <thead>
                     <tr className="border-b border-zinc-800 bg-zinc-900/30">
-                      <th className="p-4 text-xs font-bold text-zinc-500 uppercase tracking-widest whitespace-nowrap">User</th>
-                      <th className="p-4 text-xs font-bold text-zinc-500 uppercase tracking-widest whitespace-nowrap">Chats</th>
-                      <th className="p-4 text-xs font-bold text-zinc-500 uppercase tracking-widest whitespace-nowrap">Limit</th>
-                      <th className="p-4 text-xs font-bold text-zinc-500 uppercase tracking-widest whitespace-nowrap">Plan</th>
-                      <th className="p-4 text-xs font-bold text-zinc-500 uppercase tracking-widest whitespace-nowrap">Status</th>
-                      <th className="p-4 text-xs font-bold text-zinc-500 uppercase tracking-widest text-right whitespace-nowrap">Actions</th>
+                      <th className="p-4 text-xs font-bold text-zinc-500 uppercase tracking-widest whitespace-nowrap">
+                        User
+                      </th>
+                      <th className="p-4 text-xs font-bold text-zinc-500 uppercase tracking-widest whitespace-nowrap">
+                        Chats
+                      </th>
+                      <th className="p-4 text-xs font-bold text-zinc-500 uppercase tracking-widest whitespace-nowrap">
+                        Limit
+                      </th>
+                      <th className="p-4 text-xs font-bold text-zinc-500 uppercase tracking-widest whitespace-nowrap">
+                        Plan
+                      </th>
+                      <th className="p-4 text-xs font-bold text-zinc-500 uppercase tracking-widest whitespace-nowrap">
+                        Status
+                      </th>
+                      <th className="p-4 text-xs font-bold text-zinc-500 uppercase tracking-widest text-right whitespace-nowrap">
+                        Actions
+                      </th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-zinc-800/50">
                     {loading ? (
                       <tr>
-                        <td colSpan={6} className="p-20 text-center text-zinc-500">
+                        <td
+                          className="p-20 text-center text-zinc-500"
+                          colSpan={6}
+                        >
                           <div className="animate-pulse flex flex-col items-center gap-4">
-                             <div className="size-10 rounded-full bg-zinc-800" />
-                             <span className="text-sm">Retrieving user records...</span>
+                            <div className="size-10 rounded-full bg-zinc-800" />
+                            <span className="text-sm">
+                              Retrieving user records...
+                            </span>
                           </div>
                         </td>
                       </tr>
                     ) : filteredUsers.length === 0 ? (
                       <tr>
-                        <td colSpan={6} className="p-20 text-center text-zinc-600">No users found.</td>
+                        <td
+                          className="p-20 text-center text-zinc-600"
+                          colSpan={6}
+                        >
+                          No users found.
+                        </td>
                       </tr>
-                    ) : filteredUsers.map(user => (
-                      <tr key={user.id} className="hover:bg-zinc-800/20 transition-colors group">
-                        <td className="p-4">
-                          <div className="flex items-center gap-3">
-                            <div className="size-8 rounded-full bg-zinc-800 flex items-center justify-center font-bold text-zinc-400 shrink-0">
-                              {user.name?.[0]?.toUpperCase() || user.email?.[0]?.toUpperCase()}
+                    ) : (
+                      filteredUsers.map((user) => (
+                        <tr
+                          className="hover:bg-zinc-800/20 transition-colors group"
+                          key={user.id}
+                        >
+                          <td className="p-4">
+                            <div className="flex items-center gap-3">
+                              <div className="size-8 rounded-full bg-zinc-800 flex items-center justify-center font-bold text-zinc-400 shrink-0">
+                                {user.name?.[0]?.toUpperCase() ||
+                                  user.email?.[0]?.toUpperCase()}
+                              </div>
+                              <div className="flex flex-col min-w-0">
+                                <span className="font-bold text-white text-sm truncate max-w-[120px]">
+                                  {user.name || "Unnamed"}
+                                </span>
+                                <span className="text-zinc-500 text-xs truncate max-w-[150px]">
+                                  {user.email}
+                                </span>
+                              </div>
                             </div>
-                            <div className="flex flex-col min-w-0">
-                              <span className="font-bold text-white text-sm truncate max-w-[120px]">{user.name || "Unnamed"}</span>
-                              <span className="text-zinc-500 text-xs truncate max-w-[150px]">{user.email}</span>
+                          </td>
+                          <td className="p-4">
+                            <div className="flex items-center gap-2 text-zinc-300 font-medium">
+                              <MessageSquareIcon
+                                className="text-zinc-500"
+                                size={14}
+                              />
+                              <span>{user.chatCount || 0}</span>
                             </div>
-                          </div>
-                        </td>
-                        <td className="p-4">
-                          <div className="flex items-center gap-2 text-zinc-300 font-medium">
-                            <MessageSquareIcon size={14} className="text-zinc-500" />
-                            <span>{user.chatCount || 0}</span>
-                          </div>
-                        </td>
-                        <td className="p-4">
-                          <span className="text-zinc-300 font-medium">{user.limitCount}</span>
-                        </td>
-                        <td className="p-4">
-                           {user.isPro ? (
-                             <span className="px-2.5 py-0.5 bg-yellow-400/10 text-yellow-400 text-[10px] font-black uppercase tracking-widest border border-yellow-400/20 rounded-full flex items-center gap-1.5 w-fit">
-                               <CrownIcon size={10} />
-                               PRO
-                             </span>
-                           ) : (
-                             <span className="px-2.5 py-0.5 bg-zinc-800 text-zinc-500 text-[10px] font-black uppercase tracking-widest rounded-full w-fit">
-                               FREE
-                             </span>
-                           )}
-                        </td>
-                        <td className="p-4">
-                          {user.role === 'admin' ? (
-                            <span className="px-2.5 py-0.5 bg-blue-400/10 text-blue-400 text-[10px] font-black uppercase tracking-widest border border-blue-400/20 rounded-full flex items-center gap-1.5 w-fit">
-                              <KeyIcon size={10} />
-                              ADMIN
+                          </td>
+                          <td className="p-4">
+                            <span className="text-zinc-300 font-medium">
+                              {user.limitCount}
                             </span>
-                          ) : (
-                            <span className="px-2.5 py-0.5 bg-zinc-800 text-zinc-500 text-[10px] font-black uppercase tracking-widest rounded-full w-fit">
-                              USER
-                            </span>
-                          )}
-                        </td>
-                        <td className="p-4 text-right">
-                           <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                              <button 
-                                onClick={() => handleUpdateUser(user.id, { isPro: !user.isPro, limitCount: !user.isPro ? 99999 : 0 })}
+                          </td>
+                          <td className="p-4">
+                            {user.isPro ? (
+                              <span className="px-2.5 py-0.5 bg-yellow-400/10 text-yellow-400 text-[10px] font-black uppercase tracking-widest border border-yellow-400/20 rounded-full flex items-center gap-1.5 w-fit">
+                                <CrownIcon size={10} />
+                                PRO
+                              </span>
+                            ) : (
+                              <span className="px-2.5 py-0.5 bg-zinc-800 text-zinc-500 text-[10px] font-black uppercase tracking-widest rounded-full w-fit">
+                                FREE
+                              </span>
+                            )}
+                          </td>
+                          <td className="p-4">
+                            {user.role === "admin" ? (
+                              <span className="px-2.5 py-0.5 bg-blue-400/10 text-blue-400 text-[10px] font-black uppercase tracking-widest border border-blue-400/20 rounded-full flex items-center gap-1.5 w-fit">
+                                <KeyIcon size={10} />
+                                ADMIN
+                              </span>
+                            ) : (
+                              <span className="px-2.5 py-0.5 bg-zinc-800 text-zinc-500 text-[10px] font-black uppercase tracking-widest rounded-full w-fit">
+                                USER
+                              </span>
+                            )}
+                          </td>
+                          <td className="p-4 text-right">
+                            <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                              <button
                                 className="p-2.5 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-white transition-all shadow-lg border border-zinc-700/50"
+                                onClick={() =>
+                                  handleUpdateUser(user.id, {
+                                    isPro: !user.isPro,
+                                    limitCount: user.isPro ? 0 : 99_999,
+                                  })
+                                }
                                 title={user.isPro ? "Revoke Pro" : "Grant Pro"}
                               >
-                                {user.isPro ? <TicketIcon size={16} /> : <CrownIcon size={16} />}
+                                {user.isPro ? (
+                                  <TicketIcon size={16} />
+                                ) : (
+                                  <CrownIcon size={16} />
+                                )}
                               </button>
-                              <button 
+                              <button
+                                className="p-2.5 rounded-xl bg-zinc-800 hover:bg-blue-500/20 text-zinc-400 hover:text-blue-400 transition-all shadow-lg border border-zinc-700/50"
                                 onClick={() => {
-                                  const newLimit = prompt("Enter new limit count:", user.limitCount);
-                                  if (newLimit !== null) handleUpdateUser(user.id, { limitCount: parseInt(newLimit) });
+                                  // Pre-fill email in Email Tools
+                                  setEmailData({
+                                    ...emailData,
+                                    recipientType: "single",
+                                    email: user.email,
+                                    name: user.name || "",
+                                  });
+                                  setActiveTab("email-tools" as any);
                                 }}
+                                title="Send Email"
+                              >
+                                <MessageSquareIcon size={16} />
+                              </button>
+                              <button
                                 className="p-2.5 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-white transition-all shadow-lg border border-zinc-700/50"
+                                onClick={() => {
+                                  const newLimit = prompt(
+                                    "Enter new limit count:",
+                                    user.limitCount
+                                  );
+                                  if (newLimit !== null)
+                                    handleUpdateUser(user.id, {
+                                      limitCount: Number.parseInt(newLimit),
+                                    });
+                                }}
                                 title="Edit Limit"
                               >
                                 <Settings2Icon size={16} />
                               </button>
-                              <button 
-                                onClick={() => handleDeleteUser(user.id)}
+                              <button
                                 className="p-2.5 rounded-xl bg-zinc-800 hover:bg-red-500/20 text-zinc-400 hover:text-red-400 transition-all shadow-lg border border-zinc-700/50"
+                                onClick={() => handleDeleteUser(user.id)}
                                 title="Delete User"
                               >
                                 <Trash2Icon size={16} />
                               </button>
-                           </div>
-                        </td>
-                      </tr>
-                    ))}
+                            </div>
+                          </td>
+                        </tr>
+                      ))
+                    )}
                   </tbody>
                 </table>
               </div>
             </div>
           </div>
-        ) : activeTab === 'upgrade-requests' ? (
+        ) : activeTab === "upgrade-requests" ? (
           <div className="flex flex-col gap-6">
             <div className="bg-[#121214] border border-zinc-800/50 rounded-3xl shadow-2xl overflow-hidden">
               <div className="overflow-x-auto">
                 <table className="w-full text-left">
                   <thead>
                     <tr className="bg-zinc-900/50 border-b border-zinc-800">
-                      <th className="p-4 text-zinc-500 text-xs font-bold uppercase tracking-widest">User</th>
-                      <th className="p-4 text-zinc-500 text-xs font-bold uppercase tracking-widest">Plan</th>
-                      <th className="p-4 text-zinc-500 text-xs font-bold uppercase tracking-widest">Duration</th>
-                      <th className="p-4 text-zinc-500 text-xs font-bold uppercase tracking-widest">Price</th>
-                      <th className="p-4 text-zinc-500 text-xs font-bold uppercase tracking-widest">Status</th>
-                      <th className="p-4 text-zinc-500 text-xs font-bold uppercase tracking-widest">Date</th>
-                      <th className="p-4 text-zinc-500 text-xs font-bold uppercase tracking-widest text-right">Actions</th>
+                      <th className="p-4 text-zinc-500 text-xs font-bold uppercase tracking-widest">
+                        User
+                      </th>
+                      <th className="p-4 text-zinc-500 text-xs font-bold uppercase tracking-widest">
+                        Plan
+                      </th>
+                      <th className="p-4 text-zinc-500 text-xs font-bold uppercase tracking-widest">
+                        Duration
+                      </th>
+                      <th className="p-4 text-zinc-500 text-xs font-bold uppercase tracking-widest">
+                        Price
+                      </th>
+                      <th className="p-4 text-zinc-500 text-xs font-bold uppercase tracking-widest">
+                        Status
+                      </th>
+                      <th className="p-4 text-zinc-500 text-xs font-bold uppercase tracking-widest">
+                        Date
+                      </th>
+                      <th className="p-4 text-zinc-500 text-xs font-bold uppercase tracking-widest text-right">
+                        Actions
+                      </th>
                     </tr>
                   </thead>
                   <tbody>
                     {loading ? (
                       <tr>
-                        <td colSpan={7} className="p-8 text-center text-zinc-500">
+                        <td
+                          className="p-8 text-center text-zinc-500"
+                          colSpan={7}
+                        >
                           Loading upgrade requests...
                         </td>
                       </tr>
                     ) : upgradeRequests.length === 0 ? (
                       <tr>
-                        <td colSpan={7} className="p-8 text-center text-zinc-500">
+                        <td
+                          className="p-8 text-center text-zinc-500"
+                          colSpan={7}
+                        >
                           No upgrade requests yet
                         </td>
                       </tr>
-                    ) : upgradeRequests.map(req => (
-                      <tr key={req.id} className="hover:bg-zinc-800/20 transition-colors group border-b border-zinc-800/30">
-                        <td className="p-4">
-                          <div className="flex flex-col">
-                            <span className="font-bold text-white text-sm">{req.username || "Unnamed"}</span>
-                            <span className="text-zinc-500 text-xs">{req.email}</span>
-                          </div>
-                        </td>
-                        <td className="p-4">
-                          <span className="text-zinc-300 font-medium text-sm">{req.planId}</span>
-                        </td>
-                        <td className="p-4">
-                          <span className="text-zinc-300 font-medium">{req.months} bulan</span>
-                        </td>
-                        <td className="p-4">
-                          <span className="text-yellow-400 font-bold">Rp {req.price?.toLocaleString('id-ID')}</span>
-                        </td>
-                        <td className="p-4">
-                          {req.status === 'approved' ? (
-                            <span className="px-2.5 py-0.5 bg-green-400/10 text-green-400 text-[10px] font-black uppercase tracking-widest border border-green-400/20 rounded-full w-fit">
-                              Approved
-                            </span>
-                          ) : req.status === 'rejected' ? (
-                            <span className="px-2.5 py-0.5 bg-red-400/10 text-red-400 text-[10px] font-black uppercase tracking-widest border border-red-400/20 rounded-full w-fit">
-                              Rejected
-                            </span>
-                          ) : (
-                            <span className="px-2.5 py-0.5 bg-yellow-400/10 text-yellow-400 text-[10px] font-black uppercase tracking-widest border border-yellow-400/20 rounded-full w-fit">
-                              Pending
-                            </span>
-                          )}
-                        </td>
-                        <td className="p-4">
-                          <span className="text-zinc-500 text-xs">
-                            {new Date(req.createdAt).toLocaleDateString('id-ID')}
-                          </span>
-                        </td>
-                        <td className="p-4 text-right">
-                          {req.status === 'pending' && (
-                            <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                              <button 
-                                onClick={async () => {
-                                  try {
-                                    const res = await fetch('/api/admin/upgrade-requests', {
-                                      method: 'PATCH',
-                                      headers: { 'Content-Type': 'application/json' },
-                                      body: JSON.stringify({ id: req.id, status: 'approved' }),
-                                    });
-                                    const data = await res.json();
-                                    if (data.success) {
-                                      toast.success("Request approved and user upgraded!");
-                                      fetchUpgradeRequests();
-                                    } else {
-                                      toast.error(data.error || "Approval failed");
-                                    }
-                                  } catch (e) {
-                                    toast.error("Approval failed");
-                                  }
-                                }}
-                                className="px-3 py-1.5 rounded-lg bg-green-500/20 hover:bg-green-500/30 text-green-400 text-xs font-bold transition-all border border-green-500/30"
-                              >
-                                Approve
-                              </button>
-                              <button 
-                                onClick={async () => {
-                                  try {
-                                    const res = await fetch('/api/admin/upgrade-requests', {
-                                      method: 'PATCH',
-                                      headers: { 'Content-Type': 'application/json' },
-                                      body: JSON.stringify({ id: req.id, status: 'rejected' }),
-                                    });
-                                    const data = await res.json();
-                                    if (data.success) {
-                                      toast.success("Request rejected");
-                                      fetchUpgradeRequests();
-                                    } else {
-                                      toast.error(data.error || "Rejection failed");
-                                    }
-                                  } catch (e) {
-                                    toast.error("Rejection failed");
-                                  }
-                                }}
-                                className="px-3 py-1.5 rounded-lg bg-red-500/20 hover:bg-red-500/30 text-red-400 text-xs font-bold transition-all border border-red-500/30"
-                              >
-                                Reject
-                              </button>
+                    ) : (
+                      upgradeRequests.map((req) => (
+                        <tr
+                          className="hover:bg-zinc-800/20 transition-colors group border-b border-zinc-800/30"
+                          key={req.id}
+                        >
+                          <td className="p-4">
+                            <div className="flex flex-col">
+                              <span className="font-bold text-white text-sm">
+                                {req.username || "Unnamed"}
+                              </span>
+                              <span className="text-zinc-500 text-xs">
+                                {req.email}
+                              </span>
                             </div>
-                          )}
-                        </td>
-                      </tr>
-                    ))}
+                          </td>
+                          <td className="p-4">
+                            <span className="text-zinc-300 font-medium text-sm">
+                              {req.planId}
+                            </span>
+                          </td>
+                          <td className="p-4">
+                            <span className="text-zinc-300 font-medium">
+                              {req.months} bulan
+                            </span>
+                          </td>
+                          <td className="p-4">
+                            <span className="text-yellow-400 font-bold">
+                              Rp {req.price?.toLocaleString("id-ID")}
+                            </span>
+                          </td>
+                          <td className="p-4">
+                            {req.status === "approved" ? (
+                              <span className="px-2.5 py-0.5 bg-green-400/10 text-green-400 text-[10px] font-black uppercase tracking-widest border border-green-400/20 rounded-full w-fit">
+                                Approved
+                              </span>
+                            ) : req.status === "rejected" ? (
+                              <span className="px-2.5 py-0.5 bg-red-400/10 text-red-400 text-[10px] font-black uppercase tracking-widest border border-red-400/20 rounded-full w-fit">
+                                Rejected
+                              </span>
+                            ) : (
+                              <span className="px-2.5 py-0.5 bg-yellow-400/10 text-yellow-400 text-[10px] font-black uppercase tracking-widest border border-yellow-400/20 rounded-full w-fit">
+                                Pending
+                              </span>
+                            )}
+                          </td>
+                          <td className="p-4">
+                            <span className="text-zinc-500 text-xs">
+                              {new Date(req.createdAt).toLocaleDateString(
+                                "id-ID"
+                              )}
+                            </span>
+                          </td>
+                          <td className="p-4 text-right">
+                            {req.status === "pending" && (
+                              <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                <button
+                                  className="px-3 py-1.5 rounded-lg bg-green-500/20 hover:bg-green-500/30 text-green-400 text-xs font-bold transition-all border border-green-500/30"
+                                  onClick={async () => {
+                                    try {
+                                      const res = await fetch(
+                                        "/api/admin/upgrade-requests",
+                                        {
+                                          method: "PATCH",
+                                          headers: {
+                                            "Content-Type": "application/json",
+                                          },
+                                          body: JSON.stringify({
+                                            id: req.id,
+                                            status: "approved",
+                                          }),
+                                        }
+                                      );
+                                      const data = await res.json();
+                                      if (data.success) {
+                                        toast.success(
+                                          "Request approved and user upgraded!"
+                                        );
+                                        fetchUpgradeRequests();
+                                      } else {
+                                        toast.error(
+                                          data.error || "Approval failed"
+                                        );
+                                      }
+                                    } catch (e) {
+                                      toast.error("Approval failed");
+                                    }
+                                  }}
+                                >
+                                  Approve
+                                </button>
+                                <button
+                                  className="px-3 py-1.5 rounded-lg bg-red-500/20 hover:bg-red-500/30 text-red-400 text-xs font-bold transition-all border border-red-500/30"
+                                  onClick={async () => {
+                                    try {
+                                      const res = await fetch(
+                                        "/api/admin/upgrade-requests",
+                                        {
+                                          method: "PATCH",
+                                          headers: {
+                                            "Content-Type": "application/json",
+                                          },
+                                          body: JSON.stringify({
+                                            id: req.id,
+                                            status: "rejected",
+                                          }),
+                                        }
+                                      );
+                                      const data = await res.json();
+                                      if (data.success) {
+                                        toast.success("Request rejected");
+                                        fetchUpgradeRequests();
+                                      } else {
+                                        toast.error(
+                                          data.error || "Rejection failed"
+                                        );
+                                      }
+                                    } catch (e) {
+                                      toast.error("Rejection failed");
+                                    }
+                                  }}
+                                >
+                                  Reject
+                                </button>
+                              </div>
+                            )}
+                          </td>
+                        </tr>
+                      ))
+                    )}
                   </tbody>
                 </table>
               </div>
             </div>
+          </div>
+        ) : (activeTab as any) === "email-tools" ? (
+          <div className="grid grid-cols-1 gap-8">
+            <section className="bg-[#121214] border border-zinc-800/50 rounded-3xl p-8 flex flex-col gap-6 shadow-2xl">
+              <div className="flex flex-col gap-1.5">
+                <h2 className="text-xl font-bold text-white">
+                  Send Email / Broadcast
+                </h2>
+                <p className="text-zinc-500 text-sm">
+                  Send templated emails to single user or broadcast to groups.
+                </p>
+              </div>
+
+              <div className="space-y-5 max-w-2xl">
+                <div className="space-y-2">
+                  <label className="text-xs font-bold text-zinc-500 uppercase tracking-widest ml-1">
+                    Target Audience
+                  </label>
+                  <select
+                    className="w-full bg-[#18181b] border border-zinc-800 rounded-2xl p-4 text-sm focus:outline-none appearance-none"
+                    onChange={(e) =>
+                      setEmailData({
+                        ...emailData,
+                        recipientType: e.target.value,
+                      })
+                    }
+                    value={emailData.recipientType}
+                  >
+                    <option value="single">Specific User (Single)</option>
+                    <option value="all">📢 All Users (Broadcast)</option>
+                    <option value="pro">👑 PRO Users Only</option>
+                    <option value="free">🆓 FREE Users Only</option>
+                  </select>
+                </div>
+
+                {emailData.recipientType === "single" && (
+                  <div className="grid grid-cols-2 gap-4 animate-in fade-in slide-in-from-top-2">
+                    <div className="space-y-2">
+                      <label className="text-xs font-bold text-zinc-500 uppercase tracking-widest ml-1">
+                        Recipient Email
+                      </label>
+                      <input
+                        className="w-full bg-[#18181b] border border-zinc-800 rounded-2xl p-4 text-sm focus:outline-none focus:ring-2 focus:ring-zinc-700 transition-all placeholder:text-zinc-700"
+                        onChange={(e) =>
+                          setEmailData({ ...emailData, email: e.target.value })
+                        }
+                        placeholder="user@example.com"
+                        value={emailData.email}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <label className="text-xs font-bold text-zinc-500 uppercase tracking-widest ml-1">
+                        Recipient Name
+                      </label>
+                      <input
+                        className="w-full bg-[#18181b] border border-zinc-800 rounded-2xl p-4 text-sm focus:outline-none focus:ring-2 focus:ring-zinc-700 transition-all placeholder:text-zinc-700"
+                        onChange={(e) =>
+                          setEmailData({ ...emailData, name: e.target.value })
+                        }
+                        placeholder="John Doe"
+                        value={emailData.name}
+                      />
+                    </div>
+                  </div>
+                )}
+
+                <div className="space-y-2">
+                  <label className="text-xs font-bold text-zinc-500 uppercase tracking-widest ml-1">
+                    Email Template
+                  </label>
+                  <select
+                    className="w-full bg-[#18181b] border border-zinc-800 rounded-2xl p-4 text-sm focus:outline-none appearance-none"
+                    onChange={(e) => setSelectedTemplate(e.target.value)}
+                    value={selectedTemplate}
+                  >
+                    {EMAIL_TEMPLATES.map((template) => (
+                      <option key={template.id} value={template.id}>
+                        {template.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                {/* Always show editor for Custom or any Template (since they become custom on select) */}
+                <div className="space-y-4 animate-in fade-in slide-in-from-top-2">
+                  <div className="space-y-2">
+                    <label className="text-xs font-bold text-zinc-500 uppercase tracking-widest ml-1">
+                      Subject
+                    </label>
+                    <input
+                      className="w-full bg-[#18181b] border border-zinc-800 rounded-2xl p-4 text-sm focus:outline-none focus:ring-2 focus:ring-zinc-700 transition-all font-medium"
+                      onChange={(e) =>
+                        setEmailData({
+                          ...emailData,
+                          subject: e.target.value,
+                          type: "custom",
+                        })
+                      }
+                      placeholder="Email Subject"
+                      value={emailData.subject}
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <label className="text-xs font-bold text-zinc-500 uppercase tracking-widest ml-1">
+                      Message Body (HTML Supported)
+                    </label>
+                    <textarea
+                      className="w-full bg-[#18181b] border border-zinc-800 rounded-2xl p-4 text-sm focus:outline-none focus:ring-2 focus:ring-zinc-700 transition-all min-h-[200px] font-mono leading-relaxed"
+                      onChange={(e) =>
+                        setEmailData({
+                          ...emailData,
+                          message: e.target.value,
+                          type: "custom",
+                        })
+                      }
+                      placeholder="<p>Write your message here...</p>"
+                      value={emailData.message}
+                    />
+                    <p className="text-xs text-zinc-500 ml-1">
+                      * Supports basic HTML tags like &lt;p&gt;, &lt;strong&gt;,
+                      &lt;ul&gt;, &lt;li&gt;, etc.
+                    </p>
+                  </div>
+                </div>
+
+                {/* Live Preview Section */}
+                <div className="mt-8 border border-zinc-800 rounded-3xl overflow-hidden shadow-2xl">
+                  <div className="bg-[#0c0c0e] px-6 py-4 border-b border-zinc-800 flex justify-between items-center">
+                    <div className="flex items-center gap-2">
+                      <div className="size-2 rounded-full bg-green-500 animate-pulse" />
+                      <span className="text-xs font-bold text-zinc-400 uppercase tracking-widest">
+                        Live Preview
+                      </span>
+                    </div>
+                    <span className="text-xs text-zinc-600 font-mono">
+                      Rendering...
+                    </span>
+                  </div>
+                  <div className="bg-[#18181b] p-4 flex justify-center min-h-[400px]">
+                    <div className="w-full max-w-[650px] bg-transparent rounded-xl overflow-hidden shadow-sm">
+                      <iframe
+                        className="w-full h-[600px] bg-transparent border-none"
+                        srcDoc={getEmailWrapper(
+                          emailData.message ||
+                            "<p style='text-align:center; color: #666; margin-top: 100px;'>Start typing to verify preview...</p>"
+                        )}
+                        title="Email Preview"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                <button
+                  className={`w-full font-bold py-4 rounded-2xl transition-all active:scale-[0.98] shadow-xl mt-4 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 ${emailData.recipientType !== "single" ? "bg-red-500 hover:bg-red-600 text-white" : "bg-white hover:bg-zinc-200 text-black"}`}
+                  disabled={loading}
+                  onClick={handleSendEmail}
+                >
+                  {loading ? (
+                    <div className="size-4 rounded-full border-2 border-zinc-300 border-t-zinc-800 animate-spin" />
+                  ) : (
+                    <MessageSquareIcon size={18} />
+                  )}
+                  {emailData.recipientType !== "single"
+                    ? `Broadcast to ${emailData.recipientType.toUpperCase()} Users`
+                    : "Send Email"}
+                </button>
+              </div>
+            </section>
           </div>
         ) : null}
       </main>

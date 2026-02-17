@@ -79,7 +79,10 @@ export function VisibilitySelector({
         </Button>
       </DropdownMenuTrigger>
 
-      <DropdownMenuContent align="start" className="min-w-[300px]">
+      <DropdownMenuContent
+        align="start"
+        className="min-w-[300px] bg-white dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800 rounded-xl shadow-lg"
+      >
         {visibilities.map((visibility) => (
           <DropdownMenuItem
             className="group/item flex flex-row items-center justify-between gap-4"

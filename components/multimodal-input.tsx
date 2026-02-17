@@ -3,7 +3,17 @@
 import type { UseChatHelpers } from "@ai-sdk/react";
 import type { UIMessage } from "ai";
 import equal from "fast-deep-equal";
-import { CheckIcon, PlusIcon, ImageIcon, FileTextIcon, CodeIcon, FolderIcon } from "lucide-react";
+import {
+  CheckIcon,
+  CodeIcon,
+  CpuIcon,
+  FileTextIcon,
+  FolderIcon,
+  GlobeIcon,
+  ImageIcon,
+  PlusIcon,
+  SparklesIcon,
+} from "lucide-react";
 import {
   type ChangeEvent,
   type Dispatch,
@@ -15,7 +25,6 @@ import {
   useState,
 } from "react";
 import { toast } from "sonner";
-import { SparklesIcon, CpuIcon, GlobeIcon } from "lucide-react";
 import { useLocalStorage, useWindowSize } from "usehooks-ts";
 import {
   ModelSelector,
@@ -49,7 +58,7 @@ import {
   PromptInputToolbar,
   PromptInputTools,
 } from "./elements/prompt-input";
-import { ArrowUpIcon, PaperclipIcon, StopIcon } from "./icons";
+import { ArrowUpIcon, StopIcon } from "./icons";
 import { PreviewAttachment } from "./preview-attachment";
 import { Button } from "./ui/button";
 import type { VisibilityType } from "./visibility-selector";
@@ -81,6 +90,7 @@ export interface MultimodalInputProps {
   setDeepThinkingEnabled: Dispatch<SetStateAction<boolean>>;
   webSearchEnabled: boolean;
   setWebSearchEnabled: Dispatch<SetStateAction<boolean>>;
+  user?: { type?: string };
 }
 
 function PureMultimodalInput({
@@ -91,11 +101,9 @@ function PureMultimodalInput({
   stop,
   attachments,
   setAttachments,
-  messages,
   setMessages,
   sendMessage,
   className,
-  selectedVisibilityType,
   selectedModelId,
   onModelChange,
   wormgptEnabled,
@@ -104,6 +112,7 @@ function PureMultimodalInput({
   setDeepThinkingEnabled,
   webSearchEnabled,
   setWebSearchEnabled,
+  user,
 }: MultimodalInputProps) {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const { width } = useWindowSize();
@@ -328,7 +337,7 @@ function PureMultimodalInput({
       />
 
       <PromptInput
-        className="rounded-3xl border border-zinc-700/50 bg-zinc-900/50 backdrop-blur-sm p-3 shadow-lg shadow-black/10 transition-all duration-200 focus-within:border-purple-500/50 focus-within:shadow-purple-500/20 hover:border-zinc-600"
+        className="rounded-3xl border border-zinc-300 dark:border-zinc-700/50 bg-zinc-100 dark:bg-zinc-900/50 backdrop-blur-sm p-3 shadow-lg shadow-black/10 transition-all duration-200 focus-within:border-purple-500/50 focus-within:shadow-purple-500/20 hover:border-zinc-400 dark:hover:border-zinc-600"
         onSubmit={(event) => {
           event.preventDefault();
           if (!input.trim() && attachments.length === 0) {
@@ -394,75 +403,88 @@ function PureMultimodalInput({
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button
-                  className="size-8 rounded-lg p-1.5 transition-colors hover:bg-accent"
+                  className="size-8 rounded-lg p-1.5 transition-colors hover:bg-zinc-200 dark:hover:bg-zinc-800"
                   data-testid="all-options-button"
-                  variant="ghost"
                   title="Options"
+                  variant="ghost"
                 >
-                  <PlusIcon size={18} className="text-muted-foreground" />
+                  <PlusIcon className="text-muted-foreground" size={18} />
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="start" className="w-56 bg-zinc-900 border-zinc-800 rounded-xl shadow-lg">
+              <DropdownMenuContent
+                align="end"
+                className="w-56 bg-white dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800 rounded-xl shadow-lg"
+              >
                 {/* Mode Settings */}
                 <DropdownMenuItem
+                  className="cursor-pointer hover:bg-zinc-200 dark:hover:bg-zinc-800 rounded-lg focus:bg-zinc-200 dark:focus:bg-zinc-800"
                   onClick={() => setWormgptEnabled(!wormgptEnabled)}
-                  className="cursor-pointer hover:bg-zinc-800 rounded-lg focus:bg-zinc-800"
                 >
-                  <SparklesIcon className={cn("mr-2 h-4 w-4", wormgptEnabled && "fill-current")} />
+                  <SparklesIcon
+                    className={cn(
+                      "mr-2 h-4 w-4",
+                      wormgptEnabled && "fill-current"
+                    )}
+                  />
                   <span>WormGPT Mode</span>
                   {wormgptEnabled && <CheckIcon className="ml-auto h-4 w-4" />}
                 </DropdownMenuItem>
                 <DropdownMenuItem
+                  className="cursor-pointer hover:bg-zinc-200 dark:hover:bg-zinc-800 rounded-lg focus:bg-zinc-200 dark:focus:bg-zinc-800"
                   onClick={() => setDeepThinkingEnabled(!deepThinkingEnabled)}
-                  className="cursor-pointer hover:bg-zinc-800 rounded-lg focus:bg-zinc-800"
                 >
                   <CpuIcon className="mr-2 h-4 w-4" />
                   <span>Deep Thinking</span>
-                  {deepThinkingEnabled && <CheckIcon className="ml-auto h-4 w-4" />}
+                  {deepThinkingEnabled && (
+                    <CheckIcon className="ml-auto h-4 w-4" />
+                  )}
                 </DropdownMenuItem>
                 <DropdownMenuItem
+                  className="cursor-pointer hover:bg-zinc-200 dark:hover:bg-zinc-800 rounded-lg focus:bg-zinc-200 dark:focus:bg-zinc-800"
                   onClick={() => setWebSearchEnabled(!webSearchEnabled)}
-                  className="cursor-pointer hover:bg-zinc-800 rounded-lg focus:bg-zinc-800"
                 >
                   <GlobeIcon className="mr-2 h-4 w-4" />
                   <span>Web Search</span>
-                  {webSearchEnabled && <CheckIcon className="ml-auto h-4 w-4" />}
+                  {webSearchEnabled && (
+                    <CheckIcon className="ml-auto h-4 w-4" />
+                  )}
                 </DropdownMenuItem>
-                
-                <DropdownMenuSeparator className="bg-zinc-800" />
-                
+
+                <DropdownMenuSeparator className="bg-zinc-200 dark:bg-zinc-800" />
+
                 {/* File Upload Options */}
                 <DropdownMenuItem
-                  onClick={() => fileInputRef.current?.click()}
-                  className="cursor-pointer hover:bg-zinc-800 rounded-lg focus:bg-zinc-800"
+                  className="cursor-pointer hover:bg-zinc-200 dark:hover:bg-zinc-800 rounded-lg focus:bg-zinc-200 dark:focus:bg-zinc-800"
                   disabled={status !== "ready"}
+                  onClick={() => fileInputRef.current?.click()}
                 >
                   <FileTextIcon className="mr-2 h-4 w-4" />
                   <span>Upload files</span>
                 </DropdownMenuItem>
                 <DropdownMenuItem
+                  className="cursor-pointer hover:bg-zinc-200 dark:hover:bg-zinc-800 rounded-lg focus:bg-zinc-200 dark:focus:bg-zinc-800"
+                  disabled={status !== "ready"}
                   onClick={() => {
                     if (fileInputRef.current && status === "ready") {
                       fileInputRef.current.accept = "image/*";
                       fileInputRef.current.click();
                       setTimeout(() => {
                         if (fileInputRef.current) {
-                          fileInputRef.current.accept = "image/*,text/plain,application/pdf,application/json";
+                          fileInputRef.current.accept =
+                            "image/*,text/plain,application/pdf,application/json";
                         }
                       }, 100);
                     }
                   }}
-                  className="cursor-pointer hover:bg-zinc-800 rounded-lg focus:bg-zinc-800"
-                  disabled={status !== "ready"}
                 >
                   <ImageIcon className="mr-2 h-4 w-4" />
                   <span>Photos</span>
                 </DropdownMenuItem>
-                <DropdownMenuItem disabled className="opacity-50">
+                <DropdownMenuItem className="opacity-50" disabled>
                   <FolderIcon className="mr-2 h-4 w-4" />
                   <span>Add from Drive</span>
                 </DropdownMenuItem>
-                <DropdownMenuItem disabled className="opacity-50">
+                <DropdownMenuItem className="opacity-50" disabled>
                   <CodeIcon className="mr-2 h-4 w-4" />
                   <span>Import code</span>
                 </DropdownMenuItem>
@@ -473,16 +495,17 @@ function PureMultimodalInput({
             <ModelSelectorCompact
               onModelChange={onModelChange}
               selectedModelId={selectedModelId}
+              user={user}
             />
 
             <input
+              accept="image/*,text/plain,application/pdf,application/json"
               className="pointer-events-none fixed left-0 top-0 size-0.5 opacity-0"
+              data-testid="file-input"
+              multiple
+              onChange={handleFileChange}
               ref={fileInputRef}
               type="file"
-              onChange={handleFileChange}
-              multiple
-              accept="image/*,text/plain,application/pdf,application/json"
-              data-testid="file-input"
             />
           </PromptInputTools>
 
@@ -536,44 +559,28 @@ export const MultimodalInput = memo(
   }
 );
 
-function PureAttachmentsButton({
-  fileInputRef,
-  status,
-  selectedModelId,
-}: {
-  fileInputRef: React.MutableRefObject<HTMLInputElement | null>;
-  status: UseChatHelpers<ChatMessage>["status"];
-  selectedModelId: string;
-}) {
-  const isReasoningModel =
-    selectedModelId.includes("reasoning") || selectedModelId.includes("think");
-
-  return (
-    <Button
-      className="aspect-square h-8 rounded-lg p-1 transition-colors hover:bg-accent"
-      data-testid="attachments-button"
-      disabled={status !== "ready" || isReasoningModel}
-      onClick={(event) => {
-        event.preventDefault();
-        fileInputRef.current?.click();
-      }}
-      variant="ghost"
-    >
-      <PaperclipIcon size={14} style={{ width: 14, height: 14 }} />
-    </Button>
-  );
-}
-
-const AttachmentsButton = memo(PureAttachmentsButton);
-
 function PureModelSelectorCompact({
   selectedModelId,
   onModelChange,
+  user,
 }: {
   selectedModelId: string;
   onModelChange?: (modelId: string) => void;
+  user?: { type?: string };
 }) {
   const [open, setOpen] = useState(false);
+  const isPro = user?.type === "pro";
+
+  // Debug logging - COMPREHENSIVE
+  console.log("=== MODEL SELECTOR DEBUG ===");
+  console.log("Full User Object:", JSON.stringify(user, null, 2));
+  console.log("User Type:", user?.type);
+  console.log("Is Pro?:", isPro);
+  console.log(
+    "All Available Models:",
+    chatModels.map((m) => m.name)
+  );
+  console.log("===========================");
 
   const selectedModel =
     chatModels.find((m) => m.id === selectedModelId) ??
@@ -594,7 +601,10 @@ function PureModelSelectorCompact({
   return (
     <ModelSelector onOpenChange={setOpen} open={open}>
       <ModelSelectorTrigger asChild>
-        <Button className="h-8 w-[200px] justify-between px-2" variant="ghost">
+        <Button
+          className="h-8 w-[200px] justify-between px-2 hover:bg-zinc-200 dark:hover:bg-zinc-800 transition-colors"
+          variant="ghost"
+        >
           {provider && <ModelSelectorLogo provider={provider} />}
           <ModelSelectorName>{selectedModel.name}</ModelSelectorName>
         </Button>
@@ -610,10 +620,20 @@ function PureModelSelectorCompact({
               >
                 {providerModels.map((model) => {
                   const logoProvider = model.id.split("/")[0];
+                  const isProModel = model.name.includes("Pro");
+                  const isLocked = isProModel && !isPro;
+
                   return (
                     <ModelSelectorItem
+                      className={isLocked ? "opacity-60" : ""}
                       key={model.id}
                       onSelect={() => {
+                        if (isLocked) {
+                          toast.error(
+                            "Upgrade to Pro to access UltraAgent Pro"
+                          );
+                          return;
+                        }
                         onModelChange?.(model.id);
                         setCookie("chat-model", model.id);
                         setOpen(false);
@@ -621,8 +641,20 @@ function PureModelSelectorCompact({
                       value={model.id}
                     >
                       <ModelSelectorLogo provider={logoProvider} />
-                      <ModelSelectorName>{model.name}</ModelSelectorName>
-                      {model.id === selectedModel.id && (
+                      <ModelSelectorName>
+                        {model.name}
+                        {isProModel && (
+                          <span className="ml-2 text-xs font-semibold text-purple-400 bg-purple-500/10 px-1.5 py-0.5 rounded">
+                            PRO
+                          </span>
+                        )}
+                      </ModelSelectorName>
+                      {isLocked && (
+                        <span className="ml-auto text-xs text-zinc-500">
+                          🔒
+                        </span>
+                      )}
+                      {model.id === selectedModel.id && !isLocked && (
                         <CheckIcon className="ml-auto size-4" />
                       )}
                     </ModelSelectorItem>

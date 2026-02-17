@@ -41,9 +41,15 @@ export const ModelSelectorContent = ({
   title = "Model Selector",
   ...props
 }: ModelSelectorContentProps) => (
-  <DialogContent className={cn("p-0 bg-zinc-900 border-zinc-800", className)} {...props}>
+  <DialogContent
+    className={cn(
+      "p-0 bg-white dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800",
+      className
+    )}
+    {...props}
+  >
     <DialogTitle className="sr-only">{title}</DialogTitle>
-    <Command className="**:data-[slot=command-input-wrapper]:h-auto bg-zinc-900">
+    <Command className="**:data-[slot=command-input-wrapper]:h-auto bg-white dark:bg-zinc-900">
       {children}
     </Command>
   </DialogContent>
@@ -61,7 +67,13 @@ export const ModelSelectorInput = ({
   className,
   ...props
 }: ModelSelectorInputProps) => (
-  <CommandInput className={cn("h-auto py-3.5 bg-zinc-900 text-white border-zinc-800", className)} {...props} />
+  <CommandInput
+    className={cn(
+      "h-auto py-3.5 bg-white dark:bg-zinc-900 text-zinc-900 dark:text-white border-zinc-200 dark:border-zinc-800",
+      className
+    )}
+    {...props}
+  />
 );
 
 export type ModelSelectorListProps = ComponentProps<typeof CommandList>;
@@ -84,8 +96,17 @@ export const ModelSelectorGroup = (props: ModelSelectorGroupProps) => (
 
 export type ModelSelectorItemProps = ComponentProps<typeof CommandItem>;
 
-export const ModelSelectorItem = ({className, ...props}: ModelSelectorItemProps) => (
-  <CommandItem className={cn("hover:bg-zinc-800 aria-selected:bg-zinc-800 rounded-lg my-0.5", className)} {...props} />
+export const ModelSelectorItem = ({
+  className,
+  ...props
+}: ModelSelectorItemProps) => (
+  <CommandItem
+    className={cn(
+      "hover:bg-zinc-100 dark:hover:bg-zinc-800 aria-selected:bg-zinc-100 dark:aria-selected:bg-zinc-800 rounded-lg my-0.5",
+      className
+    )}
+    {...props}
+  />
 );
 
 export type ModelSelectorShortcutProps = ComponentProps<typeof CommandShortcut>;

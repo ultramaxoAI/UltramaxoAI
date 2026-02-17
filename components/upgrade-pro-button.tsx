@@ -25,16 +25,18 @@ import type { User } from "next-auth";
 
 interface UpgradeProButtonProps {
   user: User;
+  variant?: "default" | "minimal";
+  customTrigger?: React.ReactNode;
 }
 
 const PLANS = [
-  { id: "pro-1", name: "Pro - 1 Bulan", months: 1, price: 15000, originalPrice: 20000 },
-  { id: "pro-3", name: "Pro - 3 Bulan", months: 3, price: 40500, originalPrice: 60000 },
-  { id: "pro-6", name: "Pro - 6 Bulan", months: 6, price: 75000, originalPrice: 120000 },
-  { id: "pro-12", name: "Pro - 12 Bulan", months: 12, price: 135000, originalPrice: 240000 },
+  { id: "pro-1", name: "Pro - 1 Bulan", months: 1, price: 20000, originalPrice: 20000 },
+  { id: "pro-3", name: "Pro - 3 Bulan", months: 3, price: 54000, originalPrice: 60000 },
+  { id: "pro-6", name: "Pro - 6 Bulan", months: 6, price: 100000, originalPrice: 120000 },
+  { id: "pro-12", name: "Pro - 12 Bulan (1 Tahun)", months: 12, price: 120000, originalPrice: 240000 },
 ];
 
-export function UpgradeProButton({ user }: UpgradeProButtonProps) {
+export function UpgradeProButton({ user, variant = "default", customTrigger }: UpgradeProButtonProps) {
   const [open, setOpen] = useState(false);
   const [selectedPlan, setSelectedPlan] = useState<string>("");
   const [note, setNote] = useState("");
@@ -74,16 +76,32 @@ export function UpgradeProButton({ user }: UpgradeProButtonProps) {
     return null;
   }
 
+  // Render custom trigger if provided
+  const TriggerButton = customTrigger ? (
+    <div onClick={() => setOpen(true)}>
+      {customTrigger}
+    </div>
+  ) : variant === "minimal" ? (
+    <button
+      onClick={() => setOpen(true)}
+      className="px-3 py-1 text-xs font-medium text-gray-300 bg-transparent border border-white/20 rounded-full hover:bg-white/10 hover:text-white hover:border-white/30 transition-colors duration-200"
+    >
+      Upgrade
+    </button>
+  ) : (
+    <Button
+      onClick={() => setOpen(true)}
+      className="relative bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 text-white font-medium rounded-lg shadow-md hover:shadow-lg transition-all duration-200"
+      size="sm"
+    >
+      <CrownIcon className="mr-2 h-4 w-4" />
+      <span>Upgrade Plan</span>
+    </Button>
+  );
+
   return (
     <>
-      <Button
-        onClick={() => setOpen(true)}
-        className="relative bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 text-white font-medium rounded-lg shadow-md hover:shadow-lg transition-all duration-200"
-        size="sm"
-      >
-        <CrownIcon className="mr-2 h-4 w-4" />
-        <span>Upgrade Plan</span>
-      </Button>
+      {TriggerButton}
 
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className="sm:max-w-[500px] border-0 bg-black/40 backdrop-blur-2xl p-0 overflow-hidden shadow-2xl">

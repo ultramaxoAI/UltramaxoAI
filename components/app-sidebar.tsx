@@ -1,14 +1,13 @@
 "use client";
 
+import { Menu, SquarePen } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import type { User } from "next-auth";
 import { useState } from "react";
-import { SquarePen, Menu } from "lucide-react";
 import { toast } from "sonner";
 import { useSWRConfig } from "swr";
 import { unstable_serialize } from "swr/infinite";
-import { cn } from "@/lib/utils";
 import {
   getChatHistoryPaginationKey,
   SidebarHistory,
@@ -23,6 +22,7 @@ import {
   SidebarMenu,
   useSidebar,
 } from "@/components/ui/sidebar";
+import { cn } from "@/lib/utils";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -39,7 +39,7 @@ export function AppSidebar({ user }: { user: User | undefined }) {
   const { setOpenMobile, state, open, setOpen } = useSidebar();
   const { mutate } = useSWRConfig();
   const [showDeleteAllDialog, setShowDeleteAllDialog] = useState(false);
-  
+
   const isSidebarOpen = state === "expanded";
 
   const handleDeleteAll = () => {
@@ -62,7 +62,10 @@ export function AppSidebar({ user }: { user: User | undefined }) {
 
   return (
     <>
-      <Sidebar collapsible="icon" className="border-r border-border bg-zinc-900 z-30">
+      <Sidebar
+        className="border-r border-border bg-white dark:bg-zinc-900 z-30"
+        collapsible="icon"
+      >
         <SidebarHeader className="border-b border-border/10">
           <SidebarMenu>
             <div className="flex flex-col gap-2 px-3 py-4">
@@ -70,20 +73,22 @@ export function AppSidebar({ user }: { user: User | undefined }) {
               <div className="flex items-center gap-2 mb-1">
                 {/* Toggle Button */}
                 <Button
-                  className="h-8 w-8 p-0 rounded-md hover:bg-white/10 transition-colors shrink-0"
+                  aria-label={
+                    isSidebarOpen ? "Collapse sidebar" : "Expand sidebar"
+                  }
+                  className="h-8 w-8 p-0 rounded-md hover:bg-zinc-200 dark:hover:bg-white/10 transition-colors shrink-0"
                   onClick={() => setOpen(!open)}
                   type="button"
                   variant="ghost"
-                  aria-label={isSidebarOpen ? "Collapse sidebar" : "Expand sidebar"}
                 >
                   <Menu className="h-4 w-4" />
                 </Button>
-                
+
                 {/* App Title - show when open */}
                 {isSidebarOpen && (
                   <Link
-                    href="/"
                     className="flex items-center hover:opacity-80 transition-opacity"
+                    href="/chat"
                     onClick={() => setOpenMobile(false)}
                   >
                     <span className="font-semibold text-base tracking-tight text-white">
@@ -92,16 +97,18 @@ export function AppSidebar({ user }: { user: User | undefined }) {
                   </Link>
                 )}
               </div>
-              
+
               {/* New Chat Button */}
               <Button
                 className={cn(
-                  "rounded-md hover:bg-white/10 transition-colors",
-                  isSidebarOpen ? "w-full justify-start gap-2 px-2 h-9" : "h-9 w-9 p-0 mx-auto"
+                  "rounded-md hover:bg-zinc-200 dark:hover:bg-white/10 transition-colors",
+                  isSidebarOpen
+                    ? "w-full justify-start gap-2 px-2 h-9"
+                    : "h-9 w-9 p-0 mx-auto"
                 )}
                 onClick={() => {
                   setOpenMobile(false);
-                  router.push("/");
+                  router.push("/chat");
                   router.refresh();
                 }}
                 type="button"
@@ -118,14 +125,17 @@ export function AppSidebar({ user }: { user: User | undefined }) {
             <SidebarHistory user={user} />
           ) : (
             <div className="flex items-center justify-center py-4">
-              <span className="text-zinc-500 text-xs rotate-180" style={{ writingMode: 'vertical-rl' }}>
+              <span
+                className="text-zinc-500 text-xs rotate-180"
+                style={{ writingMode: "vertical-rl" }}
+              >
                 History
               </span>
             </div>
           )}
         </SidebarContent>
         <SidebarFooter>
-          {user && <SidebarUserNav user={user} isCollapsed={!isSidebarOpen} />}
+          {user && <SidebarUserNav isCollapsed={!isSidebarOpen} user={user} />}
         </SidebarFooter>
       </Sidebar>
 

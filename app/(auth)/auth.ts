@@ -1,14 +1,21 @@
+import { DrizzleAdapter } from "@auth/drizzle-adapter";
 import { compare } from "bcrypt-ts";
+import { eq } from "drizzle-orm";
 import NextAuth, { type DefaultSession } from "next-auth";
 import type { DefaultJWT } from "next-auth/jwt";
 import Credentials from "next-auth/providers/credentials";
-import Google from "next-auth/providers/google";
 import GitHub from "next-auth/providers/github";
-import { DrizzleAdapter } from "@auth/drizzle-adapter";
+import Google from "next-auth/providers/google";
 import { DUMMY_PASSWORD } from "@/lib/constants";
-import { createGuestUser, db, getUser, getUserByUsername } from "@/lib/db/queries";
+import {
+  createGuestUser,
+  db,
+  getUser,
+  getUserByUsername,
+  setEmailVerified,
+  verifyVerificationCode,
+} from "@/lib/db/queries";
 import { user as userTable } from "@/lib/db/schema";
-import { eq } from "drizzle-orm";
 import { authConfig } from "./auth.config";
 
 export type UserType = "guest" | "regular" | "pro";
@@ -68,18 +75,39 @@ export const {
         username: { label: "Username", type: "text" },
         password: { label: "Password", type: "password" },
       },
-      async authorize({ username, password }: any) {
+      async authorize({ username, password, email, code }: any) {
+        // SCENARIO 1: Login with Email & Verification Code (Auto-Login after Verify)
+        if (email && code) {
+          const isValid = await verifyVerificationCode(email, code);
+          if (isValid) {
+            await setEmailVerified(email);
+            const [user] = await getUser(email);
+            if (user) {
+              return {
+                id: user.id,
+                email: user.email,
+                type: user.isPro
+                  ? ("pro" as UserType)
+                  : ("regular" as UserType),
+                role: user.role as "user" | "admin",
+              };
+            }
+          }
+          return null;
+        }
+
+        // SCENARIO 2: Normal Login with Username & Password
         const users = await getUserByUsername(username);
 
         if (users.length === 0) {
-          await compare(password, DUMMY_PASSWORD);
+          if (password) await compare(password, DUMMY_PASSWORD);
           return null;
         }
 
         const [user] = users;
 
         if (!user.password) {
-          await compare(password, DUMMY_PASSWORD);
+          if (password) await compare(password, DUMMY_PASSWORD);
           return null;
         }
 
@@ -137,14 +165,16 @@ export const {
     async linkAccount({ user, profile }: any) {
       // Sync name from Google/GitHub if available
       if (profile?.name || profile?.login) {
-        await db.update(userTable)
+        await db
+          .update(userTable)
           .set({ name: profile.name || profile.login })
           .where(eq(userTable.id, user.id as string));
       }
     },
     async createUser({ user }) {
       // Default type and role for new OAuth users
-      await db.update(userTable)
+      await db
+        .update(userTable)
         .set({ role: "user", isPro: false })
         .where(eq(userTable.id, user.id as string));
     },
