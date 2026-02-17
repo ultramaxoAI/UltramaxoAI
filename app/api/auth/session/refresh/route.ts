@@ -1,6 +1,8 @@
 import { auth } from "@/app/(auth)/auth";
 import { NextResponse } from "next/server";
 
+export const dynamic = 'force-dynamic';
+
 /**
  * Force refresh the user session
  * This endpoint can be called after upgrade approval to refresh session immediately

@@ -4,6 +4,8 @@ import { purchaseRequest, user as userTable } from "@/lib/db/schema";
 import { and, desc, eq } from "drizzle-orm";
 import { NextResponse } from "next/server";
 
+export const dynamic = 'force-dynamic';
+
 /**
  * Check if user has any pending/approved upgrade requests
  * Used for polling to detect when admin approves upgrade

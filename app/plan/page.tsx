@@ -2,6 +2,8 @@ import { auth } from "@/app/(auth)/auth";
 import { redirect } from "next/navigation";
 import { PricingPage } from "@/components/pricing-page";
 
+export const dynamic = 'force-dynamic';
+
 export default async function PlanPage() {
   const session = await auth();
   
