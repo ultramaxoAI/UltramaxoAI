@@ -17,7 +17,7 @@ export const Greeting = () => {
         initial={{ opacity: 0, y: 10 }}
         transition={{ delay: 0.3, duration: 0.4, ease: "easeOut" }}
       >
-        Halo 👋
+        Halo, {username}!
       </motion.div>
       <motion.div
         animate={{ opacity: 1, y: 0 }}
@@ -26,7 +26,7 @@ export const Greeting = () => {
         initial={{ opacity: 0, y: 10 }}
         transition={{ delay: 0.4, duration: 0.4, ease: "easeOut" }}
       >
-        Ada yang bisa dibantu?
+        Apa yang bisa saya bantu hari ini?
       </motion.div>
     </div>
   );
