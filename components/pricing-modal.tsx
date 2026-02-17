@@ -1,9 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Check, X } from "lucide-react";
 import type { User } from "next-auth";
 import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 import {
   Dialog,
   DialogContent,
@@ -75,26 +76,118 @@ const pricingPlans = [
 export function PricingModal({ open, onOpenChange, user }: PricingModalProps) {
   const router = useRouter();
   const [selectedPlan, setSelectedPlan] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [hasPendingRequest, setHasPendingRequest] = useState(false);
 
-  const handleUpgrade = (planName: string) => {
+  // Poll for upgrade status when there's a pending request
+  useEffect(() => {
+    if (!hasPendingRequest || !user || !open) return;
+
+    const pollInterval = setInterval(async () => {
+      try {
+        const response = await fetch("/api/user/upgrade-status");
+        const data = await response.json();
+
+        if (data.isPro) {
+          // User has been upgraded!
+          clearInterval(pollInterval);
+          setHasPendingRequest(false);
+          
+          // Refresh session
+          await fetch("/api/auth/session/refresh", { method: "POST" });
+          
+          toast.success("🎉 Upgrade berhasil! Selamat datang di PRO!");
+          
+          // Close modal and reload
+          onOpenChange(false);
+          setTimeout(() => {
+            window.location.reload();
+          }, 1500);
+        }
+      } catch (error) {
+        console.error("Error polling upgrade status:", error);
+      }
+    }, 3000);
+
+    return () => clearInterval(pollInterval);
+  }, [hasPendingRequest, user, open, onOpenChange]);
+
+  const handleUpgrade = async (planName: string) => {
     setSelectedPlan(planName);
     
-    // Create WhatsApp message
-    const plan = pricingPlans.find((p) => p.name === planName);
-    if (!plan || !user) return;
+    // If user is not logged in, redirect to login
+    if (!user) {
+      toast.error("Silakan login terlebih dahulu");
+      router.push("/login");
+      return;
+    }
 
-    const message = `Halo, saya ingin upgrade ke paket ${planName}:\n\n` +
-      `📦 Paket: ${planName}\n` +
-      `💰 Harga: ${plan.price}\n` +
-      `⏱️ Periode: ${plan.period}\n` +
-      `👤 Email: ${user.email}\n`;
+    const plan = pricingPlans.find((p) => p.name === planName);
+    if (!plan) return;
+
+    setLoading(true);
+
+    try {
+      // 1. Log request to database
+      const response = await fetch("/api/upgrade", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          planId: plan.name,
+          price: Number(plan.price.replace(/\D/g, "")),
+          months: plan.name === "1 Tahun" ? 12 : 1,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to log request");
+      }
+
+      toast.success("Request berhasil dicatat!");
+      
+      // Start polling for approval
+      setHasPendingRequest(true);
+      toast.info("Menunggu admin approve upgrade Anda...", {
+        duration: 5000,
+      });
+    } catch (error) {
+      console.error("Failed to log upgrade request:", error);
+      toast.warning("Request dicatat dengan masalah, tapi tetap lanjut ke WhatsApp");
+      // We continue to WhatsApp even if logging fails, to not block the user
+    } finally {
+      setLoading(false);
+    }
+
+    // 2. Create WhatsApp message with complete format
+    const message =
+      `Halo admin Ultramaxo! 👋\n\n` +
+      `Saya ingin melakukan upgrade akun:\n\n` +
+      `━━━━━━━━━━━━━━━━━━━\n` +
+      `👤 INFORMASI USER:\n` +
+      `Nama: ${user.name || "User"}\n` +
+      `Email: ${user.email}\n\n` +
+      `📦 PAKET YANG DIPILIH:\n` +
+      `Paket: ${planName}\n` +
+      `Harga: ${plan.price}\n` +
+      `Periode: ${plan.period}\n` +
+      `━━━━━━━━━━━━━━━━━━━\n\n` +
+      `Mohon konfirmasi untuk proses pembayaran dan aktivasi. Terima kasih! 🙏`;
 
     // Encode message for URL
     const encodedMessage = encodeURIComponent(message);
     const whatsappUrl = `https://wa.me/6285191689131?text=${encodedMessage}`;
 
     // Open WhatsApp in new tab
-    window.open(whatsappUrl, "_blank");
+    const newWindow = window.open(whatsappUrl, "_blank");
+    
+    if (!newWindow || newWindow.closed || typeof newWindow.closed === "undefined") {
+      // Popup was blocked
+      toast.error("Popup diblokir! Silakan izinkan popup di browser Anda");
+      // Fallback: try to navigate in same tab
+      window.location.href = whatsappUrl;
+    } else {
+      toast.success("Mengarahkan ke WhatsApp...");
+    }
     
     // Close modal after a short delay
     setTimeout(() => {
@@ -170,6 +263,7 @@ export function PricingModal({ open, onOpenChange, user }: PricingModalProps) {
                 </ul>
 
                 <Button
+                  type="button"
                   className={`w-full justify-center ${
                     plan.popular
                       ? "bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-700 hover:to-violet-700 text-white"
@@ -177,10 +271,18 @@ export function PricingModal({ open, onOpenChange, user }: PricingModalProps) {
                       ? "bg-white/10 text-gray-400 cursor-not-allowed"
                       : "bg-white/10 hover:bg-white/20 text-white"
                   }`}
-                  disabled={plan.ctaDisabled || (!user && plan.name !== "Free")}
-                  onClick={() => !plan.ctaDisabled && handleUpgrade(plan.name)}
+                  disabled={plan.ctaDisabled || loading || (!user && plan.name !== "Free")}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    if (!plan.ctaDisabled) {
+                      handleUpgrade(plan.name);
+                    }
+                  }}
                 >
-                  {plan.ctaText}
+                  {loading && selectedPlan === plan.name
+                    ? "Processing..."
+                    : plan.ctaText}
                 </Button>
               </div>
             ))}

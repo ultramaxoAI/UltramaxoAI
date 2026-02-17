@@ -142,11 +142,35 @@ export const {
     }),
   ],
   callbacks: {
-    jwt({ token, user }) {
+    async jwt({ token, user, trigger }) {
+      // Initial sign in
       if (user) {
         token.id = user.id as string;
         token.type = user.type;
         token.role = user.role;
+      }
+
+      // Refresh user data from database on every request to keep it fresh
+      // This ensures that when admin approves, the next request will have updated data
+      if (token.id) {
+        try {
+          const [dbUser] = await db
+            .select()
+            .from(userTable)
+            .where(eq(userTable.id, token.id))
+            .limit(1);
+
+          if (dbUser) {
+            // Update token with fresh data from database
+            token.type = dbUser.isPro ? "pro" : "regular";
+            token.role = dbUser.role as "user" | "admin";
+            token.email = dbUser.email;
+            token.name = dbUser.name;
+          }
+        } catch (error) {
+          console.error("Error refreshing user data in JWT:", error);
+          // If error, keep existing token data
+        }
       }
 
       return token;
@@ -156,6 +180,8 @@ export const {
         session.user.id = token.id;
         session.user.type = token.type;
         session.user.role = token.role;
+        session.user.email = token.email as string;
+        session.user.name = token.name as string;
       }
 
       return session;

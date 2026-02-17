@@ -138,6 +138,33 @@ export async function sendUpgradeReminderEmail(email: string, name: string) {
   );
 }
 
+export async function sendWelcomeEmail(email: string, name: string) {
+  const content = `
+    <p>Halo <strong>${name}</strong>,</p>
+
+    <p>Selamat datang di <strong>Ultramaxo AI</strong>! Kami sangat senang Anda bergabung dengan komunitas kami yang terus berkembang.</p>
+
+    <p>Dengan Ultramaxo, Anda kini memiliki akses ke:</p>
+    <ul>
+      <li>🤖 <strong>Ultra Agent:</strong> Asisten AI cerdas untuk tugas sehari-hari.</li>
+      <li>⚡ <strong>Kecepatan Kilat:</strong> Dapatkan jawaban instan untuk pertanyaan kompleks Anda.</li>
+      <li>🔒 <strong>Privasi Terjamin:</strong> Data Anda aman bersama kami.</li>
+    </ul>
+
+    <p>Siap memulai? Coba buat percakapan pertama Anda sekarang!</p>
+
+    <div style="text-align: center; margin: 32px 0;">
+      <a href="https://ultramaxo.tech/chat" class="button">Mulai Chatting</a>
+    </div>
+  `;
+
+  return sendEmail(
+    email,
+    "👋 Selamat Datang di Era Baru AI - Ultramaxo",
+    getEmailWrapper(content)
+  );
+}
+
 export async function sendCustomEmail(
   email: string,
   subject: string,

@@ -32,6 +32,7 @@ export default function AdminDashboardClient() {
     durationMonths: 1,
   });
   const [voucherMessage, setVoucherMessage] = useState("");
+  const [stats, setStats] = useState({ totalUsers: 0, activeUsers: 0 });
 
   const fetchUsers = async () => {
     setLoading(true);
@@ -59,9 +60,20 @@ export default function AdminDashboardClient() {
     }
   };
 
+  const fetchStats = async () => {
+    try {
+      const res = await fetch("/api/admin/stats");
+      const data = await res.json();
+      if (data) setStats(data);
+    } catch (e) {
+      console.error("Failed to fetch stats");
+    }
+  };
+
   useEffect(() => {
     if (activeTab === "users") {
       fetchUsers();
+      fetchStats();
     } else if (activeTab === "upgrade-requests") {
       fetchUpgradeRequests();
     }
@@ -372,6 +384,30 @@ export default function AdminDashboardClient() {
           </div>
         ) : activeTab === "users" ? (
           <div className="flex flex-col gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 animate-in fade-in slide-in-from-bottom-4">
+              <div className="bg-[#121214] border border-zinc-800/50 p-6 rounded-3xl relative overflow-hidden group">
+                <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
+                  <UsersIcon size={60} />
+                </div>
+                <h3 className="text-zinc-500 text-xs font-bold uppercase tracking-widest mb-1">
+                  Total Users
+                </h3>
+                <p className="text-4xl font-black text-white">
+                  {stats.totalUsers}
+                </p>
+              </div>
+              <div className="bg-[#121214] border border-zinc-800/50 p-6 rounded-3xl relative overflow-hidden group">
+                <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
+                  <MessageSquareIcon size={60} />
+                </div>
+                <h3 className="text-zinc-500 text-xs font-bold uppercase tracking-widest mb-1">
+                  Active Users (24h)
+                </h3>
+                <p className="text-4xl font-black text-green-400">
+                  {stats.activeUsers}
+                </p>
+              </div>
+            </div>
             <div className="flex justify-between items-center bg-[#121214] border border-zinc-800/50 rounded-2xl p-2 px-6">
               <div className="flex items-center gap-3 flex-1 max-w-md">
                 <SearchIcon className="text-zinc-500" size={18} />
@@ -691,7 +727,7 @@ export default function AdminDashboardClient() {
                                       const data = await res.json();
                                       if (data.success) {
                                         toast.success(
-                                          "Request approved and user upgraded!"
+                                          "✅ Request approved! User upgraded to PRO. User perlu refresh page untuk melihat perubahan."
                                         );
                                         fetchUpgradeRequests();
                                       } else {

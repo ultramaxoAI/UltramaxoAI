@@ -1,11 +1,12 @@
 "use client";
 
-import { useState } from "react";
-import { Check, ArrowLeft } from "lucide-react";
-import type { User } from "next-auth";
-import { useRouter } from "next/navigation";
-import { Button } from "@/components/ui/button";
+import { ArrowLeft, Check } from "lucide-react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import type { User } from "next-auth";
+import { useEffect, useState } from "react";
+import { toast } from "sonner";
+import { Button } from "@/components/ui/button";
 
 interface PricingPageProps {
   user?: User;
@@ -67,33 +68,126 @@ const pricingPlans = [
 export function PricingPage({ user }: PricingPageProps) {
   const router = useRouter();
   const [selectedPlan, setSelectedPlan] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [hasPendingRequest, setHasPendingRequest] = useState(false);
 
-  const handleUpgrade = (planName: string) => {
+  // Auto-redirect if user is already PRO
+  useEffect(() => {
+    if (user?.type === "pro") {
+      toast.success("Anda sudah menjadi member PRO!");
+      router.push("/chat");
+    }
+  }, [user, router]);
+
+  // Poll for upgrade status when there's a pending request
+  useEffect(() => {
+    if (!hasPendingRequest || !user) return;
+
+    const pollInterval = setInterval(async () => {
+      try {
+        const response = await fetch("/api/user/upgrade-status");
+        const data = await response.json();
+
+        if (data.isPro) {
+          // User has been upgraded!
+          clearInterval(pollInterval);
+          setHasPendingRequest(false);
+          
+          // Refresh session to get updated user data
+          await fetch("/api/auth/session/refresh", { method: "POST" });
+          
+          toast.success("🎉 Upgrade berhasil! Selamat datang di PRO!");
+          
+          // Redirect to chat
+          setTimeout(() => {
+            window.location.href = "/chat"; // Force reload to ensure session is fresh
+          }, 1500);
+        }
+      } catch (error) {
+        console.error("Error polling upgrade status:", error);
+      }
+    }, 3000); // Poll every 3 seconds
+
+    return () => clearInterval(pollInterval);
+  }, [hasPendingRequest, user, router]);
+
+  const handleUpgrade = async (planName: string) => {
     setSelectedPlan(planName);
-    
+
     // If user is not logged in, redirect to login
     if (!user) {
+      toast.error("Silakan login terlebih dahulu");
       router.push("/login");
       return;
     }
 
-    // Create WhatsApp message
     const plan = pricingPlans.find((p) => p.name === planName);
     if (!plan) return;
 
-    const message = `Halo, saya ingin upgrade ke paket ${planName}:\n\n` +
-      `📦 Paket: ${planName}\n` +
-      `💰 Harga: ${plan.price}\n` +
-      `⏱️ Periode: ${plan.period}\n` +
-      `👤 Email: ${user.email}\n`;
+    setLoading(true);
+
+    try {
+      // 1. Log request to database
+      const response = await fetch("/api/upgrade", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          planId: plan.name,
+          price: Number(plan.price.replace(/\D/g, "")),
+          months: plan.name === "1 Tahun" ? 12 : 1,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to log request");
+      }
+
+      toast.success("Request berhasil dicatat!");
+      
+      // Start polling for approval
+      setHasPendingRequest(true);
+      toast.info("Menunggu admin approve upgrade Anda...", {
+        duration: 5000,
+      });
+    } catch (error) {
+      console.error("Failed to log upgrade request:", error);
+      toast.warning("Request dicatat dengan masalah, tapi tetap lanjut ke WhatsApp");
+      // We continue to WhatsApp even if logging fails, to not block the user
+    } finally {
+      setLoading(false);
+    }
+
+    // 2. Create WhatsApp message with complete format
+    const message =
+      `Halo admin Ultramaxo! 👋\n\n` +
+      `Saya ingin melakukan upgrade akun:\n\n` +
+      `━━━━━━━━━━━━━━━━━━━\n` +
+      `👤 INFORMASI USER:\n` +
+      `Nama: ${user.name || "User"}\n` +
+      `Email: ${user.email}\n\n` +
+      `📦 PAKET YANG DIPILIH:\n` +
+      `Paket: ${planName}\n` +
+      `Harga: ${plan.price}\n` +
+      `Periode: ${plan.period}\n` +
+      `━━━━━━━━━━━━━━━━━━━\n\n` +
+      `Mohon konfirmasi untuk proses pembayaran dan aktivasi. Terima kasih! 🙏`;
 
     // Encode message for URL
     const encodedMessage = encodeURIComponent(message);
     const whatsappUrl = `https://wa.me/6285191689131?text=${encodedMessage}`;
 
     // Open WhatsApp in new tab
-    window.open(whatsappUrl, "_blank");
+    const newWindow = window.open(whatsappUrl, "_blank");
     
+    if (!newWindow || newWindow.closed || typeof newWindow.closed === "undefined") {
+      // Popup was blocked
+      toast.error("Popup diblokir! Silakan izinkan popup di browser Anda");
+      // Fallback: try to navigate in same tab
+      window.location.href = whatsappUrl;
+    } else {
+      toast.success("Mengarahkan ke WhatsApp...");
+    }
+
     // Reset selection
     setTimeout(() => {
       setSelectedPlan(null);
@@ -110,9 +204,9 @@ export function PricingPage({ user }: PricingPageProps) {
 
       <div className="relative max-w-7xl mx-auto px-4 py-12 sm:px-6 lg:px-8">
         {/* Back Button */}
-        <Link 
-          href="/chat"
+        <Link
           className="inline-flex items-center gap-2 text-sm text-gray-400 hover:text-white transition-colors mb-8"
+          href="/chat"
         >
           <ArrowLeft className="h-4 w-4" />
           Kembali ke Chat
@@ -124,7 +218,8 @@ export function PricingPage({ user }: PricingPageProps) {
             Pilih Paket Anda
           </h1>
           <p className="text-gray-400 text-lg max-w-2xl mx-auto">
-            Tidak ada biaya tersembunyi. Upgrade kapan saja, downgrade kapan saja.
+            Tidak ada biaya tersembunyi. Upgrade kapan saja, downgrade kapan
+            saja.
           </p>
           <p className="text-sm text-gray-500 mt-2">
             Pakai gratis selamanya atau upgrade untuk fitur unlimited
@@ -135,12 +230,12 @@ export function PricingPage({ user }: PricingPageProps) {
         <div className="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto">
           {pricingPlans.map((plan, i) => (
             <div
-              key={i}
               className={`relative rounded-3xl p-8 backdrop-blur-sm transition-all duration-300 hover:scale-105 ${
                 plan.popular
                   ? "border-2 border-indigo-500/40 bg-gradient-to-b from-indigo-950/50 to-purple-950/30 shadow-[0_0_60px_rgba(99,102,241,0.15)]"
                   : "border border-white/10 bg-gradient-to-b from-white/5 to-white/[0.02] hover:border-white/20"
               }`}
+              key={i}
             >
               {plan.popular && (
                 <div className="absolute -top-4 left-1/2 -translate-x-1/2 px-5 py-1.5 bg-gradient-to-r from-indigo-500 to-purple-600 rounded-full text-xs font-semibold shadow-lg shadow-indigo-500/30">
@@ -149,7 +244,9 @@ export function PricingPage({ user }: PricingPageProps) {
               )}
 
               <div className="mb-8">
-                <p className="font-semibold text-white text-lg mb-2">{plan.name}</p>
+                <p className="font-semibold text-white text-lg mb-2">
+                  {plan.name}
+                </p>
                 <div className="flex items-end gap-2 mb-3">
                   <span className="text-4xl font-extrabold text-white">
                     {plan.price}
@@ -158,7 +255,9 @@ export function PricingPage({ user }: PricingPageProps) {
                     / {plan.period}
                   </span>
                 </div>
-                <p className="text-sm text-gray-400 leading-relaxed">{plan.desc}</p>
+                <p className="text-sm text-gray-400 leading-relaxed">
+                  {plan.desc}
+                </p>
               </div>
 
               <ul className="space-y-4 mb-8">
@@ -174,17 +273,26 @@ export function PricingPage({ user }: PricingPageProps) {
               </ul>
 
               <Button
+                type="button"
                 className={`w-full justify-center h-11 rounded-2xl font-medium transition-all ${
                   plan.popular
                     ? "bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white shadow-lg shadow-indigo-500/30"
                     : plan.ctaDisabled
-                    ? "bg-white/10 text-gray-400 cursor-not-allowed"
-                    : "bg-white/10 hover:bg-white/20 text-white"
+                      ? "bg-white/10 text-gray-400 cursor-not-allowed"
+                      : "bg-white/10 hover:bg-white/20 text-white"
                 }`}
-                disabled={plan.ctaDisabled}
-                onClick={() => !plan.ctaDisabled && handleUpgrade(plan.name)}
+                disabled={plan.ctaDisabled || loading}
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  if (!plan.ctaDisabled) {
+                    handleUpgrade(plan.name);
+                  }
+                }}
               >
-                {plan.ctaText}
+                {loading && selectedPlan === plan.name
+                  ? "Processing..."
+                  : plan.ctaText}
               </Button>
             </div>
           ))}
@@ -194,7 +302,10 @@ export function PricingPage({ user }: PricingPageProps) {
         <div className="text-center mt-16 space-y-4">
           <p className="text-sm text-gray-500">
             Dengan melanjutkan, Anda menyetujui{" "}
-            <Link href="/terms" className="text-indigo-400 hover:text-indigo-300 underline">
+            <Link
+              className="text-indigo-400 hover:text-indigo-300 underline"
+              href="/terms"
+            >
               Syarat & Ketentuan
             </Link>{" "}
             kami.

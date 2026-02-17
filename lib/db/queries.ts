@@ -10,9 +10,9 @@ import {
   gt,
   gte,
   inArray,
-  isNotNull,
   lt,
   type SQL,
+  sql,
 } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/postgres-js";
 import postgres from "postgres";
@@ -34,8 +34,8 @@ import {
   suggestion,
   type User,
   user,
-  vote,
   verificationToken,
+  vote,
 } from "./schema";
 import { generateHashedPassword } from "./utils";
 
@@ -74,7 +74,11 @@ export async function getUserByUsername(name: string): Promise<User[]> {
   }
 }
 
-export async function createUser(email: string, password: string, name?: string) {
+export async function createUser(
+  email: string,
+  password: string,
+  name?: string
+) {
   const hashedPassword = generateHashedPassword(password);
 
   try {
@@ -116,7 +120,12 @@ export async function saveChat({
   visibility: VisibilityType;
 }) {
   try {
-    console.log('saveChat attempting insert:', { id, userId, title, visibility });
+    console.log("saveChat attempting insert:", {
+      id,
+      userId,
+      title,
+      visibility,
+    });
     const result = await db.insert(chat).values({
       id,
       createdAt: new Date(),
@@ -124,10 +133,10 @@ export async function saveChat({
       title,
       visibility,
     });
-    console.log('saveChat insert success');
+    console.log("saveChat insert success");
     return result;
   } catch (error) {
-    console.error('saveChat database error:', error);
+    console.error("saveChat database error:", error);
     throw new ChatSDKError("bad_request:database", "Failed to save chat");
   }
 }
@@ -582,13 +591,11 @@ export async function getMessageCountByUserId({
           eq(message.role, "user"),
           // Only count if there's at least one assistant message in the same chat
           exists(
-            db.select()
+            db
+              .select()
               .from(message)
               .where(
-                and(
-                  eq(message.chatId, chat.id),
-                  eq(message.role, "assistant")
-                )
+                and(eq(message.chatId, chat.id), eq(message.role, "assistant"))
               )
           )
         )
@@ -798,50 +805,78 @@ export async function upsertVerificationCode(email: string, code: string) {
   try {
     const expires = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes from now
 
-    // Delete existing tokens for this email
-    await db.delete(verificationToken).where(eq(verificationToken.identifier, email));
-
-    // Insert new token
-    return await db.insert(verificationToken).values({
-      identifier: email,
-      token: code,
-      expires,
-    });
+    await db
+      .insert(verificationToken)
+      .values({
+        identifier: email,
+        token: code,
+        expires,
+      })
+      .onConflictDoUpdate({
+        target: verificationToken.identifier,
+        set: { token: code, expires },
+      });
   } catch (error) {
     console.error("Database Error (upsertVerificationCode):", error);
-    throw new ChatSDKError("bad_request:database", "Failed to upsert verification code");
+    throw new ChatSDKError(
+      "bad_request:database",
+      "Failed to upsert verification code"
+    );
+  }
+}
+
+export async function getDashboardStats() {
+  try {
+    const [totalUsers] = await db.select({ count: count() }).from(user);
+
+    const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
+
+    // Active users: Users who sent a message (role='user') in the last 24h
+    // We join message -> chat to get userId
+    const [activeUsers] = await db
+      .select({
+        count: sql<number>`count(DISTINCT ${chat.userId})`,
+      })
+      .from(message)
+      .innerJoin(chat, eq(message.chatId, chat.id))
+      .where(
+        and(eq(message.role, "user"), gt(message.createdAt, twentyFourHoursAgo))
+      );
+
+    return {
+      totalUsers: totalUsers?.count || 0,
+      activeUsers: activeUsers?.count || 0,
+    };
+  } catch (error) {
+    console.error("Database Error (getDashboardStats):", error);
+    return { totalUsers: 0, activeUsers: 0 };
   }
 }
 
 export async function verifyVerificationCode(email: string, code: string) {
   try {
-    const results = await db
+    const [token] = await db
       .select()
       .from(verificationToken)
       .where(
         and(
           eq(verificationToken.identifier, email),
-          eq(verificationToken.token, code)
+          eq(verificationToken.token, code),
+          gt(verificationToken.expires, new Date())
         )
       );
 
-    if (results.length === 0) return false;
+    if (!token) return false;
 
-    const token = results[0];
-    const now = new Date();
+    // Delete token after successful verification
+    await db
+      .delete(verificationToken)
+      .where(eq(verificationToken.identifier, email));
 
-    if (now > token.expires) {
-      // Clean up expired token
-      await db.delete(verificationToken).where(eq(verificationToken.identifier, email));
-      return false;
-    }
-
-    // Code is valid, consume it
-    await db.delete(verificationToken).where(eq(verificationToken.identifier, email));
     return true;
   } catch (error) {
     console.error("Database Error (verifyVerificationCode):", error);
-    throw new ChatSDKError("bad_request:database", "Failed to verify code");
+    return false;
   }
 }
 
@@ -853,13 +888,19 @@ export async function setEmailVerified(email: string) {
       .where(eq(user.email, email));
   } catch (error) {
     console.error("Database Error (setEmailVerified):", error);
-    throw new ChatSDKError("bad_request:database", "Failed to set email verified");
+    throw new ChatSDKError(
+      "bad_request:database",
+      "Failed to set email verified"
+    );
   }
 }
 
 export async function createPasswordResetTokenForEmail(email: string) {
   try {
-    const [foundUser] = await db.select().from(user).where(eq(user.email, email));
+    const [foundUser] = await db
+      .select()
+      .from(user)
+      .where(eq(user.email, email));
     if (!foundUser) return null;
 
     const token = generateUUID();
@@ -1012,7 +1053,10 @@ export async function updatePurchaseRequestStatus({
       .where(eq(purchaseRequest.id, id));
 
     if (!requestRow) {
-      throw new ChatSDKError("not_found:database", "Purchase request not found");
+      throw new ChatSDKError(
+        "not_found:database",
+        "Purchase request not found"
+      );
     }
 
     if (status === "approved") {
@@ -1027,11 +1071,14 @@ export async function updatePurchaseRequestStatus({
           Number(requestRow.months) || 1
         );
 
-        await db.update(user).set({
-          isPro: true,
-          limitCount: 99_999,
-          proExpiresAt: nextExpiry,
-        }).where(eq(user.id, currentUser.id));
+        await db
+          .update(user)
+          .set({
+            isPro: true,
+            limitCount: 99_999,
+            proExpiresAt: nextExpiry,
+          })
+          .where(eq(user.id, currentUser.id));
       }
     }
 
@@ -1054,13 +1101,17 @@ export async function updatePurchaseRequestStatus({
 
 export async function expireProIfNeeded(userId: string) {
   try {
-    const [currentUser] = await db.select().from(user).where(eq(user.id, userId));
+    const [currentUser] = await db
+      .select()
+      .from(user)
+      .where(eq(user.id, userId));
     if (!currentUser) return null;
 
     if (currentUser.isPro && currentUser.proExpiresAt) {
       const now = new Date();
       if (currentUser.proExpiresAt < now) {
-        await db.update(user)
+        await db
+          .update(user)
           .set({ isPro: false, proExpiresAt: null })
           .where(eq(user.id, userId));
         return { ...currentUser, isPro: false, proExpiresAt: null };
