@@ -1,11 +1,15 @@
 "use client";
 
 import { useState } from "react";
+import { Download } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuSub,
+  DropdownMenuSubContent,
+  DropdownMenuSubTrigger,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { toast } from "@/components/toast";
@@ -14,9 +18,10 @@ import { DownloadIcon, FileTextIcon, FileJsonIcon, FileIcon } from "./icons";
 interface ChatExportButtonProps {
   chatId: string;
   className?: string;
+  asMenuItem?: boolean;
 }
 
-export function ChatExportButton({ chatId, className }: ChatExportButtonProps) {
+export function ChatExportButton({ chatId, className, asMenuItem = false }: ChatExportButtonProps) {
   const [exporting, setExporting] = useState(false);
 
   const handleExport = async (format: "json" | "markdown" | "txt") => {
@@ -46,6 +51,33 @@ export function ChatExportButton({ chatId, className }: ChatExportButtonProps) {
     }
   };
 
+  // When used as menu item (inside another dropdown)
+  if (asMenuItem) {
+    return (
+      <DropdownMenuSub>
+        <DropdownMenuSubTrigger className="cursor-pointer gap-2">
+          <Download className="h-4 w-4" />
+          Export Chat
+        </DropdownMenuSubTrigger>
+        <DropdownMenuSubContent>
+          <DropdownMenuItem onClick={() => handleExport("json")} disabled={exporting}>
+            <FileJsonIcon className="mr-2 h-4 w-4" />
+            Export as JSON
+          </DropdownMenuItem>
+          <DropdownMenuItem onClick={() => handleExport("markdown")} disabled={exporting}>
+            <FileTextIcon className="mr-2 h-4 w-4" />
+            Export as Markdown
+          </DropdownMenuItem>
+          <DropdownMenuItem onClick={() => handleExport("txt")} disabled={exporting}>
+            <FileIcon className="mr-2 h-4 w-4" />
+            Export as Text
+          </DropdownMenuItem>
+        </DropdownMenuSubContent>
+      </DropdownMenuSub>
+    );
+  }
+
+  // Default: standalone dropdown button
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>

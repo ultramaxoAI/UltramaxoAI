@@ -1,4 +1,6 @@
 import { toast } from "sonner";
+import { useState } from "react";
+import { ChevronDown, ChevronRight } from "lucide-react";
 import { CodeEditor, type SupportedLanguage } from "@/components/code-editor";
 import {
   Console,
@@ -6,6 +8,7 @@ import {
   type ConsoleOutputContent,
 } from "@/components/console";
 import { Artifact } from "@/components/create-artifact";
+import { FileExplorer } from "@/components/file-explorer";
 import {
   CopyIcon,
   LogsIcon,
@@ -327,52 +330,115 @@ export const codeArtifact = new Artifact<"code", Metadata>({
     }
   },
   content: ({ metadata, setMetadata, content, ...props }) => {
-    const files = metadata?.files || parseCodeFiles(content);
+    const [isExpanded, setIsExpanded] = useState(true);
+    const files = metadata?.files || parseCodeFiles(content || "");
     const activeFileIndex = metadata?.activeFileIndex || 0;
     const activeFile = files[activeFileIndex] || files[0];
-    const detectedLanguage = activeFile?.language || metadata?.language || detectCodeLanguage(content);
+    const detectedLanguage = activeFile?.language || metadata?.language || detectCodeLanguage(content || "");
+
+    // Get preview of code (first few lines)
+    const codePreview = (activeFile?.content || content || "").split("\n").slice(0, 3).join("\n");
+    const linesCount = (activeFile?.content || content || "").split("\n").length;
+
+    const handleFileAdd = (newFile: { name: string; content: string; language: SupportedLanguage }) => {
+      const updatedFiles = [...files, newFile];
+      setMetadata({
+        ...metadata,
+        files: updatedFiles,
+        activeFileIndex: updatedFiles.length - 1,
+      });
+    };
+
+    const handleFileDelete = (index: number) => {
+      if (files.length <= 1) return;
+      
+      const updatedFiles = files.filter((_, i) => i !== index);
+      const newActiveIndex = index >= updatedFiles.length ? updatedFiles.length - 1 : index;
+      
+      setMetadata({
+        ...metadata,
+        files: updatedFiles,
+        activeFileIndex: newActiveIndex,
+      });
+    };
+
+    const handleFileRename = (index: number, newName: string) => {
+      const updatedFiles = [...files];
+      updatedFiles[index] = { ...updatedFiles[index], name: newName };
+      
+      setMetadata({
+        ...metadata,
+        files: updatedFiles,
+      });
+    };
 
     return (
-      <>
-        {files.length > 1 && (
-          <div className="border-b border-border bg-muted/30">
-            <div className="flex gap-1 p-2 overflow-x-auto">
-              {files.map((file, index) => (
-                <button
-                  key={index}
-                  onClick={() => setMetadata({ ...metadata, activeFileIndex: index })}
-                  className={`px-3 py-1.5 text-sm rounded-md flex items-center gap-2 whitespace-nowrap transition-colors ${
-                    index === activeFileIndex
-                      ? 'bg-background text-foreground font-medium shadow-sm'
-                      : 'text-muted-foreground hover:text-foreground hover:bg-background/50'
-                  }`}
-                >
-                  {getFileIcon(file.name)}
-                  <span>{file.name}</span>
-                </button>
-              ))}
+      <div className="flex flex-col w-full border border-zinc-800 rounded-xl overflow-hidden bg-zinc-900">
+        {/* Collapsible Header - Like Reagent */}
+        <button
+          onClick={() => setIsExpanded(!isExpanded)}
+          className="flex items-center gap-3 px-4 py-3 hover:bg-zinc-800/50 transition-colors border-b border-zinc-800"
+        >
+          {isExpanded ? (
+            <ChevronDown className="w-5 h-5 text-zinc-400" />
+          ) : (
+            <ChevronRight className="w-5 h-5 text-zinc-400" />
+          )}
+          <div className="flex items-center gap-2">
+            <div className="w-10 h-10 rounded-lg bg-zinc-800 flex items-center justify-center">
+              <LogsIcon size={20} />
+            </div>
+            <div className="flex-1 text-left">
+              <div className="font-medium text-zinc-200">{detectedLanguage.toUpperCase()}</div>
+              <div className="text-xs text-zinc-500">{linesCount} lines{files.length > 1 ? ` • ${files.length} files` : ""}</div>
+            </div>
+          </div>
+          {!isExpanded && (
+            <div className="flex-1 text-left text-sm text-zinc-500 font-mono truncate ml-4">
+              {codePreview.substring(0, 80)}...
+            </div>
+          )}
+        </button>
+
+        {/* Expandable Content */}
+        {isExpanded && (
+          <div className="flex h-[500px] w-full">
+            {/* File Explorer Sidebar - Show when multiple files */}
+            {files.length > 1 && (
+              <FileExplorer
+                files={files}
+                activeFileIndex={activeFileIndex}
+                onFileSelect={(index) => setMetadata({ ...metadata, activeFileIndex: index })}
+                onFileAdd={handleFileAdd}
+                onFileDelete={handleFileDelete}
+                onFileRename={handleFileRename}
+                className="w-56 shrink-0 border-r border-zinc-800"
+              />
+            )}
+
+            {/* Code Editor Area */}
+            <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
+              <CodeEditor 
+                {...props} 
+                content={activeFile?.content || content || ""}
+                language={detectedLanguage}
+              />
+
+              {metadata?.outputs && metadata.outputs.length > 0 && (
+                <Console
+                  consoleOutputs={metadata.outputs}
+                  setConsoleOutputs={() => {
+                    setMetadata({
+                      ...metadata,
+                      outputs: [],
+                    });
+                  }}
+                />
+              )}
             </div>
           </div>
         )}
-        
-        <CodeEditor 
-          {...props} 
-          content={activeFile?.content || content}
-          language={detectedLanguage}
-        />
-
-        {metadata?.outputs && (
-          <Console
-            consoleOutputs={metadata.outputs}
-            setConsoleOutputs={() => {
-              setMetadata({
-                ...metadata,
-                outputs: [],
-              });
-            }}
-          />
-        )}
-      </>
+      </div>
     );
   },
   actions: [

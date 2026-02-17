@@ -328,7 +328,7 @@ function PureMultimodalInput({
       />
 
       <PromptInput
-        className="rounded-xl border border-border bg-background p-3 shadow-xs transition-all duration-200 focus-within:border-border hover:border-muted-foreground/50"
+        className="rounded-3xl border border-zinc-700/50 bg-zinc-900/50 backdrop-blur-sm p-3 shadow-lg shadow-black/10 transition-all duration-200 focus-within:border-purple-500/50 focus-within:shadow-purple-500/20 hover:border-zinc-600"
         onSubmit={(event) => {
           event.preventDefault();
           if (!input.trim() && attachments.length === 0) {
@@ -382,7 +382,7 @@ function PureMultimodalInput({
             maxHeight={200}
             minHeight={44}
             onChange={handleInput}
-            placeholder="Send a message..."
+            placeholder="Tulis pertanyaan atau perintah di sini..."
             ref={textareaRef}
             rows={1}
             value={input}
@@ -402,11 +402,11 @@ function PureMultimodalInput({
                   <PlusIcon size={18} className="text-muted-foreground" />
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="start" className="w-56">
+              <DropdownMenuContent align="start" className="w-56 bg-zinc-900 border-zinc-800 rounded-xl shadow-lg">
                 {/* Mode Settings */}
                 <DropdownMenuItem
                   onClick={() => setWormgptEnabled(!wormgptEnabled)}
-                  className="cursor-pointer"
+                  className="cursor-pointer hover:bg-zinc-800 rounded-lg focus:bg-zinc-800"
                 >
                   <SparklesIcon className={cn("mr-2 h-4 w-4", wormgptEnabled && "fill-current")} />
                   <span>WormGPT Mode</span>
@@ -414,7 +414,7 @@ function PureMultimodalInput({
                 </DropdownMenuItem>
                 <DropdownMenuItem
                   onClick={() => setDeepThinkingEnabled(!deepThinkingEnabled)}
-                  className="cursor-pointer"
+                  className="cursor-pointer hover:bg-zinc-800 rounded-lg focus:bg-zinc-800"
                 >
                   <CpuIcon className="mr-2 h-4 w-4" />
                   <span>Deep Thinking</span>
@@ -422,19 +422,19 @@ function PureMultimodalInput({
                 </DropdownMenuItem>
                 <DropdownMenuItem
                   onClick={() => setWebSearchEnabled(!webSearchEnabled)}
-                  className="cursor-pointer"
+                  className="cursor-pointer hover:bg-zinc-800 rounded-lg focus:bg-zinc-800"
                 >
                   <GlobeIcon className="mr-2 h-4 w-4" />
                   <span>Web Search</span>
                   {webSearchEnabled && <CheckIcon className="ml-auto h-4 w-4" />}
                 </DropdownMenuItem>
                 
-                <DropdownMenuSeparator />
+                <DropdownMenuSeparator className="bg-zinc-800" />
                 
                 {/* File Upload Options */}
                 <DropdownMenuItem
                   onClick={() => fileInputRef.current?.click()}
-                  className="cursor-pointer"
+                  className="cursor-pointer hover:bg-zinc-800 rounded-lg focus:bg-zinc-800"
                   disabled={status !== "ready"}
                 >
                   <FileTextIcon className="mr-2 h-4 w-4" />
@@ -452,7 +452,7 @@ function PureMultimodalInput({
                       }, 100);
                     }
                   }}
-                  className="cursor-pointer"
+                  className="cursor-pointer hover:bg-zinc-800 rounded-lg focus:bg-zinc-800"
                   disabled={status !== "ready"}
                 >
                   <ImageIcon className="mr-2 h-4 w-4" />
@@ -588,6 +588,7 @@ function PureModelSelectorCompact({
     google: "Google",
     xai: "xAI",
     reasoning: "Reasoning",
+    groq: "",
   };
 
   return (

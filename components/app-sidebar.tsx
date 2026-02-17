@@ -4,10 +4,11 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import type { User } from "next-auth";
 import { useState } from "react";
+import { SquarePen, Menu } from "lucide-react";
 import { toast } from "sonner";
 import { useSWRConfig } from "swr";
 import { unstable_serialize } from "swr/infinite";
-import { PlusIcon, TrashIcon } from "@/components/icons";
+import { cn } from "@/lib/utils";
 import {
   getChatHistoryPaginationKey,
   SidebarHistory,
@@ -32,13 +33,14 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "./ui/alert-dialog";
-import { Tooltip, TooltipContent, TooltipTrigger } from "./ui/tooltip";
 
 export function AppSidebar({ user }: { user: User | undefined }) {
   const router = useRouter();
-  const { setOpenMobile } = useSidebar();
+  const { setOpenMobile, state, open, setOpen } = useSidebar();
   const { mutate } = useSWRConfig();
   const [showDeleteAllDialog, setShowDeleteAllDialog] = useState(false);
+  
+  const isSidebarOpen = state === "expanded";
 
   const handleDeleteAll = () => {
     const deletePromise = fetch("/api/history", {
@@ -60,66 +62,71 @@ export function AppSidebar({ user }: { user: User | undefined }) {
 
   return (
     <>
-      <Sidebar className="group-data-[side=left]:border-r-0">
-        <SidebarHeader>
+      <Sidebar collapsible="icon" className="border-r border-border bg-zinc-900 z-30">
+        <SidebarHeader className="border-b border-border/10">
           <SidebarMenu>
-            <div className="flex flex-row items-center justify-between">
-              <Link
-                className="flex flex-row items-center gap-3"
-                href="/"
+            <div className="flex flex-col gap-2 px-3 py-4">
+              {/* Toggle + Title Row */}
+              <div className="flex items-center gap-2 mb-1">
+                {/* Toggle Button */}
+                <Button
+                  className="h-8 w-8 p-0 rounded-md hover:bg-white/10 transition-colors shrink-0"
+                  onClick={() => setOpen(!open)}
+                  type="button"
+                  variant="ghost"
+                  aria-label={isSidebarOpen ? "Collapse sidebar" : "Expand sidebar"}
+                >
+                  <Menu className="h-4 w-4" />
+                </Button>
+                
+                {/* App Title - show when open */}
+                {isSidebarOpen && (
+                  <Link
+                    href="/"
+                    className="flex items-center hover:opacity-80 transition-opacity"
+                    onClick={() => setOpenMobile(false)}
+                  >
+                    <span className="font-semibold text-base tracking-tight text-white">
+                      UltramaxoAI
+                    </span>
+                  </Link>
+                )}
+              </div>
+              
+              {/* New Chat Button */}
+              <Button
+                className={cn(
+                  "rounded-md hover:bg-white/10 transition-colors",
+                  isSidebarOpen ? "w-full justify-start gap-2 px-2 h-9" : "h-9 w-9 p-0 mx-auto"
+                )}
                 onClick={() => {
                   setOpenMobile(false);
+                  router.push("/");
+                  router.refresh();
                 }}
+                type="button"
+                variant="ghost"
               >
-                <span className="cursor-pointer rounded-md px-2 font-semibold text-lg hover:bg-muted">
-                  UltramaxoAI
-                </span>
-              </Link>
-              <div className="flex flex-row gap-1">
-                {user && (
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <Button
-                        className="h-8 p-1 md:h-fit md:p-2"
-                        onClick={() => setShowDeleteAllDialog(true)}
-                        type="button"
-                        variant="ghost"
-                      >
-                        <TrashIcon />
-                      </Button>
-                    </TooltipTrigger>
-                    <TooltipContent align="end" className="hidden md:block">
-                      Delete All Chats
-                    </TooltipContent>
-                  </Tooltip>
-                )}
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Button
-                      className="h-8 p-1 md:h-fit md:p-2"
-                      onClick={() => {
-                        setOpenMobile(false);
-                        router.push("/");
-                        router.refresh();
-                      }}
-                      type="button"
-                      variant="ghost"
-                    >
-                      <PlusIcon />
-                    </Button>
-                  </TooltipTrigger>
-                  <TooltipContent align="end" className="hidden md:block">
-                    New Chat
-                  </TooltipContent>
-                </Tooltip>
-              </div>
+                <SquarePen className="h-4 w-4 shrink-0" />
+                {isSidebarOpen && <span className="text-sm">New Chat</span>}
+              </Button>
             </div>
           </SidebarMenu>
         </SidebarHeader>
         <SidebarContent>
-          <SidebarHistory user={user} />
+          {isSidebarOpen ? (
+            <SidebarHistory user={user} />
+          ) : (
+            <div className="flex items-center justify-center py-4">
+              <span className="text-zinc-500 text-xs rotate-180" style={{ writingMode: 'vertical-rl' }}>
+                History
+              </span>
+            </div>
+          )}
         </SidebarContent>
-        <SidebarFooter>{user && <SidebarUserNav user={user} />}</SidebarFooter>
+        <SidebarFooter>
+          {user && <SidebarUserNav user={user} isCollapsed={!isSidebarOpen} />}
+        </SidebarFooter>
       </Sidebar>
 
       <AlertDialog

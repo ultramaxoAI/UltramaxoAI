@@ -78,66 +78,89 @@ export function UpgradeProButton({ user }: UpgradeProButtonProps) {
     <>
       <Button
         onClick={() => setOpen(true)}
-        className="w-full bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 text-white font-semibold"
+        className="relative bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 text-white font-medium rounded-lg shadow-md hover:shadow-lg transition-all duration-200"
         size="sm"
       >
         <CrownIcon className="mr-2 h-4 w-4" />
-        Upgrade Pro
+        <span>Upgrade Plan</span>
       </Button>
 
       <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent className="sm:max-w-[425px]">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <CrownIcon className="h-5 w-5 text-blue-500" />
-              Upgrade ke Pro
-            </DialogTitle>
-            <DialogDescription>
-              Pilih paket Pro yang sesuai dengan kebutuhan Anda. Admin akan
-              meninjau request Anda dan memberikan instruksi pembayaran.
-            </DialogDescription>
-          </DialogHeader>
+        <DialogContent className="sm:max-w-[500px] border-0 bg-black/40 backdrop-blur-2xl p-0 overflow-hidden shadow-2xl">
+          <div className="relative border border-white/10 rounded-2xl bg-gradient-to-b from-zinc-900/90 to-black/90 p-6">
+            <DialogHeader className="space-y-3">
+              <DialogTitle className="flex items-center gap-3 text-2xl">
+                <div className="p-2 rounded-xl bg-gradient-to-br from-purple-500 to-blue-500 shadow-lg shadow-purple-500/50">
+                  <CrownIcon className="h-6 w-6 text-white" />
+                </div>
+                <span className="bg-gradient-to-r from-purple-400 to-blue-400 bg-clip-text text-transparent font-bold">
+                  Upgrade ke Pro
+                </span>
+              </DialogTitle>
+              <DialogDescription className="text-gray-400 text-base leading-relaxed">
+                Pilih paket Pro yang sesuai dengan kebutuhan Anda. Admin akan
+                meninjau request Anda dan memberikan instruksi pembayaran.
+              </DialogDescription>
+            </DialogHeader>
 
-          <div className="grid gap-4 py-4">
-            <div className="grid gap-2">
-              <Label htmlFor="plan">Paket Pro</Label>
+          <div className="grid gap-6 py-6">
+            <div className="grid gap-3">
+              <Label htmlFor="plan" className="text-sm font-semibold text-gray-300">Paket Pro</Label>
               <Select value={selectedPlan} onValueChange={setSelectedPlan}>
-                <SelectTrigger id="plan">
+                <SelectTrigger id="plan" className="bg-zinc-900/50 border-white/10 text-white rounded-xl h-12 hover:border-purple-500/50 transition-colors">
                   <SelectValue placeholder="Pilih paket" />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="bg-zinc-900 border-white/10 backdrop-blur-xl">
                   {PLANS.map((plan) => (
-                    <SelectItem key={plan.id} value={plan.id}>
-                      {plan.name} - <span className="line-through text-muted-foreground">Rp {plan.originalPrice.toLocaleString("id-ID")}</span> <span className="font-bold text-green-600">Rp {plan.price.toLocaleString("id-ID")}</span>
+                    <SelectItem key={plan.id} value={plan.id} className="text-white hover:bg-white/10 focus:bg-white/10 rounded-lg my-1">
+                      {plan.name} - <span className="line-through text-gray-500">Rp {plan.originalPrice.toLocaleString("id-ID")}</span> <span className="font-bold text-green-400">Rp {plan.price.toLocaleString("id-ID")}</span>
                     </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
             </div>
 
-            <div className="grid gap-2">
-              <Label htmlFor="note">Catatan (Opsional)</Label>
+            <div className="grid gap-3">
+              <Label htmlFor="note" className="text-sm font-semibold text-gray-300">Catatan (Opsional)</Label>
               <Textarea
                 id="note"
                 placeholder="Tambahkan catatan jika diperlukan..."
                 value={note}
                 onChange={(e) => setNote(e.target.value)}
                 rows={3}
+                className="bg-zinc-900/50 border-white/10 text-white placeholder:text-gray-500 rounded-xl resize-none hover:border-purple-500/50 transition-colors focus:border-purple-500"
               />
             </div>
 
             {selectedPlan && (
-              <div className="rounded-lg bg-muted p-4">
-                <h4 className="font-semibold mb-2">Detail Paket</h4>
-                <div className="text-sm space-y-1">
+              <div className="rounded-xl bg-gradient-to-br from-purple-500/10 to-blue-500/10 border border-purple-500/20 p-5 backdrop-blur-sm">
+                <h4 className="font-bold mb-3 text-purple-300 flex items-center gap-2">
+                  <span className="w-1 h-4 bg-gradient-to-b from-purple-400 to-blue-400 rounded-full"></span>
+                  Detail Paket
+                </h4>
+                <div className="text-sm space-y-2">
                   {PLANS.filter((p) => p.id === selectedPlan).map((plan) => (
-                    <div key={plan.id}>
-                      <p>Durasi: {plan.months} bulan</p>
-                      <p className="text-muted-foreground">Harga Normal: <span className="line-through">Rp {plan.originalPrice.toLocaleString("id-ID")}</span></p>
-                      <p className="font-semibold text-lg text-green-600">
-                        Harga Diskon: Rp {plan.price.toLocaleString("id-ID")}
-                      </p>
-                      <p className="text-xs text-green-600 mt-1">Hemat Rp {(plan.originalPrice - plan.price).toLocaleString("id-ID")}!</p>
+                    <div key={plan.id} className="space-y-2">
+                      <div className="flex items-center justify-between text-gray-300">
+                        <span>Durasi:</span>
+                        <span className="font-semibold">{plan.months} bulan</span>
+                      </div>
+                      <div className="flex items-center justify-between text-gray-400">
+                        <span>Harga Normal:</span>
+                        <span className="line-through">Rp {plan.originalPrice.toLocaleString("id-ID")}</span>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <span className="font-semibold text-white">Harga Diskon:</span>
+                        <span className="font-bold text-xl bg-gradient-to-r from-green-400 to-emerald-400 bg-clip-text text-transparent">
+                          Rp {plan.price.toLocaleString("id-ID")}
+                        </span>
+                      </div>
+                      <div className="pt-2 mt-2 border-t border-white/10">
+                        <p className="text-xs text-green-400 font-semibold flex items-center gap-1">
+                          <span className="inline-block w-2 h-2 bg-green-400 rounded-full animate-pulse"></span>
+                          Hemat Rp {(plan.originalPrice - plan.price).toLocaleString("id-ID")}!
+                        </p>
+                      </div>
                     </div>
                   ))}
                 </div>
@@ -145,21 +168,23 @@ export function UpgradeProButton({ user }: UpgradeProButtonProps) {
             )}
           </div>
 
-          <DialogFooter>
+          <DialogFooter className="gap-3">
             <Button
               variant="outline"
               onClick={() => setOpen(false)}
+              className="bg-zinc-900/50 border-white/10 text-gray-300 hover:bg-zinc-800 hover:text-white rounded-xl"
             >
               Batal
             </Button>
             <Button
               onClick={handleSubmit}
               disabled={!selectedPlan}
-              className="bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700"
+              className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white rounded-xl shadow-lg shadow-purple-500/50 disabled:opacity-50 disabled:shadow-none font-bold"
             >
               Beli Sekarang
             </Button>
           </DialogFooter>
+          </div>
         </DialogContent>
       </Dialog>
     </>

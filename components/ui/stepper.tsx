@@ -6,6 +6,7 @@ interface StepperProps extends HTMLAttributes<HTMLDivElement> {
   initialStep?: number;
   onStepChange?: (step: number) => void;
   onFinalStepCompleted?: () => void;
+  validateStep?: (step: number) => boolean;
   stepCircleContainerClassName?: string;
   stepContainerClassName?: string;
   contentClassName?: string;
@@ -27,6 +28,7 @@ export default function Stepper({
   initialStep = 1,
   onStepChange = () => {},
   onFinalStepCompleted = () => {},
+  validateStep,
   stepCircleContainerClassName = '',
   stepContainerClassName = '',
   contentClassName = '',
@@ -64,12 +66,20 @@ export default function Stepper({
 
   const handleNext = () => {
     if (!isLastStep) {
+      // Validate current step before proceeding
+      if (validateStep && !validateStep(currentStep)) {
+        return;
+      }
       setDirection(1);
       updateStep(currentStep + 1);
     }
   };
 
   const handleComplete = () => {
+    // Validate last step before completing
+    if (validateStep && !validateStep(currentStep)) {
+      return;
+    }
     setDirection(1);
     updateStep(totalSteps + 1);
   };
@@ -118,7 +128,7 @@ export default function Stepper({
           isCompleted={isCompleted}
           currentStep={currentStep}
           direction={direction}
-          className={`space-y-2 px-6 ${contentClassName}`}
+          className={`space-y-4 px-6 ${contentClassName}`}
         >
           {stepsArray[currentStep - 1]}
         </StepContentWrapper>
@@ -129,10 +139,10 @@ export default function Stepper({
               {currentStep !== 1 && (
                 <button
                   onClick={handleBack}
-                  className={`rounded px-4 py-2 text-sm font-medium transition ${
+                  className={`rounded-lg px-4 py-2 text-sm font-medium transition ${
                     currentStep === 1
-                      ? 'pointer-events-none opacity-50 text-muted-foreground'
-                      : 'text-muted-foreground hover:text-foreground'
+                      ? 'pointer-events-none opacity-50 text-gray-500'
+                      : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-800'
                   }`}
                   {...backButtonProps}
                 >
@@ -141,7 +151,7 @@ export default function Stepper({
               )}
               <button
                 onClick={isLastStep ? handleComplete : handleNext}
-                className="flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition hover:bg-primary/90"
+                className="flex items-center justify-center rounded-lg bg-gray-100 dark:bg-gray-200 text-gray-900 px-4 py-2 text-sm font-semibold transition hover:bg-gray-200 dark:hover:bg-gray-300 border border-gray-300 dark:border-gray-400 shadow-sm active:scale-[0.98]"
                 {...nextButtonProps}
               >
                 {isLastStep ? 'Complete' : nextButtonText}

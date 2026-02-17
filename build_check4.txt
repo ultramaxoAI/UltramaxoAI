@@ -1,0 +1,298 @@
+
+> ai-chatbot@3.1.0 build
+> next build
+
+node.exe : [baseline
+-browser-mapping] 
+The data in this 
+module is over two 
+months old.  To 
+ensure accurate 
+Baseline data, 
+please update: `npm 
+i baseline-browser-m
+apping@latest -D`
+At line:1 char:1
++ & "C:\Program File
+s\nodejs/node.exe" 
+"C:\Program Files\no
+dejs/node_mo ...
++ ~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~
+    + CategoryInfo  
+            : 
+NotSpecifi    ed: 
+([baseline-bro    
+ws...ping@latest -  
+  D`:String) [], 
+Rem    oteException
+    + 
+FullyQualifiedEr    
+rorId : NativeComm  
+  andError
+ 
+ ??? Warning: 
+Next.js inferred 
+your workspace 
+root, but it may 
+not be correct.
+ We detected 
+multiple lockfiles 
+and selected the 
+directory of 
+C:\Users\HYPE R Seri
+es\package-lock.json
+ as the root 
+directory.
+ To silence this 
+warning, set 
+`turbopack.root` in 
+your Next.js 
+config, or consider 
+removing one of the 
+lockfiles if it's 
+not needed.
+   See https://nextj
+s.org/docs/app/api-r
+eference/config/next
+-config-js/turbopack
+#root-directory for 
+more information.
+ Detected 
+additional 
+lockfiles: 
+   * C:\Users\HYPE 
+R Series\OneDrive\Do
+kumen\UltramaxoV2\pn
+pm-lock.yaml
+   * C:\Users\HYPE 
+R Series\OneDrive\Do
+kumen\package-lock.j
+son
+
+   ??? Next.js 16.0.10 (Turbopack, Cache Components)
+   - Environments: .env.local
+
+ ??? The 
+"middleware" file 
+convention is 
+deprecated. Please 
+use "proxy" 
+instead. Learn 
+more: https://nextjs
+.org/docs/messages/m
+iddleware-to-proxy
+   Creating an optimized production build ...
+[baseline-browser-ma
+pping] The data in 
+this module is over 
+two months old.  To 
+ensure accurate 
+Baseline data, 
+please update: `npm 
+i baseline-browser-m
+apping@latest -D`
+ ??? Compiled successfully in 14.6s
+   Running TypeScript ...
+   Collecting page data using 11 workers ...
+[baseline-browser-ma
+pping] The data in 
+this module is over 
+two months old.  To 
+ensure accurate 
+Baseline data, 
+please update: `npm 
+i baseline-browser-m
+apping@latest -D`
+[baseline-browser-ma
+pping] The data in 
+this module is over 
+two months old.  To 
+ensure accurate 
+Baseline data, 
+please update: `npm 
+i baseline-browser-m
+apping@latest -D`
+[baseline-browser-ma
+pping] The data in 
+this module is over 
+two months old.  To 
+ensure accurate 
+Baseline data, 
+please update: `npm 
+i baseline-browser-m
+apping@latest -D`
+[baseline-browser-ma
+pping] The data in 
+this module is over 
+two months old.  To 
+ensure accurate 
+Baseline data, 
+please update: `npm 
+i baseline-browser-m
+apping@latest -D`
+[baseline-browser-ma
+pping] The data in 
+this module is over 
+two months old.  To 
+ensure accurate 
+Baseline data, 
+please update: `npm 
+i baseline-browser-m
+apping@latest -D`
+[baseline-browser-ma
+pping] The data in 
+this module is over 
+two months old.  To 
+ensure accurate 
+Baseline data, 
+please update: `npm 
+i baseline-browser-m
+apping@latest -D`
+[baseline-browser-ma
+pping] The data in 
+this module is over 
+two months old.  To 
+ensure accurate 
+Baseline data, 
+please update: `npm 
+i baseline-browser-m
+apping@latest -D`
+[baseline-browser-ma
+pping] The data in 
+this module is over 
+two months old.  To 
+ensure accurate 
+Baseline data, 
+please update: `npm 
+i baseline-browser-m
+apping@latest -D`
+[baseline-browser-ma
+pping] The data in 
+this module is over 
+two months old.  To 
+ensure accurate 
+Baseline data, 
+please update: `npm 
+i baseline-browser-m
+apping@latest -D`
+[baseline-browser-ma
+pping] The data in 
+this module is over 
+two months old.  To 
+ensure accurate 
+Baseline data, 
+please update: `npm 
+i baseline-browser-m
+apping@latest -D`
+[baseline-browser-ma
+pping] The data in 
+this module is over 
+two months old.  To 
+ensure accurate 
+Baseline data, 
+please update: `npm 
+i baseline-browser-m
+apping@latest -D`
+   Generating static pages using 11 workers (0/41) ...
+[baseline-browser-ma
+pping] The data in 
+this module is over 
+two months old.  To 
+ensure accurate 
+Baseline data, 
+please update: `npm 
+i baseline-browser-m
+apping@latest -D`
+[baseline-browser-ma
+pping] The data in 
+this module is over 
+two months old.  To 
+ensure accurate 
+Baseline data, 
+please update: `npm 
+i baseline-browser-m
+apping@latest -D`
+   Generating static pages using 11 workers (10/41) 
+[ERROR] Chat export 
+error {
+  message: 'During 
+prerendering, 
+`headers()` rejects 
+when the prerender 
+is complete. 
+Typically these 
+errors are handled 
+by React but if you 
+move `headers()` to 
+a different context 
+by using 
+`setTimeout`, 
+`after`, or similar 
+functions you may 
+observe this error 
+and you should 
+handle it in that 
+context. This 
+occurred at route "/
+api/chat/export".',
+  stack: undefined
+}
+   Generating static pages using 11 workers (20/41) 
+   Generating static pages using 11 workers (30/41) 
+ ??? Generating static pages using 11 workers (41/41) in 2.8s
+   Finalizing page optimization ...
+
+Route (app)
+??? ??? /
+??? ??? /_not-found
+??? ??? /admin
+??? ?? /api/admin/purchases
+??? ?? /api/admin/redeem-codes
+??? ?? /api/admin/upgrade-requests
+??? ?? /api/admin/users
+??? ?? /api/admin/vouchers
+??? ?? /api/auth/[...nextauth]
+??? ?? /api/auth/forgot-password
+??? ?? /api/auth/guest
+??? ?? /api/auth/resend-code
+??? ?? /api/auth/send-code
+??? ?? /api/auth/verify
+??? ?? /api/chat
+??? ?? /api/chat/[id]/stream
+??? ?? /api/chat/export
+??? ?? /api/debug-db
+??? ?? /api/document
+??? ?? /api/files/upload
+??? ?? /api/health
+??? ?? /api/history
+??? ?? /api/purchases
+??? ?? /api/redeem
+??? ?? /api/suggestions
+??? ?? /api/user/profile
+??? ?? /api/user/settings
+??? ?? /api/user/upgrade-request
+??? ?? /api/vote
+??? ??? /chat
+??? ??? /chat/[id]
+??? ??? /chat/[id]
+??? ??? /forgot-password
+??? ??? /login
+??? ??? /opengraph-image-12cog0.png
+??? ??? /privacy
+??? ??? /redeem
+??? ??? /register
+??? ??? /reset-password
+??? ??? /terms
+??? ??? /twitter-image-12cog0.png
+??? ??? /verify
+
+
+?? Proxy (Middleware)
+
+???  (Static)             prerendered as static content
+???  (Partial Prerender)  prerendered as static HTML with dynamic server-streamed content
+??  (Dynamic)            server-rendered on demand
+

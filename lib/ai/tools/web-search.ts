@@ -1,12 +1,12 @@
 import { tool } from "ai";
 import { z } from "zod";
 
-export const webSearch = tool({
-  description: "Search the web for real-time information, news, and current events.",
+export const webSearch = {
+  description: "Search the web for real-time information, news, and current events. Use this when user needs current/recent information that may not be in your training data.",
   inputSchema: z.object({
     query: z.string().describe("The search query to look up on the web"),
   }),
-  execute: async ({ query }) => {
+  execute: async ({ query }: { query: string }) => {
     const tavilyKey = process.env.TAVILY_API_KEY;
     if (!tavilyKey) {
       return {
@@ -41,4 +41,4 @@ export const webSearch = tool({
       };
     }
   },
-});
+};

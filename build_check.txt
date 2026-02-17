@@ -1,0 +1,450 @@
+
+> ai-chatbot@3.1.0 build
+> next build
+
+node.exe : [baseline
+-browser-mapping] 
+The data in this 
+module is over two 
+months old.  To 
+ensure accurate 
+Baseline data, 
+please update: `npm 
+i baseline-browser-m
+apping@latest -D`
+At line:1 char:1
++ & "C:\Program File
+s\nodejs/node.exe" 
+"C:\Program Files\no
+dejs/node_mo ...
++ ~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~
+    + CategoryInfo  
+            : NotS  
+  pecified: ([bas   
+ eline-brows...p    
+ing@latest -D`:    
+String) [], Rem    
+oteException
+    + FullyQualifie 
+   dErrorId : Nati  
+  veCommandError
+ 
+ ??? Warning: 
+Next.js inferred 
+your workspace 
+root, but it may 
+not be correct.
+ We detected 
+multiple lockfiles 
+and selected the 
+directory of 
+C:\Users\HYPE R Seri
+es\package-lock.json
+ as the root 
+directory.
+ To silence this 
+warning, set 
+`turbopack.root` in 
+your Next.js 
+config, or consider 
+removing one of the 
+lockfiles if it's 
+not needed.
+   See https://nextj
+s.org/docs/app/api-r
+eference/config/next
+-config-js/turbopack
+#root-directory for 
+more information.
+ Detected 
+additional 
+lockfiles: 
+   * C:\Users\HYPE 
+R Series\OneDrive\Do
+kumen\UltramaxoV2\pn
+pm-lock.yaml
+   * C:\Users\HYPE 
+R Series\OneDrive\Do
+kumen\package-lock.j
+son
+
+   ??? Next.js 16.0.10 (Turbopack, Cache Components)
+   - Environments: .env.local
+
+ ??? The 
+"middleware" file 
+convention is 
+deprecated. Please 
+use "proxy" 
+instead. Learn 
+more: https://nextjs
+.org/docs/messages/m
+iddleware-to-proxy
+   Creating an optimized production build ...
+[baseline-browser-ma
+pping] The data in 
+this module is over 
+two months old.  To 
+ensure accurate 
+Baseline data, 
+please update: `npm 
+i baseline-browser-m
+apping@latest -D`
+ ??? Compiled successfully in 15.2s
+   Running TypeScript ...
+   Collecting page data using 11 workers ...
+[baseline-browser-ma
+pping] The data in 
+this module is over 
+two months old.  To 
+ensure accurate 
+Baseline data, 
+please update: `npm 
+i baseline-browser-m
+apping@latest -D`
+[baseline-browser-ma
+pping] The data in 
+this module is over 
+two months old.  To 
+ensure accurate 
+Baseline data, 
+please update: `npm 
+i baseline-browser-m
+apping@latest -D`
+[baseline-browser-ma
+pping] The data in 
+this module is over 
+two months old.  To 
+ensure accurate 
+Baseline data, 
+please update: `npm 
+i baseline-browser-m
+apping@latest -D`
+[baseline-browser-ma
+pping] The data in 
+this module is over 
+two months old.  To 
+ensure accurate 
+Baseline data, 
+please update: `npm 
+i baseline-browser-m
+apping@latest -D`
+[baseline-browser-ma
+pping] The data in 
+this module is over 
+two months old.  To 
+ensure accurate 
+Baseline data, 
+please update: `npm 
+i baseline-browser-m
+apping@latest -D`
+[baseline-browser-ma
+pping] The data in 
+this module is over 
+two months old.  To 
+ensure accurate 
+Baseline data, 
+please update: `npm 
+i baseline-browser-m
+apping@latest -D`
+[baseline-browser-ma
+pping] The data in 
+this module is over 
+two months old.  To 
+ensure accurate 
+Baseline data, 
+please update: `npm 
+i baseline-browser-m
+apping@latest -D`
+[baseline-browser-ma
+pping] The data in 
+this module is over 
+two months old.  To 
+ensure accurate 
+Baseline data, 
+please update: `npm 
+i baseline-browser-m
+apping@latest -D`
+[baseline-browser-ma
+pping] The data in 
+this module is over 
+two months old.  To 
+ensure accurate 
+Baseline data, 
+please update: `npm 
+i baseline-browser-m
+apping@latest -D`
+[baseline-browser-ma
+pping] The data in 
+this module is over 
+two months old.  To 
+ensure accurate 
+Baseline data, 
+please update: `npm 
+i baseline-browser-m
+apping@latest -D`
+[baseline-browser-ma
+pping] The data in 
+this module is over 
+two months old.  To 
+ensure accurate 
+Baseline data, 
+please update: `npm 
+i baseline-browser-m
+apping@latest -D`
+   Generating static pages using 11 workers (0/40) ...
+[baseline-browser-ma
+pping] The data in 
+this module is over 
+two months old.  To 
+ensure accurate 
+Baseline data, 
+please update: `npm 
+i baseline-browser-m
+apping@latest -D`
+[baseline-browser-ma
+pping] The data in 
+this module is over 
+two months old.  To 
+ensure accurate 
+Baseline data, 
+please update: `npm 
+i baseline-browser-m
+apping@latest -D`
+   Generating static pages using 11 workers (10/40) 
+[ERROR] Chat export 
+error {
+  message: 'During 
+prerendering, 
+`headers()` rejects 
+when the prerender 
+is complete. 
+Typically these 
+errors are handled 
+by React but if you 
+move `headers()` to 
+a different context 
+by using 
+`setTimeout`, 
+`after`, or similar 
+functions you may 
+observe this error 
+and you should 
+handle it in that 
+context. This 
+occurred at route "/
+api/chat/export".',
+  stack: undefined
+}
+   Generating static pages using 11 workers (20/40) 
+   Generating static pages using 11 workers (30/40) 
+C:\Users\HYPE R Seri
+es\OneDrive\Dokumen\
+UltramaxoV2\.next\se
+rver\chunks\ssr\3fec
+d_next_dist_esm_092c
+30ad._.js: Invalid 
+source map. Only 
+conformant source 
+maps can be used to 
+find the original 
+code. Cause: Error: 
+sourceMapURL could 
+not be parsed
+C:\Users\HYPE R Seri
+es\OneDrive\Dokumen\
+UltramaxoV2\.next\se
+rver\chunks\ssr\3fec
+d_c1a5f66d._.js: 
+Invalid source map. 
+Only conformant 
+source maps can be 
+used to find the 
+original code. 
+Cause: Error: 
+sourceMapURL could 
+not be parsed
+C:\Users\HYPE R Seri
+es\OneDrive\Dokumen\
+UltramaxoV2\.next\se
+rver\chunks\ssr\[roo
+t-of-the-server]__be
+d6dbb8._.js: 
+Invalid source map. 
+Only conformant 
+source maps can be 
+used to find the 
+original code. 
+Cause: Error: 
+sourceMapURL could 
+not be parsed
+C:\Users\HYPE R Seri
+es\OneDrive\Dokumen\
+UltramaxoV2\node_mod
+ules\next\dist\compi
+led\next-server\app-
+page-turbo.runtime.p
+rod.js: Invalid 
+source map. Only 
+conformant source 
+maps can be used to 
+find the original 
+code. Cause: Error: 
+sourceMapURL could 
+not be parsed
+Error: Route "/": 
+Uncached data was 
+accessed outside of 
+<Suspense>. This 
+delays the entire 
+page from 
+rendering, 
+resulting in a slow 
+user experience. 
+Learn more: https://
+nextjs.org/docs/mess
+ages/blocking-route
+    at S 
+(C:\Users\HYPE R Ser
+ies\OneDrive\Dokumen
+\UltramaxoV2\.next\s
+erver\chunks\ssr\3fe
+cd_next_dist_esm_092
+c30ad._.js:4:13230)
+    at J 
+(C:\Users\HYPE R Ser
+ies\OneDrive\Dokumen
+\UltramaxoV2\.next\s
+erver\chunks\ssr\3fe
+cd_next_dist_esm_092
+c30ad._.js:4:10387)
+    at K 
+(C:\Users\HYPE R Ser
+ies\OneDrive\Dokumen
+\UltramaxoV2\.next\s
+erver\chunks\ssr\3fe
+cd_next_dist_esm_092
+c30ad._.js:4:11077)
+    at i 
+(C:\Users\HYPE R Ser
+ies\OneDrive\Dokumen
+\UltramaxoV2\.next\s
+erver\chunks\ssr\3fe
+cd_next_dist_esm_092
+c30ad._.js:4:3160)
+    at j 
+(C:\Users\HYPE R Ser
+ies\OneDrive\Dokumen
+\UltramaxoV2\.next\s
+erver\chunks\ssr\3fe
+cd_next_dist_esm_092
+c30ad._.js:4:4120)
+    at T 
+(C:\Users\HYPE R Ser
+ies\OneDrive\Dokumen
+\UltramaxoV2\.next\s
+erver\chunks\ssr\3fe
+cd_next_dist_esm_092
+c30ad._.js:4:14789)
+    at B 
+(C:\Users\HYPE R Ser
+ies\OneDrive\Dokumen
+\UltramaxoV2\.next\s
+erver\chunks\ssr\3fe
+cd_next_dist_esm_092
+c30ad._.js:4:9275)
+    at Q 
+(C:\Users\HYPE R Ser
+ies\OneDrive\Dokumen
+\UltramaxoV2\.next\s
+erver\chunks\ssr\3fe
+cd_next_dist_esm_092
+c30ad._.js:4:11749)
+    at R 
+(C:\Users\HYPE R Ser
+ies\OneDrive\Dokumen
+\UltramaxoV2\.next\s
+erver\chunks\ssr\3fe
+cd_next_dist_esm_092
+c30ad._.js:4:12910)
+    at e 
+(C:\Users\HYPE R Ser
+ies\OneDrive\Dokumen
+\UltramaxoV2\.next\s
+erver\chunks\ssr\3fe
+cd_next_dist_esm_092
+c30ad._.js:4:17177)
+    at U 
+(C:\Users\HYPE R Ser
+ies\OneDrive\Dokumen
+\UltramaxoV2\.next\s
+erver\chunks\ssr\3fe
+cd_next_dist_esm_092
+c30ad._.js:4:15092)
+    at w 
+(C:\Users\HYPE R Ser
+ies\OneDrive\Dokumen
+\UltramaxoV2\.next\s
+erver\chunks\ssr\3fe
+cd_c1a5f66d._.js:1:4
+155)
+    at j 
+(C:\Users\HYPE R Ser
+ies\OneDrive\Dokumen
+\UltramaxoV2\.next\s
+erver\chunks\ssr\3fe
+cd_c1a5f66d._.js:1:6
+475)
+    at h 
+(C:\Users\HYPE R Ser
+ies\OneDrive\Dokumen
+\UltramaxoV2\.next\s
+erver\chunks\ssr\3fe
+cd_c1a5f66d._.js:1:6
+389)
+    at d 
+(C:\Users\HYPE R Ser
+ies\OneDrive\Dokumen
+\UltramaxoV2\.next\s
+erver\chunks\ssr\[ro
+ot-of-the-server]__b
+ed6dbb8._.js:1:577)
+    at body 
+(<anonymous>)
+    at html 
+(<anonymous>)
+To get a more 
+detailed stack 
+trace and pinpoint 
+the issue, try one 
+of the following:
+  - Start the app 
+in development mode 
+by running `next 
+dev`, then open "/" 
+in your browser to 
+investigate the 
+error.
+  - Rerun the 
+production build 
+with `next build 
+--debug-prerender` 
+to generate better 
+stack traces.
+Error occurred 
+prerendering page 
+"/". Read more: http
+s://nextjs.org/docs/
+messages/prerender-e
+rror
+Export encountered 
+an error on 
+/(chat)/page: /, 
+exiting the build.
+ ??? Next.js build 
+worker exited with 
+code: 1 and signal: 
+null

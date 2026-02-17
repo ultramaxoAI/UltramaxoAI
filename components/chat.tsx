@@ -7,7 +7,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import useSWR, { useSWRConfig } from "swr";
 import { unstable_serialize } from "swr/infinite";
-import { ChatHeader } from "@/components/chat-header";
+import { ChatContextHeader } from "@/components/chat-context-header";
 import { useArtifactSelector } from "@/hooks/use-artifact";
 import { useAutoResume } from "@/hooks/use-auto-resume";
 import { useChatVisibility } from "@/hooks/use-chat-visibility";
@@ -208,37 +208,41 @@ export function Chat({
 
   return (
     <>
-      <div className={`overscroll-behavior-contain flex h-dvh min-w-0 touch-pan-y flex-col bg-background ${
-        messages.length === 0 ? 'chat-empty' : 'chat-started'
-      }`}>
-        <ChatHeader
-          chatId={id}
-          isReadonly={isReadonly}
-          selectedVisibilityType={initialVisibilityType}
-        />
+      <div className="flex h-dvh min-w-0 flex-col bg-background relative">
+        {/* Header dengan absolute positioning agar center */}
+        <div className="absolute top-0 left-0 right-0 z-20">
+          <ChatContextHeader
+            chatId={id}
+            isReadonly={isReadonly}
+            selectedVisibilityType={initialVisibilityType}
+          />
+        </div>
 
-        {/* Container that centers content when empty, scrolls when filled */}
-        <div className={`flex flex-1 flex-col overflow-hidden transition-all duration-500 ease-in-out ${
+        {/* Main content area with proper centering - offset untuk header */}
+        <div className={`flex flex-1 flex-col overflow-hidden pt-13 ${
           messages.length === 0 ? 'items-center justify-center' : ''
         }`}>
+          {/* Messages container with centered max-width */}
           {messages.length > 0 && (
-            <Messages
-              addToolApprovalResponse={addToolApprovalResponse}
-              chatId={id}
-              isArtifactVisible={isArtifactVisible}
-              isReadonly={isReadonly}
-              messages={messages}
-              regenerate={regenerate}
-              selectedModelId={initialChatModel}
-              setMessages={setMessages}
-              status={status}
-              votes={votes}
-            />
+            <div className="flex flex-1 flex-col overflow-hidden">
+              <Messages
+                addToolApprovalResponse={addToolApprovalResponse}
+                chatId={id}
+                isArtifactVisible={isArtifactVisible}
+                isReadonly={isReadonly}
+                messages={messages}
+                regenerate={regenerate}
+                selectedModelId={initialChatModel}
+                setMessages={setMessages}
+                status={status}
+                votes={votes}
+              />
+            </div>
           )}
 
           {/* Centered greeting + input container for empty state */}
           {messages.length === 0 && (
-            <div className="w-full max-w-3xl px-4 space-y-12">
+            <div className="w-full max-w-3xl px-4 space-y-8">
               <Messages
                 addToolApprovalResponse={addToolApprovalResponse}
                 chatId={id}
@@ -297,9 +301,10 @@ export function Chat({
 
         {/* Bottom input for active chat state */}
         {messages.length > 0 && (
-          <div className={`mx-auto w-full transition-all duration-500 ease-in-out px-2 pb-3 md:px-4 md:pb-4 max-w-4xl`}>
-          {!isReadonly ? (
-            <MultimodalInput
+          <div className="w-full px-4 pb-4">
+            <div className="mx-auto w-full max-w-3xl">
+              {!isReadonly ? (
+                <MultimodalInput
               attachments={attachments}
               chatId={id}
               input={input}
@@ -337,7 +342,8 @@ export function Chat({
               </div>
             </div>
           )}
-        </div>
+            </div>
+          </div>
         )}
       </div>
 

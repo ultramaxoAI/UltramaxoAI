@@ -59,7 +59,7 @@ export function AuthForm({
 
   return (
     <div className="relative w-full mx-auto">
-      <div className="flex flex-col gap-8 w-full p-10 rounded-[2rem] border border-white/5 bg-[#18181b] shadow-2xl relative z-10 mx-auto">
+      <div className="flex flex-col gap-8 w-full p-10 rounded-4xl border border-white/5 bg-[#18181b] shadow-2xl relative z-10 mx-auto">
         <div className="flex flex-col gap-1.5">
           <h1 className="text-2xl font-bold tracking-tight text-white">
             {type === "login" ? "Sign in" : "Sign up"}

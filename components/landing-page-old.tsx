@@ -9,11 +9,8 @@ import {
   ChevronDown,
   Code2,
   Database,
-  FileText,
   Github,
   Globe,
-  HelpCircle,
-  Image as ImageIcon,
   Layers,
   Lock,
   Menu,
@@ -23,7 +20,6 @@ import {
   Shield,
   Sparkles,
   Star,
-  Table,
   Twitter,
   Unlock,
   Upload,
@@ -56,7 +52,9 @@ export default function LandingPage() {
     setMobileNavOpen(false);
     setTimeout(() => {
       const el = document.getElementById(id);
-      if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
+      if (el) {
+        el.scrollIntoView({ behavior: "smooth", block: "start" });
+      }
     }, 60);
   };
 
@@ -259,9 +257,9 @@ export default function LandingPage() {
           <div className="hidden md:flex items-center gap-2">
             {navItems.map((item) => (
               <motion.button
+                className="px-4 py-2 rounded-lg text-slate-600 hover:text-slate-900 hover:bg-slate-100 font-medium transition-all"
                 key={item.id}
                 onClick={() => scrollToSection(item.id)}
-                className="px-4 py-2 rounded-lg text-slate-600 hover:text-slate-900 hover:bg-slate-100 font-medium transition-all"
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
               >
@@ -272,16 +270,16 @@ export default function LandingPage() {
 
           <div className="hidden md:flex items-center gap-3">
             <motion.button
-              onClick={() => router.push("/login")}
               className="px-4 py-2 text-slate-600 hover:text-slate-900 font-semibold transition-colors"
+              onClick={() => router.push("/login")}
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
             >
               Masuk
             </motion.button>
             <motion.button
-              onClick={() => router.push("/register")}
               className="px-6 py-2.5 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white rounded-lg font-semibold shadow-lg shadow-indigo-500/30 transition-all"
+              onClick={() => router.push("/register")}
               whileHover={{ scale: 1.05, y: -2 }}
               whileTap={{ scale: 0.95 }}
             >
@@ -290,9 +288,9 @@ export default function LandingPage() {
           </div>
 
           <button
-            onClick={() => setMobileNavOpen(!mobileNavOpen)}
-            className="md:hidden p-2 rounded-lg hover:bg-slate-100"
             aria-label="Toggle menu"
+            className="md:hidden p-2 rounded-lg hover:bg-slate-100"
+            onClick={() => setMobileNavOpen(!mobileNavOpen)}
           >
             {mobileNavOpen ? (
               <X className="w-6 h-6" />
@@ -305,31 +303,31 @@ export default function LandingPage() {
         <AnimatePresence>
           {mobileNavOpen && (
             <motion.div
-              initial={{ opacity: 0, height: 0 }}
               animate={{ opacity: 1, height: "auto" }}
-              exit={{ opacity: 0, height: 0 }}
               className="md:hidden border-t border-slate-200 bg-white"
+              exit={{ opacity: 0, height: 0 }}
+              initial={{ opacity: 0, height: 0 }}
             >
               <div className="max-w-7xl mx-auto px-6 py-4 space-y-2">
                 {navItems.map((item) => (
                   <button
+                    className="w-full text-left px-4 py-2 rounded-lg text-slate-600 hover:bg-slate-100 font-medium"
                     key={item.id}
                     onClick={() => scrollToSection(item.id)}
-                    className="w-full text-left px-4 py-2 rounded-lg text-slate-600 hover:bg-slate-100 font-medium"
                   >
                     {item.label}
                   </button>
                 ))}
                 <div className="pt-2 space-y-2">
                   <button
-                    onClick={() => router.push("/login")}
                     className="w-full px-4 py-2 text-slate-600 border border-slate-200 rounded-lg font-semibold hover:bg-slate-50"
+                    onClick={() => router.push("/login")}
                   >
                     Masuk
                   </button>
                   <button
-                    onClick={() => router.push("/register")}
                     className="w-full px-4 py-2 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-lg font-semibold"
+                    onClick={() => router.push("/register")}
                   >
                     Daftar Gratis
                   </button>
@@ -343,16 +341,16 @@ export default function LandingPage() {
       {/* ─── Hero Section ─── */}
       <section className="relative z-10 max-w-7xl mx-auto px-6 pt-20 pb-32">
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6 }}
           className="text-center"
+          initial={{ opacity: 0, y: 20 }}
+          transition={{ duration: 0.6 }}
         >
           <motion.div
-            initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
-            transition={{ delay: 0.1 }}
             className="inline-flex items-center gap-2 px-4 py-2 bg-indigo-50 border border-indigo-200 rounded-full mb-6"
+            initial={{ opacity: 0, scale: 0.9 }}
+            transition={{ delay: 0.1 }}
           >
             <Sparkles className="w-4 h-4 text-indigo-600" />
             <span className="text-sm font-semibold text-indigo-600">
@@ -374,16 +372,16 @@ export default function LandingPage() {
 
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-16">
             <motion.button
-              onClick={() => router.push("/register")}
               className="px-8 py-4 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white text-lg font-semibold rounded-xl shadow-2xl shadow-indigo-500/40 flex items-center gap-2"
+              onClick={() => router.push("/register")}
               whileHover={{ scale: 1.05, y: -2 }}
               whileTap={{ scale: 0.95 }}
             >
               Mulai Gratis Sekarang <ArrowRight className="w-5 h-5" />
             </motion.button>
             <motion.button
-              onClick={() => scrollToSection("features")}
               className="px-8 py-4 bg-white border-2 border-slate-200 hover:border-slate-300 text-slate-700 text-lg font-semibold rounded-xl shadow-lg"
+              onClick={() => scrollToSection("features")}
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
             >
@@ -400,11 +398,11 @@ export default function LandingPage() {
               { label: "Rating", value: "4.9/5", icon: Star },
             ].map((stat, i) => (
               <motion.div
-                key={i}
-                initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.2 + i * 0.1 }}
                 className="bg-white border border-slate-200 rounded-2xl p-6 shadow-lg"
+                initial={{ opacity: 0, y: 20 }}
+                key={i}
+                transition={{ delay: 0.2 + i * 0.1 }}
               >
                 <stat.icon className="w-8 h-8 text-indigo-600 mx-auto mb-2" />
                 <div className="text-3xl font-bold text-slate-900 mb-1">
@@ -418,13 +416,13 @@ export default function LandingPage() {
       </section>
 
       {/* ─── Features Section ─── */}
-      <section id="features" className="relative z-10 py-24 bg-slate-50">
+      <section className="relative z-10 py-24 bg-slate-50" id="features">
         <div className="max-w-7xl mx-auto px-6">
           <motion.div
-            initial={{ opacity: 0 }}
-            whileInView={{ opacity: 1 }}
-            viewport={viewportOnce}
             className="text-center mb-16"
+            initial={{ opacity: 0 }}
+            viewport={viewportOnce}
+            whileInView={{ opacity: 1 }}
           >
             <h2 className="text-4xl md:text-5xl font-bold mb-4">
               Fitur-Fitur{" "}
@@ -441,13 +439,13 @@ export default function LandingPage() {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             {features.map((feature, i) => (
               <motion.div
-                key={i}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={viewportOnce}
-                transition={{ delay: i * 0.1 }}
-                whileHover={{ y: -8, scale: 1.02 }}
                 className="bg-white rounded-2xl p-6 shadow-lg border border-slate-200 hover:shadow-2xl transition-all group"
+                initial={{ opacity: 0, y: 20 }}
+                key={i}
+                transition={{ delay: i * 0.1 }}
+                viewport={viewportOnce}
+                whileHover={{ y: -8, scale: 1.02 }}
+                whileInView={{ opacity: 1, y: 0 }}
               >
                 <div
                   className={`w-14 h-14 rounded-xl bg-gradient-to-br ${feature.gradient} flex items-center justify-center mb-4 group-hover:scale-110 transition-transform`}
@@ -465,13 +463,13 @@ export default function LandingPage() {
       </section>
 
       {/* ─── Models Section ─── */}
-      <section id="models" className="relative z-10 py-24">
+      <section className="relative z-10 py-24" id="models">
         <div className="max-w-7xl mx-auto px-6">
           <motion.div
-            initial={{ opacity: 0 }}
-            whileInView={{ opacity: 1 }}
-            viewport={viewportOnce}
             className="text-center mb-16"
+            initial={{ opacity: 0 }}
+            viewport={viewportOnce}
+            whileInView={{ opacity: 1 }}
           >
             <h2 className="text-4xl md:text-5xl font-bold mb-4">
               <span className="bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
@@ -487,10 +485,10 @@ export default function LandingPage() {
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             <motion.div
-              initial={{ opacity: 0, x: -20 }}
-              whileInView={{ opacity: 1, x: 0 }}
-              viewport={viewportOnce}
               className="bg-gradient-to-br from-green-50 to-emerald-50 border-2 border-green-200 rounded-3xl p-8"
+              initial={{ opacity: 0, x: -20 }}
+              viewport={viewportOnce}
+              whileInView={{ opacity: 1, x: 0 }}
             >
               <div className="flex items-center gap-4 mb-6">
                 <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-green-500 to-emerald-500 flex items-center justify-center shadow-lg">
@@ -507,15 +505,17 @@ export default function LandingPage() {
                 {["WormGPT", "Gemini 2.0 Flash", "Groq Llama 3.3 70B"].map(
                   (model, i) => (
                     <motion.div
-                      key={i}
-                      initial={{ opacity: 0, x: -10 }}
-                      whileInView={{ opacity: 1, x: 0 }}
-                      viewport={viewportOnce}
-                      transition={{ delay: i * 0.1 }}
                       className="flex items-center gap-3 bg-white rounded-xl p-4 shadow"
+                      initial={{ opacity: 0, x: -10 }}
+                      key={i}
+                      transition={{ delay: i * 0.1 }}
+                      viewport={viewportOnce}
+                      whileInView={{ opacity: 1, x: 0 }}
                     >
                       <Check className="w-5 h-5 text-green-600" />
-                      <span className="font-medium text-slate-900">{model}</span>
+                      <span className="font-medium text-slate-900">
+                        {model}
+                      </span>
                     </motion.div>
                   )
                 )}
@@ -523,10 +523,10 @@ export default function LandingPage() {
             </motion.div>
 
             <motion.div
-              initial={{ opacity: 0, x: 20 }}
-              whileInView={{ opacity: 1, x: 0 }}
-              viewport={viewportOnce}
               className="bg-gradient-to-br from-indigo-50 to-purple-50 border-2 border-indigo-200 rounded-3xl p-8"
+              initial={{ opacity: 0, x: 20 }}
+              viewport={viewportOnce}
+              whileInView={{ opacity: 1, x: 0 }}
             >
               <div className="flex items-center gap-4 mb-6">
                 <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-indigo-600 to-purple-600 flex items-center justify-center shadow-lg">
@@ -549,12 +549,12 @@ export default function LandingPage() {
                   "Dan 18 model premium lainnya...",
                 ].map((model, i) => (
                   <motion.div
-                    key={i}
-                    initial={{ opacity: 0, x: 10 }}
-                    whileInView={{ opacity: 1, x: 0 }}
-                    viewport={viewportOnce}
-                    transition={{ delay: i * 0.1 }}
                     className="flex items-center gap-3 bg-white rounded-xl p-4 shadow"
+                    initial={{ opacity: 0, x: 10 }}
+                    key={i}
+                    transition={{ delay: i * 0.1 }}
+                    viewport={viewportOnce}
+                    whileInView={{ opacity: 1, x: 0 }}
                   >
                     <Sparkles className="w-5 h-5 text-indigo-600" />
                     <span className="font-medium text-slate-900">{model}</span>
@@ -567,13 +567,13 @@ export default function LandingPage() {
       </section>
 
       {/* ─── Pricing Section ─── */}
-      <section id="pricing" className="relative z-10 py-24 bg-slate-50">
+      <section className="relative z-10 py-24 bg-slate-50" id="pricing">
         <div className="max-w-7xl mx-auto px-6">
           <motion.div
-            initial={{ opacity: 0 }}
-            whileInView={{ opacity: 1 }}
-            viewport={viewportOnce}
             className="text-center mb-16"
+            initial={{ opacity: 0 }}
+            viewport={viewportOnce}
+            whileInView={{ opacity: 1 }}
           >
             <h2 className="text-4xl md:text-5xl font-bold mb-4">
               Harga yang{" "}
@@ -589,17 +589,17 @@ export default function LandingPage() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-5xl mx-auto">
             {pricingPlans.map((plan, i) => (
               <motion.div
-                key={i}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={viewportOnce}
-                transition={{ delay: i * 0.1 }}
-                whileHover={{ y: -8 }}
                 className={`relative bg-white rounded-3xl p-8 shadow-xl ${
                   plan.popular
                     ? "border-2 border-indigo-600 ring-4 ring-indigo-100"
                     : "border border-slate-200"
                 }`}
+                initial={{ opacity: 0, y: 20 }}
+                key={i}
+                transition={{ delay: i * 0.1 }}
+                viewport={viewportOnce}
+                whileHover={{ y: -8 }}
+                whileInView={{ opacity: 1, y: 0 }}
               >
                 {plan.popular && (
                   <div className="absolute -top-4 left-1/2 -translate-x-1/2 px-6 py-2 bg-gradient-to-r from-indigo-600 to-purple-600 text-white text-sm font-bold rounded-full shadow-lg">
@@ -634,13 +634,15 @@ export default function LandingPage() {
                     <span className="text-5xl font-bold text-slate-900">
                       {plan.price}
                     </span>
-                    <span className="text-xl text-slate-600">{plan.period}</span>
+                    <span className="text-xl text-slate-600">
+                      {plan.period}
+                    </span>
                   </div>
                 </div>
 
                 <ul className="space-y-4 mb-8">
                   {plan.features.map((feature, j) => (
-                    <li key={j} className="flex items-start gap-3">
+                    <li className="flex items-start gap-3" key={j}>
                       <Check
                         className={`w-5 h-5 mt-0.5 ${
                           plan.popular ? "text-indigo-600" : "text-slate-600"
@@ -652,14 +654,14 @@ export default function LandingPage() {
                 </ul>
 
                 <motion.button
-                  onClick={() => router.push("/register")}
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
                   className={`w-full py-4 rounded-xl font-semibold text-lg transition-all ${
                     plan.popular
                       ? "bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white shadow-lg shadow-indigo-500/30"
                       : "bg-slate-100 hover:bg-slate-200 text-slate-900"
                   }`}
+                  onClick={() => router.push("/register")}
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
                 >
                   {plan.cta}
                 </motion.button>
@@ -673,10 +675,10 @@ export default function LandingPage() {
       <section className="relative z-10 py-24">
         <div className="max-w-7xl mx-auto px-6">
           <motion.div
-            initial={{ opacity: 0 }}
-            whileInView={{ opacity: 1 }}
-            viewport={viewportOnce}
             className="text-center mb-16"
+            initial={{ opacity: 0 }}
+            viewport={viewportOnce}
+            whileInView={{ opacity: 1 }}
           >
             <h2 className="text-4xl md:text-5xl font-bold mb-4">
               Dipercaya oleh{" "}
@@ -692,19 +694,19 @@ export default function LandingPage() {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             {testimonials.map((testimonial, i) => (
               <motion.div
-                key={i}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={viewportOnce}
-                transition={{ delay: i * 0.1 }}
-                whileHover={{ y: -8 }}
                 className="bg-white rounded-2xl p-8 shadow-lg border border-slate-200"
+                initial={{ opacity: 0, y: 20 }}
+                key={i}
+                transition={{ delay: i * 0.1 }}
+                viewport={viewportOnce}
+                whileHover={{ y: -8 }}
+                whileInView={{ opacity: 1, y: 0 }}
               >
                 <div className="flex items-center gap-1 mb-4">
-                  {[...Array(testimonial.rating)].map((_, j) => (
+                  {[...new Array(testimonial.rating)].map((_, j) => (
                     <Star
-                      key={j}
                       className="w-5 h-5 fill-yellow-400 text-yellow-400"
+                      key={j}
                     />
                   ))}
                 </div>
@@ -734,10 +736,10 @@ export default function LandingPage() {
       <section className="relative z-10 py-16 bg-slate-50">
         <div className="max-w-7xl mx-auto px-6">
           <motion.div
-            initial={{ opacity: 0 }}
-            whileInView={{ opacity: 1 }}
-            viewport={viewportOnce}
             className="text-center"
+            initial={{ opacity: 0 }}
+            viewport={viewportOnce}
+            whileInView={{ opacity: 1 }}
           >
             <h3 className="text-2xl font-bold text-slate-900 mb-8">
               Dibangun dengan Teknologi Modern
@@ -745,13 +747,13 @@ export default function LandingPage() {
             <div className="flex flex-wrap items-center justify-center gap-8">
               {techStack.map((tech, i) => (
                 <motion.div
-                  key={i}
-                  initial={{ opacity: 0, scale: 0.8 }}
-                  whileInView={{ opacity: 1, scale: 1 }}
-                  viewport={viewportOnce}
-                  transition={{ delay: i * 0.1 }}
-                  whileHover={{ scale: 1.1, y: -4 }}
                   className="flex flex-col items-center gap-2"
+                  initial={{ opacity: 0, scale: 0.8 }}
+                  key={i}
+                  transition={{ delay: i * 0.1 }}
+                  viewport={viewportOnce}
+                  whileHover={{ scale: 1.1, y: -4 }}
+                  whileInView={{ opacity: 1, scale: 1 }}
                 >
                   <div className="w-16 h-16 rounded-xl bg-white border border-slate-200 flex items-center justify-center shadow">
                     <tech.icon className={`w-8 h-8 ${tech.color}`} />
@@ -767,13 +769,13 @@ export default function LandingPage() {
       </section>
 
       {/* ─── FAQ Section ─── */}
-      <section id="faq" className="relative z-10 py-24">
+      <section className="relative z-10 py-24" id="faq">
         <div className="max-w-4xl mx-auto px-6">
           <motion.div
-            initial={{ opacity: 0 }}
-            whileInView={{ opacity: 1 }}
-            viewport={viewportOnce}
             className="text-center mb-16"
+            initial={{ opacity: 0 }}
+            viewport={viewportOnce}
+            whileInView={{ opacity: 1 }}
           >
             <h2 className="text-4xl md:text-5xl font-bold mb-4">
               Pertanyaan yang{" "}
@@ -789,16 +791,16 @@ export default function LandingPage() {
           <div className="space-y-4">
             {faqItems.map((faq, i) => (
               <motion.div
-                key={i}
-                initial={{ opacity: 0, y: 10 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={viewportOnce}
-                transition={{ delay: i * 0.05 }}
                 className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden"
+                initial={{ opacity: 0, y: 10 }}
+                key={i}
+                transition={{ delay: i * 0.05 }}
+                viewport={viewportOnce}
+                whileInView={{ opacity: 1, y: 0 }}
               >
                 <button
-                  onClick={() => setOpenFaq(openFaq === i ? null : i)}
                   className="w-full px-6 py-5 flex items-center justify-between text-left hover:bg-slate-50 transition-colors"
+                  onClick={() => setOpenFaq(openFaq === i ? null : i)}
                 >
                   <span className="font-semibold text-slate-900 pr-4">
                     {faq.q}
@@ -812,11 +814,11 @@ export default function LandingPage() {
                 <AnimatePresence>
                   {openFaq === i && (
                     <motion.div
-                      initial={{ height: 0, opacity: 0 }}
                       animate={{ height: "auto", opacity: 1 }}
-                      exit={{ height: 0, opacity: 0 }}
-                      transition={{ duration: 0.2 }}
                       className="overflow-hidden"
+                      exit={{ height: 0, opacity: 0 }}
+                      initial={{ height: 0, opacity: 0 }}
+                      transition={{ duration: 0.2 }}
                     >
                       <div className="px-6 pb-5 text-slate-600 leading-relaxed">
                         {faq.a}
@@ -835,8 +837,8 @@ export default function LandingPage() {
         <div className="max-w-5xl mx-auto px-6 text-center">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
             viewport={viewportOnce}
+            whileInView={{ opacity: 1, y: 0 }}
           >
             <h2 className="text-4xl md:text-5xl font-bold text-white mb-6">
               Siap Meningkatkan Produktivitas?
@@ -847,18 +849,18 @@ export default function LandingPage() {
             </p>
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
               <motion.button
+                className="px-8 py-4 bg-white hover:bg-slate-50 text-indigo-600 text-lg font-semibold rounded-xl shadow-2xl flex items-center gap-2"
                 onClick={() => router.push("/register")}
                 whileHover={{ scale: 1.05, y: -2 }}
                 whileTap={{ scale: 0.95 }}
-                className="px-8 py-4 bg-white hover:bg-slate-50 text-indigo-600 text-lg font-semibold rounded-xl shadow-2xl flex items-center gap-2"
               >
                 Daftar Gratis <ArrowRight className="w-5 h-5" />
               </motion.button>
               <motion.button
+                className="px-8 py-4 bg-transparent border-2 border-white hover:bg-white/10 text-white text-lg font-semibold rounded-xl"
                 onClick={() => router.push("/login")}
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
-                className="px-8 py-4 bg-transparent border-2 border-white hover:bg-white/10 text-white text-lg font-semibold rounded-xl"
               >
                 Sudah Punya Akun? Masuk
               </motion.button>
@@ -890,17 +892,17 @@ export default function LandingPage() {
               <h4 className="text-white font-semibold mb-4">Produk</h4>
               <ul className="space-y-2">
                 <li>
-                  <a href="#features" className="hover:text-white transition">
+                  <a className="hover:text-white transition" href="#features">
                     Fitur
                   </a>
                 </li>
                 <li>
-                  <a href="#models" className="hover:text-white transition">
+                  <a className="hover:text-white transition" href="#models">
                     Model AI
                   </a>
                 </li>
                 <li>
-                  <a href="#pricing" className="hover:text-white transition">
+                  <a className="hover:text-white transition" href="#pricing">
                     Harga
                   </a>
                 </li>
@@ -911,17 +913,17 @@ export default function LandingPage() {
               <h4 className="text-white font-semibold mb-4">Perusahaan</h4>
               <ul className="space-y-2">
                 <li>
-                  <Link href="/about" className="hover:text-white transition">
+                  <Link className="hover:text-white transition" href="/about">
                     Tentang Kami
                   </Link>
                 </li>
                 <li>
-                  <Link href="/privacy" className="hover:text-white transition">
+                  <Link className="hover:text-white transition" href="/privacy">
                     Kebijakan Privasi
                   </Link>
                 </li>
                 <li>
-                  <Link href="/terms" className="hover:text-white transition">
+                  <Link className="hover:text-white transition" href="/terms">
                     Syarat & Ketentuan
                   </Link>
                 </li>
@@ -932,20 +934,20 @@ export default function LandingPage() {
               <h4 className="text-white font-semibold mb-4">Sosial Media</h4>
               <div className="flex gap-3">
                 <a
-                  href="#"
                   className="w-10 h-10 rounded-lg bg-slate-800 hover:bg-slate-700 flex items-center justify-center transition"
+                  href="#"
                 >
                   <Twitter className="w-5 h-5" />
                 </a>
                 <a
-                  href="#"
                   className="w-10 h-10 rounded-lg bg-slate-800 hover:bg-slate-700 flex items-center justify-center transition"
+                  href="#"
                 >
                   <Github className="w-5 h-5" />
                 </a>
                 <a
-                  href="#"
                   className="w-10 h-10 rounded-lg bg-slate-800 hover:bg-slate-700 flex items-center justify-center transition"
+                  href="#"
                 >
                   <Globe className="w-5 h-5" />
                 </a>
@@ -958,13 +960,13 @@ export default function LandingPage() {
               © 2026 Ultramaxo AI. All rights reserved.
             </p>
             <div className="flex items-center gap-6 text-sm">
-              <Link href="/privacy" className="hover:text-white transition">
+              <Link className="hover:text-white transition" href="/privacy">
                 Privacy
               </Link>
-              <Link href="/terms" className="hover:text-white transition">
+              <Link className="hover:text-white transition" href="/terms">
                 Terms
               </Link>
-              <a href="#faq" className="hover:text-white transition">
+              <a className="hover:text-white transition" href="#faq">
                 FAQ
               </a>
             </div>

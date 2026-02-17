@@ -22,7 +22,7 @@ import { MessageActions } from "./message-actions";
 import { MessageEditor } from "./message-editor";
 import { MessageReasoning } from "./message-reasoning";
 import { PreviewAttachment } from "./preview-attachment";
-import { Weather } from "./weather";
+import { Weather, type WeatherAtLocation } from "./weather";
 
 const PurePreviewMessage = ({
   addToolApprovalResponse,
@@ -51,12 +51,9 @@ const PurePreviewMessage = ({
     (part) => part.type === "file"
   );
 
-  // Check if there's ANY artifact being created/updated
+  // Check if there's ANY artifact being created/updated (disabled for now)
   // If so, hide code blocks in chat to avoid duplication
-  const hasAnyArtifact = message.parts.some(
-    (part) =>
-      part.type === "tool-createDocument" || part.type === "tool-updateDocument"
-  );
+  const hasAnyArtifact = false;
 
   useDataStream();
 
@@ -192,7 +189,7 @@ const PurePreviewMessage = ({
               if (state === "output-available") {
                 return (
                   <div className={widthClass} key={toolCallId}>
-                    <Weather weatherAtLocation={part.output} />
+                    <Weather weatherAtLocation={part.output as WeatherAtLocation} />
                   </div>
                 );
               }
@@ -272,54 +269,6 @@ const PurePreviewMessage = ({
               );
             }
 
-            if (type === "tool-createDocument") {
-              const { toolCallId } = part;
-
-              if (part.output && "error" in part.output) {
-                return (
-                  <div
-                    className="rounded-lg border border-red-200 bg-red-50 p-4 text-red-500 dark:bg-red-950/50"
-                    key={toolCallId}
-                  >
-                    Error creating document: {String(part.output.error)}
-                  </div>
-                );
-              }
-
-              return (
-                <DocumentPreview
-                  isReadonly={isReadonly}
-                  key={toolCallId}
-                  result={part.output}
-                />
-              );
-            }
-
-            if (type === "tool-updateDocument") {
-              const { toolCallId } = part;
-
-              if (part.output && "error" in part.output) {
-                return (
-                  <div
-                    className="rounded-lg border border-red-200 bg-red-50 p-4 text-red-500 dark:bg-red-950/50"
-                    key={toolCallId}
-                  >
-                    Error updating document: {String(part.output.error)}
-                  </div>
-                );
-              }
-
-              return (
-                <div className="relative" key={toolCallId}>
-                  <DocumentPreview
-                    args={{ ...part.output, isUpdate: true }}
-                    isReadonly={isReadonly}
-                    result={part.output}
-                  />
-                </div>
-              );
-            }
-
             if (type === "tool-requestSuggestions") {
               const { toolCallId, state } = part;
 
@@ -334,14 +283,14 @@ const PurePreviewMessage = ({
                       <ToolOutput
                         errorText={undefined}
                         output={
-                          "error" in part.output ? (
+                          (part.output as any)?.error ? (
                             <div className="rounded border p-2 text-red-500">
-                              Error: {String(part.output.error)}
+                              Error: {String((part.output as any).error)}
                             </div>
                           ) : (
                             <DocumentToolResult
                               isReadonly={isReadonly}
-                              result={part.output}
+                              result={part.output as { id: string; title: string; kind: "image" | "text" | "code" | "sheet" }}
                               type="request-suggestions"
                             />
                           )

@@ -217,7 +217,9 @@ export default function LandingPage() {
   const scrollToSection = (href: string) => {
     setMobileNavOpen(false);
     const el = document.querySelector(href);
-    if (el) el.scrollIntoView({ behavior: "smooth" });
+    if (el) {
+      el.scrollIntoView({ behavior: "smooth" });
+    }
   };
 
   /* ───── data ───── */
