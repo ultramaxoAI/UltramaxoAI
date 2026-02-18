@@ -26,7 +26,7 @@ const groqSecondary: GroqProvider | null =
     : null;
 
 // Local AI setup
-const localAiUrl = process.env.LOCAL_AI_URL || "http://localhost:8000/v1";
+const localAiUrl = process.env.LOCAL_AI_URL || "http://152.42.199.99:8000/v1";
 console.log("[AI Provider] Initializing localClient with baseURL:", localAiUrl);
 
 const localClient = createOpenAI({
