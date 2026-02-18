@@ -1,4 +1,4 @@
-export const DEFAULT_CHAT_MODEL = "groq/llama-3.3-70b-versatile";
+export const DEFAULT_CHAT_MODEL = "ultramaxo/ultra-agent";
 
 export type ChatModel = {
   id: string;
@@ -9,15 +9,15 @@ export type ChatModel = {
 
 export const chatModels: ChatModel[] = [
   {
-    id: "groq/llama-3.3-70b-versatile",
+    id: "ultramaxo/ultra-agent",
     name: "UltraAgent",
-    provider: "groq",
-    description: "Fast and capable AI assistant for everyday tasks",
+    provider: "ultramaxo",
+    description: "Fast and capable AI assistant powered by Local Llama 3.3",
   },
   {
-    id: "groq/deepseek-r1-distill-llama-70b",
+    id: "ultramaxo/ultra-agent-pro",
     name: "UltraAgent Pro",
-    provider: "groq",
+    provider: "ultramaxo",
     description:
       "Advanced AI with superior reasoning, deep thinking, and expert-level coding capabilities",
   },
