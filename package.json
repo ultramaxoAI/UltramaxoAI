@@ -20,6 +20,7 @@
   "dependencies": {
     "@ai-sdk/gateway": "^3.0.15",
     "@ai-sdk/groq": "^3.0.19",
+    "@ai-sdk/openai": "^3.0.29",
     "@ai-sdk/provider": "^3.0.3",
     "@ai-sdk/react": "3.0.39",
     "@auth/drizzle-adapter": "^1.11.1",

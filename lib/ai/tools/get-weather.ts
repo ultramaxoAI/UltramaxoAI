@@ -29,7 +29,7 @@ async function geocodeCity(
   }
 }
 
-export const getWeather =  {
+export const getWeather = tool({
   description:
     "Get the current weather at a location. You can provide either coordinates or a city name.",
   inputSchema: z.object({
@@ -40,22 +40,22 @@ export const getWeather =  {
       .optional()
       .describe("City name (e.g., 'San Francisco', 'New York', 'London')"),
   }),
-  execute: async (input: { latitude?: number; longitude?: number; city?: string }) => {
-    let latitude: number;
-    let longitude: number;
+  execute: async ({ latitude, longitude, city }) => {
+    let targetLat: number;
+    let targetLon: number;
 
-    if (input.city) {
-      const coords = await geocodeCity(input.city);
+    if (city) {
+      const coords = await geocodeCity(city);
       if (!coords) {
         return {
-          error: `Could not find coordinates for "${input.city}". Please check the city name.`,
+          error: `Could not find coordinates for "${city}". Please check the city name.`,
         };
       }
-      latitude = coords.latitude;
-      longitude = coords.longitude;
-    } else if (input.latitude !== undefined && input.longitude !== undefined) {
-      latitude = input.latitude;
-      longitude = input.longitude;
+      targetLat = coords.latitude;
+      targetLon = coords.longitude;
+    } else if (latitude !== undefined && longitude !== undefined) {
+      targetLat = latitude;
+      targetLon = longitude;
     } else {
       return {
         error:
@@ -64,15 +64,15 @@ export const getWeather =  {
     }
 
     const response = await fetch(
-      `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current=temperature_2m&hourly=temperature_2m&daily=sunrise,sunset&timezone=auto`
+      `https://api.open-meteo.com/v1/forecast?latitude=${targetLat}&longitude=${targetLon}&current=temperature_2m&hourly=temperature_2m&daily=sunrise,sunset&timezone=auto`
     );
 
     const weatherData = await response.json();
 
-    if ("city" in input) {
-      weatherData.cityName = input.city;
+    if (city) {
+      weatherData.cityName = city;
     }
 
     return weatherData;
   },
-};
+});

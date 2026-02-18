@@ -9,21 +9,22 @@ import {
 } from "ai";
 import { after } from "next/server";
 import { createResumableStreamContext } from "resumable-stream";
-import { auth, type UserType } from "@/app/(auth)/auth";
-import { entitlementsByUserType } from "@/lib/ai/entitlements";
+import { auth } from "@/app/(auth)/auth";
 import { type RequestHints, systemPrompt } from "@/lib/ai/prompts";
-import { getLanguageModel, markKeyFailed, resetFailureTracking } from "@/lib/ai/providers";
+import {
+  getLanguageModel,
+  markKeyFailed,
+  resetFailureTracking,
+} from "@/lib/ai/providers";
 import { getWeather } from "@/lib/ai/tools/get-weather";
 import { requestSuggestions } from "@/lib/ai/tools/request-suggestions";
 import { webSearch } from "@/lib/ai/tools/web-search";
 import { isProductionEnvironment } from "@/lib/constants";
-import { checkRateLimit, getClientIp } from "@/lib/rateLimiter";
 import {
   createStreamId,
   deleteChatById,
   expireProIfNeeded,
   getChatById,
-  getMessageCountByUserId,
   getMessagesByChatId,
   saveChat,
   saveMessages,
@@ -32,6 +33,7 @@ import {
 } from "@/lib/db/queries";
 import type { DBMessage } from "@/lib/db/schema";
 import { ChatSDKError } from "@/lib/errors";
+import { checkRateLimit, getClientIp } from "@/lib/rateLimiter";
 import type { ChatMessage } from "@/lib/types";
 import { convertToUIMessages, generateUUID } from "@/lib/utils";
 import { generateTitleFromUserMessage } from "../../actions";
@@ -62,13 +64,15 @@ export async function POST(request: Request) {
   if (!hasGroqApiKey) {
     console.error("=== CONFIGURATION ERROR ===");
     console.error("No Groq API key found in environment variables");
-    console.error("Please set GROQ_API_KEY or GROQ_API_KEY_1/2 in your deployment");
+    console.error(
+      "Please set GROQ_API_KEY or GROQ_API_KEY_1/2 in your deployment"
+    );
     console.error("=== END CONFIGURATION ERROR ===");
 
     return new Response(
       JSON.stringify({
         error: "AI service not configured. Please contact administrator.",
-        code: "missing_api_key"
+        code: "missing_api_key",
       }),
       { status: 500, headers: { "Content-Type": "application/json" } }
     );
@@ -90,6 +94,7 @@ export async function POST(request: Request) {
       selectedVisibilityType,
       wormgptEnabled,
       deepThinkingEnabled,
+      webSearchEnabled,
     } = requestBody;
 
     const session = await auth();
@@ -110,13 +115,8 @@ export async function POST(request: Request) {
       return new ChatSDKError("rate_limit:chat").toResponse();
     }
 
-    const dbUser = await expireProIfNeeded(session.user.id);
-    const userType: UserType =
-      session.user.role === "admin"
-        ? "pro"
-        : dbUser?.isPro
-          ? "pro"
-          : "regular";
+    await expireProIfNeeded(session.user.id);
+    // userType checking done via DB and session role
 
     // No daily message limit - users can chat unlimited in conversations
     // Only rate limited by requests per minute (10/min)
@@ -165,7 +165,7 @@ export async function POST(request: Request) {
             id: message.id,
             role: "user",
             parts: message.parts,
-            attachments: [ ],
+            attachments: [],
             createdAt: new Date(),
           },
         ],
@@ -175,7 +175,16 @@ export async function POST(request: Request) {
     const isReasoningModel =
       selectedChatModel.includes("reasoning") ||
       selectedChatModel.includes("thinking") ||
+      selectedChatModel.includes("deepseek-r1") ||
       deepThinkingEnabled;
+
+    console.log("[Chat API] Model configuration:", {
+      selectedChatModel,
+      isReasoningModel,
+      wormgptEnabled,
+      deepThinkingEnabled,
+      webSearchEnabled,
+    });
 
     const modelMessages = await convertToModelMessages(uiMessages);
 
@@ -184,35 +193,28 @@ export async function POST(request: Request) {
       execute: async ({ writer: dataStream }) => {
         let retryCount = 0;
         const maxRetries = 2;
-        
+
         while (retryCount <= maxRetries) {
           try {
             // Disable tools on retry to avoid function call errors
             const useTools = retryCount === 0 && !isReasoningModel;
-            
+
             if (retryCount > 0) {
-              console.log(`[Chat API] Retry attempt ${retryCount}/${maxRetries} without tools`);
+              console.log(
+                `[Chat API] Retry attempt ${retryCount}/${maxRetries} without tools`
+              );
             }
-            
+
             const result = streamText({
               model: getLanguageModel(selectedChatModel),
               system: systemPrompt({
-                selectedChatModel,
                 requestHints,
                 wormgptEnabled,
                 deepThinkingEnabled,
+                toolsEnabled: useTools,
               }),
               messages: modelMessages,
               stopWhen: stepCountIs(5),
-              experimental_activeTools: useTools
-                ? [
-                    "getWeather",
-                    // "createDocument", // Disabled - Groq has issues with this tool
-                    // "updateDocument", // Disabled - Groq has issues with this tool
-                    "requestSuggestions",
-                    "webSearch",
-                  ]
-                : [],
               providerOptions: isReasoningModel
                 ? {
                     anthropic: {
@@ -220,19 +222,23 @@ export async function POST(request: Request) {
                     },
                   }
                 : undefined,
-              tools: useTools ? {
-                getWeather,
-                // createDocument: createDocument({ session, dataStream }), // Disabled
-                // updateDocument: updateDocument({ session, dataStream }), // Disabled
-                requestSuggestions: requestSuggestions({ session, dataStream }),
-                webSearch,
-              } : {},
+              tools: useTools
+                ? {
+                    getWeather,
+                    // createDocument: createDocument({ session, dataStream }), // Disabled
+                    // updateDocument: updateDocument({ session, dataStream }), // Disabled
+                    requestSuggestions: requestSuggestions({
+                      session,
+                      dataStream,
+                    }),
+                    ...(webSearchEnabled ? { webSearch } : {}),
+                  }
+                : {},
               experimental_telemetry: {
                 isEnabled: isProductionEnvironment,
                 functionId: "stream-text",
               },
             });
-
 
             dataStream.merge(result.toUIMessageStream({ sendReasoning: true }));
 
@@ -241,62 +247,75 @@ export async function POST(request: Request) {
               dataStream.write({ type: "data-chat-title", data: title });
               updateChatTitleById({ chatId: id, title });
             }
-            
+
             // Success - break retry loop
             break;
-            
           } catch (error: any) {
-            console.error(`[Chat API] Error during streaming (attempt ${retryCount + 1}/${maxRetries + 1}):`, error);
-            console.error(`[Chat API] Error details:`, {
+            console.error(
+              `[Chat API] Error during streaming (attempt ${retryCount + 1}/${maxRetries + 1}):`,
+              error
+            );
+            console.error("[Chat API] Error details:", {
               message: error?.message,
               type: error?.type,
               statusCode: error?.statusCode,
               cause: error?.cause,
-              stack: error?.stack?.split('\n').slice(0, 3)
+              stack: error?.stack?.split("\n").slice(0, 3),
             });
-            
+
             // Check if error is function call related
-            const isFunctionError = error?.message?.includes('Failed to call a function') ||
-                                   error?.message?.includes('failed_generation') ||
-                                   error?.message?.includes('invalid_request_error') ||
-                                   error?.message?.includes('tool call validation') ||
-                                   error?.type === 'invalid_request_error' ||
-                                   error?.cause?.message?.includes('tool');
-            
+            const isFunctionError =
+              error?.message?.includes("Failed to call a function") ||
+              error?.message?.includes("failed_generation") ||
+              error?.message?.includes("invalid_request_error") ||
+              error?.message?.includes("tool call validation") ||
+              error?.type === "invalid_request_error" ||
+              error?.cause?.message?.includes("tool");
+
             // Check if error is Invalid API Key
-            const isInvalidKey = error?.message?.includes('Invalid API Key') ||
-                                error?.message?.includes('invalid_api_key') ||
-                                error?.message?.includes('Unauthorized') ||
-                                error?.statusCode === 401;
-            
+            const isInvalidKey =
+              error?.message?.includes("Invalid API Key") ||
+              error?.message?.includes("invalid_api_key") ||
+              error?.message?.includes("Unauthorized") ||
+              error?.statusCode === 401;
+
             // Check if error is rate limit or API error
-            const isRateLimit = error?.message?.includes('rate limit') || 
-                                error?.message?.includes('429') ||
-                                error?.statusCode === 429;
-            
-            const isApiError = error?.message?.includes('API') || 
-                              error?.statusCode >= 500;
+            const isRateLimit =
+              error?.message?.includes("rate limit") ||
+              error?.message?.includes("429") ||
+              error?.statusCode === 429;
+
+            const isApiError =
+              error?.message?.includes("API") || error?.statusCode >= 500;
 
             if (isInvalidKey) {
-              console.error("[Chat API] Invalid API Key detected - switching to backup key");
-              markKeyFailed('primary');
-              setTimeout(() => resetFailureTracking(), 30000);
-              throw new Error("Invalid API Key. Silakan hubungi administrator untuk mengecek konfigurasi API key.");
+              console.error(
+                "[Chat API] Invalid API Key detected - switching to backup key"
+              );
+              markKeyFailed("primary");
+              setTimeout(() => resetFailureTracking(), 30_000);
+              throw new Error(
+                "Invalid API Key. Silakan hubungi administrator untuk mengecek konfigurasi API key."
+              );
             }
 
             if (isFunctionError && retryCount < maxRetries) {
-              console.log(`[Chat API] Function call failed, retrying without tools (${retryCount + 1}/${maxRetries})`);
+              console.log(
+                `[Chat API] Function call failed, retrying without tools (${retryCount + 1}/${maxRetries})`
+              );
               retryCount++;
-              await new Promise(resolve => setTimeout(resolve, 500)); // Wait 500ms before retry
+              await new Promise((resolve) => setTimeout(resolve, 500)); // Wait 500ms before retry
               continue; // Retry loop
             }
 
             if (isRateLimit || isApiError) {
-              console.log("[Chat API] Marking current key as failed, will use backup on retry");
-              markKeyFailed('primary');
-              setTimeout(() => resetFailureTracking(), 60000);
+              console.log(
+                "[Chat API] Marking current key as failed, will use backup on retry"
+              );
+              markKeyFailed("primary");
+              setTimeout(() => resetFailureTracking(), 60_000);
             }
-            
+
             // If we've exhausted retries or hit non-retryable error, throw
             throw error;
           }
@@ -370,18 +389,27 @@ export async function POST(request: Request) {
     // Log detailed error information
     console.error("=== AI CHAT ERROR ===");
     console.error("Vercel ID:", vercelId);
-    console.error("Error Type:", error instanceof Error ? error.constructor.name : typeof error);
-    console.error("Error Message:", error instanceof Error ? error.message : String(error));
+    console.error(
+      "Error Type:",
+      error instanceof Error ? error.constructor.name : typeof error
+    );
+    console.error(
+      "Error Message:",
+      error instanceof Error ? error.message : String(error)
+    );
     console.error("Error Stack:", error instanceof Error ? error.stack : "N/A");
-    
+
     // Log request context
     console.error("Request Body:", JSON.stringify(requestBody, null, 2));
     console.error("Selected Model:", requestBody?.selectedChatModel);
     console.error("Chat ID:", requestBody?.id);
-    
+
     // Log any additional error details
-    if (error && typeof error === 'object') {
-      console.error("Error Details:", JSON.stringify(error, Object.getOwnPropertyNames(error), 2));
+    if (error && typeof error === "object") {
+      console.error(
+        "Error Details:",
+        JSON.stringify(error, Object.getOwnPropertyNames(error), 2)
+      );
     }
     console.error("=== END ERROR LOG ===");
 

@@ -26,7 +26,7 @@ export const requestSuggestions = ({
           "The UUID of an existing document artifact that was previously created with createDocument"
         ),
     }),
-    execute: async ({ documentId }) => {
+    execute: async ({ documentId }: { documentId: string }) => {
       const document = await getDocumentById({ id: documentId });
 
       if (!document || !document.content) {

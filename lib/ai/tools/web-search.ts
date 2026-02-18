@@ -1,8 +1,9 @@
 import { tool } from "ai";
 import { z } from "zod";
 
-export const webSearch = {
-  description: "Search the web for real-time information, news, and current events. Use this when user needs current/recent information that may not be in your training data.",
+export const webSearch = tool({
+  description:
+    "Search the web for real-time information, news, and current events. Use this when user needs current/recent information that may not be in your training data.",
   inputSchema: z.object({
     query: z.string().describe("The search query to look up on the web"),
   }),
@@ -10,7 +11,8 @@ export const webSearch = {
     const tavilyKey = process.env.TAVILY_API_KEY;
     if (!tavilyKey) {
       return {
-        error: "Web search is currently unavailable (API key missing).",
+        error:
+          "Pencarian web saat ini tidak tersedia karena kunci API Tavily belum dikonfigurasi. Beritahu pengguna bahwa mereka perlu menambahkan TAVILY_API_KEY ke file .env.local mereka agar fitur ini dapat berfungsi.",
       };
     }
 
@@ -35,10 +37,10 @@ export const webSearch = {
 
       const data = await response.json();
       return data;
-    } catch (error) {
+    } catch (_error) {
       return {
         error: "An unexpected error occurred during the web search.",
       };
     }
   },
-};
+});
