@@ -69,10 +69,28 @@ export function Chat({
   const [deepThinkingEnabled, setDeepThinkingEnabled] = useState(false);
   const [webSearchEnabled, setWebSearchEnabled] = useState(false);
   const currentModelIdRef = useRef(currentModelId);
+  const togglesRef = useRef({
+    wormgptEnabled,
+    deepThinkingEnabled,
+    webSearchEnabled,
+    visibilityType,
+  });
 
   useEffect(() => {
     currentModelIdRef.current = currentModelId;
-  }, [currentModelId]);
+    togglesRef.current = {
+      wormgptEnabled,
+      deepThinkingEnabled,
+      webSearchEnabled,
+      visibilityType,
+    };
+  }, [
+    currentModelId,
+    wormgptEnabled,
+    deepThinkingEnabled,
+    webSearchEnabled,
+    visibilityType,
+  ]);
 
   const {
     messages,
@@ -122,10 +140,10 @@ export function Chat({
               ? { messages: request.messages }
               : { message: lastMessage }),
             selectedChatModel: currentModelIdRef.current,
-            selectedVisibilityType: visibilityType,
-            wormgptEnabled,
-            deepThinkingEnabled,
-            webSearchEnabled,
+            selectedVisibilityType: togglesRef.current.visibilityType,
+            wormgptEnabled: togglesRef.current.wormgptEnabled,
+            deepThinkingEnabled: togglesRef.current.deepThinkingEnabled,
+            webSearchEnabled: togglesRef.current.webSearchEnabled,
             ...request.body,
           },
         };
