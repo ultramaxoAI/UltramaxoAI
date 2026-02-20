@@ -1,5 +1,6 @@
 "use client";
 
+import type { UseChatHelpers } from "@ai-sdk/react";
 import type { UIMessage } from "ai";
 import equal from "fast-deep-equal";
 import {
@@ -192,12 +193,13 @@ function PureMultimodalInput({
       const currentInput = input;
 
       // 1. Append user message
-      setMessages((messages) => [
+      setMessages((messages: UIMessage[]) => [
         ...messages,
         {
           id: userMessageId,
           role: "user",
           content: currentInput,
+          parts: [{ type: "text", text: currentInput }],
         },
       ]);
 
@@ -210,12 +212,13 @@ function PureMultimodalInput({
 
       // 2. Append loading message
       const loadingMessageId = nanoid();
-      setMessages((messages) => [
+      setMessages((messages: UIMessage[]) => [
         ...messages,
         {
           id: loadingMessageId,
           role: "assistant",
           content: "Generating your image... 🎨",
+          parts: [{ type: "text", text: "Generating your image... 🎨" }],
         },
       ]);
 
@@ -231,7 +234,7 @@ function PureMultimodalInput({
         const data = await res.json();
 
         // 3. Replace loading message with image
-        setMessages((messages) =>
+        setMessages((messages: UIMessage[]) =>
           messages.map((m) =>
             m.id === loadingMessageId
               ? {
@@ -248,12 +251,18 @@ function PureMultimodalInput({
           )
         );
       } catch (error) {
-        setMessages((messages) =>
-          messages.map((m) =>
+        setMessages((messages: UIMessage[]) =>
+          messages.map((m: UIMessage) =>
             m.id === loadingMessageId
               ? {
                   ...m,
                   content: "❌ Failed to generate image. Please try again.",
+                  parts: [
+                    {
+                      type: "text",
+                      text: "❌ Failed to generate image. Please try again.",
+                    },
+                  ],
                 }
               : m
           )
@@ -858,7 +867,7 @@ function PureStopButton({
       onClick={(event) => {
         event.preventDefault();
         stop();
-        setMessages((messages) => messages);
+        setMessages((messages: ChatMessage[]) => messages);
       }}
     >
       <StopIcon size={14} />
