@@ -6,10 +6,8 @@ import type { ChatMessage } from "@/lib/types";
 import { cn, sanitizeText } from "@/lib/utils";
 import { useDataStream } from "./data-stream-provider";
 import { DocumentToolResult } from "./document";
-import { DocumentPreview } from "./document-preview";
 import { MessageContent } from "./elements/message";
 import { Response } from "./elements/response";
-import { ResponseViewer } from "./response-viewer";
 import {
   Tool,
   ToolContent,
@@ -22,6 +20,7 @@ import { MessageActions } from "./message-actions";
 import { MessageEditor } from "./message-editor";
 import { MessageReasoning } from "./message-reasoning";
 import { PreviewAttachment } from "./preview-attachment";
+import { ResponseViewer } from "./response-viewer";
 import { Weather, type WeatherAtLocation } from "./weather";
 
 const PurePreviewMessage = ({
@@ -76,7 +75,7 @@ const PurePreviewMessage = ({
         )}
 
         <div
-          className={cn("flex flex-col", {
+          className={cn("flex flex-col min-w-0", {
             "gap-2 md:gap-4": message.parts?.some(
               (p) => p.type === "text" && p.text?.trim()
             ),
@@ -141,10 +140,10 @@ const PurePreviewMessage = ({
                       data-testid="message-content"
                     >
                       {message.role === "assistant" ? (
-                        <ResponseViewer 
-                          text={sanitizeText(part.text)} 
-                          hideCodeBlocks={hasAnyArtifact}
+                        <ResponseViewer
                           className={isLoading ? "streaming-cursor" : ""}
+                          hideCodeBlocks={hasAnyArtifact}
+                          text={sanitizeText(part.text)}
                         />
                       ) : (
                         <Response>{sanitizeText(part.text)}</Response>
@@ -189,7 +188,9 @@ const PurePreviewMessage = ({
               if (state === "output-available") {
                 return (
                   <div className={widthClass} key={toolCallId}>
-                    <Weather weatherAtLocation={part.output as WeatherAtLocation} />
+                    <Weather
+                      weatherAtLocation={part.output as WeatherAtLocation}
+                    />
                   </div>
                 );
               }
@@ -290,7 +291,13 @@ const PurePreviewMessage = ({
                           ) : (
                             <DocumentToolResult
                               isReadonly={isReadonly}
-                              result={part.output as { id: string; title: string; kind: "image" | "text" | "code" | "sheet" }}
+                              result={
+                                part.output as {
+                                  id: string;
+                                  title: string;
+                                  kind: "image" | "text" | "code" | "sheet";
+                                }
+                              }
                               type="request-suggestions"
                             />
                           )

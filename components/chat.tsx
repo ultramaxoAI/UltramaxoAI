@@ -246,7 +246,7 @@ export function Chat({
       <div
         className={cn(
           "flex h-dvh min-w-0 flex-col bg-background relative transition-all duration-300 ease-in-out",
-          isArtifactVisible ? "md:w-[55%]" : "w-full"
+          isArtifactVisible ? "lg:w-[55%]" : "w-full"
         )}
       >
         {/* Header dengan absolute positioning agar center */}
@@ -261,7 +261,7 @@ export function Chat({
 
         {/* Main content area with proper centering - offset untuk header */}
         <div
-          className={`flex flex-1 flex-col overflow-hidden pt-13 ${
+          className={`flex flex-1 flex-col min-w-0 overflow-hidden pt-13 ${
             messages.length === 0 ? "items-center justify-center" : ""
           }`}
         >

@@ -253,7 +253,7 @@ function PureArtifact({
       : true;
 
   const { width: windowWidth, height: windowHeight } = useWindowSize();
-  const isMobile = windowWidth ? windowWidth < 768 : false;
+  const isMobile = windowWidth ? windowWidth < 1024 : false;
 
   const artifactDefinition = artifactDefinitions.find(
     (definition) => definition.kind === artifact.kind
@@ -289,8 +289,8 @@ function PureArtifact({
                     opacity: 1,
                     x: 0,
                     y: 0,
-                    height: windowHeight,
-                    width: windowWidth ? windowWidth : "calc(100dvw)",
+                    height: windowHeight ? windowHeight : "100dvh",
+                    width: windowWidth ? windowWidth : "100dvw",
                     borderRadius: 0,
                     transition: {
                       delay: 0,
@@ -304,8 +304,8 @@ function PureArtifact({
                     opacity: 1,
                     x: windowWidth ? windowWidth * 0.55 : 0,
                     y: 0,
-                    height: windowHeight,
-                    width: windowWidth ? windowWidth * 0.45 : "calc(45dvw)",
+                    height: windowHeight ? windowHeight : "100dvh",
+                    width: windowWidth ? windowWidth * 0.45 : "45dvw",
                     borderRadius: 0,
                     transition: {
                       delay: 0,
