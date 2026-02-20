@@ -1,7 +1,7 @@
 "use client";
 
-import type { UseChatHelpers } from "@ai-sdk/react";
 import type { UIMessage } from "ai";
+import { nanoid } from "ai";
 import equal from "fast-deep-equal";
 import {
   CheckIcon,
@@ -184,8 +184,87 @@ function PureMultimodalInput({
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [uploadQueue, setUploadQueue] = useState<string[]>([]);
 
-  const submitForm = useCallback(() => {
+  const submitForm = useCallback(async () => {
     window.history.pushState({}, "", `/chat/${chatId}`);
+
+    if (imageGenerationMode) {
+      const userMessageId = nanoid();
+      const currentInput = input;
+
+      // 1. Append user message
+      setMessages((messages) => [
+        ...messages,
+        {
+          id: userMessageId,
+          role: "user",
+          content: currentInput,
+        },
+      ]);
+
+      // Handle UI reset
+      setAttachments([]);
+      setLocalStorageInput("");
+      resetHeight();
+      setInput("");
+      setImageGenerationMode(false); // Disable image mode after use
+
+      // 2. Append loading message
+      const loadingMessageId = nanoid();
+      setMessages((messages) => [
+        ...messages,
+        {
+          id: loadingMessageId,
+          role: "assistant",
+          content: "Generating your image... 🎨",
+        },
+      ]);
+
+      try {
+        const res = await fetch("/api/generate-image", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ prompt: currentInput }),
+        });
+
+        if (!res.ok) throw new Error("Failed to generate image");
+
+        const data = await res.json();
+
+        // 3. Replace loading message with image
+        setMessages((messages) =>
+          messages.map((m) =>
+            m.id === loadingMessageId
+              ? {
+                  ...m,
+                  content: `![Generated Image](${data.imageUrl})`,
+                  parts: [
+                    {
+                      type: "text",
+                      text: `![Generated Image](${data.imageUrl})`,
+                    },
+                  ],
+                }
+              : m
+          )
+        );
+      } catch (error) {
+        setMessages((messages) =>
+          messages.map((m) =>
+            m.id === loadingMessageId
+              ? {
+                  ...m,
+                  content: "❌ Failed to generate image. Please try again.",
+                }
+              : m
+          )
+        );
+      }
+
+      if (width && width > 768) {
+        textareaRef.current?.focus();
+      }
+      return;
+    }
 
     sendMessage({
       role: "user",
@@ -221,6 +300,9 @@ function PureMultimodalInput({
     width,
     chatId,
     resetHeight,
+    imageGenerationMode,
+    setImageGenerationMode,
+    setMessages,
   ]);
 
   const uploadFile = useCallback(async (file: File) => {
