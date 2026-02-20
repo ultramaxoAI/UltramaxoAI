@@ -84,8 +84,11 @@ export async function POST(request: Request) {
     let sentCount = 0;
     let failCount = 0;
 
-    // Loop and send (Sequential to avoid rate limits for now, albeit slow)
-    // In production, use a queue (BullMQ/Inngest)
+    // Helper to wait between sends - Resend limits to 2 req/second
+    const sleep = (ms: number) =>
+      new Promise((resolve) => setTimeout(resolve, ms));
+
+    // Loop and send with throttle to avoid Resend rate limit (2 req/sec)
     for (const u of users) {
       if (!u.email) continue;
       try {
@@ -96,6 +99,8 @@ export async function POST(request: Request) {
         console.error(`Failed to send to ${u.email}`, e);
         failCount++;
       }
+      // Wait 600ms between each send to stay under 2 req/sec limit
+      await sleep(600);
     }
 
     return NextResponse.json({
