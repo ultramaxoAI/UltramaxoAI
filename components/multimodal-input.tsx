@@ -1,7 +1,6 @@
 "use client";
 
 import type { UIMessage } from "ai";
-import { nanoid } from "ai";
 import equal from "fast-deep-equal";
 import {
   CheckIcon,
@@ -16,6 +15,7 @@ import {
   Wand2Icon,
   XIcon,
 } from "lucide-react";
+import { nanoid } from "nanoid";
 import {
   type ChangeEvent,
   type Dispatch,
