@@ -1,66 +1,45 @@
-import nodemailer from "nodemailer";
+import { Resend } from "resend";
 import { getEmailWrapper } from "./email-wrapper";
 
-// SMTP Configuration from environment variables
-const SMTP_HOST = process.env.SMTP_HOST || "smtp.gmail.com";
-const SMTP_PORT = Number.parseInt(process.env.SMTP_PORT || "587");
-const SMTP_USER = process.env.SMTP_USER || "";
-const SMTP_PASS = process.env.SMTP_PASS || "";
+// Resend Configuration from environment variables
+const resend = new Resend(process.env.RESEND_API_KEY || "re_missing_key");
+
+// Authorized domains should match the ones verified on Resend
 const EMAIL_FROM =
-  process.env.EMAIL_FROM || "Ultramaxo AI <noreply@ultramaxo.tech>";
-
-// Create reusable transporter
-let transporter: nodemailer.Transporter | null = null;
-
-function getTransporter() {
-  if (!transporter) {
-    if (!SMTP_USER || !SMTP_PASS) {
-      console.warn(
-        "[email] SMTP credentials not configured; email sending disabled."
-      );
-      return null;
-    }
-
-    transporter = nodemailer.createTransport({
-      host: SMTP_HOST,
-      port: SMTP_PORT,
-      secure: SMTP_PORT === 465,
-      auth: {
-        user: SMTP_USER,
-        pass: SMTP_PASS,
-      },
-    });
-  }
-  return transporter;
-}
+  process.env.RESEND_FROM ||
+  process.env.EMAIL_FROM ||
+  "Ultramaxo AI <no-reply@ultramaxo.tech>";
 
 // Re-export wrapper for convenience if needed, but primary usage is internal here
-export { getEmailWrapper };
+export { getEmailWrapper } from "./email-wrapper";
 
 async function sendEmail(to: string, subject: string, html: string) {
-  const transport = getTransporter();
-
-  if (!transport) {
-    console.warn("[email] Email transport not configured; skipping send.");
+  if (!process.env.RESEND_API_KEY) {
+    console.warn("[email] RESEND_API_KEY not configured; skipping send.");
     return false;
   }
 
   try {
-    const info = await transport.sendMail({
+    const { data, error } = await resend.emails.send({
       from: EMAIL_FROM,
-      to,
+      to: [to],
       subject,
       html,
     });
 
-    console.info("[email] Email sent:", {
+    if (error) {
+      console.error("[email] Resend API error:", error);
+      return false;
+    }
+
+    console.info("[email] Email sent successfully via Resend:", {
       to,
       subject,
-      messageId: info.messageId,
+      id: data?.id,
     });
     return true;
   } catch (err) {
-    console.error("[email] Send error:", err);
+    console.error("[email] Unexpected send error:", err);
     return false;
   }
 }
@@ -80,7 +59,7 @@ export async function sendVerificationEmail(email: string, code: string) {
       Kode ini akan kedaluwarsa dalam <strong>10 menit</strong>. Jika Anda tidak mendaftar, abaikan email ini.
     </p>
   `;
-  return sendEmail(
+  return await sendEmail(
     email,
     "🔐 Kode Verifikasi Ultramaxo AI",
     getEmailWrapper(content)
@@ -102,7 +81,7 @@ export async function sendPasswordResetEmail(email: string, resetUrl: string) {
       Link ini akan kedaluwarsa dalam <strong>1 jam</strong>. Jika Anda tidak meminta reset password, abaikan email ini.
     </p>
   `;
-  return sendEmail(
+  return await sendEmail(
     email,
     "🔑 Reset Password Ultramaxo AI",
     getEmailWrapper(content)
@@ -131,7 +110,7 @@ export async function sendUpgradeReminderEmail(email: string, name: string) {
     <p style="text-align: center;">Jangan lewatkan kesempatan untuk meningkatkan produktivitas Anda!</p>
   `;
 
-  return sendEmail(
+  return await sendEmail(
     email,
     "✨ Unlock Full Potential dengan Ultramaxo PRO!",
     getEmailWrapper(content)
@@ -158,7 +137,7 @@ export async function sendWelcomeEmail(email: string, name: string) {
     </div>
   `;
 
-  return sendEmail(
+  return await sendEmail(
     email,
     "👋 Selamat Datang di Era Baru AI - Ultramaxo",
     getEmailWrapper(content)
@@ -170,10 +149,10 @@ export async function sendCustomEmail(
   subject: string,
   body: string
 ) {
-  // `body` is expected to be HTML fragment
+  // \`body\` is expected to be HTML fragment
   // Replace newlines with <br/> only if it doesn't look like HTML
   const isHtml = /<[a-z][\s\S]*>/i.test(body);
   const formattedBody = isHtml ? body : body.replace(/\n/g, "<br/>");
 
-  return sendEmail(email, subject, getEmailWrapper(formattedBody));
+  return await sendEmail(email, subject, getEmailWrapper(formattedBody));
 }
