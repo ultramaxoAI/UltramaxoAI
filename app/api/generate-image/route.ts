@@ -17,6 +17,15 @@ export async function POST(request: NextRequest) {
     const userRole = (session.user as any).role;
     const hasPro = userType === "pro" || userRole === "admin";
 
+    console.log(
+      "[generate-image] user type:",
+      userType,
+      "role:",
+      userRole,
+      "hasPro:",
+      hasPro
+    );
+
     if (!hasPro) {
       return NextResponse.json(
         { error: "Image generation is a PRO feature. Upgrade to access." },
@@ -40,6 +49,8 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    console.log("[generate-image] Calling MAIA with model:", IMAGE_MODEL);
+
     const response = await fetch(
       "https://api.maiarouter.ai/v1/images/generations",
       {
@@ -54,34 +65,56 @@ export async function POST(request: NextRequest) {
           model: IMAGE_MODEL,
           prompt: prompt.trim(),
           n: 1,
-          response_format: "b64_json",
+          // Gemini models typically return URL format
+          response_format: "url",
         }),
       }
     );
 
+    const rawText = await response.text();
+    console.log("[generate-image] MAIA status:", response.status);
+    console.log("[generate-image] MAIA response:", rawText.slice(0, 800));
+
     if (!response.ok) {
-      const errorText = await response.text();
-      console.error("[generate-image] MAIA error:", errorText);
       return NextResponse.json(
-        { error: "Failed to generate image. Please try again." },
+        {
+          error: `Failed to generate image (${response.status}). Please try again.`,
+        },
         { status: 500 }
       );
     }
 
-    const data = await response.json();
+    let data: any;
+    try {
+      data = JSON.parse(rawText);
+    } catch {
+      console.error("[generate-image] Failed to parse JSON:", rawText);
+      return NextResponse.json(
+        { error: "Invalid response from generator" },
+        { status: 500 }
+      );
+    }
+
+    // Handle URL response (Gemini default) or b64_json fallback
+    const imageUrl = data?.data?.[0]?.url;
     const b64 = data?.data?.[0]?.b64_json;
 
-    if (!b64) {
-      console.error("[generate-image] No image in response:", data);
-      return NextResponse.json(
-        { error: "No image returned from generator" },
-        { status: 500 }
-      );
+    if (imageUrl) {
+      return NextResponse.json({ imageUrl });
     }
 
-    return NextResponse.json({
-      imageUrl: `data:image/png;base64,${b64}`,
-    });
+    if (b64) {
+      return NextResponse.json({ imageUrl: `data:image/png;base64,${b64}` });
+    }
+
+    console.error(
+      "[generate-image] Unexpected response shape:",
+      JSON.stringify(data)
+    );
+    return NextResponse.json(
+      { error: "No image returned from generator" },
+      { status: 500 }
+    );
   } catch (error) {
     console.error("[generate-image] Error:", error);
     return NextResponse.json(
