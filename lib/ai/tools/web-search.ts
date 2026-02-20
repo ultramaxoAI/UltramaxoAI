@@ -8,8 +8,10 @@ export const webSearch = tool({
     query: z.string().describe("The search query to look up on the web"),
   }),
   execute: async ({ query }: { query: string }) => {
+    console.log("[Web Search Tool] Calling Tavily API for query:", query);
     const tavilyKey = process.env.TAVILY_API_KEY;
     if (!tavilyKey) {
+      console.warn("[Web Search Tool] Missing TAVILY_API_KEY");
       return {
         error:
           "Pencarian web saat ini tidak tersedia karena kunci API Tavily belum dikonfigurasi. Beritahu pengguna bahwa mereka perlu menambahkan TAVILY_API_KEY ke file .env.local mereka agar fitur ini dapat berfungsi.",
@@ -29,15 +31,23 @@ export const webSearch = tool({
         }),
       });
 
+      console.log("[Web Search Tool] Tavily response status:", response.status);
+
       if (!response.ok) {
+        const errText = await response.text();
+        console.error("[Web Search Tool] Tavily error:", errText);
         return {
           error: `Search API returned error: ${response.status}`,
         };
       }
 
       const data = await response.json();
+      console.log(
+        `[Web Search Tool] Search successful, found ${data.results?.length || 0} results`
+      );
       return data;
-    } catch (_error) {
+    } catch (_error: any) {
+      console.error("[Web Search Tool] Fetch exception:", _error.message);
       return {
         error: "An unexpected error occurred during the web search.",
       };

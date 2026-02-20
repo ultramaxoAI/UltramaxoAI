@@ -463,12 +463,14 @@ export const systemPrompt = ({
   requestHints,
   wormgptEnabled,
   deepThinkingEnabled,
+  webSearchEnabled,
   toolsEnabled,
 }: {
   selectedChatModel: string;
   requestHints: RequestHints;
   wormgptEnabled?: boolean;
   deepThinkingEnabled?: boolean;
+  webSearchEnabled?: boolean;
   toolsEnabled?: boolean;
 }) => {
   const requestPrompt = getRequestPromptFromHints(requestHints);
@@ -489,6 +491,11 @@ export const systemPrompt = ({
 
   if (deepThinkingEnabled) {
     basePrompt += `\n\n${deepThinkingPrompt}`;
+  }
+
+  if (webSearchEnabled) {
+    basePrompt += `\n\n### WEB SEARCH MODE ACTIVATED
+  You MUST search the internet for the user's query using the \`webSearch\` tool before responding. Do not rely solely on your training data. Use the \`webSearch\` tool to gather up-to-date facts and news, then synthesize them into your answer.`;
   }
 
   if (

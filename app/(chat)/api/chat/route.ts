@@ -99,6 +99,14 @@ export async function POST(request: Request) {
         return new ChatSDKError("unauthorized:chat").toResponse();
       }
 
+      console.log("[Chat API Payload]", {
+        id,
+        selectedChatModel,
+        wormgptEnabled,
+        deepThinkingEnabled,
+        webSearchEnabled,
+      });
+
       // Per-account rate limiting: 10 chat requests per minute per user
       const clientIp = getClientIp(request);
       const userKey = `user:${session.user.id}:chat`;
@@ -214,11 +222,12 @@ export async function POST(request: Request) {
                   requestHints,
                   wormgptEnabled,
                   deepThinkingEnabled,
+                  webSearchEnabled,
                   toolsEnabled: useTools,
                 }),
                 messages: modelMessages,
                 stopWhen: stepCountIs(5),
-                toolChoice: webSearchEnabled ? "required" : "auto",
+                toolChoice: "auto",
                 providerOptions: isReasoningModel
                   ? {
                       anthropic: {
