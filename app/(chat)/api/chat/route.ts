@@ -205,7 +205,7 @@ export async function POST(request: Request) {
                 // Use smarter model for Deep Thinking mode
                 model: getLanguageModel(
                   deepThinkingEnabled
-                    ? "maia/gemini-2.5-pro"
+                    ? "maia/gemini-2.5-flash"
                     : selectedChatModel
                 ),
                 system: systemPrompt({
