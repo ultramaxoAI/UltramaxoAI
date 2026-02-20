@@ -192,8 +192,9 @@ export async function POST(request: Request) {
 
           while (retryCount <= maxRetries) {
             try {
-              // Disable tools on retry to avoid function call errors
-              const useTools = retryCount === 0 && !isReasoningModel;
+              // Disable tools on retry, or for reasoning models — EXCEPT when web search is explicitly enabled
+              const useTools =
+                (retryCount === 0 && !isReasoningModel) || webSearchEnabled;
 
               if (retryCount > 0) {
                 console.log(
@@ -217,7 +218,7 @@ export async function POST(request: Request) {
                 }),
                 messages: modelMessages,
                 stopWhen: stepCountIs(5),
-                toolChoice: "auto",
+                toolChoice: webSearchEnabled ? "required" : "auto",
                 providerOptions: isReasoningModel
                   ? {
                       anthropic: {
@@ -227,14 +228,7 @@ export async function POST(request: Request) {
                   : undefined,
                 tools: useTools
                   ? {
-                      getWeather,
-                      // createDocument: createDocument({ session, dataStream }),
-                      // updateDocument: updateDocument({ session, dataStream }),
-                      // requestSuggestions: requestSuggestions({
-                      //   session,
-                      //   dataStream,
-                      // }),
-                      ...(webSearchEnabled ? { webSearch } : {}),
+                      ...(webSearchEnabled ? { webSearch } : { getWeather }),
                     }
                   : {},
                 experimental_telemetry: {
