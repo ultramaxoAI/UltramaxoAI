@@ -1,6 +1,6 @@
 /**
  * Contoh Layout Chat dengan ChatGPT Dark Mode Theme
- * 
+ *
  * Warna yang digunakan:
  * - bg-gpt-main: #343541 (background chat area)
  * - bg-gpt-sidebar: #202123 (sidebar)
@@ -16,8 +16,18 @@ export default function ChatGPTLayout() {
         {/* Header Sidebar */}
         <div className="p-3">
           <button className="w-full bg-gpt-card hover:bg-gpt-main text-gpt-text rounded-lg px-4 py-3 text-left transition-colors flex items-center gap-2">
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+            <svg
+              className="w-5 h-5"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                d="M12 4v16m8-8H4"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+              />
             </svg>
             New Chat
           </button>
@@ -52,7 +62,9 @@ export default function ChatGPTLayout() {
       <main className="flex-1 bg-gpt-main flex flex-col">
         {/* Chat Header */}
         <header className="bg-gpt-main border-b border-white/10 px-6 py-4">
-          <h1 className="text-gpt-text text-xl font-semibold">UltramaxoAI Chat</h1>
+          <h1 className="text-gpt-text text-xl font-semibold">
+            UltramaxoAI Chat
+          </h1>
         </header>
 
         {/* Messages Container */}
@@ -62,7 +74,8 @@ export default function ChatGPTLayout() {
             <div className="flex justify-end">
               <div className="bg-gpt-card text-gpt-text rounded-2xl px-5 py-3 max-w-[80%] shadow-lg">
                 <p className="text-sm leading-relaxed">
-                  Halo! Tolong jelaskan tentang AI dan machine learning dengan bahasa yang sederhana.
+                  Halo! Tolong jelaskan tentang AI dan machine learning dengan
+                  bahasa yang sederhana.
                 </p>
               </div>
             </div>
@@ -77,8 +90,9 @@ export default function ChatGPTLayout() {
                 {/* Message Content */}
                 <div className="bg-gpt-card text-gpt-text rounded-2xl px-5 py-4 shadow-lg">
                   <p className="text-sm leading-relaxed mb-3">
-                    Tentu! AI (Artificial Intelligence) adalah teknologi yang membuat komputer bisa "berpikir" 
-                    seperti manusia. Bayangkan komputer yang bisa:
+                    Tentu! AI (Artificial Intelligence) adalah teknologi yang
+                    membuat komputer bisa "berpikir" seperti manusia. Bayangkan
+                    komputer yang bisa:
                   </p>
                   <ul className="list-disc list-inside text-sm space-y-2 text-gpt-text/90">
                     <li>Mengenali wajah dalam foto</li>
@@ -87,8 +101,9 @@ export default function ChatGPTLayout() {
                     <li>Merekomendasikan video yang kamu suka</li>
                   </ul>
                   <p className="text-sm leading-relaxed mt-3">
-                    Machine Learning adalah cara komputer "belajar" dari pengalaman. Bukan diprogram satu per satu, 
-                    tapi komputer belajar dari data yang diberikan.
+                    Machine Learning adalah cara komputer "belajar" dari
+                    pengalaman. Bukan diprogram satu per satu, tapi komputer
+                    belajar dari data yang diberikan.
                   </p>
                 </div>
               </div>
@@ -98,7 +113,8 @@ export default function ChatGPTLayout() {
             <div className="flex justify-end">
               <div className="bg-gpt-card text-gpt-text rounded-2xl px-5 py-3 max-w-[80%] shadow-lg">
                 <p className="text-sm leading-relaxed">
-                  Menarik! Bisakah kamu berikan contoh penggunaan AI dalam kehidupan sehari-hari?
+                  Menarik! Bisakah kamu berikan contoh penggunaan AI dalam
+                  kehidupan sehari-hari?
                 </p>
               </div>
             </div>
@@ -114,11 +130,25 @@ export default function ChatGPTLayout() {
                     Contoh AI dalam kehidupan sehari-hari:
                   </p>
                   <ol className="list-decimal list-inside text-sm space-y-2 text-gpt-text/90">
-                    <li><strong>Voice Assistant</strong> - Siri, Google Assistant, Alexa</li>
-                    <li><strong>Rekomendasi</strong> - Netflix, Spotify, YouTube</li>
-                    <li><strong>Filter Spam Email</strong> - Gmail secara otomatis memblokir spam</li>
-                    <li><strong>Face Unlock</strong> - Smartphone mengenali wajah kamu</li>
-                    <li><strong>Google Maps</strong> - Prediksi traffic dan rute terbaik</li>
+                    <li>
+                      <strong>Voice Assistant</strong> - Siri, Google Assistant,
+                      Alexa
+                    </li>
+                    <li>
+                      <strong>Rekomendasi</strong> - Netflix, Spotify, YouTube
+                    </li>
+                    <li>
+                      <strong>Filter Spam Email</strong> - Gmail secara otomatis
+                      memblokir spam
+                    </li>
+                    <li>
+                      <strong>Face Unlock</strong> - Smartphone mengenali wajah
+                      kamu
+                    </li>
+                    <li>
+                      <strong>Google Maps</strong> - Prediksi traffic dan rute
+                      terbaik
+                    </li>
                   </ol>
                 </div>
               </div>
@@ -132,22 +162,42 @@ export default function ChatGPTLayout() {
             <div className="bg-gpt-card rounded-2xl shadow-xl flex items-center gap-3 px-4 py-3 focus-within:ring-2 focus-within:ring-primary/50 transition-all">
               {/* Attachment Button */}
               <button className="text-gpt-text/60 hover:text-gpt-text transition-colors p-1">
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" />
+                <svg
+                  className="w-5 h-5"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                  />
                 </svg>
               </button>
 
               {/* Text Input */}
-              <input 
-                type="text"
-                placeholder="Send a message..."
+              <input
                 className="flex-1 bg-transparent text-gpt-text placeholder:text-gpt-text/40 outline-none text-sm"
+                placeholder="Send a message..."
+                type="text"
               />
 
               {/* Send Button */}
               <button className="bg-primary hover:bg-primary/90 text-white rounded-lg p-2 transition-colors">
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+                <svg
+                  className="w-5 h-5"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                  />
                 </svg>
               </button>
             </div>

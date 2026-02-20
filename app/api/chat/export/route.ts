@@ -1,8 +1,8 @@
+import { eq } from "drizzle-orm";
 import { NextResponse } from "next/server";
 import { auth } from "@/app/(auth)/auth";
 import { db } from "@/lib/db/queries";
-import { message, chat } from "@/lib/db/schema";
-import { eq, and, desc } from "drizzle-orm";
+import { chat, message } from "@/lib/db/schema";
 import { logger } from "@/lib/logger";
 
 export async function GET(request: Request) {
@@ -31,7 +31,10 @@ export async function GET(request: Request) {
       return NextResponse.json({ error: "Chat not found" }, { status: 404 });
     }
 
-    if (chatData.userId !== session.user.id && chatData.visibility !== "public") {
+    if (
+      chatData.userId !== session.user.id &&
+      chatData.visibility !== "public"
+    ) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
@@ -56,13 +59,13 @@ export async function GET(request: Request) {
         contentType = "text/markdown";
         filename = `chat_${title}_${timestamp}.md`;
         break;
-      
+
       case "txt":
         exportData = formatAsText(chatData.title, messages);
         contentType = "text/plain";
         filename = `chat_${title}_${timestamp}.txt`;
         break;
-      
+
       default: // json
         exportData = JSON.stringify(
           {
@@ -111,13 +114,13 @@ function formatAsMarkdown(title: string, messages: any[]): string {
   for (const msg of messages) {
     const role = msg.role === "user" ? "👤 User" : "🤖 Assistant";
     md += `## ${role}\n\n`;
-    
+
     const textParts = msg.parts.filter((p: any) => p.type === "text");
     for (const part of textParts) {
       md += `${part.text}\n\n`;
     }
-    
-    md += `---\n\n`;
+
+    md += "---\n\n";
   }
 
   return md;
@@ -132,12 +135,12 @@ function formatAsText(title: string, messages: any[]): string {
   for (const msg of messages) {
     const role = msg.role === "user" ? "USER" : "ASSISTANT";
     txt += `[${role}]\n`;
-    
+
     const textParts = msg.parts.filter((p: any) => p.type === "text");
     for (const part of textParts) {
       txt += `${part.text}\n\n`;
     }
-    
+
     txt += `${"-".repeat(50)}\n\n`;
   }
 

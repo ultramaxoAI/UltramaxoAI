@@ -19,7 +19,7 @@ import {
 } from "@/components/icons";
 import { generateUUID } from "@/lib/utils";
 
-function getFileIcon(filename: string) {
+function _getFileIcon(filename: string) {
   const ext = filename.split(".").pop()?.toLowerCase();
   const iconClass = "w-4 h-4";
 
@@ -405,7 +405,9 @@ export const codeArtifact = new Artifact<"code", Metadata>({
     };
 
     const handleFileDelete = (index: number) => {
-      if (files.length <= 1) return;
+      if (files.length <= 1) {
+        return;
+      }
 
       const updatedFiles = files.filter((_, i) => i !== index);
       const newActiveIndex =

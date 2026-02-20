@@ -1,7 +1,7 @@
 import { auth } from "@/app/(auth)/auth";
 import { getDashboardStats } from "@/lib/db/queries";
 
-export const dynamic = 'force-dynamic';
+export const dynamic = "force-dynamic";
 
 export async function GET() {
   try {

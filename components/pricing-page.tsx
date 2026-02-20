@@ -81,7 +81,9 @@ export function PricingPage({ user }: PricingPageProps) {
 
   // Poll for upgrade status when there's a pending request
   useEffect(() => {
-    if (!hasPendingRequest || !user) return;
+    if (!hasPendingRequest || !user) {
+      return;
+    }
 
     const pollInterval = setInterval(async () => {
       try {
@@ -92,12 +94,12 @@ export function PricingPage({ user }: PricingPageProps) {
           // User has been upgraded!
           clearInterval(pollInterval);
           setHasPendingRequest(false);
-          
+
           // Refresh session to get updated user data
           await fetch("/api/auth/session/refresh", { method: "POST" });
-          
+
           toast.success("🎉 Upgrade berhasil! Selamat datang di PRO!");
-          
+
           // Redirect to chat
           setTimeout(() => {
             window.location.href = "/chat"; // Force reload to ensure session is fresh
@@ -109,7 +111,7 @@ export function PricingPage({ user }: PricingPageProps) {
     }, 3000); // Poll every 3 seconds
 
     return () => clearInterval(pollInterval);
-  }, [hasPendingRequest, user, router]);
+  }, [hasPendingRequest, user]);
 
   const handleUpgrade = async (planName: string) => {
     setSelectedPlan(planName);
@@ -122,7 +124,9 @@ export function PricingPage({ user }: PricingPageProps) {
     }
 
     const plan = pricingPlans.find((p) => p.name === planName);
-    if (!plan) return;
+    if (!plan) {
+      return;
+    }
 
     setLoading(true);
 
@@ -143,7 +147,7 @@ export function PricingPage({ user }: PricingPageProps) {
       }
 
       toast.success("Request berhasil dicatat!");
-      
+
       // Start polling for approval
       setHasPendingRequest(true);
       toast.info("Menunggu admin approve upgrade Anda...", {
@@ -151,7 +155,9 @@ export function PricingPage({ user }: PricingPageProps) {
       });
     } catch (error) {
       console.error("Failed to log upgrade request:", error);
-      toast.warning("Request dicatat dengan masalah, tapi tetap lanjut ke WhatsApp");
+      toast.warning(
+        "Request dicatat dengan masalah, tapi tetap lanjut ke WhatsApp"
+      );
       // We continue to WhatsApp even if logging fails, to not block the user
     } finally {
       setLoading(false);
@@ -159,18 +165,18 @@ export function PricingPage({ user }: PricingPageProps) {
 
     // 2. Create WhatsApp message with complete format
     const message =
-      `Halo admin Ultramaxo! 👋\n\n` +
-      `Saya ingin melakukan upgrade akun:\n\n` +
-      `━━━━━━━━━━━━━━━━━━━\n` +
-      `👤 INFORMASI USER:\n` +
+      "Halo admin Ultramaxo! 👋\n\n" +
+      "Saya ingin melakukan upgrade akun:\n\n" +
+      "━━━━━━━━━━━━━━━━━━━\n" +
+      "👤 INFORMASI USER:\n" +
       `Nama: ${user.name || "User"}\n` +
       `Email: ${user.email}\n\n` +
-      `📦 PAKET YANG DIPILIH:\n` +
+      "📦 PAKET YANG DIPILIH:\n" +
       `Paket: ${planName}\n` +
       `Harga: ${plan.price}\n` +
       `Periode: ${plan.period}\n` +
-      `━━━━━━━━━━━━━━━━━━━\n\n` +
-      `Mohon konfirmasi untuk proses pembayaran dan aktivasi. Terima kasih! 🙏`;
+      "━━━━━━━━━━━━━━━━━━━\n\n" +
+      "Mohon konfirmasi untuk proses pembayaran dan aktivasi. Terima kasih! 🙏";
 
     // Encode message for URL
     const encodedMessage = encodeURIComponent(message);
@@ -178,8 +184,12 @@ export function PricingPage({ user }: PricingPageProps) {
 
     // Open WhatsApp in new tab
     const newWindow = window.open(whatsappUrl, "_blank");
-    
-    if (!newWindow || newWindow.closed || typeof newWindow.closed === "undefined") {
+
+    if (
+      !newWindow ||
+      newWindow.closed ||
+      typeof newWindow.closed === "undefined"
+    ) {
       // Popup was blocked
       toast.error("Popup diblokir! Silakan izinkan popup di browser Anda");
       // Fallback: try to navigate in same tab
@@ -273,7 +283,6 @@ export function PricingPage({ user }: PricingPageProps) {
               </ul>
 
               <Button
-                type="button"
                 className={`w-full justify-center h-11 rounded-2xl font-medium transition-all ${
                   plan.popular
                     ? "bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white shadow-lg shadow-indigo-500/30"
@@ -289,6 +298,7 @@ export function PricingPage({ user }: PricingPageProps) {
                     handleUpgrade(plan.name);
                   }
                 }}
+                type="button"
               >
                 {loading && selectedPlan === plan.name
                   ? "Processing..."

@@ -22,11 +22,15 @@ export function Response({ className, children, ...props }: ResponseProps) {
         pre: ({ children, ...props }: any) => {
           // Robustly extract text from children
           const extractText = (content: any): string => {
-            if (typeof content === "string") return content;
-            if (Array.isArray(content))
+            if (typeof content === "string") {
+              return content;
+            }
+            if (Array.isArray(content)) {
               return content.map(extractText).join("");
-            if (content?.props?.children)
+            }
+            if (content?.props?.children) {
               return extractText(content.props.children);
+            }
             return "";
           };
 

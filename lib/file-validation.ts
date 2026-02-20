@@ -10,21 +10,21 @@ export const MAX_DOCUMENT_SIZE = 10 * 1024 * 1024; // 10MB for documents
 
 // Allowed MIME types
 export const ALLOWED_IMAGE_TYPES = [
-  'image/jpeg',
-  'image/jpg',
-  'image/png',
-  'image/gif',
-  'image/webp',
-  'image/svg+xml',
+  "image/jpeg",
+  "image/jpg",
+  "image/png",
+  "image/gif",
+  "image/webp",
+  "image/svg+xml",
 ];
 
 export const ALLOWED_DOCUMENT_TYPES = [
-  'application/pdf',
-  'text/plain',
-  'text/markdown',
-  'text/csv',
-  'application/json',
-  'application/xml',
+  "application/pdf",
+  "text/plain",
+  "text/markdown",
+  "text/csv",
+  "application/json",
+  "application/xml",
 ];
 
 export const ALLOWED_FILE_TYPES = [
@@ -41,7 +41,10 @@ export interface FileValidationResult {
 /**
  * Validate file size and type
  */
-export function validateFile(file: File, maxSize: number = MAX_FILE_SIZE): FileValidationResult {
+export function validateFile(
+  file: File,
+  maxSize: number = MAX_FILE_SIZE
+): FileValidationResult {
   // Check file size
   if (file.size > maxSize) {
     return {
@@ -71,7 +74,7 @@ export function validateImage(file: File): FileValidationResult {
   if (!ALLOWED_IMAGE_TYPES.includes(file.type)) {
     return {
       valid: false,
-      error: 'File harus berupa gambar (JPEG, PNG, GIF, WebP, atau SVG)',
+      error: "File harus berupa gambar (JPEG, PNG, GIF, WebP, atau SVG)",
     };
   }
 
@@ -85,7 +88,7 @@ export function validateDocument(file: File): FileValidationResult {
   if (!ALLOWED_DOCUMENT_TYPES.includes(file.type)) {
     return {
       valid: false,
-      error: 'File harus berupa dokumen (PDF, TXT, MD, CSV, JSON, atau XML)',
+      error: "File harus berupa dokumen (PDF, TXT, MD, CSV, JSON, atau XML)",
     };
   }
 
@@ -96,13 +99,15 @@ export function validateDocument(file: File): FileValidationResult {
  * Format file size for display
  */
 export function formatFileSize(bytes: number): string {
-  if (bytes === 0) return '0 Bytes';
+  if (bytes === 0) {
+    return "0 Bytes";
+  }
 
   const k = 1024;
-  const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+  const sizes = ["Bytes", "KB", "MB", "GB"];
   const i = Math.floor(Math.log(bytes) / Math.log(k));
 
-  return `${parseFloat((bytes / Math.pow(k, i)).toFixed(2))} ${sizes[i]}`;
+  return `${Number.parseFloat((bytes / k ** i).toFixed(2))} ${sizes[i]}`;
 }
 
 /**

@@ -46,7 +46,6 @@ export default function Page() {
   return (
     <div className="flex min-h-screen w-full items-center justify-center bg-black relative overflow-hidden py-8">
       <div className="flex w-full max-w-[440px] flex-col gap-10 relative z-10 animate-in fade-in slide-in-from-bottom-4 duration-1000 px-6">
-        
         <AuthForm action={formAction} defaultEmail="" type="login">
           <SubmitButton isSuccessful={isSuccessful}>Sign In</SubmitButton>
           <p className="mt-6 text-center text-zinc-500 text-sm">

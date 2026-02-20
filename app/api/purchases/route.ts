@@ -1,10 +1,10 @@
+import { NextResponse } from "next/server";
 import { auth } from "@/app/(auth)/auth";
 import {
   createPurchaseRequest,
   getUserById,
   listPurchaseRequestsByUserId,
 } from "@/lib/db/queries";
-import { NextResponse } from "next/server";
 
 export async function GET() {
   const session = await auth();
@@ -17,7 +17,10 @@ export async function GET() {
     return NextResponse.json({ purchases });
   } catch (error) {
     console.error("API Error (purchases/GET):", error);
-    return NextResponse.json({ error: "Failed to fetch purchases" }, { status: 500 });
+    return NextResponse.json(
+      { error: "Failed to fetch purchases" },
+      { status: 500 }
+    );
   }
 }
 
@@ -29,7 +32,13 @@ export async function POST(request: Request) {
 
   try {
     const body = await request.json();
-    const { planId, months = 1, price = 0, method = "manual", note } = body || {};
+    const {
+      planId,
+      months = 1,
+      price = 0,
+      method = "manual",
+      note,
+    } = body || {};
 
     if (!planId) {
       return NextResponse.json({ error: "Missing planId" }, { status: 400 });
@@ -51,6 +60,9 @@ export async function POST(request: Request) {
     return NextResponse.json({ purchase });
   } catch (error) {
     console.error("API Error (purchases/POST):", error);
-    return NextResponse.json({ error: "Failed to create purchase request" }, { status: 500 });
+    return NextResponse.json(
+      { error: "Failed to create purchase request" },
+      { status: 500 }
+    );
   }
 }

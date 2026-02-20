@@ -14,7 +14,10 @@ export async function POST(request: Request) {
     if (email && !token && !newPassword) {
       const normalizedEmail = String(email).trim().toLowerCase();
       if (!normalizedEmail.includes("@")) {
-        return NextResponse.json({ error: "Email tidak valid" }, { status: 400 });
+        return NextResponse.json(
+          { error: "Email tidak valid" },
+          { status: 400 }
+        );
       }
 
       const result = await createPasswordResetTokenForEmail(normalizedEmail);
@@ -40,7 +43,10 @@ export async function POST(request: Request) {
         );
       }
 
-      return NextResponse.json({ success: true, message: "Link reset dikirim" });
+      return NextResponse.json({
+        success: true,
+        message: "Link reset dikirim",
+      });
     }
 
     if (token && newPassword) {
@@ -60,7 +66,10 @@ export async function POST(request: Request) {
       }
 
       await updateUserPassword(consumed.userId, String(newPassword));
-      return NextResponse.json({ success: true, message: "Password berhasil direset" });
+      return NextResponse.json({
+        success: true,
+        message: "Password berhasil direset",
+      });
     }
 
     return NextResponse.json({ error: "Invalid request" }, { status: 400 });

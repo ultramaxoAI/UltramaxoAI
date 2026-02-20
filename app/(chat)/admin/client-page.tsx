@@ -1,6 +1,8 @@
 "use client";
 
+import { formatDistanceToNow } from "date-fns";
 import {
+  BarChartIcon,
   CrownIcon,
   KeyIcon,
   LogOutIcon,
@@ -18,7 +20,7 @@ import { getEmailWrapper } from "@/lib/email-wrapper";
 
 export default function AdminDashboardClient() {
   const [activeTab, setActiveTab] = useState<
-    "vouchers" | "users" | "upgrade-requests"
+    "vouchers" | "users" | "upgrade-requests" | "insights"
   >("vouchers");
   const [users, setUsers] = useState<any[]>([]);
   const [upgradeRequests, setUpgradeRequests] = useState<any[]>([]);
@@ -31,16 +33,40 @@ export default function AdminDashboardClient() {
     value: 0,
     durationMonths: 1,
   });
-  const [voucherMessage, setVoucherMessage] = useState("");
+  const [_voucherMessage, _setVoucherMessage] = useState("");
   const [stats, setStats] = useState({ totalUsers: 0, activeUsers: 0 });
+  const [insights, setInsights] = useState<{
+    realtimeTraffic: any[];
+    authenticatedVisitors: any[];
+  } | null>(null);
+
+  const fetchInsights = async () => {
+    setLoading(true);
+    try {
+      const res = await fetch("/api/admin/insights");
+      const data = await res.json();
+      if (data.success) {
+        setInsights({
+          realtimeTraffic: data.realtimeTraffic,
+          authenticatedVisitors: data.authenticatedVisitors,
+        });
+      }
+    } catch {
+      toast.error("Failed to fetch insights");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const fetchUsers = async () => {
     setLoading(true);
     try {
       const res = await fetch("/api/admin/users");
       const data = await res.json();
-      if (data.users) setUsers(data.users);
-    } catch (e) {
+      if (data.users) {
+        setUsers(data.users);
+      }
+    } catch {
       toast.error("Failed to fetch users");
     } finally {
       setLoading(false);
@@ -52,8 +78,10 @@ export default function AdminDashboardClient() {
     try {
       const res = await fetch("/api/admin/upgrade-requests");
       const data = await res.json();
-      if (data.requests) setUpgradeRequests(data.requests);
-    } catch (e) {
+      if (data.requests) {
+        setUpgradeRequests(data.requests);
+      }
+    } catch {
       toast.error("Failed to fetch upgrade requests");
     } finally {
       setLoading(false);
@@ -64,8 +92,10 @@ export default function AdminDashboardClient() {
     try {
       const res = await fetch("/api/admin/stats");
       const data = await res.json();
-      if (data) setStats(data);
-    } catch (e) {
+      if (data) {
+        setStats(data);
+      }
+    } catch {
       console.error("Failed to fetch stats");
     }
   };
@@ -76,7 +106,10 @@ export default function AdminDashboardClient() {
       fetchStats();
     } else if (activeTab === "upgrade-requests") {
       fetchUpgradeRequests();
+    } else if (activeTab === "insights") {
+      fetchInsights();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeTab]);
 
   const handleVoucherSubmit = async () => {
@@ -87,12 +120,13 @@ export default function AdminDashboardClient() {
         body: JSON.stringify(voucherData),
       });
       const data = await res.json();
-      if (data.error) toast.error(data.error);
-      else {
+      if (data.error) {
+        toast.error(data.error);
+      } else {
         toast.success("Voucher created successfully!");
         setVoucherData({ ...voucherData, code: "" });
       }
-    } catch (e) {
+    } catch {
       toast.error("Error creating voucher");
     }
   };
@@ -111,18 +145,19 @@ export default function AdminDashboardClient() {
       } else {
         toast.error(data.error || "Update failed");
       }
-    } catch (e) {
+    } catch {
       toast.error("Update failed");
     }
   };
 
   const handleDeleteUser = async (userId: string) => {
     if (
-      !confirm(
+      !window.confirm(
         "Are you sure you want to delete this user? This action cannot be undone."
       )
-    )
+    ) {
       return;
+    }
 
     try {
       const res = await fetch(`/api/admin/users?id=${userId}`, {
@@ -135,7 +170,7 @@ export default function AdminDashboardClient() {
       } else {
         toast.error(data.error || "Delete failed");
       }
-    } catch (e) {
+    } catch {
       toast.error("Delete failed");
     }
   };
@@ -172,7 +207,7 @@ export default function AdminDashboardClient() {
 
     if (
       emailData.recipientType !== "single" &&
-      !confirm(
+      !window.confirm(
         `Are you sure you want to broadcast this email to ${emailData.recipientType.toUpperCase()} users? This action cannot be undone.`
       )
     ) {
@@ -206,7 +241,7 @@ export default function AdminDashboardClient() {
       } else {
         toast.error(data.error || "Failed to send email");
       }
-    } catch (e) {
+    } catch {
       toast.error("Error sending email");
     } finally {
       setLoading(false);
@@ -238,6 +273,13 @@ export default function AdminDashboardClient() {
           >
             <TicketIcon size={18} />
             <span className="text-sm font-medium">Vouchers</span>
+          </button>
+          <button
+            className={`flex items-center gap-3 px-4 py-2.5 rounded-xl transition-all ${activeTab === "insights" ? "bg-zinc-800 text-white shadow-lg" : "text-zinc-500 hover:text-white hover:bg-zinc-800/50"}`}
+            onClick={() => setActiveTab("insights")}
+          >
+            <BarChartIcon size={18} />
+            <span className="text-sm font-medium">Insights</span>
           </button>
           <button
             className={`flex items-center gap-3 px-4 py-2.5 rounded-xl transition-all ${activeTab === "users" ? "bg-zinc-800 text-white shadow-lg" : "text-zinc-500 hover:text-white hover:bg-zinc-800/50"}`}
@@ -335,7 +377,7 @@ export default function AdminDashboardClient() {
                       onChange={(e) =>
                         setVoucherData({
                           ...voucherData,
-                          durationMonths: Number.parseInt(e.target.value),
+                          durationMonths: Number.parseInt(e.target.value, 10),
                         })
                       }
                       type="number"
@@ -352,7 +394,7 @@ export default function AdminDashboardClient() {
                       onChange={(e) =>
                         setVoucherData({
                           ...voucherData,
-                          value: Number.parseInt(e.target.value),
+                          value: Number.parseInt(e.target.value, 10),
                         })
                       }
                       type="number"
@@ -381,6 +423,177 @@ export default function AdminDashboardClient() {
                 </p>
               </div>
             </section>
+          </div>
+        ) : activeTab === "insights" ? (
+          <div className="flex flex-col gap-6">
+            <h2 className="text-xl font-bold text-white mb-2">
+              Lalu Lintas Semua Pengunjung (24 Jam)
+            </h2>
+
+            {/* Aggregate Total Card */}
+            {insights?.realtimeTraffic &&
+              insights.realtimeTraffic.length > 0 && (
+                <div className="bg-gradient-to-br from-blue-500/10 to-purple-500/10 border border-blue-500/20 p-6 rounded-3xl relative overflow-hidden group mb-2 shadow-xl">
+                  <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
+                    <BarChartIcon className="text-blue-500" size={80} />
+                  </div>
+                  <h3 className="text-blue-400 text-xs font-bold uppercase tracking-widest mb-1">
+                    TOTAL KESELURUHAN WEBSITE
+                  </h3>
+                  <div className="flex items-end gap-6 mt-2">
+                    <div>
+                      <p className="text-5xl font-black text-white">
+                        {insights.realtimeTraffic.reduce(
+                          (acc, curr) => acc + Number(curr.totalHits),
+                          0
+                        )}
+                      </p>
+                      <p className="text-xs text-zinc-400 uppercase font-bold tracking-wider mt-1">
+                        Total Dilihat
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-5xl font-black text-blue-400">
+                        {insights.realtimeTraffic.reduce(
+                          (acc, curr) => acc + Number(curr.uniqueVisitors),
+                          0
+                        )}
+                      </p>
+                      <p className="text-xs text-zinc-400 uppercase font-bold tracking-wider mt-1">
+                        Jumlah Orang (Unik)
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+            <h3 className="text-sm font-bold text-zinc-500 mt-2 mb-1">
+              Rincian per Halaman:
+            </h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 animate-in fade-in slide-in-from-bottom-4">
+              {insights?.realtimeTraffic?.map((traffic) => (
+                <div
+                  className="bg-[#121214] border border-zinc-800/50 p-6 rounded-3xl relative overflow-hidden group"
+                  key={traffic.path}
+                >
+                  <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
+                    <BarChartIcon size={60} />
+                  </div>
+                  <h3 className="text-zinc-500 text-xs font-bold uppercase tracking-widest mb-1">
+                    Halaman: {traffic.path || "/"}
+                  </h3>
+                  <div className="flex items-end gap-4 mt-2">
+                    <div>
+                      <p className="text-4xl font-black text-white">
+                        {traffic.totalHits}
+                      </p>
+                      <p className="text-xs text-zinc-500 uppercase font-bold tracking-wider mt-1">
+                        Total Dilihat
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-4xl font-black text-blue-400">
+                        {traffic.uniqueVisitors}
+                      </p>
+                      <p className="text-xs text-zinc-500 uppercase font-bold tracking-wider mt-1">
+                        Jumlah Orang (Unik)
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              ))}
+              {!insights?.realtimeTraffic?.length && !loading && (
+                <div className="bg-[#121214] border border-zinc-800/50 p-6 rounded-3xl col-span-2 text-center text-zinc-500 py-12">
+                  Belum ada kunjungan ke halaman mana pun dalam 24 jam terakhir.
+                </div>
+              )}
+            </div>
+
+            <h2 className="text-xl font-bold text-white mt-8 mb-2">
+              Aktivitas Pengguna (Yang Sudah Login)
+            </h2>
+            <div className="bg-[#121214] border border-zinc-800/50 rounded-3xl overflow-hidden shadow-2xl">
+              <div className="overflow-x-auto">
+                <table className="w-full text-left">
+                  <thead>
+                    <tr className="border-b border-zinc-800 bg-zinc-900/30">
+                      <th className="p-4 text-xs font-bold text-zinc-500 uppercase tracking-widest whitespace-nowrap">
+                        Nama & Email
+                      </th>
+                      <th className="p-4 text-xs font-bold text-zinc-500 uppercase tracking-widest whitespace-nowrap text-center">
+                        Total Chat
+                      </th>
+                      <th className="p-4 text-xs font-bold text-zinc-500 uppercase tracking-widest whitespace-nowrap text-center">
+                        Total Pesan
+                      </th>
+                      <th className="p-4 text-xs font-bold text-zinc-500 uppercase tracking-widest whitespace-nowrap text-right">
+                        Terakhir Aktif
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {insights?.authenticatedVisitors?.map((user) => (
+                      <tr
+                        className="border-b border-zinc-800/50 hover:bg-zinc-800/20 transition-colors"
+                        key={user.id}
+                      >
+                        <td className="p-4">
+                          <div className="flex flex-col">
+                            <span className="font-bold text-sm text-white">
+                              {user.name || "Unknown"}
+                            </span>
+                            <span className="text-xs text-zinc-500">
+                              {user.email}
+                            </span>
+                            {user.isPro && (
+                              <span className="text-[10px] bg-amber-500/10 text-amber-500 uppercase font-bold px-2 py-0.5 rounded-full w-max mt-1">
+                                Pro
+                              </span>
+                            )}
+                          </div>
+                        </td>
+                        <td className="p-4 text-center text-sm font-medium text-white">
+                          {user.chatCount}
+                        </td>
+                        <td className="p-4 text-center text-sm font-medium text-white">
+                          {user.messageCount}
+                        </td>
+                        <td className="p-4 text-right text-xs text-zinc-400">
+                          {user.lastActiveAt
+                            ? formatDistanceToNow(new Date(user.lastActiveAt), {
+                                addSuffix: true,
+                              })
+                                .replace("about", "sekitar")
+                                .replace("less than a minute ago", "baru saja")
+                                .replace("minute", "menit")
+                                .replace("minutes", "menit")
+                                .replace("hour", "jam")
+                                .replace("hours", "jam")
+                                .replace("day", "hari")
+                                .replace("days", "hari")
+                                .replace("month", "bulan")
+                                .replace("months", "bulan")
+                                .replace("year", "tahun")
+                                .replace("years", "tahun")
+                                .replace("ago", "yang lalu")
+                            : "Belum Pernah"}
+                        </td>
+                      </tr>
+                    ))}
+                    {!insights?.authenticatedVisitors?.length && !loading && (
+                      <tr>
+                        <td
+                          className="p-8 text-center text-zinc-500 text-sm"
+                          colSpan={4}
+                        >
+                          Belum ada aktivitas dari pengguna yang login.
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </div>
           </div>
         ) : activeTab === "users" ? (
           <div className="flex flex-col gap-6">
@@ -576,10 +789,11 @@ export default function AdminDashboardClient() {
                                     "Enter new limit count:",
                                     user.limitCount
                                   );
-                                  if (newLimit !== null)
+                                  if (newLimit !== null) {
                                     handleUpdateUser(user.id, {
-                                      limitCount: Number.parseInt(newLimit),
+                                      limitCount: Number.parseInt(newLimit, 10),
                                     });
+                                  }
                                 }}
                                 title="Edit Limit"
                               >
@@ -735,7 +949,7 @@ export default function AdminDashboardClient() {
                                           data.error || "Approval failed"
                                         );
                                       }
-                                    } catch (e) {
+                                    } catch (_e) {
                                       toast.error("Approval failed");
                                     }
                                   }}
@@ -768,7 +982,7 @@ export default function AdminDashboardClient() {
                                           data.error || "Rejection failed"
                                         );
                                       }
-                                    } catch (e) {
+                                    } catch (_e) {
                                       toast.error("Rejection failed");
                                     }
                                   }}

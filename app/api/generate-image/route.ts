@@ -102,9 +102,12 @@ export async function POST(request: NextRequest) {
     // Fallback: check standard OpenAI images format just in case
     const urlImg = data?.data?.[0]?.url;
     const b64Img = data?.data?.[0]?.b64_json;
-    if (urlImg) return NextResponse.json({ imageUrl: urlImg });
-    if (b64Img)
+    if (urlImg) {
+      return NextResponse.json({ imageUrl: urlImg });
+    }
+    if (b64Img) {
       return NextResponse.json({ imageUrl: `data:image/png;base64,${b64Img}` });
+    }
 
     console.error(
       "[generate-image] Unexpected response shape:",

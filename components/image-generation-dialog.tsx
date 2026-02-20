@@ -51,7 +51,9 @@ export function ImageGenerationDialog({
   };
 
   const handleDownload = () => {
-    if (!imageUrl) return;
+    if (!imageUrl) {
+      return;
+    }
     const link = document.createElement("a");
     link.href = imageUrl;
     link.download = `ultramaxo-image-${Date.now()}.png`;
@@ -65,7 +67,9 @@ export function ImageGenerationDialog({
     onClose();
   };
 
-  if (!open) return null;
+  if (!open) {
+    return null;
+  }
 
   return (
     // Backdrop
@@ -73,7 +77,9 @@ export function ImageGenerationDialog({
     <div
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4"
       onClick={(e) => {
-        if (e.target === e.currentTarget) handleClose();
+        if (e.target === e.currentTarget) {
+          handleClose();
+        }
       }}
     >
       {/* Dialog */}

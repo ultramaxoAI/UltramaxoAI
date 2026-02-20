@@ -1,8 +1,9 @@
 "use client";
 
-import { useState } from "react";
-import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
+import { useSession } from "next-auth/react";
+import { useState } from "react";
+import { toast } from "@/components/toast";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -14,27 +15,35 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { toast } from "@/components/toast";
-import { validateImage, formatFileSize, MAX_IMAGE_SIZE } from "@/lib/file-validation";
-import { PencilIcon, LoaderIcon } from "./icons";
+import {
+  formatFileSize,
+  MAX_IMAGE_SIZE,
+  validateImage,
+} from "@/lib/file-validation";
+import { LoaderIcon, PencilIcon } from "./icons";
 
 export function ProfileEditDialog() {
   const { data: session, update } = useSession();
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
-  
+
   const [name, setName] = useState(session?.user?.name || "");
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (!file) return;
+    if (!file) {
+      return;
+    }
 
     const validation = validateImage(file);
     if (!validation.valid) {
-      toast({ type: "error", description: validation.error || "File tidak valid" });
+      toast({
+        type: "error",
+        description: validation.error || "File tidak valid",
+      });
       return;
     }
 
@@ -68,7 +77,7 @@ export function ProfileEditDialog() {
       }
 
       const data = await response.json();
-      
+
       // Update session
       await update({
         ...session,
@@ -124,7 +133,8 @@ export function ProfileEditDialog() {
               type="file"
             />
             <p className="text-xs text-muted-foreground">
-              Maksimal {formatFileSize(MAX_IMAGE_SIZE)} - JPG, PNG, GIF, atau WebP
+              Maksimal {formatFileSize(MAX_IMAGE_SIZE)} - JPG, PNG, GIF, atau
+              WebP
             </p>
             {imagePreview && (
               <div className="mt-2">

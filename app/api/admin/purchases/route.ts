@@ -1,9 +1,9 @@
+import { NextResponse } from "next/server";
 import { auth } from "@/app/(auth)/auth";
 import {
   listPurchaseRequestsAdmin,
   updatePurchaseRequestStatus,
 } from "@/lib/db/queries";
-import { NextResponse } from "next/server";
 
 export async function GET() {
   const session = await auth();
@@ -16,7 +16,10 @@ export async function GET() {
     return NextResponse.json({ purchases });
   } catch (error) {
     console.error("API Error (admin/purchases/GET):", error);
-    return NextResponse.json({ error: "Failed to fetch purchases" }, { status: 500 });
+    return NextResponse.json(
+      { error: "Failed to fetch purchases" },
+      { status: 500 }
+    );
   }
 }
 
@@ -31,10 +34,13 @@ export async function PATCH(request: Request) {
     const { id, status } = body || {};
 
     if (!id || !status) {
-      return NextResponse.json({ error: "Missing id or status" }, { status: 400 });
+      return NextResponse.json(
+        { error: "Missing id or status" },
+        { status: 400 }
+      );
     }
 
-    if (!['pending', 'paid', 'approved', 'rejected'].includes(status)) {
+    if (!["pending", "paid", "approved", "rejected"].includes(status)) {
       return NextResponse.json({ error: "Invalid status" }, { status: 400 });
     }
 
@@ -42,6 +48,9 @@ export async function PATCH(request: Request) {
     return NextResponse.json({ purchase });
   } catch (error) {
     console.error("API Error (admin/purchases/PATCH):", error);
-    return NextResponse.json({ error: "Failed to update purchase" }, { status: 500 });
+    return NextResponse.json(
+      { error: "Failed to update purchase" },
+      { status: 500 }
+    );
   }
 }

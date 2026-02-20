@@ -68,7 +68,13 @@ export const DownloadIcon = ({ size = 16 }: { size?: number }) => (
   </svg>
 );
 
-export const FileTextIcon = ({ size = 16, className }: { size?: number; className?: string }) => (
+export const FileTextIcon = ({
+  size = 16,
+  className,
+}: {
+  size?: number;
+  className?: string;
+}) => (
   <svg
     className={className}
     fill="none"
@@ -89,7 +95,13 @@ export const FileTextIcon = ({ size = 16, className }: { size?: number; classNam
   </svg>
 );
 
-export const FileJsonIcon = ({ size = 16, className }: { size?: number; className?: string }) => (
+export const FileJsonIcon = ({
+  size = 16,
+  className,
+}: {
+  size?: number;
+  className?: string;
+}) => (
   <svg
     className={className}
     fill="none"
@@ -109,7 +121,13 @@ export const FileJsonIcon = ({ size = 16, className }: { size?: number; classNam
   </svg>
 );
 
-export const FileIcon = ({ size = 16, className }: { size?: number; className?: string }) => (
+export const FileIcon = ({
+  size = 16,
+  className,
+}: {
+  size?: number;
+  className?: string;
+}) => (
   <svg
     className={className}
     fill="none"

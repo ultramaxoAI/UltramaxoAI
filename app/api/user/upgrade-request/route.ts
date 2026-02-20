@@ -46,7 +46,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ success: true });
   } catch (error: any) {
     console.error("Error creating upgrade request:", error);
-    
+
     if (error.name === "ZodError") {
       return NextResponse.json(
         { error: "Invalid request data" },

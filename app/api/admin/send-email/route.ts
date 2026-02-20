@@ -46,8 +46,9 @@ export async function POST(request: Request) {
         );
       }
       if (type === "custom") {
-        if (!subject || !message)
+        if (!subject || !message) {
           throw new Error("Subject and message required");
+        }
         return await sendCustomEmail(targetEmail, subject, message);
       }
       if (type === "verification-test") {
@@ -58,7 +59,9 @@ export async function POST(request: Request) {
 
     if (actualRecipientType === "single") {
       const success = await sendToUser(email, name);
-      if (success) return NextResponse.json({ success: true });
+      if (success) {
+        return NextResponse.json({ success: true });
+      }
       return NextResponse.json(
         { error: "Failed to send email" },
         { status: 500 }
@@ -66,7 +69,8 @@ export async function POST(request: Request) {
     }
 
     // BROADCAST LOGIC
-    let query;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    let query: any;
     if (actualRecipientType === "all") {
       query = db.select().from(user);
     } else if (actualRecipientType === "pro") {
@@ -90,11 +94,16 @@ export async function POST(request: Request) {
 
     // Loop and send with throttle to avoid Resend rate limit (2 req/sec)
     for (const u of users) {
-      if (!u.email) continue;
+      if (!u.email) {
+        continue;
+      }
       try {
         const result = await sendToUser(u.email, u.name || "User");
-        if (result) sentCount++;
-        else failCount++;
+        if (result) {
+          sentCount++;
+        } else {
+          failCount++;
+        }
       } catch (e) {
         console.error(`Failed to send to ${u.email}`, e);
         failCount++;

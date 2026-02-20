@@ -1,7 +1,8 @@
 "use client";
 
-import { useState } from "react";
 import { Download } from "lucide-react";
+import { useState } from "react";
+import { toast } from "@/components/toast";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -12,8 +13,7 @@ import {
   DropdownMenuSubTrigger,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { toast } from "@/components/toast";
-import { DownloadIcon, FileTextIcon, FileJsonIcon, FileIcon } from "./icons";
+import { DownloadIcon, FileIcon, FileJsonIcon, FileTextIcon } from "./icons";
 
 interface ChatExportButtonProps {
   chatId: string;
@@ -21,14 +21,20 @@ interface ChatExportButtonProps {
   asMenuItem?: boolean;
 }
 
-export function ChatExportButton({ chatId, className, asMenuItem = false }: ChatExportButtonProps) {
+export function ChatExportButton({
+  chatId,
+  className,
+  asMenuItem = false,
+}: ChatExportButtonProps) {
   const [exporting, setExporting] = useState(false);
 
   const handleExport = async (format: "json" | "markdown" | "txt") => {
     setExporting(true);
     try {
-      const response = await fetch(`/api/chat/export?chatId=${chatId}&format=${format}`);
-      
+      const response = await fetch(
+        `/api/chat/export?chatId=${chatId}&format=${format}`
+      );
+
       if (!response.ok) {
         throw new Error("Gagal export chat");
       }
@@ -37,15 +43,25 @@ export function ChatExportButton({ chatId, className, asMenuItem = false }: Chat
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
-      a.download = response.headers.get("content-disposition")?.split("filename=")[1]?.replace(/"/g, "") || `chat.${format}`;
+      a.download =
+        response.headers
+          .get("content-disposition")
+          ?.split("filename=")[1]
+          ?.replace(/"/g, "") || `chat.${format}`;
       document.body.appendChild(a);
       a.click();
       window.URL.revokeObjectURL(url);
       document.body.removeChild(a);
 
-      toast({ type: "success", description: `Chat berhasil di-export sebagai ${format.toUpperCase()}!` });
+      toast({
+        type: "success",
+        description: `Chat berhasil di-export sebagai ${format.toUpperCase()}!`,
+      });
     } catch (error: any) {
-      toast({ type: "error", description: error.message || "Gagal export chat" });
+      toast({
+        type: "error",
+        description: error.message || "Gagal export chat",
+      });
     } finally {
       setExporting(false);
     }
@@ -60,15 +76,24 @@ export function ChatExportButton({ chatId, className, asMenuItem = false }: Chat
           Export Chat
         </DropdownMenuSubTrigger>
         <DropdownMenuSubContent>
-          <DropdownMenuItem onClick={() => handleExport("json")} disabled={exporting}>
+          <DropdownMenuItem
+            disabled={exporting}
+            onClick={() => handleExport("json")}
+          >
             <FileJsonIcon className="mr-2 h-4 w-4" />
             Export as JSON
           </DropdownMenuItem>
-          <DropdownMenuItem onClick={() => handleExport("markdown")} disabled={exporting}>
+          <DropdownMenuItem
+            disabled={exporting}
+            onClick={() => handleExport("markdown")}
+          >
             <FileTextIcon className="mr-2 h-4 w-4" />
             Export as Markdown
           </DropdownMenuItem>
-          <DropdownMenuItem onClick={() => handleExport("txt")} disabled={exporting}>
+          <DropdownMenuItem
+            disabled={exporting}
+            onClick={() => handleExport("txt")}
+          >
             <FileIcon className="mr-2 h-4 w-4" />
             Export as Text
           </DropdownMenuItem>

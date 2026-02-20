@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
 import { Check, Copy, Download } from "lucide-react";
+import { useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 
 interface CodeBlockWrapperProps {
@@ -9,7 +9,10 @@ interface CodeBlockWrapperProps {
   language?: string;
 }
 
-export function CodeBlockWrapper({ children, language }: CodeBlockWrapperProps) {
+export function CodeBlockWrapper({
+  children,
+  language,
+}: CodeBlockWrapperProps) {
   const [copied, setCopied] = useState(false);
   const preRef = useRef<HTMLDivElement>(null);
 
@@ -38,23 +41,23 @@ export function CodeBlockWrapper({ children, language }: CodeBlockWrapperProps) 
   };
 
   return (
-    <div ref={preRef} className="group/code relative my-4">
+    <div className="group/code relative my-4" ref={preRef}>
       <div className="absolute right-2 top-2 z-10 flex gap-1 opacity-0 transition-opacity group-hover/code:opacity-100">
         <Button
-          variant="ghost"
-          size="icon"
           className="size-8 bg-muted/80 backdrop-blur-sm hover:bg-muted"
           onClick={handleCopy}
+          size="icon"
           title={copied ? "Copied!" : "Copy code"}
+          variant="ghost"
         >
           {copied ? <Check className="size-4" /> : <Copy className="size-4" />}
         </Button>
         <Button
-          variant="ghost"
-          size="icon"
           className="size-8 bg-muted/80 backdrop-blur-sm hover:bg-muted"
           onClick={handleDownload}
+          size="icon"
           title="Download code"
+          variant="ghost"
         >
           <Download className="size-4" />
         </Button>

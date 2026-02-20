@@ -41,7 +41,8 @@ export default function VerifyPage() {
       });
 
       const text = await response.text();
-      let data;
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      let data: any;
       try {
         data = JSON.parse(text);
       } catch {
@@ -143,13 +144,17 @@ export default function VerifyPage() {
             onSubmit={step === "verify" ? handleVerify : handleResendCode}
           >
             <div>
-              <label className="block text-sm font-medium text-slate-300 mb-2">
+              <label
+                className="block text-sm font-medium text-slate-300 mb-2"
+                htmlFor="verify-email"
+              >
                 Email
               </label>
               <div className="relative">
                 <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-500" />
                 <input
                   className="w-full pl-10 pr-4 py-2.5 bg-slate-800 border border-slate-700 rounded-lg text-white placeholder-slate-500 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 outline-none transition-all"
+                  id="verify-email"
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="nama@email.com"
                   required
@@ -161,13 +166,17 @@ export default function VerifyPage() {
 
             {step === "verify" && (
               <div>
-                <label className="block text-sm font-medium text-slate-300 mb-2">
+                <label
+                  className="block text-sm font-medium text-slate-300 mb-2"
+                  htmlFor="verification-code"
+                >
                   Kode Verifikasi (6 digit)
                 </label>
                 <div className="relative">
                   <Key className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-500" />
                   <input
                     className="w-full pl-10 pr-4 py-2.5 bg-slate-800 border border-slate-700 rounded-lg text-white placeholder-slate-500 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 outline-none transition-all text-center text-2xl tracking-widest"
+                    id="verification-code"
                     maxLength={6}
                     onChange={(e) =>
                       setCode(e.target.value.replace(/\D/g, "").slice(0, 6))
@@ -222,6 +231,7 @@ export default function VerifyPage() {
                 setError("");
                 setSuccess("");
               }}
+              type="button"
             >
               {step === "verify"
                 ? "Belum menerima kode? Kirim ulang"
@@ -233,6 +243,7 @@ export default function VerifyPage() {
             <button
               className="text-slate-400 hover:text-white text-sm flex items-center justify-center gap-2 mx-auto transition-colors"
               onClick={() => router.push("/login")}
+              type="button"
             >
               Kembali ke Login
             </button>

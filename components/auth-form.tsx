@@ -59,7 +59,7 @@ export function AuthForm({
           description: data.error || "Gagal mengirim kode.",
         });
       }
-    } catch (error) {
+    } catch (_error) {
       toast({
         type: "error",
         description: "Terjadi kesalahan saat mengirim kode.",

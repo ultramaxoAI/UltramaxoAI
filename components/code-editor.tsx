@@ -136,19 +136,6 @@ async function getLanguageExtension(language: SupportedLanguage) {
       return javascript({ jsx: true, typescript: true });
     case "python":
       return python();
-    case "html":
-    case "css":
-    case "json":
-    case "markdown":
-    case "java":
-    case "cpp":
-    case "c":
-    case "rust":
-    case "go":
-    case "php":
-    case "ruby":
-    case "swift":
-    case "kotlin":
     default:
       return javascript(); // Fallback to javascript for syntax highlighting
   }
@@ -195,14 +182,18 @@ function PureCodeEditor({
     };
     // NOTE: we only want to run this effect once
     // eslint-disable-next-line
-  }, []);
+  }, [content, detectedLanguage]);
 
   useEffect(() => {
-    if (!editorRef.current) return;
+    if (!editorRef.current) {
+      return;
+    }
 
     (async () => {
       const view = editorRef.current;
-      if (!view) return;
+      if (!view) {
+        return;
+      }
 
       const langExtension = await getLanguageExtension(detectedLanguage);
 

@@ -57,7 +57,8 @@ function PureArtifactActions({
                   "p-2.5": !action.label,
                   "px-3 py-2": action.label,
                 },
-                action.label && "bg-primary text-primary-foreground hover:bg-primary/90"
+                action.label &&
+                  "bg-primary text-primary-foreground hover:bg-primary/90"
               )}
               disabled={
                 isLoading || artifact.status === "streaming"
@@ -80,7 +81,9 @@ function PureArtifactActions({
               variant={action.label ? "default" : "outline"}
             >
               {action.icon}
-              {action.label && <span className="ml-1.5 font-medium">{action.label}</span>}
+              {action.label && (
+                <span className="ml-1.5 font-medium">{action.label}</span>
+              )}
             </Button>
           </TooltipTrigger>
           <TooltipContent>{action.description}</TooltipContent>

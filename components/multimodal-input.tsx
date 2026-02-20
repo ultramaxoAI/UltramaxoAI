@@ -229,7 +229,9 @@ function PureMultimodalInput({
           body: JSON.stringify({ prompt: currentInput }),
         });
 
-        if (!res.ok) throw new Error("Failed to generate image");
+        if (!res.ok) {
+          throw new Error("Failed to generate image");
+        }
 
         const data = await res.json();
 
@@ -250,7 +252,7 @@ function PureMultimodalInput({
               : m
           )
         );
-      } catch (error) {
+      } catch (_error) {
         setMessages((messages: ChatMessage[]) =>
           messages.map((m: ChatMessage) =>
             m.id === loadingMessageId
@@ -310,7 +312,6 @@ function PureMultimodalInput({
     chatId,
     resetHeight,
     imageGenerationMode,
-    setImageGenerationMode,
     setMessages,
   ]);
 
@@ -617,7 +618,9 @@ function PureMultimodalInput({
                   )}
                   disabled={!isPro}
                   onClick={() => {
-                    if (isPro) setImageGenerationMode(!imageGenerationMode);
+                    if (isPro) {
+                      setImageGenerationMode(!imageGenerationMode);
+                    }
                   }}
                 >
                   <Wand2Icon className="mr-2 h-4 w-4" />

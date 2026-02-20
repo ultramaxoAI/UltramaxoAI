@@ -246,6 +246,15 @@ export const stream = pgTable(
 
 export type Stream = InferSelectModel<typeof stream>;
 
+export const pageVisit = pgTable("page_visit", {
+  id: uuid("id").primaryKey().notNull().defaultRandom(),
+  path: text("path").notNull(),
+  ipHash: text("ipHash").notNull(), // hashed IP for privacy
+  visitedAt: timestamp("visitedAt").notNull().defaultNow(),
+});
+
+export type PageVisit = InferSelectModel<typeof pageVisit>;
+
 export const redeemCode = pgTable("redeem_codes", {
   id: uuid("id").primaryKey().notNull().defaultRandom(),
   code: varchar("code", { length: 50 }).notNull().unique(),

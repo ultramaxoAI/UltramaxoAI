@@ -502,10 +502,10 @@ export const systemPrompt = ({
     selectedChatModel.includes("reasoning") ||
     selectedChatModel.includes("thinking")
   ) {
-    return basePrompt + "\n\n" + requestPrompt;
+    return `${basePrompt}\n\n${requestPrompt}`;
   }
 
-  return basePrompt + "\n\n" + requestPrompt + "\n\n" + artifactsPrompt;
+  return `${basePrompt}\n\n${requestPrompt}\n\n${artifactsPrompt}`;
 };
 
 // ──────────────────────────────────────────────────────────────────────────────

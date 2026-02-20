@@ -1,7 +1,7 @@
+import { compare } from "bcrypt-ts";
+import { NextResponse } from "next/server";
 import { auth } from "@/app/(auth)/auth";
 import { getUserById, updateUserPassword } from "@/lib/db/queries";
-import { NextResponse } from "next/server";
-import { compare } from "bcrypt-ts";
 
 export async function GET() {
   const session = await auth();
@@ -19,7 +19,10 @@ export async function GET() {
     return NextResponse.json({ user: userWithoutPassword });
   } catch (error) {
     console.error("API Error (user/settings/GET):", error);
-    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    return NextResponse.json(
+      { error: "Internal server error" },
+      { status: 500 }
+    );
   }
 }
 
@@ -41,13 +44,19 @@ export async function PATCH(request: Request) {
     const user = users[0];
 
     if (!user.password) {
-      return NextResponse.json({ error: "Akun ini tidak memiliki password (login via Google/GitHub)" }, { status: 400 });
+      return NextResponse.json(
+        { error: "Akun ini tidak memiliki password (login via Google/GitHub)" },
+        { status: 400 }
+      );
     }
 
     // Check current password
     const isPasswordValid = await compare(currentPassword, user.password);
     if (!isPasswordValid) {
-      return NextResponse.json({ error: "Password saat ini salah" }, { status: 400 });
+      return NextResponse.json(
+        { error: "Password saat ini salah" },
+        { status: 400 }
+      );
     }
 
     await updateUserPassword(session.user.id, newPassword);
@@ -55,6 +64,9 @@ export async function PATCH(request: Request) {
     return NextResponse.json({ success: true });
   } catch (error) {
     console.error("API Error (user/settings/PATCH):", error);
-    return NextResponse.json({ error: "Gagal memperbarui password" }, { status: 500 });
+    return NextResponse.json(
+      { error: "Gagal memperbarui password" },
+      { status: 500 }
+    );
   }
 }

@@ -28,7 +28,9 @@ export function ChartViewer({ config, title }: ChartViewerProps) {
   const chartInstanceRef = useRef<any>(null);
 
   useEffect(() => {
-    if (!canvasRef.current) return;
+    if (!canvasRef.current) {
+      return;
+    }
 
     // Dynamically import Chart.js to reduce bundle size
     import("chart.js/auto").then(({ default: Chart }) => {
@@ -38,7 +40,7 @@ export function ChartViewer({ config, title }: ChartViewerProps) {
       }
 
       // Create new chart
-      const ctx = canvasRef.current!.getContext("2d");
+      const ctx = canvasRef.current?.getContext("2d");
       if (ctx) {
         chartInstanceRef.current = new Chart(ctx, {
           type: config.type,

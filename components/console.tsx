@@ -173,8 +173,8 @@ export function Console({ consoleOutputs, setConsoleOutputs }: ConsoleProps) {
                       </picture>
                     ) : content.type === "html" ? (
                       <iframe
-                        key={`${consoleOutput.id}-${contentIndex}`}
                         className="w-full min-h-100 rounded-md border border-zinc-200 dark:border-zinc-700 bg-white"
+                        key={`${consoleOutput.id}-${contentIndex}`}
                         sandbox="allow-scripts allow-same-origin"
                         srcDoc={content.value}
                         title="HTML Output"

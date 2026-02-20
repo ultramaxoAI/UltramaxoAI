@@ -5,7 +5,7 @@ export async function GET() {
   const vars = {
     hasPostgresUrl: !!process.env.POSTGRES_URL,
     postgresUrlStart: process.env.POSTGRES_URL
-      ? process.env.POSTGRES_URL.substring(0, 15) + "..."
+      ? `${process.env.POSTGRES_URL.substring(0, 15)}...`
       : "N/A",
     hasAuthSecret: !!process.env.AUTH_SECRET,
     nodeEnv: process.env.NODE_ENV,

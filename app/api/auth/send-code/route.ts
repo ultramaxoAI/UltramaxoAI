@@ -11,7 +11,7 @@ export async function POST(request: Request) {
     }
 
     // Generate 6-digit code
-    const code = Math.floor(100000 + Math.random() * 900000).toString();
+    const code = Math.floor(100_000 + Math.random() * 900_000).toString();
 
     // Save to DB
     await upsertVerificationCode(email, code);

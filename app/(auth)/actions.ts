@@ -74,15 +74,19 @@ export const register = async (
     });
 
     // Only verify code if email verification is enabled
-    const emailVerificationEnabled = process.env.ENABLE_EMAIL_VERIFICATION === "true";
-    
+    const emailVerificationEnabled =
+      process.env.ENABLE_EMAIL_VERIFICATION === "true";
+
     if (emailVerificationEnabled) {
       if (!validatedData.code) {
         return { status: "invalid_code" };
       }
 
       // Verify code first
-      const isCodeValid = await verifyVerificationCode(validatedData.email!, validatedData.code);
+      const isCodeValid = await verifyVerificationCode(
+        validatedData.email as string,
+        validatedData.code
+      );
       if (!isCodeValid) {
         return { status: "invalid_code" };
       }
@@ -92,13 +96,13 @@ export const register = async (
       return { status: "password_mismatch" };
     }
 
-    const [user] = await getUser(validatedData.email!);
+    const [user] = await getUser(validatedData.email as string);
 
     if (user) {
       return { status: "user_exists" } as RegisterActionState;
     }
     await createUser(
-      validatedData.email!,
+      validatedData.email as string,
       validatedData.password,
       validatedData.username
     );

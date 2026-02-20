@@ -1,11 +1,9 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { parseResponse } from "@/lib/parse-response";
 import { cn } from "@/lib/utils";
 import { Response } from "./elements/response";
-import { parseResponse } from "@/lib/parse-response";
-import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
-import { oneDark } from "react-syntax-highlighter/dist/esm/styles/prism";
 
 type CodeBlock = {
   language?: string;
@@ -28,11 +26,14 @@ const looksLikeHtml = (text: string) =>
   );
 
 const stripScriptsAndEvents = (html: string) => {
-  const withoutScripts = html.replace(/<script[\s\S]*?>[\s\S]*?<\/script>/gi, "");
+  const withoutScripts = html.replace(
+    /<script[\s\S]*?>[\s\S]*?<\/script>/gi,
+    ""
+  );
   const withoutEvents = withoutScripts.replace(/\son\w+\s*=\s*"[^"]*"/gi, "");
   const withoutJsUrls = withoutEvents.replace(
     /(href|src)\s*=\s*"\s*javascript:[^"]*"/gi,
-    "$1=\"\""
+    '$1=""'
   );
   return withoutJsUrls;
 };
@@ -69,11 +70,20 @@ const buildHtmlPreviewDoc = (blocks: CodeBlock[]) => {
   </body>
 </html>`;
 };
-function getFileName(language: string | undefined, index: number) {
+function _getFileName(language: string | undefined, index: number) {
   const lang = (language || "").toLowerCase();
-  if (lang === "html") return "index.html";
-  if (lang === "css") return "style.css";
-  if (lang === "js" || lang === "javascript" || lang === "ts" || lang === "typescript") {
+  if (lang === "html") {
+    return "index.html";
+  }
+  if (lang === "css") {
+    return "style.css";
+  }
+  if (
+    lang === "js" ||
+    lang === "javascript" ||
+    lang === "ts" ||
+    lang === "typescript"
+  ) {
     return "script.js";
   }
   return `snippet-${index + 1}${lang ? `.${lang}` : ""}`;
@@ -97,7 +107,7 @@ export function ResponseViewer({
     js: true,
     other: true,
   });
-  const [showPreview, setShowPreview] = useState(false);
+  const [_showPreview, setShowPreview] = useState(false);
 
   const parsed = useMemo(() => parseResponse(text), [text]);
 
@@ -123,10 +133,12 @@ export function ResponseViewer({
     [codeBlocks]
   );
   const hasCode = codeBlocks.length > 0;
-  const hasHtmlOrCss = htmlBlocks.length > 0 || !!htmlPreviewDoc;
+  const _hasHtmlOrCss = htmlBlocks.length > 0 || !!htmlPreviewDoc;
 
   const files = useMemo<FileEntry[]>(() => {
-    if (!hasCode) return [];
+    if (!hasCode) {
+      return [];
+    }
 
     let html = "";
     let css = "";
@@ -150,7 +162,9 @@ export function ResponseViewer({
         js += (js ? "\n\n" : "") + block.content;
       } else {
         other += (other ? "\n\n" : "") + block.content;
-        if (!otherLang) otherLang = lang || "text";
+        if (!otherLang) {
+          otherLang = lang || "text";
+        }
       }
     }
 
@@ -218,7 +232,9 @@ export function ResponseViewer({
     }
 
     setActiveFile((prev) => {
-      if (prev && files.some((f) => f.key === prev)) return prev;
+      if (prev && files.some((f) => f.key === prev)) {
+        return prev;
+      }
       const htmlFile = files.find((f) => f.key === "html");
       return (htmlFile ?? files[0]).key;
     });
@@ -231,9 +247,9 @@ export function ResponseViewer({
     }
   }, [activeFile]);
 
-  const canShowExplorer = showModes && files.length > 0;
+  const _canShowExplorer = showModes && files.length > 0;
 
-  const handleFileClick = (key: FileKey) => {
+  const _handleFileClick = (key: FileKey) => {
     const isOpen = openFiles[key] ?? true;
     const nextOpen = !isOpen;
 
@@ -242,12 +258,14 @@ export function ResponseViewer({
     if (nextOpen) {
       setActiveFile(key);
     } else if (activeFile === key) {
-      const firstOther = files.find((f) => f.key !== key && (openFiles[f.key] ?? true));
+      const firstOther = files.find(
+        (f) => f.key !== key && (openFiles[f.key] ?? true)
+      );
       setActiveFile(firstOther ? firstOther.key : null);
     }
   };
 
-  const active =
+  const _active =
     activeFile && (openFiles[activeFile] ?? true)
       ? files.find((f) => f.key === activeFile) || null
       : null;

@@ -26,6 +26,7 @@ import {
   type DBMessage,
   document,
   message,
+  pageVisit,
   passwordResetToken,
   purchaseRequest,
   redeemCode,
@@ -673,7 +674,9 @@ export async function redeemVoucher({
       .select()
       .from(user)
       .where(eq(user.id, userId));
-    if (!currentUser) return { error: "User tidak ditemukan." };
+    if (!currentUser) {
+      return { error: "User tidak ditemukan." };
+    }
 
     const updates: Partial<User> = {};
     if (voucher.type === "PRO") {
@@ -867,7 +870,9 @@ export async function verifyVerificationCode(email: string, code: string) {
         )
       );
 
-    if (!token) return false;
+    if (!token) {
+      return false;
+    }
 
     // Delete token after successful verification
     await db
@@ -902,7 +907,9 @@ export async function createPasswordResetTokenForEmail(email: string) {
       .select()
       .from(user)
       .where(eq(user.email, email));
-    if (!foundUser) return null;
+    if (!foundUser) {
+      return null;
+    }
 
     const token = generateUUID();
     const expiresAt = new Date(Date.now() + 60 * 60 * 1000);
@@ -936,7 +943,9 @@ export async function consumePasswordResetToken(token: string) {
       .from(passwordResetToken)
       .where(eq(passwordResetToken.token, token));
 
-    if (!row) return null;
+    if (!row) {
+      return null;
+    }
 
     if (row.expiresAt < new Date()) {
       await db
@@ -1092,7 +1101,9 @@ export async function updatePurchaseRequestStatus({
     return updated;
   } catch (error) {
     console.error("Database Error (updatePurchaseRequestStatus):", error);
-    if (error instanceof ChatSDKError) throw error;
+    if (error instanceof ChatSDKError) {
+      throw error;
+    }
     throw new ChatSDKError(
       "bad_request:database",
       "Failed to update purchase request"
@@ -1106,7 +1117,9 @@ export async function expireProIfNeeded(userId: string) {
       .select()
       .from(user)
       .where(eq(user.id, userId));
-    if (!currentUser) return null;
+    if (!currentUser) {
+      return null;
+    }
 
     if (currentUser.isPro && currentUser.proExpiresAt) {
       const now = new Date();
@@ -1135,5 +1148,70 @@ export async function deleteUserById(id: string) {
   } catch (error) {
     console.error("Database Error (deleteUserById):", error);
     throw new ChatSDKError("bad_request:database", "Failed to delete user");
+  }
+}
+
+export async function logPageVisit(path: string, ipHash: string) {
+  try {
+    await db.insert(pageVisit).values({
+      path,
+      ipHash,
+      visitedAt: new Date(),
+    });
+  } catch (error) {
+    console.error("Database Error (logPageVisit):", error);
+    // fail silently to not disrupt the user request
+  }
+}
+
+export async function getRealtimeVisits() {
+  try {
+    const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
+    const results = await db
+      .select({
+        path: pageVisit.path,
+        uniqueVisitors: sql<number>`count(DISTINCT ${pageVisit.ipHash})`,
+        totalHits: count(pageVisit.id),
+      })
+      .from(pageVisit)
+      .where(gt(pageVisit.visitedAt, twentyFourHoursAgo))
+      .groupBy(pageVisit.path);
+
+    return results;
+  } catch (error) {
+    console.error("Database Error (getRealtimeVisits):", error);
+    throw new ChatSDKError(
+      "bad_request:database",
+      "Failed to get realtime visits"
+    );
+  }
+}
+
+export async function getVisitorInsights() {
+  try {
+    const results = await db
+      .select({
+        id: user.id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+        isPro: user.isPro,
+        lastActiveAt: sql<Date>`max(${message.createdAt})`,
+        messageCount: count(message.id),
+        chatCount: sql<number>`count(DISTINCT ${chat.id})`,
+      })
+      .from(user)
+      .leftJoin(chat, eq(user.id, chat.userId))
+      .leftJoin(message, eq(chat.id, message.chatId))
+      .groupBy(user.id)
+      .orderBy(desc(sql`max(${message.createdAt})`));
+
+    return results;
+  } catch (error) {
+    console.error("Database Error (getVisitorInsights):", error);
+    throw new ChatSDKError(
+      "bad_request:database",
+      "Failed to fetch visitor insights"
+    );
   }
 }

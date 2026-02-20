@@ -2,11 +2,11 @@
 
 import Link from "next/link";
 import { useSession } from "next-auth/react";
-import { UpgradeProButton } from "./upgrade-pro-button";
-import { guestRegex } from "@/lib/constants";
 import { useSidebar } from "@/components/ui/sidebar";
-import { SidebarToggle } from "./sidebar-toggle";
+import { guestRegex } from "@/lib/constants";
 import { cn } from "@/lib/utils";
+import { SidebarToggle } from "./sidebar-toggle";
+import { UpgradeProButton } from "./upgrade-pro-button";
 
 export function GlobalHeader() {
   const { data } = useSession();
@@ -15,7 +15,7 @@ export function GlobalHeader() {
   const isSidebarOpen = state === "expanded";
 
   return (
-    <header 
+    <header
       className={cn(
         "fixed top-0 right-0 z-40 bg-background/80 backdrop-blur-md border-b border-border transition-all duration-300 ease-in-out",
         isSidebarOpen ? "left-0 md:left-64" : "left-0 md:left-20"
@@ -25,9 +25,12 @@ export function GlobalHeader() {
         {/* Sidebar Toggle - Always Visible */}
         <div className="flex items-center gap-3">
           <SidebarToggle />
-          
+
           {/* Logo */}
-          <Link href="/" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
+          <Link
+            className="flex items-center gap-2 hover:opacity-80 transition-opacity"
+            href="/"
+          >
             <span className="font-semibold text-xl tracking-tight">
               UltramaxoAI
             </span>
@@ -36,9 +39,7 @@ export function GlobalHeader() {
 
         {/* Upgrade Plan Button */}
         <div className="flex items-center gap-3">
-          {!isGuest && data?.user && (
-            <UpgradeProButton user={data.user} />
-          )}
+          {!isGuest && data?.user && <UpgradeProButton user={data.user} />}
         </div>
       </div>
     </header>

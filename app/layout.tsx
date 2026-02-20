@@ -6,6 +6,7 @@ import { ThemeProvider } from "@/components/theme-provider";
 
 import "./globals.css";
 import { SessionProvider } from "next-auth/react";
+import { VisitorTracker } from "@/components/visitor-tracker";
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://ultramaxo.tech"),
@@ -76,6 +77,7 @@ export default function RootLayout({
           enableSystem
         >
           <Toaster position="top-center" />
+          <VisitorTracker />
           <SessionProvider>{children}</SessionProvider>
         </ThemeProvider>
       </body>

@@ -10,7 +10,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Email tidak valid" }, { status: 400 });
     }
 
-    const code = Math.floor(100000 + Math.random() * 900000).toString();
+    const code = Math.floor(100_000 + Math.random() * 900_000).toString();
     await upsertVerificationCode(email, code);
 
     const sent = await sendVerificationEmail(email, code);

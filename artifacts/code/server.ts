@@ -16,7 +16,7 @@ export const codeDocumentHandler = createDocumentHandler<"code">({
 
     for await (const delta of textStream) {
       draftContent += delta;
-      
+
       dataStream.write({
         type: "data-codeDelta",
         data: draftContent,
@@ -37,7 +37,7 @@ export const codeDocumentHandler = createDocumentHandler<"code">({
 
     for await (const delta of textStream) {
       draftContent += delta;
-      
+
       dataStream.write({
         type: "data-codeDelta",
         data: draftContent,

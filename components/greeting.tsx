@@ -3,7 +3,8 @@ import { useSession } from "next-auth/react";
 
 export const Greeting = () => {
   const { data: session } = useSession();
-  const username = session?.user?.name || session?.user?.email?.split('@')[0] || "there";
+  const username =
+    session?.user?.name || session?.user?.email?.split("@")[0] || "there";
 
   return (
     <div

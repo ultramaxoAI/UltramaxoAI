@@ -1,9 +1,9 @@
+import { put } from "@vercel/blob";
+import { eq } from "drizzle-orm";
 import { NextResponse } from "next/server";
 import { auth } from "@/app/(auth)/auth";
 import { db } from "@/lib/db/queries";
 import { user } from "@/lib/db/schema";
-import { eq } from "drizzle-orm";
-import { put } from "@vercel/blob";
 import { logger } from "@/lib/logger";
 
 export async function PATCH(request: Request) {
@@ -22,9 +22,13 @@ export async function PATCH(request: Request) {
     // Upload image to Vercel Blob if provided
     if (imageFile && process.env.BLOB_READ_WRITE_TOKEN) {
       try {
-        const blob = await put(`profile/${session.user.id}/${imageFile.name}`, imageFile, {
-          access: "public",
-        });
+        const blob = await put(
+          `profile/${session.user.id}/${imageFile.name}`,
+          imageFile,
+          {
+            access: "public",
+          }
+        );
         imageUrl = blob.url;
       } catch (error) {
         logger.error("Failed to upload profile image", error);
@@ -33,8 +37,12 @@ export async function PATCH(request: Request) {
 
     // Update user in database
     const updates: any = {};
-    if (name) updates.name = name;
-    if (imageUrl) updates.image = imageUrl;
+    if (name) {
+      updates.name = name;
+    }
+    if (imageUrl) {
+      updates.image = imageUrl;
+    }
     updates.updatedAt = new Date();
 
     const [updatedUser] = await db

@@ -1,10 +1,10 @@
+import { desc, eq } from "drizzle-orm";
+import { NextResponse } from "next/server";
 import { auth } from "@/app/(auth)/auth";
 import { db } from "@/lib/db/queries";
 import { purchaseRequest, user as userTable } from "@/lib/db/schema";
-import { and, desc, eq } from "drizzle-orm";
-import { NextResponse } from "next/server";
 
-export const dynamic = 'force-dynamic';
+export const dynamic = "force-dynamic";
 
 /**
  * Check if user has any pending/approved upgrade requests
@@ -13,7 +13,7 @@ export const dynamic = 'force-dynamic';
 export async function GET() {
   try {
     const session = await auth();
-    
+
     if (!session?.user) {
       return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
     }
@@ -35,12 +35,14 @@ export async function GET() {
 
     return NextResponse.json({
       isPro: userData?.isPro || false,
-      latestRequest: latestRequest ? {
-        id: latestRequest.id,
-        status: latestRequest.status,
-        planId: latestRequest.planId,
-        createdAt: latestRequest.createdAt,
-      } : null,
+      latestRequest: latestRequest
+        ? {
+            id: latestRequest.id,
+            status: latestRequest.status,
+            planId: latestRequest.planId,
+            createdAt: latestRequest.createdAt,
+          }
+        : null,
     });
   } catch (error) {
     console.error("Error checking upgrade status:", error);

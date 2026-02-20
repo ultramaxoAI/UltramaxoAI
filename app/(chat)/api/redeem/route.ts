@@ -1,6 +1,6 @@
+import { NextResponse } from "next/server";
 import { auth } from "@/app/(auth)/auth";
 import { redeemVoucher } from "@/lib/db/queries";
-import { NextResponse } from "next/server";
 
 export async function POST(request: Request) {
   try {
@@ -17,12 +17,15 @@ export async function POST(request: Request) {
     const result = await redeemVoucher({ userId: session.user.id, code });
 
     if (result.error) {
-       return NextResponse.json({ error: result.error }, { status: 400 });
+      return NextResponse.json({ error: result.error }, { status: 400 });
     }
 
     return NextResponse.json(result);
   } catch (error) {
     console.error("Redeem API Error:", error);
-    return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
+    return NextResponse.json(
+      { error: "Internal Server Error" },
+      { status: 500 }
+    );
   }
 }

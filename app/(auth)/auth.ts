@@ -102,14 +102,18 @@ export const {
         const users = await getUserByUsername(username);
 
         if (users.length === 0) {
-          if (password) await compare(password, DUMMY_PASSWORD);
+          if (password) {
+            await compare(password, DUMMY_PASSWORD);
+          }
           return null;
         }
 
         const [user] = users;
 
         if (!user.password) {
-          if (password) await compare(password, DUMMY_PASSWORD);
+          if (password) {
+            await compare(password, DUMMY_PASSWORD);
+          }
           return null;
         }
 
@@ -144,7 +148,7 @@ export const {
     }),
   ],
   callbacks: {
-    async jwt({ token, user, trigger }) {
+    async jwt({ token, user }) {
       // Initial sign in
       if (user) {
         token.id = user.id as string;
@@ -190,7 +194,9 @@ export const {
     },
     async signIn({ user, account }) {
       // Allow credentials sign in
-      if (account?.provider === "credentials") return true;
+      if (account?.provider === "credentials") {
+        return true;
+      }
 
       // For OAuth (Google, GitHub) - allow sign in and let NextAuth handle linking
       // If the email already exists with a different provider, automatically link

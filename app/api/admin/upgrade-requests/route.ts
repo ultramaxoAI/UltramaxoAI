@@ -1,11 +1,10 @@
+import { desc, eq } from "drizzle-orm";
 import { NextResponse } from "next/server";
 import { auth } from "@/app/(auth)/auth";
 import { db } from "@/lib/db/queries";
 import { purchaseRequest, user } from "@/lib/db/schema";
-import { eq } from "drizzle-orm";
-import { desc } from "drizzle-orm";
 
-export async function GET(request: Request) {
+export async function GET(_request: Request) {
   try {
     const session = await auth();
 
@@ -49,9 +48,9 @@ export async function PATCH(request: Request) {
     // Update request status
     await db
       .update(purchaseRequest)
-      .set({ 
+      .set({
         status,
-        updatedAt: new Date()
+        updatedAt: new Date(),
       })
       .where(eq(purchaseRequest.id, id));
 
@@ -62,7 +61,7 @@ export async function PATCH(request: Request) {
         .from(purchaseRequest)
         .where(eq(purchaseRequest.id, id));
 
-      if (request && request.userId) {
+      if (request?.userId) {
         const now = new Date();
         const expiresAt = new Date(now);
         expiresAt.setMonth(expiresAt.getMonth() + (request.months || 1));
@@ -72,7 +71,7 @@ export async function PATCH(request: Request) {
           .set({
             isPro: true,
             proExpiresAt: expiresAt,
-            limitCount: 99999,
+            limitCount: 99_999,
           })
           .where(eq(user.id, request.userId));
       }

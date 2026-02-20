@@ -1,13 +1,14 @@
 "use client";
 
-import { memo } from "react";
 import { useSession } from "next-auth/react";
-import { VisibilitySelector, type VisibilityType } from "./visibility-selector";
+import { memo } from "react";
+import { guestRegex } from "@/lib/constants";
 import { ChatExportButton } from "./chat-export-button";
 import { UpgradeProButton } from "./upgrade-pro-button";
-import { guestRegex } from "@/lib/constants";
+import { VisibilitySelector, type VisibilityType } from "./visibility-selector";
 
-function PureChatHeader({  chatId,
+function PureChatHeader({
+  chatId,
   selectedVisibilityType,
   isReadonly,
 }: {
@@ -27,17 +28,13 @@ function PureChatHeader({  chatId,
               chatId={chatId}
               selectedVisibilityType={selectedVisibilityType}
             />
-            <ChatExportButton 
-              chatId={chatId} 
-            />
+            <ChatExportButton chatId={chatId} />
           </>
         )}
       </div>
-      
+
       {/* Upgrade Pro Button - Top Right */}
-      {!isGuest && data?.user && (
-        <UpgradeProButton user={data.user} />
-      )}
+      {!isGuest && data?.user && <UpgradeProButton user={data.user} />}
     </header>
   );
 }

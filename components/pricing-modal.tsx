@@ -1,10 +1,11 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import { Check, X } from "lucide-react";
-import type { User } from "next-auth";
 import { useRouter } from "next/navigation";
+import type { User } from "next-auth";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
+import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
@@ -12,7 +13,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
 
 interface PricingModalProps {
   open: boolean;
@@ -81,7 +81,9 @@ export function PricingModal({ open, onOpenChange, user }: PricingModalProps) {
 
   // Poll for upgrade status when there's a pending request
   useEffect(() => {
-    if (!hasPendingRequest || !user || !open) return;
+    if (!hasPendingRequest || !user || !open) {
+      return;
+    }
 
     const pollInterval = setInterval(async () => {
       try {
@@ -92,12 +94,12 @@ export function PricingModal({ open, onOpenChange, user }: PricingModalProps) {
           // User has been upgraded!
           clearInterval(pollInterval);
           setHasPendingRequest(false);
-          
+
           // Refresh session
           await fetch("/api/auth/session/refresh", { method: "POST" });
-          
+
           toast.success("🎉 Upgrade berhasil! Selamat datang di PRO!");
-          
+
           // Close modal and reload
           onOpenChange(false);
           setTimeout(() => {
@@ -114,7 +116,7 @@ export function PricingModal({ open, onOpenChange, user }: PricingModalProps) {
 
   const handleUpgrade = async (planName: string) => {
     setSelectedPlan(planName);
-    
+
     // If user is not logged in, redirect to login
     if (!user) {
       toast.error("Silakan login terlebih dahulu");
@@ -123,7 +125,9 @@ export function PricingModal({ open, onOpenChange, user }: PricingModalProps) {
     }
 
     const plan = pricingPlans.find((p) => p.name === planName);
-    if (!plan) return;
+    if (!plan) {
+      return;
+    }
 
     setLoading(true);
 
@@ -144,7 +148,7 @@ export function PricingModal({ open, onOpenChange, user }: PricingModalProps) {
       }
 
       toast.success("Request berhasil dicatat!");
-      
+
       // Start polling for approval
       setHasPendingRequest(true);
       toast.info("Menunggu admin approve upgrade Anda...", {
@@ -152,7 +156,9 @@ export function PricingModal({ open, onOpenChange, user }: PricingModalProps) {
       });
     } catch (error) {
       console.error("Failed to log upgrade request:", error);
-      toast.warning("Request dicatat dengan masalah, tapi tetap lanjut ke WhatsApp");
+      toast.warning(
+        "Request dicatat dengan masalah, tapi tetap lanjut ke WhatsApp"
+      );
       // We continue to WhatsApp even if logging fails, to not block the user
     } finally {
       setLoading(false);
@@ -160,18 +166,18 @@ export function PricingModal({ open, onOpenChange, user }: PricingModalProps) {
 
     // 2. Create WhatsApp message with complete format
     const message =
-      `Halo admin Ultramaxo! 👋\n\n` +
-      `Saya ingin melakukan upgrade akun:\n\n` +
-      `━━━━━━━━━━━━━━━━━━━\n` +
-      `👤 INFORMASI USER:\n` +
+      "Halo admin Ultramaxo! 👋\n\n" +
+      "Saya ingin melakukan upgrade akun:\n\n" +
+      "━━━━━━━━━━━━━━━━━━━\n" +
+      "👤 INFORMASI USER:\n" +
       `Nama: ${user.name || "User"}\n` +
       `Email: ${user.email}\n\n` +
-      `📦 PAKET YANG DIPILIH:\n` +
+      "📦 PAKET YANG DIPILIH:\n" +
       `Paket: ${planName}\n` +
       `Harga: ${plan.price}\n` +
       `Periode: ${plan.period}\n` +
-      `━━━━━━━━━━━━━━━━━━━\n\n` +
-      `Mohon konfirmasi untuk proses pembayaran dan aktivasi. Terima kasih! 🙏`;
+      "━━━━━━━━━━━━━━━━━━━\n\n" +
+      "Mohon konfirmasi untuk proses pembayaran dan aktivasi. Terima kasih! 🙏";
 
     // Encode message for URL
     const encodedMessage = encodeURIComponent(message);
@@ -179,8 +185,12 @@ export function PricingModal({ open, onOpenChange, user }: PricingModalProps) {
 
     // Open WhatsApp in new tab
     const newWindow = window.open(whatsappUrl, "_blank");
-    
-    if (!newWindow || newWindow.closed || typeof newWindow.closed === "undefined") {
+
+    if (
+      !newWindow ||
+      newWindow.closed ||
+      typeof newWindow.closed === "undefined"
+    ) {
       // Popup was blocked
       toast.error("Popup diblokir! Silakan izinkan popup di browser Anda");
       // Fallback: try to navigate in same tab
@@ -188,7 +198,7 @@ export function PricingModal({ open, onOpenChange, user }: PricingModalProps) {
     } else {
       toast.success("Mengarahkan ke WhatsApp...");
     }
-    
+
     // Close modal after a short delay
     setTimeout(() => {
       onOpenChange(false);
@@ -197,13 +207,13 @@ export function PricingModal({ open, onOpenChange, user }: PricingModalProps) {
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog onOpenChange={onOpenChange} open={open}>
       <DialogContent className="max-w-5xl border-0 bg-[#0a0a0a] p-0 overflow-hidden">
         <div className="relative border border-white/10 rounded-2xl overflow-hidden">
           {/* Close Button */}
           <button
-            onClick={() => onOpenChange(false)}
             className="absolute top-4 right-4 z-10 p-2 rounded-lg bg-white/5 hover:bg-white/10 transition-colors"
+            onClick={() => onOpenChange(false)}
           >
             <X className="h-4 w-4 text-gray-400" />
           </button>
@@ -215,7 +225,8 @@ export function PricingModal({ open, onOpenChange, user }: PricingModalProps) {
                 Pilih Paket Anda
               </DialogTitle>
               <DialogDescription className="text-gray-400 text-base">
-                Tidak ada biaya tersembunyi. Upgrade kapan saja, downgrade kapan saja.
+                Tidak ada biaya tersembunyi. Upgrade kapan saja, downgrade kapan
+                saja.
               </DialogDescription>
             </DialogHeader>
           </div>
@@ -224,12 +235,12 @@ export function PricingModal({ open, onOpenChange, user }: PricingModalProps) {
           <div className="grid md:grid-cols-3 gap-6 p-8">
             {pricingPlans.map((plan, i) => (
               <div
-                key={i}
                 className={`relative rounded-2xl p-7 border backdrop-blur-sm transition-all duration-300 ${
                   plan.popular
                     ? "border-indigo-500/40 bg-indigo-950/30 shadow-[0_0_40px_rgba(99,102,241,0.1)]"
                     : "border-white/10 bg-white/5 hover:border-white/20"
                 }`}
+                key={i}
               >
                 {plan.popular && (
                   <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-4 py-1 bg-gradient-to-r from-indigo-500 to-violet-600 rounded-full text-xs font-medium shadow-lg shadow-indigo-500/25">
@@ -263,15 +274,18 @@ export function PricingModal({ open, onOpenChange, user }: PricingModalProps) {
                 </ul>
 
                 <Button
-                  type="button"
                   className={`w-full justify-center ${
                     plan.popular
                       ? "bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-700 hover:to-violet-700 text-white"
                       : plan.ctaDisabled
-                      ? "bg-white/10 text-gray-400 cursor-not-allowed"
-                      : "bg-white/10 hover:bg-white/20 text-white"
+                        ? "bg-white/10 text-gray-400 cursor-not-allowed"
+                        : "bg-white/10 hover:bg-white/20 text-white"
                   }`}
-                  disabled={plan.ctaDisabled || loading || (!user && plan.name !== "Free")}
+                  disabled={
+                    plan.ctaDisabled ||
+                    loading ||
+                    (!user && plan.name !== "Free")
+                  }
                   onClick={(e) => {
                     e.preventDefault();
                     e.stopPropagation();
@@ -279,6 +293,7 @@ export function PricingModal({ open, onOpenChange, user }: PricingModalProps) {
                       handleUpgrade(plan.name);
                     }
                   }}
+                  type="button"
                 >
                   {loading && selectedPlan === plan.name
                     ? "Processing..."
@@ -292,7 +307,10 @@ export function PricingModal({ open, onOpenChange, user }: PricingModalProps) {
           <div className="px-8 pb-8 text-center">
             <p className="text-xs text-gray-500">
               Dengan melanjutkan, Anda menyetujui{" "}
-              <a href="/terms" className="text-indigo-400 hover:text-indigo-300">
+              <a
+                className="text-indigo-400 hover:text-indigo-300"
+                href="/terms"
+              >
                 Syarat & Ketentuan
               </a>{" "}
               kami.
