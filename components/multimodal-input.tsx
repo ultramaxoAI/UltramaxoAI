@@ -14,6 +14,7 @@ import {
   PlusIcon,
   SparklesIcon,
   Wand2Icon,
+  XIcon,
 } from "lucide-react";
 import {
   type ChangeEvent,
@@ -119,6 +120,7 @@ function PureMultimodalInput({
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const { width } = useWindowSize();
   const [imageGenerationOpen, setImageGenerationOpen] = useState(false);
+  const [imageGenerationMode, setImageGenerationMode] = useState(false);
   // Grant image gen access to PRO users and admins
   const isPro =
     (user as any)?.type === "pro" ||
@@ -391,6 +393,66 @@ function PureMultimodalInput({
             ))}
           </div>
         )}
+        {/* Active Mode Chips — like Gemini */}
+        {(imageGenerationMode ||
+          wormgptEnabled ||
+          deepThinkingEnabled ||
+          webSearchEnabled) && (
+          <div className="flex flex-row flex-wrap gap-1.5 px-2 pt-2">
+            {imageGenerationMode && (
+              <span className="flex items-center gap-1 rounded-full bg-violet-500/15 border border-violet-500/30 px-2.5 py-0.5 text-[11px] font-bold text-violet-400">
+                <Wand2Icon className="size-3" />
+                Image
+                <button
+                  className="ml-0.5 hover:text-white"
+                  onClick={() => setImageGenerationMode(false)}
+                  type="button"
+                >
+                  <XIcon className="size-3" />
+                </button>
+              </span>
+            )}
+            {wormgptEnabled && (
+              <span className="flex items-center gap-1 rounded-full bg-red-500/15 border border-red-500/30 px-2.5 py-0.5 text-[11px] font-bold text-red-400">
+                <SparklesIcon className="size-3" />
+                WormGPT
+                <button
+                  className="ml-0.5 hover:text-white"
+                  onClick={() => setWormgptEnabled(false)}
+                  type="button"
+                >
+                  <XIcon className="size-3" />
+                </button>
+              </span>
+            )}
+            {deepThinkingEnabled && (
+              <span className="flex items-center gap-1 rounded-full bg-blue-500/15 border border-blue-500/30 px-2.5 py-0.5 text-[11px] font-bold text-blue-400">
+                <CpuIcon className="size-3" />
+                Deep Thinking
+                <button
+                  className="ml-0.5 hover:text-white"
+                  onClick={() => setDeepThinkingEnabled(false)}
+                  type="button"
+                >
+                  <XIcon className="size-3" />
+                </button>
+              </span>
+            )}
+            {webSearchEnabled && (
+              <span className="flex items-center gap-1 rounded-full bg-green-500/15 border border-green-500/30 px-2.5 py-0.5 text-[11px] font-bold text-green-400">
+                <GlobeIcon className="size-3" />
+                Web Search
+                <button
+                  className="ml-0.5 hover:text-white"
+                  onClick={() => setWebSearchEnabled(false)}
+                  type="button"
+                >
+                  <XIcon className="size-3" />
+                </button>
+              </span>
+            )}
+          </div>
+        )}
         <div className="flex flex-row items-start gap-1 sm:gap-2">
           <PromptInputTextarea
             className="grow resize-none border-0! border-none! bg-transparent p-2 text-base outline-none ring-0 [-ms-overflow-style:none] [scrollbar-width:none] placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 [&::-webkit-scrollbar]:hidden"
@@ -463,10 +525,15 @@ function PureMultimodalInput({
                     !isPro && "cursor-not-allowed opacity-40"
                   )}
                   disabled={!isPro}
-                  onClick={() => isPro && setImageGenerationOpen(true)}
+                  onClick={() => {
+                    if (isPro) setImageGenerationMode(!imageGenerationMode);
+                  }}
                 >
                   <Wand2Icon className="mr-2 h-4 w-4" />
                   <span>Image Generation</span>
+                  {imageGenerationMode && (
+                    <CheckIcon className="ml-auto h-4 w-4" />
+                  )}
                 </DropdownMenuItem>
 
                 <DropdownMenuSeparator className="bg-zinc-200 dark:bg-zinc-800" />

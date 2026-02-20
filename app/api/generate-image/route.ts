@@ -87,13 +87,14 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Extract image from Gemini response: candidates[0].content.parts[].inline_data
+    // Extract image from Gemini response: candidates[0].content.parts[].inlineData
     const parts = data?.candidates?.[0]?.content?.parts ?? [];
     for (const part of parts) {
-      if (part?.inline_data?.data) {
-        const mimeType = part.inline_data.mime_type || "image/png";
+      if (part?.inlineData?.data) {
+        const mimeType =
+          part.inlineData.mime_type || part.inlineData.mimeType || "image/png";
         return NextResponse.json({
-          imageUrl: `data:${mimeType};base64,${part.inline_data.data}`,
+          imageUrl: `data:${mimeType};base64,${part.inlineData.data}`,
         });
       }
     }
