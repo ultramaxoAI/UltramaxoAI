@@ -404,11 +404,11 @@ function PureMultimodalInput({
                 <Wand2Icon className="size-3" />
                 Image
                 <button
-                  className="ml-0.5 hover:text-white"
+                  className="ml-1 rounded-full p-0.5 hover:bg-violet-500/30 transition-colors"
                   onClick={() => setImageGenerationMode(false)}
                   type="button"
                 >
-                  <XIcon className="size-3" />
+                  <XIcon className="size-3.5" />
                 </button>
               </span>
             )}
@@ -417,11 +417,11 @@ function PureMultimodalInput({
                 <SparklesIcon className="size-3" />
                 WormGPT
                 <button
-                  className="ml-0.5 hover:text-white"
+                  className="ml-1 rounded-full p-0.5 hover:bg-red-500/30 transition-colors"
                   onClick={() => setWormgptEnabled(false)}
                   type="button"
                 >
-                  <XIcon className="size-3" />
+                  <XIcon className="size-3.5" />
                 </button>
               </span>
             )}
@@ -430,11 +430,11 @@ function PureMultimodalInput({
                 <CpuIcon className="size-3" />
                 Deep Thinking
                 <button
-                  className="ml-0.5 hover:text-white"
+                  className="ml-1 rounded-full p-0.5 hover:bg-blue-500/30 transition-colors"
                   onClick={() => setDeepThinkingEnabled(false)}
                   type="button"
                 >
-                  <XIcon className="size-3" />
+                  <XIcon className="size-3.5" />
                 </button>
               </span>
             )}
@@ -443,11 +443,11 @@ function PureMultimodalInput({
                 <GlobeIcon className="size-3" />
                 Web Search
                 <button
-                  className="ml-0.5 hover:text-white"
+                  className="ml-1 rounded-full p-0.5 hover:bg-green-500/30 transition-colors"
                   onClick={() => setWebSearchEnabled(false)}
                   type="button"
                 >
-                  <XIcon className="size-3" />
+                  <XIcon className="size-3.5" />
                 </button>
               </span>
             )}

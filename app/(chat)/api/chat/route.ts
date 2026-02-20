@@ -202,7 +202,12 @@ export async function POST(request: Request) {
               }
 
               const result = streamText({
-                model: getLanguageModel(selectedChatModel),
+                // Use smarter model for Deep Thinking mode
+                model: getLanguageModel(
+                  deepThinkingEnabled
+                    ? "maia/gemini-2.5-pro"
+                    : selectedChatModel
+                ),
                 system: systemPrompt({
                   selectedChatModel,
                   requestHints,
