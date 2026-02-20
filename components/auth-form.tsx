@@ -1,10 +1,10 @@
 import Link from "next/link";
+import { signIn } from "next-auth/react";
+import { useEffect, useState } from "react";
+import { GitIcon, LogoGoogle } from "./icons";
+import { toast } from "./toast";
 import { Input } from "./ui/input";
 import { Label } from "./ui/label";
-import { signIn } from "next-auth/react";
-import { GitIcon, LogoGoogle } from "./icons";
-import { useState, useEffect } from "react";
-import { toast } from "./toast";
 
 export function AuthForm({
   action,
@@ -32,7 +32,10 @@ export function AuthForm({
 
   const handleSendCode = async () => {
     if (!email || !email.includes("@")) {
-      toast({ type: "error", description: "Silakan masukkan email yang valid." });
+      toast({
+        type: "error",
+        description: "Silakan masukkan email yang valid.",
+      });
       return;
     }
 
@@ -45,13 +48,22 @@ export function AuthForm({
 
       const data = await res.json();
       if (res.ok) {
-        toast({ type: "success", description: "Kode verifikasi telah dikirim ke email kamu!" });
+        toast({
+          type: "success",
+          description: "Kode verifikasi telah dikirim ke email kamu!",
+        });
         setCountdown(60);
       } else {
-        toast({ type: "error", description: data.error || "Gagal mengirim kode." });
+        toast({
+          type: "error",
+          description: data.error || "Gagal mengirim kode.",
+        });
       }
     } catch (error) {
-      toast({ type: "error", description: "Terjadi kesalahan saat mengirim kode." });
+      toast({
+        type: "error",
+        description: "Terjadi kesalahan saat mengirim kode.",
+      });
     } finally {
       setIsSendingCode(false);
     }
@@ -116,18 +128,26 @@ export function AuthForm({
                 id={type === "login" ? "username" : "email"}
                 name={type === "login" ? "username" : "email"}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder={type === "login" ? "your@email.com or johndoe" : "name@email.com"}
+                placeholder={
+                  type === "login"
+                    ? "your@email.com or johndoe"
+                    : "name@email.com"
+                }
                 required
                 type={type === "login" ? "text" : "email"}
               />
               {type === "register" && (
                 <button
-                  type="button"
-                  onClick={handleSendCode}
-                  disabled={isSendingCode || countdown > 0}
                   className="absolute right-2 top-1.5 h-8 px-3 rounded-lg bg-zinc-800 hover:bg-zinc-700 disabled:opacity-50 text-[11px] font-bold text-white transition-all"
+                  disabled={isSendingCode || countdown > 0}
+                  onClick={handleSendCode}
+                  type="button"
                 >
-                  {isSendingCode ? "Sending..." : countdown > 0 ? `${countdown}s` : "Get Code"}
+                  {isSendingCode
+                    ? "Sending..."
+                    : countdown > 0
+                      ? `${countdown}s`
+                      : "Get Code"}
                 </button>
               )}
             </div>
@@ -144,11 +164,11 @@ export function AuthForm({
               <Input
                 className="bg-zinc-900 border-zinc-800 focus:border-zinc-700 focus:ring-1 focus:ring-zinc-700 transition-all text-sm h-11 rounded-xl text-white placeholder:text-zinc-600 w-full px-4"
                 id="code"
+                maxLength={6}
                 name="code"
                 placeholder="123456"
                 required
                 type="text"
-                maxLength={6}
               />
             </div>
           )}
@@ -163,8 +183,8 @@ export function AuthForm({
               </Label>
               {type === "login" && (
                 <Link
-                  href="/forgot-password"
                   className="text-xs text-zinc-400 hover:text-white transition-colors font-medium"
+                  href="/forgot-password"
                 >
                   Forgot password?
                 </Link>
@@ -174,8 +194,8 @@ export function AuthForm({
               className="bg-zinc-900 border-zinc-800 focus:border-zinc-700 focus:ring-1 focus:ring-zinc-700 transition-all text-sm h-11 rounded-xl text-white w-full px-4"
               id="password"
               name="password"
-              required
               placeholder="••••••••"
+              required
               type="password"
             />
           </div>
@@ -192,16 +212,14 @@ export function AuthForm({
                 className="bg-zinc-900 border-zinc-800 focus:border-zinc-700 focus:ring-1 focus:ring-zinc-700 transition-all text-sm h-11 rounded-xl text-white w-full px-4"
                 id="confirmPassword"
                 name="confirmPassword"
-                required
                 placeholder="••••••••"
+                required
                 type="password"
               />
             </div>
           )}
 
-          <div className="mt-2 flex flex-col gap-4">
-            {children}
-          </div>
+          <div className="mt-2 flex flex-col gap-4">{children}</div>
         </form>
 
         <div className="relative">
@@ -209,24 +227,22 @@ export function AuthForm({
             <span className="w-full border-t border-zinc-800" />
           </div>
           <div className="relative flex justify-center text-xs">
-            <span className="bg-[#18181b] px-4 text-zinc-500">
-              or
-            </span>
+            <span className="bg-[#18181b] px-4 text-zinc-500">or</span>
           </div>
         </div>
 
         <div className="flex flex-col gap-3 relative z-10">
           <button
-            onClick={() => signIn("google", { callbackUrl: "/" })}
             className="flex w-full items-center justify-center gap-3 rounded-xl border border-zinc-800 bg-transparent py-2.5 text-sm font-semibold text-white hover:bg-zinc-800 transition-all active:scale-[0.98]"
+            onClick={() => signIn("google", { callbackUrl: "/chat" })}
             type="button"
           >
             <LogoGoogle size={18} />
             <span>Continue with Google</span>
           </button>
           <button
-            onClick={() => signIn("github", { callbackUrl: "/" })}
             className="flex w-full items-center justify-center gap-3 rounded-xl border border-zinc-800 bg-transparent py-2.5 text-sm font-semibold text-white hover:bg-zinc-800 transition-all active:scale-[0.98]"
+            onClick={() => signIn("github", { callbackUrl: "/chat" })}
             type="button"
           >
             <GitIcon size={18} />
