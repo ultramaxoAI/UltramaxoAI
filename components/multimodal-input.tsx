@@ -193,7 +193,7 @@ function PureMultimodalInput({
       const currentInput = input;
 
       // 1. Append user message
-      setMessages((messages: UIMessage[]) => [
+      setMessages((messages: ChatMessage[]) => [
         ...messages,
         {
           id: userMessageId,
@@ -212,7 +212,7 @@ function PureMultimodalInput({
 
       // 2. Append loading message
       const loadingMessageId = nanoid();
-      setMessages((messages: UIMessage[]) => [
+      setMessages((messages: ChatMessage[]) => [
         ...messages,
         {
           id: loadingMessageId,
@@ -234,8 +234,8 @@ function PureMultimodalInput({
         const data = await res.json();
 
         // 3. Replace loading message with image
-        setMessages((messages: UIMessage[]) =>
-          messages.map((m) =>
+        setMessages((messages: ChatMessage[]) =>
+          messages.map((m: ChatMessage) =>
             m.id === loadingMessageId
               ? {
                   ...m,
@@ -251,8 +251,8 @@ function PureMultimodalInput({
           )
         );
       } catch (error) {
-        setMessages((messages: UIMessage[]) =>
-          messages.map((m: UIMessage) =>
+        setMessages((messages: ChatMessage[]) =>
+          messages.map((m: ChatMessage) =>
             m.id === loadingMessageId
               ? {
                   ...m,

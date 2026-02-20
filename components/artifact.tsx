@@ -22,8 +22,6 @@ import type { Attachment, ChatMessage } from "@/lib/types";
 import { fetcher } from "@/lib/utils";
 import { ArtifactActions } from "./artifact-actions";
 import { ArtifactCloseButton } from "./artifact-close-button";
-import { ArtifactMessages } from "./artifact-messages";
-import { MultimodalInput } from "./multimodal-input";
 import { Toolbar } from "./toolbar";
 import { useSidebar } from "./ui/sidebar";
 import { VersionFooter } from "./version-footer";
@@ -279,99 +277,11 @@ function PureArtifact({
       {artifact.isVisible && (
         <motion.div
           animate={{ opacity: 1 }}
-          className="fixed top-0 left-0 z-50 flex h-dvh w-dvw flex-row bg-transparent"
+          className="fixed top-0 left-0 z-50 flex h-dvh w-dvw flex-row bg-transparent pointer-events-none"
           data-testid="artifact"
           exit={{ opacity: 0, transition: { delay: 0.4 } }}
           initial={{ opacity: 1 }}
         >
-          {!isMobile && (
-            <motion.div
-              animate={{ width: windowWidth, right: 0 }}
-              className="fixed h-dvh bg-background"
-              exit={{
-                width: isSidebarOpen ? windowWidth - 256 : windowWidth,
-                right: 0,
-              }}
-              initial={{
-                width: isSidebarOpen ? windowWidth - 256 : windowWidth,
-                right: 0,
-              }}
-            />
-          )}
-
-          {!isMobile && (
-            <motion.div
-              animate={{
-                opacity: 1,
-                x: 0,
-                scale: 1,
-                transition: {
-                  delay: 0.1,
-                  type: "spring",
-                  stiffness: 300,
-                  damping: 30,
-                },
-              }}
-              className="relative h-dvh w-[55%] shrink-0 bg-muted dark:bg-background"
-              exit={{
-                opacity: 0,
-                x: 0,
-                scale: 1,
-                transition: { duration: 0 },
-              }}
-              initial={{ opacity: 0, x: 10, scale: 1 }}
-            >
-              <AnimatePresence>
-                {!isCurrentVersion && (
-                  <motion.div
-                    animate={{ opacity: 1 }}
-                    className="absolute top-0 left-0 z-50 h-dvh w-full bg-zinc-900/50"
-                    exit={{ opacity: 0 }}
-                    initial={{ opacity: 0 }}
-                  />
-                )}
-              </AnimatePresence>
-
-              <div className="flex h-full flex-col items-center justify-between">
-                <ArtifactMessages
-                  addToolApprovalResponse={addToolApprovalResponse}
-                  artifactStatus={artifact.status}
-                  chatId={chatId}
-                  isReadonly={isReadonly}
-                  messages={messages}
-                  regenerate={regenerate}
-                  setMessages={setMessages}
-                  status={status}
-                  votes={votes}
-                />
-
-                <div className="relative flex w-full flex-row items-end gap-2 px-4 pb-4">
-                  <MultimodalInput
-                    attachments={attachments}
-                    chatId={chatId}
-                    className="bg-background dark:bg-muted"
-                    input={input}
-                    messages={messages}
-                    selectedModelId={selectedModelId}
-                    selectedVisibilityType={selectedVisibilityType}
-                    sendMessage={sendMessage}
-                    setAttachments={setAttachments}
-                    setInput={setInput}
-                    setMessages={setMessages}
-                    status={status}
-                    stop={stop}
-                    wormgptEnabled={wormgptEnabled}
-                    setWormgptEnabled={setWormgptEnabled}
-                    deepThinkingEnabled={deepThinkingEnabled}
-                    setDeepThinkingEnabled={setDeepThinkingEnabled}
-                    webSearchEnabled={webSearchEnabled}
-                    setWebSearchEnabled={setWebSearchEnabled}
-                  />
-                </div>
-              </div>
-            </motion.div>
-          )}
-
           <motion.div
             animate={
               isMobile
@@ -395,9 +305,7 @@ function PureArtifact({
                     x: windowWidth ? windowWidth * 0.55 : 0,
                     y: 0,
                     height: windowHeight,
-                    width: windowWidth
-                      ? windowWidth * 0.45
-                      : "calc(45dvw)",
+                    width: windowWidth ? windowWidth * 0.45 : "calc(45dvw)",
                     borderRadius: 0,
                     transition: {
                       delay: 0,
@@ -408,7 +316,7 @@ function PureArtifact({
                     },
                   }
             }
-            className="fixed flex h-dvh flex-col overflow-y-scroll border-zinc-200 bg-background md:border-l dark:border-zinc-700 dark:bg-muted"
+            className="fixed flex h-dvh flex-col overflow-y-scroll border-zinc-200 bg-background md:border-l dark:border-zinc-700 dark:bg-muted pointer-events-auto"
             exit={{
               opacity: 0,
               scale: 0.5,

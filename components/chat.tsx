@@ -15,7 +15,7 @@ import { useChatVisibility } from "@/hooks/use-chat-visibility";
 import type { Vote } from "@/lib/db/schema";
 import { ChatSDKError } from "@/lib/errors";
 import type { Attachment, ChatMessage } from "@/lib/types";
-import { fetcher, fetchWithErrorHandlers, generateUUID } from "@/lib/utils";
+import { cn, fetcher, fetchWithErrorHandlers, generateUUID } from "@/lib/utils";
 import { Artifact } from "./artifact";
 import { useDataStream } from "./data-stream-provider";
 import { Messages } from "./messages";
@@ -243,7 +243,12 @@ export function Chat({
 
   return (
     <>
-      <div className="flex h-dvh min-w-0 flex-col bg-background relative">
+      <div
+        className={cn(
+          "flex h-dvh min-w-0 flex-col bg-background relative transition-all duration-300 ease-in-out",
+          isArtifactVisible ? "md:w-[55%]" : "w-full"
+        )}
+      >
         {/* Header dengan absolute positioning agar center */}
         <div className="absolute top-0 left-0 right-0 z-20">
           <ChatContextHeader
