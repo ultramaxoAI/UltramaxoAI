@@ -1,12 +1,11 @@
 "use client";
 
 import type { ComponentProps } from "react";
-import rehypeHighlight from "rehype-highlight";
 import rehypeKatex from "rehype-katex";
 import remarkMath from "remark-math";
 import { Streamdown } from "streamdown";
 import { cn } from "@/lib/utils";
-import { CodeBlockWrapper } from "./code-block-wrapper";
+import { CodeBlock } from "./code-block";
 import "katex/dist/katex.min.css";
 
 type ResponseProps = ComponentProps<typeof Streamdown>;
@@ -19,29 +18,74 @@ export function Response({ className, children, ...props }: ResponseProps) {
         className
       )}
       components={{
-        pre({ children, ...props }: any) {
-          // Streamdown might wrap code in multiple elements or arrays
+        pre: ({ children, ...props }: any) => {
+          // Robustly extract text from children
+          const extractText = (content: any): string => {
+            if (typeof content === "string") return content;
+            if (Array.isArray(content))
+              return content.map(extractText).join("");
+            if (content?.props?.children)
+              return extractText(content.props.children);
+            return "";
+          };
+
+          // Find code element among children
           const childrenArray = Array.isArray(children) ? children : [children];
           const codeElement = childrenArray.find(
-            (child: any) => child?.type === "code"
+            (child: any) =>
+              child?.type === "code" ||
+              child?.props?.className?.startsWith("language-") ||
+              child?.type === "code"
           );
 
-          if (!codeElement) {
-            return <pre {...props}>{children}</pre>;
+          // Even if no code element is found directly (e.g. plain text inside pre), treats as code block
+          // But usually markdown gives pre > code structure.
+
+          let language = "text";
+          let codeContent = "";
+
+          if (codeElement) {
+            const className = codeElement.props?.className || "";
+            const match = /language-(\w+)/.exec(className);
+            language = match ? match[1] : "text";
+            codeContent = String(
+              extractText(codeElement.props.children)
+            ).replace(/\n$/, "");
+          } else {
+            // Fallback: extract text from pre's direct children
+            codeContent = String(extractText(children)).replace(/\n$/, "");
           }
 
-          const className = codeElement.props?.className || "";
-          const match = /language-(\w+)/.exec(className);
-          const language = match ? match[1] : "";
-
           return (
-            <CodeBlockWrapper language={language}>
-              <pre {...props}>{children}</pre>
-            </CodeBlockWrapper>
+            <CodeBlock className={`language-${language}`} language={language}>
+              {codeContent}
+            </CodeBlock>
+          );
+        },
+        code: ({ node, inline, className, children, ...props }: any) => {
+          // Handle inline code only. Block code is handled by 'pre'.
+          if (inline) {
+            return (
+              <code
+                className={cn(
+                  "bg-muted px-1.5 py-0.5 rounded-md font-mono text-sm",
+                  className
+                )}
+                {...props}
+              >
+                {children}
+              </code>
+            );
+          }
+          // For block code, just render children so 'pre' can access them
+          return (
+            <code className={className} {...props}>
+              {children}
+            </code>
           );
         },
       }}
-      rehypePlugins={[rehypeKatex, rehypeHighlight]}
+      rehypePlugins={[rehypeKatex]}
       remarkPlugins={[remarkMath]}
       {...props}
     >

@@ -59,7 +59,11 @@ function detectLanguage(code: string): SupportedLanguage {
     code.includes("console.log") ||
     code.includes("=>")
   ) {
-    if (code.includes(": string") || code.includes(": number") || code.includes("interface ")) {
+    if (
+      code.includes(": string") ||
+      code.includes(": number") ||
+      code.includes("interface ")
+    ) {
       return "typescript";
     }
     return "javascript";
@@ -71,12 +75,15 @@ function detectLanguage(code: string): SupportedLanguage {
   }
 
   // CSS
-  if (/\{[\s\S]*:[^:]+;[\s\S]*\}/.test(code) && /@media|\.class|#id/.test(code)) {
+  if (
+    /\{[\s\S]*:[^:]+;[\s\S]*\}/.test(code) &&
+    /@media|\.class|#id/.test(code)
+  ) {
     return "css";
   }
 
   // JSON
-  if (/^\s*[\[{]/.test(code) && /[\]}]\s*$/.test(code)) {
+  if (/^\s*[[{]/.test(code) && /[\]}]\s*$/.test(code)) {
     try {
       JSON.parse(code);
       return "json";
@@ -162,9 +169,15 @@ function PureCodeEditor({
       (async () => {
         const langExtension = await getLanguageExtension(detectedLanguage);
 
+        // Custom theme to handle responsive scrolling behavior inside CodeMirror
+        const editorTheme = EditorView.theme({
+          "&": { height: "100%" },
+          ".cm-scroller": { overflowY: "auto", overflowX: "auto" },
+        });
+
         const startState = EditorState.create({
           doc: content,
-          extensions: [basicSetup, langExtension, oneDark],
+          extensions: [basicSetup, langExtension, oneDark, editorTheme],
         });
 
         editorRef.current = new EditorView({

@@ -12,14 +12,14 @@ export const chatModels: ChatModel[] = [
     id: "ultramaxo/ultra-agent",
     name: "UltraAgent",
     provider: "ultramaxo",
-    description: "Fast and capable AI assistant powered by Local Llama 3.3",
+    description: "Fast and capable AI assistant powered by Qwen3 80B",
   },
   {
     id: "ultramaxo/ultra-agent-pro",
     name: "UltraAgent Pro",
     provider: "ultramaxo",
     description:
-      "Advanced AI with superior reasoning, deep thinking, and expert-level coding capabilities",
+      "Advanced AI with superior reasoning, deep thinking, and expert-level coding powered by Qwen3 Coder 480B",
   },
 ];
 

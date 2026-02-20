@@ -1,6 +1,6 @@
-import { toast } from "sonner";
-import { useState } from "react";
 import { ChevronDown, ChevronRight } from "lucide-react";
+import { useState } from "react";
+import { toast } from "sonner";
 import { CodeEditor, type SupportedLanguage } from "@/components/code-editor";
 import {
   Console,
@@ -20,23 +20,43 @@ import {
 import { generateUUID } from "@/lib/utils";
 
 function getFileIcon(filename: string) {
-  const ext = filename.split('.').pop()?.toLowerCase();
+  const ext = filename.split(".").pop()?.toLowerCase();
   const iconClass = "w-4 h-4";
-  
+
   switch (ext) {
-    case 'js':
-    case 'jsx':
-      return <span className={iconClass} style={{ color: '#f7df1e' }}>📜</span>;
-    case 'ts':
-    case 'tsx':
-      return <span className={iconClass} style={{ color: '#3178c6' }}>📘</span>;
-    case 'py':
-      return <span className={iconClass} style={{ color: '#3776ab' }}>🐍</span>;
-    case 'html':
-      return <span className={iconClass} style={{ color: '#e34c26' }}>🌐</span>;
-    case 'css':
-      return <span className={iconClass} style={{ color: '#264de4' }}>🎨</span>;
-    case 'json':
+    case "js":
+    case "jsx":
+      return (
+        <span className={iconClass} style={{ color: "#f7df1e" }}>
+          📜
+        </span>
+      );
+    case "ts":
+    case "tsx":
+      return (
+        <span className={iconClass} style={{ color: "#3178c6" }}>
+          📘
+        </span>
+      );
+    case "py":
+      return (
+        <span className={iconClass} style={{ color: "#3776ab" }}>
+          🐍
+        </span>
+      );
+    case "html":
+      return (
+        <span className={iconClass} style={{ color: "#e34c26" }}>
+          🌐
+        </span>
+      );
+    case "css":
+      return (
+        <span className={iconClass} style={{ color: "#264de4" }}>
+          🎨
+        </span>
+      );
+    case "json":
       return <span className={iconClass}>📋</span>;
     default:
       return <span className={iconClass}>📄</span>;
@@ -119,9 +139,12 @@ function detectCodeLanguage(code: string): SupportedLanguage {
 }
 
 // Parse code into files if it contains multiple file markers
-function parseCodeFiles(code: string): Array<{ name: string; content: string; language: SupportedLanguage }> {
+function parseCodeFiles(
+  code: string
+): Array<{ name: string; content: string; language: SupportedLanguage }> {
   // Check for file markers like "// filename.js" or "# filename.py" or "<!-- filename.html -->"
-  const fileMarkerRegex = /(?:\/\/|#|<!--)\s*(?:file:|filename:)?\s*([^\s\n]+\.[a-z]+)/gi;
+  const fileMarkerRegex =
+    /(?:\/\/|#|<!--)\s*(?:file:|filename:)?\s*([^\s\n]+\.[a-z]+)/gi;
   const matches = Array.from(code.matchAll(fileMarkerRegex));
 
   if (matches.length === 0) {
@@ -129,26 +152,33 @@ function parseCodeFiles(code: string): Array<{ name: string; content: string; la
     if (/<html|<!DOCTYPE/i.test(code)) {
       return extractHtmlFiles(code);
     }
-    
+
     // Single file
     const language = detectCodeLanguage(code);
-    return [{
-      name: getDefaultFileName(language),
-      content: code,
-      language
-    }];
+    return [
+      {
+        name: getDefaultFileName(language),
+        content: code,
+        language,
+      },
+    ];
   }
 
   // Multiple files
-  const files: Array<{ name: string; content: string; language: SupportedLanguage }> = [];
-  
+  const files: Array<{
+    name: string;
+    content: string;
+    language: SupportedLanguage;
+  }> = [];
+
   for (let i = 0; i < matches.length; i++) {
     const match = matches[i];
     const fileName = match[1];
     const startIndex = match.index! + match[0].length;
-    const endIndex = i < matches.length - 1 ? matches[i + 1].index! : code.length;
+    const endIndex =
+      i < matches.length - 1 ? matches[i + 1].index! : code.length;
     const content = code.substring(startIndex, endIndex).trim();
-    
+
     const language = detectCodeLanguage(content);
     files.push({ name: fileName, content, language });
   }
@@ -157,86 +187,98 @@ function parseCodeFiles(code: string): Array<{ name: string; content: string; la
 }
 
 // Extract HTML, CSS, and JS from a single HTML file with inline styles/scripts
-function extractHtmlFiles(html: string): Array<{ name: string; content: string; language: SupportedLanguage }> {
-  const files: Array<{ name: string; content: string; language: SupportedLanguage }> = [];
-  
+function extractHtmlFiles(
+  html: string
+): Array<{ name: string; content: string; language: SupportedLanguage }> {
+  const files: Array<{
+    name: string;
+    content: string;
+    language: SupportedLanguage;
+  }> = [];
+
   // Extract inline CSS
   const styleRegex = /<style[^>]*>([\s\S]*?)<\/style>/gi;
   const styleMatches = Array.from(html.matchAll(styleRegex));
-  let extractedCSS = '';
-  
+  let extractedCSS = "";
+
   if (styleMatches.length > 0) {
-    extractedCSS = styleMatches.map(m => m[1].trim()).join('\n\n');
+    extractedCSS = styleMatches.map((m) => m[1].trim()).join("\n\n");
     // Remove style tags from HTML
-    html = html.replace(styleRegex, '');
+    html = html.replace(styleRegex, "");
   }
-  
+
   // Extract inline JavaScript
   const scriptRegex = /<script[^>]*>([\s\S]*?)<\/script>/gi;
   const scriptMatches = Array.from(html.matchAll(scriptRegex));
-  let extractedJS = '';
-  
+  let extractedJS = "";
+
   if (scriptMatches.length > 0) {
     extractedJS = scriptMatches
-      .map(m => m[1].trim())
-      .filter(js => js && !js.includes('src=')) // Skip external scripts
-      .join('\n\n');
+      .map((m) => m[1].trim())
+      .filter((js) => js && !js.includes("src=")) // Skip external scripts
+      .join("\n\n");
     // Remove inline script tags from HTML
-    html = html.replace(/<script(?![^>]*src=)[^>]*>[\s\S]*?<\/script>/gi, '');
+    html = html.replace(/<script(?![^>]*src=)[^>]*>[\s\S]*?<\/script>/gi, "");
   }
-  
+
   // Add link to CSS if we extracted any
   if (extractedCSS) {
     html = html.replace(
-      '</head>',
+      "</head>",
       '    <link rel="stylesheet" href="style.css">\n</head>'
     );
   }
-  
+
   // Add script tag if we extracted any JS
   if (extractedJS) {
     html = html.replace(
-      '</body>',
+      "</body>",
       '    <script src="script.js"></script>\n</body>'
     );
   }
-  
+
   // Add HTML file
   files.push({
-    name: 'index.html',
+    name: "index.html",
     content: html.trim(),
-    language: 'html'
+    language: "html",
   });
-  
+
   // Add CSS file if exists
   if (extractedCSS) {
     files.push({
-      name: 'style.css',
+      name: "style.css",
       content: extractedCSS,
-      language: 'css'
+      language: "css",
     });
   }
-  
+
   // Add JS file if exists
   if (extractedJS) {
     files.push({
-      name: 'script.js',
+      name: "script.js",
       content: extractedJS,
-      language: 'javascript'
+      language: "javascript",
     });
   }
-  
+
   return files;
 }
 
 function getDefaultFileName(language: SupportedLanguage): string {
   switch (language) {
-    case "python": return "main.py";
-    case "javascript": return "index.js";
-    case "typescript": return "index.ts";
-    case "html": return "index.html";
-    case "css": return "style.css";
-    default: return "code.txt";
+    case "python":
+      return "main.py";
+    case "javascript":
+      return "index.js";
+    case "typescript":
+      return "index.ts";
+    case "html":
+      return "index.html";
+    case "css":
+      return "style.css";
+    default:
+      return "code.txt";
   }
 }
 
@@ -320,7 +362,8 @@ export const codeArtifact = new Artifact<"code", Metadata>({
       // Parse files and detect language when enough content is available
       if (streamPart.data.length > 50) {
         const files = parseCodeFiles(streamPart.data);
-        const detectedLang = files[0]?.language || detectCodeLanguage(streamPart.data);
+        const detectedLang =
+          files[0]?.language || detectCodeLanguage(streamPart.data);
         setMetadata((metadata) => ({
           ...metadata,
           language: detectedLang,
@@ -334,13 +377,25 @@ export const codeArtifact = new Artifact<"code", Metadata>({
     const files = metadata?.files || parseCodeFiles(content || "");
     const activeFileIndex = metadata?.activeFileIndex || 0;
     const activeFile = files[activeFileIndex] || files[0];
-    const detectedLanguage = activeFile?.language || metadata?.language || detectCodeLanguage(content || "");
+    const detectedLanguage =
+      activeFile?.language ||
+      metadata?.language ||
+      detectCodeLanguage(content || "");
 
     // Get preview of code (first few lines)
-    const codePreview = (activeFile?.content || content || "").split("\n").slice(0, 3).join("\n");
-    const linesCount = (activeFile?.content || content || "").split("\n").length;
+    const codePreview = (activeFile?.content || content || "")
+      .split("\n")
+      .slice(0, 3)
+      .join("\n");
+    const linesCount = (activeFile?.content || content || "").split(
+      "\n"
+    ).length;
 
-    const handleFileAdd = (newFile: { name: string; content: string; language: SupportedLanguage }) => {
+    const handleFileAdd = (newFile: {
+      name: string;
+      content: string;
+      language: SupportedLanguage;
+    }) => {
       const updatedFiles = [...files, newFile];
       setMetadata({
         ...metadata,
@@ -351,10 +406,11 @@ export const codeArtifact = new Artifact<"code", Metadata>({
 
     const handleFileDelete = (index: number) => {
       if (files.length <= 1) return;
-      
+
       const updatedFiles = files.filter((_, i) => i !== index);
-      const newActiveIndex = index >= updatedFiles.length ? updatedFiles.length - 1 : index;
-      
+      const newActiveIndex =
+        index >= updatedFiles.length ? updatedFiles.length - 1 : index;
+
       setMetadata({
         ...metadata,
         files: updatedFiles,
@@ -365,7 +421,7 @@ export const codeArtifact = new Artifact<"code", Metadata>({
     const handleFileRename = (index: number, newName: string) => {
       const updatedFiles = [...files];
       updatedFiles[index] = { ...updatedFiles[index], name: newName };
-      
+
       setMetadata({
         ...metadata,
         files: updatedFiles,
@@ -376,8 +432,8 @@ export const codeArtifact = new Artifact<"code", Metadata>({
       <div className="flex flex-col w-full border border-zinc-800 rounded-xl overflow-hidden bg-zinc-900">
         {/* Collapsible Header - Like Reagent */}
         <button
-          onClick={() => setIsExpanded(!isExpanded)}
           className="flex items-center gap-3 px-4 py-3 hover:bg-zinc-800/50 transition-colors border-b border-zinc-800"
+          onClick={() => setIsExpanded(!isExpanded)}
         >
           {isExpanded ? (
             <ChevronDown className="w-5 h-5 text-zinc-400" />
@@ -389,8 +445,13 @@ export const codeArtifact = new Artifact<"code", Metadata>({
               <LogsIcon size={20} />
             </div>
             <div className="flex-1 text-left">
-              <div className="font-medium text-zinc-200">{detectedLanguage.toUpperCase()}</div>
-              <div className="text-xs text-zinc-500">{linesCount} lines{files.length > 1 ? ` • ${files.length} files` : ""}</div>
+              <div className="font-medium text-zinc-200">
+                {detectedLanguage.toUpperCase()}
+              </div>
+              <div className="text-xs text-zinc-500">
+                {linesCount} lines
+                {files.length > 1 ? ` • ${files.length} files` : ""}
+              </div>
             </div>
           </div>
           {!isExpanded && (
@@ -406,20 +467,22 @@ export const codeArtifact = new Artifact<"code", Metadata>({
             {/* File Explorer Sidebar - Show when multiple files */}
             {files.length > 1 && (
               <FileExplorer
-                files={files}
                 activeFileIndex={activeFileIndex}
-                onFileSelect={(index) => setMetadata({ ...metadata, activeFileIndex: index })}
+                className="w-56 shrink-0 border-r border-zinc-800"
+                files={files}
                 onFileAdd={handleFileAdd}
                 onFileDelete={handleFileDelete}
                 onFileRename={handleFileRename}
-                className="w-56 shrink-0 border-r border-zinc-800"
+                onFileSelect={(index) =>
+                  setMetadata({ ...metadata, activeFileIndex: index })
+                }
               />
             )}
 
             {/* Code Editor Area */}
-            <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
-              <CodeEditor 
-                {...props} 
+            <div className="flex-1 flex flex-col min-w-0 overflow-y-auto">
+              <CodeEditor
+                {...props}
                 content={activeFile?.content || content || ""}
                 language={detectedLanguage}
               />
@@ -449,12 +512,15 @@ export const codeArtifact = new Artifact<"code", Metadata>({
       onClick: async ({ content, setMetadata, metadata }) => {
         const runId = generateUUID();
         const outputContent: ConsoleOutputContent[] = [];
-        
+
         const files = metadata?.files || parseCodeFiles(content);
         const activeFileIndex = metadata?.activeFileIndex || 0;
         const activeFile = files[activeFileIndex] || files[0];
         const codeToRun = activeFile?.content || content;
-        const language = activeFile?.language || metadata?.language || detectCodeLanguage(content);
+        const language =
+          activeFile?.language ||
+          metadata?.language ||
+          detectCodeLanguage(content);
 
         setMetadata((metadata) => ({
           ...metadata,

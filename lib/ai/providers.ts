@@ -1,133 +1,88 @@
-import { createGroq, groq } from "@ai-sdk/groq";
 import { createOpenAI } from "@ai-sdk/openai";
 
-// Groq client setup
-type GroqProvider = typeof groq;
+// ============================================================
+// MAIA Router API Keys
+// ============================================================
+const maiaApiKey = (process.env.OPENROUTER_API_KEY_1 || "").trim();
 
-const primaryApiKey = (
-  process.env.GROQ_API_KEY_1 ||
-  process.env.GROQ_API_KEY ||
-  ""
-).trim();
-const secondaryApiKey = (
-  process.env.GROQ_API_KEY_2 ||
-  process.env.GROQ_API_KEY_3 ||
-  ""
-).trim();
-
-const groqPrimary: GroqProvider =
-  primaryApiKey && primaryApiKey.length > 0
-    ? createGroq({ apiKey: primaryApiKey })
-    : groq;
-
-const groqSecondary: GroqProvider | null =
-  secondaryApiKey && secondaryApiKey.length > 0
-    ? createGroq({ apiKey: secondaryApiKey })
-    : null;
-
-// Local AI setup
-const localAiUrl = process.env.LOCAL_AI_URL || "http://152.42.199.99:8000/v1";
-console.log("[AI Provider] Initializing localClient with baseURL:", localAiUrl);
-
-const localClient = createOpenAI({
-  baseURL: localAiUrl,
-  apiKey: "not-needed",
-});
-
-let usePrimaryNext = true;
-let lastFailedKey: "primary" | "secondary" | null = null;
-
-function getGroqClient(): GroqProvider {
-  const hasPrimaryEnv = primaryApiKey && primaryApiKey.length > 0;
-  const hasSecondaryEnv = secondaryApiKey && secondaryApiKey.length > 0;
-
-  if (!hasPrimaryEnv && !hasSecondaryEnv) {
+/**
+ * Creates a model via @ai-sdk/openai pointing to MAIA Router.
+ * Uses .chat() to ensure /chat/completions endpoint is used.
+ */
+function getMaiaRouterModel(modelId: string) {
+  if (!maiaApiKey) {
     throw new Error(
-      "GROQ_API_KEY or GROQ_API_KEY_1/2 is not configured properly."
+      "No MAIA Router API key configured. Set OPENROUTER_API_KEY_1 in your environment."
     );
   }
 
-  if (lastFailedKey === "primary" && groqSecondary) {
-    return groqSecondary as any;
-  }
-  if (lastFailedKey === "secondary" && hasPrimaryEnv) {
-    return groqPrimary;
-  }
+  console.log(`[AI Provider] Creating MAIA Router model: ${modelId}`);
 
-  if (groqSecondary && hasSecondaryEnv) {
-    const usePrimary = usePrimaryNext;
-    usePrimaryNext = !usePrimaryNext;
-    return usePrimary ? groqPrimary : (groqSecondary as any);
-  }
+  const client = createOpenAI({
+    baseURL: "https://api.maiarouter.ai/v1", // MAIA Router Endpoint
+    apiKey: maiaApiKey,
+    headers: {
+      "HTTP-Referer": "https://ultramaxo.com",
+      "X-Title": "Ultramaxo AI",
+    },
+  });
 
-  return groqPrimary;
+  // Use .chat() for Chat Completions endpoint
+  return client.chat(modelId);
 }
 
-export function markKeyFailed(keyType: "primary" | "secondary") {
-  lastFailedKey = keyType;
-}
+// ============================================================
+// Model IDs on MAIA Router (xAI Grok & Gemini)
+// ============================================================
+// Primary Model: xAI Grok 4-1 Fast (Supports Vision, Tools, Reasoning)
+// Update: Preview model erroring (503), reverting to stable Flash
+const GROK_MODEL = "maia/gemini-2.5-flash";
 
-export function resetFailureTracking() {
-  lastFailedKey = null;
-}
-
+// ============================================================
+// getLanguageModel - main routing function
+// ============================================================
 export const getLanguageModel = (modelId: string) => {
   const normalized = modelId.toLowerCase();
-
-  console.log("-----------------------------------------");
+  console.log("-------------------------------------------");
   console.log("[AI Provider] Model Requested:", modelId);
-  console.log("[AI Provider] Routing to Singapore VPS...");
 
-  const getLocalChatModel = (id: string) => {
-    // Calling .chat() explicitly forces OpenAIChatLanguageModel (uses /chat/completions)
-    // instead of OpenAIResponsesLanguageModel (uses /v1/responses)
-    const client = localClient as any;
-    return typeof client.chat === "function"
-      ? client.chat(id)
-      : localClient(id);
-  };
-
-  // Handle Ultramaxo Local Models & Legacy IDs
-  if (
-    normalized.startsWith("ultramaxo/") ||
-    normalized.includes("llama") ||
-    normalized.includes("deepseek") ||
-    normalized.startsWith("local/")
-  ) {
-    console.log("[AI Provider] ACTION: Using Local Chat API");
-    return getLocalChatModel("gpt-3.5-turbo");
+  // All "ultra-agent" variants map to Grok (now Gemini Flash Preview)
+  if (normalized.includes("ultra-agent") || normalized.includes("pro")) {
+    console.log("[AI Provider] -> UltraAgent (Grok/Gemini):", GROK_MODEL);
+    return getMaiaRouterModel(GROK_MODEL);
   }
 
-  const groqClient = getGroqClient();
-
-  try {
-    if (normalized.startsWith("groq/")) {
-      const actualModelId = modelId.split("/")[1];
-      console.log("[AI Provider] ACTION: Using Groq Cloud for", actualModelId);
-      return groqClient(actualModelId);
-    }
-
-    // Default fallback to Local AI
-    console.log("[AI Provider] ACTION: Default Fallback to Singapore");
-    return getLocalChatModel("gpt-3.5-turbo");
-  } catch (error) {
-    console.error("[AI Provider] ERROR Routing:", error);
-    return getLocalChatModel("gpt-3.5-turbo");
+  // Explicit maia/ or xai/ prefix
+  if (normalized.startsWith("maia/") || normalized.startsWith("xai/")) {
+    console.log("[AI Provider] -> Passthrough:", modelId);
+    return getMaiaRouterModel(modelId);
   }
+
+  // Default fallback
+  console.log("[AI Provider] -> Default:", GROK_MODEL);
+  return getMaiaRouterModel(GROK_MODEL);
 };
 
+// ============================================================
+// Title generation
+// ============================================================
 export function getTitleModel() {
-  console.log("[AI Provider] Title generation -> Singapore");
-  const client = localClient as any;
-  return typeof client.chat === "function"
-    ? client.chat("gpt-3.5-turbo")
-    : localClient("gpt-3.5-turbo");
+  console.log("[AI Provider] Title model:", GROK_MODEL);
+  return getMaiaRouterModel(GROK_MODEL);
 }
 
+// ============================================================
+// Artifact model
+// ============================================================
 export function getArtifactModel() {
-  console.log("[AI Provider] Artifact generation -> Singapore");
-  const client = localClient as any;
-  return typeof client.chat === "function"
-    ? client.chat("gpt-3.5-turbo")
-    : localClient("gpt-3.5-turbo");
+  console.log("[AI Provider] Artifact model:", GROK_MODEL);
+  return getMaiaRouterModel(GROK_MODEL);
+}
+
+// ============================================================
+// Image/Vision model
+// ============================================================
+export function getImageModel() {
+  console.log("[AI Provider] Vision model:", GROK_MODEL);
+  return getMaiaRouterModel(GROK_MODEL);
 }
