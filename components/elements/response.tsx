@@ -2,6 +2,7 @@
 
 import type { ComponentProps } from "react";
 import rehypeKatex from "rehype-katex";
+import remarkGfm from "remark-gfm";
 import remarkMath from "remark-math";
 import { Streamdown } from "streamdown";
 import { cn } from "@/lib/utils";
@@ -84,9 +85,41 @@ export function Response({ className, children, ...props }: ResponseProps) {
             </code>
           );
         },
+        table: ({ children, ...props }: any) => (
+          <div className="my-4 w-full overflow-y-auto w-full overflow-x-auto rounded-lg border border-border">
+            <table className="w-full text-left text-sm" {...props}>
+              {children}
+            </table>
+          </div>
+        ),
+        thead: ({ children, ...props }: any) => (
+          <thead className="bg-muted/50 text-muted-foreground" {...props}>
+            {children}
+          </thead>
+        ),
+        tbody: ({ children, ...props }: any) => (
+          <tbody className="divide-y divide-border" {...props}>
+            {children}
+          </tbody>
+        ),
+        tr: ({ children, ...props }: any) => (
+          <tr className="transition-colors hover:bg-muted/50" {...props}>
+            {children}
+          </tr>
+        ),
+        th: ({ children, ...props }: any) => (
+          <th className="px-4 py-3 font-medium" {...props}>
+            {children}
+          </th>
+        ),
+        td: ({ children, ...props }: any) => (
+          <td className="px-4 py-3" {...props}>
+            {children}
+          </td>
+        ),
       }}
       rehypePlugins={[rehypeKatex]}
-      remarkPlugins={[remarkMath]}
+      remarkPlugins={[remarkMath, remarkGfm]}
       {...props}
     >
       {children}
