@@ -2,7 +2,9 @@ import { type NextRequest, NextResponse } from "next/server";
 import { auth } from "@/app/(auth)/auth";
 
 const MAIA_API_KEY = (process.env.OPENROUTER_API_KEY_1 || "").trim();
-const IMAGE_MODEL = "maia/gemini-2.5-flash-image-preview";
+// Use Vertex AI Gemini endpoint — gemini-2.5-flash can generate images
+const MODEL_NAME = "gemini-2.5-flash-image-preview";
+const VERTEX_URL = `https://api.maiarouter.ai/vertex_ai/publishers/google/models/${MODEL_NAME}:generateContent`;
 
 export async function POST(request: NextRequest) {
   try {
@@ -16,15 +18,6 @@ export async function POST(request: NextRequest) {
     const userType = (session.user as any).type;
     const userRole = (session.user as any).role;
     const hasPro = userType === "pro" || userRole === "admin";
-
-    console.log(
-      "[generate-image] user type:",
-      userType,
-      "role:",
-      userRole,
-      "hasPro:",
-      hasPro
-    );
 
     if (!hasPro) {
       return NextResponse.json(
@@ -49,37 +42,37 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    console.log("[generate-image] Calling MAIA with model:", IMAGE_MODEL);
+    console.log("[generate-image] Calling Vertex AI Gemini:", VERTEX_URL);
 
-    const response = await fetch(
-      "https://api.maiarouter.ai/v1/images/generations",
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${MAIA_API_KEY}`,
-          "HTTP-Referer": "https://ultramaxo.tech",
-          "X-Title": "Ultramaxo AI",
+    // Use Gemini generateContent format for Vertex AI image generation
+    const response = await fetch(VERTEX_URL, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${MAIA_API_KEY}`,
+        "HTTP-Referer": "https://ultramaxo.tech",
+        "X-Title": "Ultramaxo AI",
+      },
+      body: JSON.stringify({
+        contents: [
+          {
+            role: "user",
+            parts: [{ text: prompt.trim() }],
+          },
+        ],
+        generation_config: {
+          response_modalities: ["IMAGE", "TEXT"],
         },
-        body: JSON.stringify({
-          model: IMAGE_MODEL,
-          prompt: prompt.trim(),
-          n: 1,
-          // Gemini models typically return URL format
-          response_format: "url",
-        }),
-      }
-    );
+      }),
+    });
 
     const rawText = await response.text();
-    console.log("[generate-image] MAIA status:", response.status);
-    console.log("[generate-image] MAIA response:", rawText.slice(0, 800));
+    console.log("[generate-image] status:", response.status);
+    console.log("[generate-image] response:", rawText.slice(0, 800));
 
     if (!response.ok) {
       return NextResponse.json(
-        {
-          error: `Failed to generate image (${response.status}). Please try again.`,
-        },
+        { error: `Generator error (${response.status}). Please try again.` },
         { status: 500 }
       );
     }
@@ -88,28 +81,33 @@ export async function POST(request: NextRequest) {
     try {
       data = JSON.parse(rawText);
     } catch {
-      console.error("[generate-image] Failed to parse JSON:", rawText);
       return NextResponse.json(
         { error: "Invalid response from generator" },
         { status: 500 }
       );
     }
 
-    // Handle URL response (Gemini default) or b64_json fallback
-    const imageUrl = data?.data?.[0]?.url;
-    const b64 = data?.data?.[0]?.b64_json;
-
-    if (imageUrl) {
-      return NextResponse.json({ imageUrl });
+    // Extract image from Gemini response: candidates[0].content.parts[].inline_data
+    const parts = data?.candidates?.[0]?.content?.parts ?? [];
+    for (const part of parts) {
+      if (part?.inline_data?.data) {
+        const mimeType = part.inline_data.mime_type || "image/png";
+        return NextResponse.json({
+          imageUrl: `data:${mimeType};base64,${part.inline_data.data}`,
+        });
+      }
     }
 
-    if (b64) {
-      return NextResponse.json({ imageUrl: `data:image/png;base64,${b64}` });
-    }
+    // Fallback: check standard OpenAI images format just in case
+    const urlImg = data?.data?.[0]?.url;
+    const b64Img = data?.data?.[0]?.b64_json;
+    if (urlImg) return NextResponse.json({ imageUrl: urlImg });
+    if (b64Img)
+      return NextResponse.json({ imageUrl: `data:image/png;base64,${b64Img}` });
 
     console.error(
       "[generate-image] Unexpected response shape:",
-      JSON.stringify(data)
+      JSON.stringify(data).slice(0, 500)
     );
     return NextResponse.json(
       { error: "No image returned from generator" },
