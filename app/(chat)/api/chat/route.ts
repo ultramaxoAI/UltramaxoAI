@@ -237,7 +237,8 @@ export async function POST(request: Request) {
                   : undefined,
                 tools: useTools
                   ? {
-                      ...(webSearchEnabled ? { webSearch } : { getWeather }),
+                      getWeather,
+                      ...(webSearchEnabled ? { webSearch } : {}),
                     }
                   : {},
                 experimental_telemetry: {
