@@ -805,17 +805,18 @@ export async function upsertVerificationCode(email: string, code: string) {
   try {
     const expires = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes from now
 
+    // Delete any existing token for this email first (composite PK on identifier+token,
+    // so we can't do onConflictDoUpdate on just identifier)
     await db
-      .insert(verificationToken)
-      .values({
-        identifier: email,
-        token: code,
-        expires,
-      })
-      .onConflictDoUpdate({
-        target: verificationToken.identifier,
-        set: { token: code, expires },
-      });
+      .delete(verificationToken)
+      .where(eq(verificationToken.identifier, email));
+
+    // Insert the new token
+    await db.insert(verificationToken).values({
+      identifier: email,
+      token: code,
+      expires,
+    });
   } catch (error) {
     console.error("Database Error (upsertVerificationCode):", error);
     throw new ChatSDKError(
