@@ -186,6 +186,32 @@ export const {
 
       return session;
     },
+    async signIn({ user, account }) {
+      // Allow credentials sign in
+      if (account?.provider === "credentials") return true;
+
+      // For OAuth (Google, GitHub) - allow sign in and let NextAuth handle linking
+      // If the email already exists with a different provider, automatically link
+      if (account && user.email) {
+        try {
+          const [existingUser] = await getUser(user.email);
+          if (existingUser) {
+            // User exists — update their name if not set
+            if (!existingUser.name && user.name) {
+              await db
+                .update(userTable)
+                .set({ name: user.name })
+                .where(eq(userTable.id, existingUser.id));
+            }
+            // Patch user.id so NextAuth uses the existing user
+            user.id = existingUser.id;
+          }
+        } catch {
+          // If lookup fails, continue with normal flow
+        }
+      }
+      return true;
+    },
   },
   events: {
     async linkAccount({ user, profile }: any) {

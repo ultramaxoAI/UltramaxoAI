@@ -119,7 +119,7 @@ function PureMultimodalInput({
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const { width } = useWindowSize();
   const [imageGenerationOpen, setImageGenerationOpen] = useState(false);
-  const isPro = user?.isPro ?? false;
+  const isPro = user?.type === "pro" || (user as any)?.isPro === true;
 
   const adjustHeight = useCallback(() => {
     if (textareaRef.current) {
