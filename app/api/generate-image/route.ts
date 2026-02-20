@@ -12,8 +12,12 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    // PRO-only feature
-    if (!(session.user as any).isPro) {
+    // PRO-only feature — check type (set in JWT callback) or role
+    const userType = (session.user as any).type;
+    const userRole = (session.user as any).role;
+    const hasPro = userType === "pro" || userRole === "admin";
+
+    if (!hasPro) {
       return NextResponse.json(
         { error: "Image generation is a PRO feature. Upgrade to access." },
         { status: 403 }
