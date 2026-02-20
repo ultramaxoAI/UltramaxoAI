@@ -13,6 +13,7 @@ import {
   ImageIcon,
   PlusIcon,
   SparklesIcon,
+  Wand2Icon,
 } from "lucide-react";
 import {
   type ChangeEvent,
@@ -59,6 +60,7 @@ import {
   PromptInputTools,
 } from "./elements/prompt-input";
 import { ArrowUpIcon, StopIcon } from "./icons";
+import { ImageGenerationDialog } from "./image-generation-dialog";
 import { PreviewAttachment } from "./preview-attachment";
 import { Button } from "./ui/button";
 import type { VisibilityType } from "./visibility-selector";
@@ -90,7 +92,7 @@ export interface MultimodalInputProps {
   setDeepThinkingEnabled: Dispatch<SetStateAction<boolean>>;
   webSearchEnabled: boolean;
   setWebSearchEnabled: Dispatch<SetStateAction<boolean>>;
-  user?: { type?: string };
+  user?: { type?: string; isPro?: boolean };
 }
 
 function PureMultimodalInput({
@@ -116,6 +118,8 @@ function PureMultimodalInput({
 }: MultimodalInputProps) {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const { width } = useWindowSize();
+  const [imageGenerationOpen, setImageGenerationOpen] = useState(false);
+  const isPro = user?.isPro ?? false;
 
   const adjustHeight = useCallback(() => {
     if (textareaRef.current) {
@@ -449,6 +453,17 @@ function PureMultimodalInput({
                     <CheckIcon className="ml-auto h-4 w-4" />
                   )}
                 </DropdownMenuItem>
+                <DropdownMenuItem
+                  className={cn(
+                    "cursor-pointer hover:bg-zinc-200 dark:hover:bg-zinc-800 rounded-lg focus:bg-zinc-200 dark:focus:bg-zinc-800",
+                    !isPro && "cursor-not-allowed opacity-40"
+                  )}
+                  disabled={!isPro}
+                  onClick={() => isPro && setImageGenerationOpen(true)}
+                >
+                  <Wand2Icon className="mr-2 h-4 w-4" />
+                  <span>Image Generation</span>
+                </DropdownMenuItem>
 
                 <DropdownMenuSeparator className="bg-zinc-200 dark:bg-zinc-800" />
 
@@ -523,6 +538,11 @@ function PureMultimodalInput({
           )}
         </PromptInputToolbar>
       </PromptInput>
+
+      <ImageGenerationDialog
+        onClose={() => setImageGenerationOpen(false)}
+        open={imageGenerationOpen}
+      />
     </div>
   );
 }
