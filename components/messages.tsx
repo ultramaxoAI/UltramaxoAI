@@ -77,10 +77,20 @@ function PureMessages({
                 />
               ))}
 
-              {status === "submitted" &&
+              {/* Render ThinkingMessage if submitted or streaming with an empty last assistant message */}
+              {(status === "submitted" ||
+                (status === "streaming" &&
+                  messages.length > 0 &&
+                  messages.at(-1)?.role === "assistant" &&
+                  !messages
+                    .at(-1)
+                    ?.parts.some(
+                      (p) => p.type === "text" && p.text.trim().length > 0
+                    ))) &&
                 !messages.some((msg) =>
                   msg.parts?.some(
-                    (part) => "state" in part && part.state === "approval-responded"
+                    (part) =>
+                      "state" in part && part.state === "approval-responded"
                   )
                 ) && <ThinkingMessage />}
 

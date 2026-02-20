@@ -67,7 +67,15 @@ function PureArtifactMessages({
       ))}
 
       <AnimatePresence mode="wait">
-        {status === "submitted" &&
+        {(status === "submitted" ||
+          (status === "streaming" &&
+            messages.length > 0 &&
+            messages.at(-1)?.role === "assistant" &&
+            !messages
+              .at(-1)
+              ?.parts.some(
+                (p) => p.type === "text" && p.text.trim().length > 0
+              ))) &&
           !messages.some((msg) =>
             msg.parts?.some(
               (part) => "state" in part && part.state === "approval-responded"
