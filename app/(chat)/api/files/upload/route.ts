@@ -78,33 +78,24 @@ export async function POST(request: Request) {
         });
         return NextResponse.json(data);
       }
-      // Fallback to local storage if Vercel Blob is not configured
+      // Fallback to Base64 data URL if Vercel Blob is not configured
       console.warn(
-        "BLOB_READ_WRITE_TOKEN not found, saving to local public directory"
+        "BLOB_READ_WRITE_TOKEN not found, returning base64 data URL fallback"
       );
-      const fs = await import("node:fs/promises");
-      const path = await import("node:path");
-      const crypto = await import("node:crypto");
 
+      const buffer = Buffer.from(fileBuffer);
+      const base64Str = buffer.toString("base64");
+      const mimeType = file.type || "application/octet-stream";
+      const dataUrl = `data:${mimeType};base64,${base64Str}`;
+      const crypto = await import("node:crypto");
       const uniqueId = crypto.randomUUID();
       const safeName = filename.replace(/[^a-zA-Z0-9.-]/g, "_");
       const newFilename = `${uniqueId}-${safeName}`;
-      const uploadDir = path.join(process.cwd(), "public", "uploads");
-
-      // Ensure upload dir exists
-      try {
-        await fs.mkdir(uploadDir, { recursive: true });
-      } catch (_e) {
-        // Ignore if directory already exists
-      }
-
-      const filePath = path.join(uploadDir, newFilename);
-      await fs.writeFile(filePath, Buffer.from(fileBuffer));
 
       return NextResponse.json({
-        url: `/uploads/${newFilename}`,
+        url: dataUrl,
         pathname: newFilename,
-        contentType: file.type || "application/octet-stream",
+        contentType: mimeType,
         contentDisposition: `inline; filename="${safeName}"`,
       });
     } catch (error: any) {

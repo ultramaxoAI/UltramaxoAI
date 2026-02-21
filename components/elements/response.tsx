@@ -15,11 +15,27 @@ export function Response({ className, children, ...props }: ResponseProps) {
   return (
     <Streamdown
       className={cn(
-        "size-full [&>*:first-child]:mt-0 [&>*:last-child]:mb-0 [&_code]:whitespace-pre-wrap [&_code]:break-words [&_pre]:max-w-full [&_pre]:overflow-x-auto",
+        "size-full [&>*:first-child]:mt-0 [&>*:last-child]:mb-0",
+        // Grok-like typography styling
+        "text-[15px] leading-[1.65] md:text-base md:leading-relaxed",
+        "tracking-[-0.01em] text-zinc-100", // Clean, bright text
+        "[&_p]:my-4",
+        "[&_ul]:my-4 [&_ul]:list-disc [&_ul]:pl-6 [&_ul_ul]:my-1",
+        "[&_ol]:my-4 [&_ol]:list-decimal [&_ol]:pl-6 [&_ol_ol]:my-1",
+        "[&_li]:mt-1.5 [&_li]:pl-1",
+        "[&_h1]:text-2xl [&_h1]:font-semibold [&_h1]:mt-8 [&_h1]:mb-4 [&_h1]:tracking-tight",
+        "[&_h2]:text-xl [&_h2]:font-semibold [&_h2]:mt-8 [&_h2]:mb-4 [&_h2]:tracking-tight",
+        "[&_h3]:text-lg [&_h3]:font-semibold [&_h3]:mt-6 [&_h3]:mb-3",
+        "[&_h4]:text-[15px] font-semibold mt-6 mb-2",
+        "[&_strong]:font-semibold [&_strong]:text-white",
+        "[&_a]:text-blue-400 [&_a]:underline [&_a]:underline-offset-2 [&_a]:decoration-blue-400/50 hover:[&_a]:decoration-blue-400",
+        "[&_blockquote]:border-l-4 [&_blockquote]:border-zinc-700 [&_blockquote]:pl-4 [&_blockquote]:italic [&_blockquote]:text-zinc-400 [&_blockquote]:my-4",
+        "[&_hr]:my-8 [&_hr]:border-zinc-800",
+        "[&_code]:whitespace-pre-wrap [&_code]:break-words [&_pre]:max-w-full [&_pre]:overflow-x-auto",
         className
       )}
       components={{
-        pre: ({ children, ...props }: any) => {
+        pre: ({ children }: any) => {
           // Robustly extract text from children
           const extractText = (content: any): string => {
             if (typeof content === "string") {
@@ -67,7 +83,7 @@ export function Response({ className, children, ...props }: ResponseProps) {
             </CodeBlock>
           );
         },
-        code: ({ node, inline, className, children, ...props }: any) => {
+        code: ({ inline, className, children, ...props }: any) => {
           // Handle inline code only. Block code is handled by 'pre'.
           if (inline) {
             return (
