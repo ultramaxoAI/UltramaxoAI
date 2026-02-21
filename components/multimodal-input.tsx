@@ -122,6 +122,12 @@ function PureMultimodalInput({
   const [imageGenerationOpen, setImageGenerationOpen] = useState(false);
   const [imageGenerationMode, setImageGenerationMode] = useState(false);
 
+  // Grant image gen access to PRO users and admins
+  const isPro =
+    (user as any)?.type === "pro" ||
+    (user as any)?.isPro === true ||
+    (user as any)?.role === "admin";
+
   const adjustHeight = useCallback(() => {
     if (textareaRef.current) {
       // Temporarily set height to 0 to correctly calculate shrink
@@ -636,11 +642,22 @@ function PureMultimodalInput({
                   )}
                 </DropdownMenuItem>
                 <DropdownMenuItem
-                  className="cursor-pointer hover:bg-white/10 rounded-lg focus:bg-white/10 opacity-40"
-                  disabled
+                  className={cn(
+                    "cursor-pointer hover:bg-white/10 rounded-lg focus:bg-white/10",
+                    !isPro && "cursor-not-allowed opacity-40"
+                  )}
+                  disabled={!isPro}
+                  onClick={() => {
+                    if (isPro) {
+                      setImageGenerationMode(!imageGenerationMode);
+                    }
+                  }}
                 >
                   <Wand2Icon className="mr-2 h-4 w-4" />
                   <span>Image Gen (Pro)</span>
+                  {imageGenerationMode && (
+                    <CheckIcon className="ml-auto h-4 w-4 text-purple-500" />
+                  )}
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
