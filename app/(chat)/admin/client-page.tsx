@@ -647,16 +647,7 @@ export default function AdminDashboardClient() {
                         User
                       </th>
                       <th className="p-4 text-xs font-bold text-zinc-500 uppercase tracking-widest whitespace-nowrap">
-                        Msgs (Total)
-                      </th>
-                      <th className="p-4 text-xs font-bold text-zinc-500 uppercase tracking-widest whitespace-nowrap">
-                        Limit
-                      </th>
-                      <th className="p-4 text-xs font-bold text-zinc-500 uppercase tracking-widest whitespace-nowrap">
-                        Plan
-                      </th>
-                      <th className="p-4 text-xs font-bold text-zinc-500 uppercase tracking-widest whitespace-nowrap">
-                        Status
+                        Usage & Limit
                       </th>
                       <th className="p-4 text-xs font-bold text-zinc-500 uppercase tracking-widest text-right whitespace-nowrap">
                         Actions
@@ -693,66 +684,56 @@ export default function AdminDashboardClient() {
                           className="hover:bg-zinc-800/20 transition-colors group"
                           key={user.id}
                         >
-                          <td className="p-4">
+                          <td className="p-4 max-w-[200px] sm:max-w-none">
                             <div className="flex items-center gap-3">
-                              <div className="size-8 rounded-full bg-zinc-800 flex items-center justify-center font-bold text-zinc-400 shrink-0">
+                              <div className="size-8 sm:size-10 rounded-full bg-zinc-800 flex items-center justify-center font-bold text-zinc-400 shrink-0">
                                 {user.name?.[0]?.toUpperCase() ||
                                   user.email?.[0]?.toUpperCase()}
                               </div>
-                              <div className="flex flex-col min-w-0">
-                                <span className="font-bold text-white text-sm truncate max-w-[120px]">
-                                  {user.name || "Unnamed"}
-                                </span>
-                                <span className="text-zinc-500 text-xs truncate max-w-[150px]">
+                              <div className="flex flex-col min-w-0 gap-1 text-left">
+                                <div className="flex items-center gap-2 flex-wrap">
+                                  <span className="font-bold text-white text-sm truncate max-w-[120px] sm:max-w-[200px]">
+                                    {user.name || "Unnamed"}
+                                  </span>
+                                  {user.isPro && (
+                                    <span className="px-1.5 py-0.5 bg-yellow-400/10 text-yellow-400 text-[9px] font-black uppercase tracking-widest border border-yellow-400/20 rounded-full flex items-center gap-1 w-fit shrink-0">
+                                      <CrownIcon size={8} /> PRO
+                                    </span>
+                                  )}
+                                  {user.role === "admin" && (
+                                    <span className="px-1.5 py-0.5 bg-blue-400/10 text-blue-400 text-[9px] font-black uppercase tracking-widest border border-blue-400/20 rounded-full flex items-center gap-1 w-fit shrink-0">
+                                      <KeyIcon size={8} /> ADMIN
+                                    </span>
+                                  )}
+                                </div>
+                                <span className="text-zinc-500 text-xs truncate max-w-[150px] sm:max-w-[250px]">
                                   {user.email}
                                 </span>
                               </div>
                             </div>
                           </td>
                           <td className="p-4">
-                            <div className="flex items-center gap-2 text-zinc-300 font-medium whitespace-nowrap">
-                              <MessageSquareIcon
-                                className="text-zinc-500"
-                                size={14}
-                              />
-                              <span>{user.todayMessageCount || 0} / 10</span>
+                            <div className="flex flex-col gap-1.5">
+                              <div className="flex items-center gap-2 text-zinc-300 font-medium whitespace-nowrap">
+                                <MessageSquareIcon
+                                  className="text-zinc-500"
+                                  size={14}
+                                />
+                                <span className="text-sm">
+                                  {user.todayMessageCount || 0} / 10
+                                </span>
+                              </div>
+                              <span className="text-zinc-500 text-[10px] font-bold uppercase tracking-widest">
+                                {user.isPro
+                                  ? "Unlimited Plan"
+                                  : user.limitCount && user.limitCount > 0
+                                    ? `Total Limit: ${user.limitCount + 10}`
+                                    : "Free Plan"}
+                              </span>
                             </div>
                           </td>
-                          <td className="p-4">
-                            <span className="text-zinc-300 font-medium">
-                              {user.isPro
-                                ? "Unlimited"
-                                : user.limitCount && user.limitCount > 0
-                                  ? `10/Day + ${user.limitCount}`
-                                  : "10/Day"}
-                            </span>
-                          </td>
-                          <td className="p-4">
-                            {user.isPro ? (
-                              <span className="px-2.5 py-0.5 bg-yellow-400/10 text-yellow-400 text-[10px] font-black uppercase tracking-widest border border-yellow-400/20 rounded-full flex items-center gap-1.5 w-fit">
-                                <CrownIcon size={10} />
-                                PRO
-                              </span>
-                            ) : (
-                              <span className="px-2.5 py-0.5 bg-zinc-800 text-zinc-500 text-[10px] font-black uppercase tracking-widest rounded-full w-fit">
-                                FREE
-                              </span>
-                            )}
-                          </td>
-                          <td className="p-4">
-                            {user.role === "admin" ? (
-                              <span className="px-2.5 py-0.5 bg-blue-400/10 text-blue-400 text-[10px] font-black uppercase tracking-widest border border-blue-400/20 rounded-full flex items-center gap-1.5 w-fit">
-                                <KeyIcon size={10} />
-                                ADMIN
-                              </span>
-                            ) : (
-                              <span className="px-2.5 py-0.5 bg-zinc-800 text-zinc-500 text-[10px] font-black uppercase tracking-widest rounded-full w-fit">
-                                USER
-                              </span>
-                            )}
-                          </td>
                           <td className="p-4 text-right">
-                            <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                            <div className="flex flex-wrap sm:flex-nowrap items-center justify-end gap-1.5 sm:gap-2 opacity-100 lg:opacity-0 group-hover:opacity-100 transition-opacity">
                               <button
                                 className="p-2.5 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-white transition-all shadow-lg border border-zinc-700/50"
                                 onClick={() =>
