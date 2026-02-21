@@ -67,43 +67,44 @@ export function OnboardingStepper() {
       <Step>
         <div className="space-y-4 pb-6">
           <div className="space-y-2">
-            <h2 className="text-2xl font-bold tracking-tight text-gray-900 dark:text-gray-100">
-              Selamat Datang! 👋
+            <h2 className="text-2xl font-bold tracking-tight text-white">
+              Selamat Datang di Ultramaxo! 👋
             </h2>
-            <p className="text-sm text-muted-foreground leading-relaxed">
-              Ayo mulai perjalanan AI Anda dengan UltramaxoAI
+            <p className="text-sm text-zinc-400 leading-relaxed">
+              Platform AI terlengkap untuk meningkatkan produktivitas Anda tanpa
+              batas. Mari persiapkan ruang kerja khusus untuk Anda.
             </p>
           </div>
 
           <div className="space-y-3">
-            <div className="rounded-xl border border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900/50 p-5">
-              <h3 className="font-semibold mb-3 text-gray-900 dark:text-gray-100 flex items-center gap-2">
-                <span className="text-lg">✨</span> Fitur Unggulan
+            <div className="rounded-2xl border border-blue-500/20 bg-gradient-to-b from-blue-500/10 to-transparent p-6 shadow-lg">
+              <h3 className="font-bold mb-4 text-white flex items-center gap-2">
+                <span className="text-xl">✨</span> Fitur Unggulan
               </h3>
-              <ul className="space-y-2.5 text-sm">
-                <li className="flex items-start gap-2 text-gray-700 dark:text-gray-300">
-                  <span className="text-gray-500 dark:text-gray-400 font-bold mt-0.5">
-                    ✓
-                  </span>
-                  <span>Chat AI dengan model terbaru</span>
+              <ul className="space-y-3 shrink-0">
+                <li className="flex items-center gap-3 text-zinc-300 text-sm">
+                  <div className="flex items-center justify-center w-5 h-5 rounded-full bg-blue-500/20 text-blue-400">
+                    <span className="text-xs font-bold">✓</span>
+                  </div>
+                  <span>Akses model AI tercerdas & tercepat saat ini</span>
                 </li>
-                <li className="flex items-start gap-2 text-gray-700 dark:text-gray-300">
-                  <span className="text-gray-500 dark:text-gray-400 font-bold mt-0.5">
-                    ✓
-                  </span>
-                  <span>Generate code & dokumen</span>
+                <li className="flex items-center gap-3 text-zinc-300 text-sm">
+                  <div className="flex items-center justify-center w-5 h-5 rounded-full bg-blue-500/20 text-blue-400">
+                    <span className="text-xs font-bold">✓</span>
+                  </div>
+                  <span>Generate code, artikel, & dokumen dalam detik</span>
                 </li>
-                <li className="flex items-start gap-2 text-gray-700 dark:text-gray-300">
-                  <span className="text-gray-500 dark:text-gray-400 font-bold mt-0.5">
-                    ✓
-                  </span>
-                  <span>Web search & weather tools</span>
+                <li className="flex items-center gap-3 text-zinc-300 text-sm">
+                  <div className="flex items-center justify-center w-5 h-5 rounded-full bg-blue-500/20 text-blue-400">
+                    <span className="text-xs font-bold">✓</span>
+                  </div>
+                  <span>Real-time web search & weather tracking</span>
                 </li>
-                <li className="flex items-start gap-2 text-gray-700 dark:text-gray-300">
-                  <span className="text-gray-500 dark:text-gray-400 font-bold mt-0.5">
-                    ✓
-                  </span>
-                  <span>Multi-user collaboration</span>
+                <li className="flex items-center gap-3 text-zinc-300 text-sm">
+                  <div className="flex items-center justify-center w-5 h-5 rounded-full bg-blue-500/20 text-blue-400">
+                    <span className="text-xs font-bold">✓</span>
+                  </div>
+                  <span>Multi-user collaboration secara langsung</span>
                 </li>
               </ul>
             </div>
@@ -114,70 +115,69 @@ export function OnboardingStepper() {
       <Step>
         <div className="space-y-4 pb-6">
           <div className="space-y-2">
-            <h2 className="text-2xl font-bold tracking-tight text-gray-900 dark:text-gray-100">
-              Apa Tujuan Anda?
+            <h2 className="text-2xl font-bold tracking-tight text-white">
+              Apa Tujuan Utama Anda?
             </h2>
-            <p className="text-sm text-muted-foreground leading-relaxed">
-              Pilih tujuan utama menggunakan UltramaxoAI{" "}
-              <span className="text-gray-500 font-semibold">*</span>
+            <p className="text-sm text-zinc-400 leading-relaxed">
+              Beri tahu kami bagaimana Ultramaxo dapat membantu Anda
+              sehari-hari. <span className="text-red-500 font-semibold">*</span>
             </p>
           </div>
 
-          <div className="space-y-2.5">
+          <div className="space-y-3">
             {[
               {
                 value: "coding",
                 label: "💻 Coding & Development",
-                desc: "Bantuan programming dan debugging",
+                desc: "Bantuan menulis, membedah, dan mendebug code",
               },
               {
                 value: "writing",
-                label: "✍️ Content Writing",
-                desc: "Menulis artikel, blog, dan konten",
+                label: "✍️ Content & Copywriting",
+                desc: "Drafting artikel, blog, email, dan ide postingan",
               },
               {
                 value: "learning",
                 label: "📚 Learning & Research",
-                desc: "Belajar topik baru dan riset",
+                desc: "Memahami topik kompleks dan riset akademis",
               },
               {
                 value: "business",
                 label: "💼 Business & Productivity",
-                desc: "Produktivitas dan analisis bisnis",
+                desc: "Otomatisasi, analisis data, dan strategi bisnis",
               },
               {
                 value: "creative",
-                label: "🎨 Creative Projects",
-                desc: "Proyek kreatif dan brainstorming",
+                label: "🎨 Creative Brainstorming",
+                desc: "Mencari inspirasi, cerita, dan ide kreatif gila",
               },
             ].map((purpose) => {
               const isSelected = formData.purpose === purpose.value;
               return (
                 <button
-                  className={`group relative w-full text-left rounded-lg border p-4 transition-all duration-200 ${
+                  className={`group relative w-full text-left rounded-2xl border p-4 transition-all duration-300 ${
                     isSelected
-                      ? "border-gray-400 dark:border-gray-600 bg-gray-200 dark:bg-gray-800"
-                      : "border-gray-200 dark:border-gray-800 hover:border-gray-300 dark:hover:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-900/50"
+                      ? "border-blue-500 bg-blue-500/10 shadow-[0_0_20px_rgba(59,130,246,0.15)] scale-[1.02]"
+                      : "border-zinc-800 bg-[#121214] hover:border-zinc-600 hover:bg-zinc-800/40"
                   }`}
                   key={purpose.value}
                   onClick={() =>
                     setFormData({ ...formData, purpose: purpose.value })
                   }
+                  type="button"
                 >
                   {isSelected && (
-                    <div className="absolute top-3 right-3 w-5 h-5 rounded-full bg-gray-700 dark:bg-gray-400 flex items-center justify-center">
-                      <span className="text-xs font-bold text-gray-100 dark:text-gray-900">
-                        ✓
-                      </span>
+                    <div className="absolute top-4 right-4 w-6 h-6 rounded-full bg-blue-500 flex items-center justify-center shadow-lg">
+                      <span className="text-xs font-bold text-white">✓</span>
                     </div>
                   )}
                   <div
-                    className={`font-semibold ${isSelected ? "text-gray-900 dark:text-gray-100" : "text-gray-900 dark:text-gray-100"}`}
+                    className={`font-bold ${isSelected ? "text-white" : "text-zinc-200"}`}
                   >
                     {purpose.label}
                   </div>
                   <div
-                    className={`text-sm mt-1 leading-relaxed ${isSelected ? "text-gray-700 dark:text-gray-300" : "text-gray-600 dark:text-gray-400"}`}
+                    className={`text-sm mt-1 leading-relaxed ${isSelected ? "text-blue-200" : "text-zinc-500"}`}
                   >
                     {purpose.desc}
                   </div>
@@ -195,16 +195,17 @@ export function OnboardingStepper() {
       <Step>
         <div className="space-y-4 pb-6">
           <div className="space-y-2">
-            <h2 className="text-2xl font-bold tracking-tight text-gray-900 dark:text-gray-100">
-              Minat & Topik
+            <h2 className="text-2xl font-bold tracking-tight text-white">
+              Topik Apa Saja yang Menarik?
             </h2>
-            <p className="text-sm text-muted-foreground leading-relaxed">
-              Pilih topik yang Anda minati{" "}
-              <span className="text-gray-500 font-semibold">*</span>
+            <p className="text-sm text-zinc-400 leading-relaxed">
+              Pilih 2 atau lebih topik agar AI kami bisa memberikan respons &
+              rekomendasi yang lebih tajam.{" "}
+              <span className="text-red-500 font-semibold">*</span>
             </p>
           </div>
 
-          <div className="grid grid-cols-2 gap-2.5">
+          <div className="grid grid-cols-2 gap-3">
             {[
               "🐍 Python",
               "⚛️ React",
@@ -212,9 +213,9 @@ export function OnboardingStepper() {
               "🤖 AI/ML",
               "📊 Data Science",
               "🎮 Game Dev",
-              "📱 Mobile",
+              "📱 Apps/Mobile",
               "🌐 Web Dev",
-              "☁️ Cloud",
+              "☁️ Cloud Ops",
               "🔐 Security",
               "🎯 Marketing",
               "📈 Analytics",
@@ -222,10 +223,10 @@ export function OnboardingStepper() {
               const isSelected = formData.interests.includes(interest);
               return (
                 <button
-                  className={`relative rounded-lg border p-3 text-sm font-medium transition-all duration-200 ${
+                  className={`relative rounded-xl border p-4 text-sm font-semibold transition-all duration-300 flex items-center justify-center ${
                     isSelected
-                      ? "border-gray-400 dark:border-gray-600 bg-gray-200 dark:bg-gray-800 text-gray-900 dark:text-gray-100"
-                      : "border-gray-200 dark:border-gray-800 hover:border-gray-300 dark:hover:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-900/50 text-gray-900 dark:text-gray-100"
+                      ? "border-purple-500 bg-purple-500/10 text-white shadow-[0_0_15px_rgba(168,85,247,0.15)] scale-[1.03]"
+                      : "border-zinc-800 bg-[#121214] text-zinc-400 hover:border-zinc-600 hover:bg-zinc-800/40 hover:text-zinc-200"
                   }`}
                   key={interest}
                   onClick={() => {
@@ -236,10 +237,11 @@ export function OnboardingStepper() {
                         : [...formData.interests, interest],
                     });
                   }}
+                  type="button"
                 >
                   {isSelected && (
-                    <div className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-gray-700 dark:bg-gray-400 flex items-center justify-center">
-                      <span className="text-xs font-bold text-gray-100 dark:text-gray-900">
+                    <div className="absolute -top-2 -right-2 w-6 h-6 rounded-full bg-purple-500 flex items-center justify-center shadow-lg">
+                      <span className="text-[10px] font-black text-white">
                         ✓
                       </span>
                     </div>
@@ -250,16 +252,16 @@ export function OnboardingStepper() {
             })}
           </div>
 
-          <div className="flex items-center justify-between text-xs">
-            <p className="text-gray-500 dark:text-gray-500 flex items-center gap-1">
-              <span className="text-gray-600 dark:text-gray-400">*</span> Wajib
-              pilih minimal 2 topik
+          <div className="flex items-center justify-between text-xs pt-2">
+            <p className="text-zinc-500 flex items-center gap-1.5 font-medium">
+              <span className="text-red-500">*</span> Wajib pilih minimal 2
+              topik
             </p>
             <p
-              className={`font-semibold ${
+              className={`font-bold px-3 py-1 rounded-full ${
                 formData.interests.length >= 2
-                  ? "text-gray-900 dark:text-gray-100"
-                  : "text-gray-400 dark:text-gray-600"
+                  ? "bg-green-500/10 text-green-400 border border-green-500/20"
+                  : "bg-zinc-800/50 text-zinc-400 border border-zinc-700"
               }`}
             >
               {formData.interests.length} dipilih
@@ -271,11 +273,12 @@ export function OnboardingStepper() {
       <Step>
         <div className="space-y-4 pb-6">
           <div className="space-y-2">
-            <h2 className="text-2xl font-bold tracking-tight text-gray-900 dark:text-gray-100">
-              Buat Akun
+            <h2 className="text-2xl font-bold tracking-tight text-white mb-1">
+              Buat Akun Anda
             </h2>
-            <p className="text-sm text-muted-foreground leading-relaxed">
-              Lengkapi data untuk membuat akun Anda
+            <p className="text-sm text-zinc-400 leading-relaxed mb-6">
+              Lengkapi kredensial untuk segera mengakses dashboard dan fitur
+              premium.
             </p>
           </div>
 

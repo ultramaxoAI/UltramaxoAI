@@ -1,7 +1,7 @@
 "use server";
 
 import { z } from "zod";
-import { createUser, getUser, verifyVerificationCode } from "@/lib/db/queries";
+import { createUser, getUser } from "@/lib/db/queries";
 import { signIn } from "./auth";
 
 const authFormSchema = z.object({
@@ -57,7 +57,8 @@ export type RegisterActionState = {
     | "user_exists"
     | "password_mismatch"
     | "invalid_data"
-    | "invalid_code";
+    | "invalid_code"
+    | "verification_sent";
 };
 
 export const register = async (
@@ -70,42 +71,43 @@ export const register = async (
       password: formData.get("password"),
       username: formData.get("username"),
       confirmPassword: formData.get("confirmPassword"),
-      code: formData.get("code"),
     });
 
-    // Only verify code if email verification is enabled
-    const emailVerificationEnabled =
-      process.env.ENABLE_EMAIL_VERIFICATION === "true";
-
-    if (emailVerificationEnabled) {
-      if (!validatedData.code) {
-        return { status: "invalid_code" };
-      }
-
-      // Verify code first
-      const isCodeValid = await verifyVerificationCode(
-        validatedData.email as string,
-        validatedData.code
-      );
-      if (!isCodeValid) {
-        return { status: "invalid_code" };
-      }
+    // Check if user exists
+    const [user] = await getUser(validatedData.email as string);
+    if (user) {
+      return { status: "user_exists" } as RegisterActionState;
     }
 
     if (validatedData.password !== validatedData.confirmPassword) {
       return { status: "password_mismatch" };
     }
 
-    const [user] = await getUser(validatedData.email as string);
+    const emailVerificationEnabled =
+      process.env.ENABLE_EMAIL_VERIFICATION === "true";
 
-    if (user) {
-      return { status: "user_exists" } as RegisterActionState;
-    }
+    // 1. Create the user in the database (unverified)
     await createUser(
       validatedData.email as string,
       validatedData.password,
       validatedData.username
     );
+
+    // 2. If email verification is enabled, do NOT sign in. Generate magic link.
+    if (emailVerificationEnabled) {
+      const crypto = require("node:crypto");
+      const token = crypto.randomUUID();
+
+      const { upsertVerificationCode } = require("@/lib/db/queries");
+      await upsertVerificationCode(validatedData.email as string, token);
+
+      const { sendVerificationEmail } = require("@/lib/email");
+      await sendVerificationEmail(validatedData.email as string, token);
+
+      return { status: "verification_sent" };
+    }
+
+    // 3. Otherwise (verification disabled), sign in immediately
     await signIn("credentials", {
       email: validatedData.email,
       username: validatedData.username,

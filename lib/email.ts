@@ -19,12 +19,21 @@ async function sendEmail(to: string, subject: string, html: string) {
     return false;
   }
 
+  // Generate plain text fallback for better email deliverability (stops spam filtering)
+  const text = html
+    .replace(/<style[^>]*>[\s\S]*?<\/style>/gi, "")
+    .replace(/<[^>]*>?/gm, " ")
+    .replace(/&nbsp;/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+
   try {
     const { data, error } = await resend.emails.send({
       from: EMAIL_FROM,
       to: [to],
       subject,
       html,
+      text,
     });
 
     if (error) {
@@ -44,24 +53,29 @@ async function sendEmail(to: string, subject: string, html: string) {
   }
 }
 
-export async function sendVerificationEmail(email: string, code: string) {
+export async function sendVerificationEmail(email: string, token: string) {
+  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "https://ultramaxo.tech";
+  const verificationUrl = `${baseUrl}/verify?token=${token}&email=${encodeURIComponent(
+    email
+  )}`;
+
   const content = `
     <div style="text-align: center; margin-bottom: 30px;">
       <h1 style="font-size: 28px;">Verifikasi Akun</h1>
-      <p>Terima kasih telah mendaftar di <strong>Ultramaxo AI</strong>. Gunakan kode verifikasi di bawah untuk mengaktifkan akun Anda:</p>
+      <p>Terima kasih telah mendaftar di <strong>Ultramaxo AI</strong>. Silakan klik tombol di bawah ini untuk memverifikasi akun Anda:</p>
     </div>
     
-    <div style="background: #27272a; border-radius: 12px; padding: 24px; text-align: center; margin: 32px 0; border: 1px dashed #3f3f46;">
-      <div style="font-size: 36px; font-weight: 800; color: #fff; letter-spacing: 8px; font-family: monospace;">${code}</div>
+    <div style="text-align: center; margin: 32px 0;">
+      <a href="${verificationUrl}" class="button" style="display: inline-block; padding: 14px 28px; background-color: #3b82f6; color: #ffffff; text-decoration: none; border-radius: 8px; font-weight: bold; font-size: 16px;">Verifikasi Sekarang</a>
     </div>
     
     <p style="text-align: center; font-size: 14px; opacity: 0.8;">
-      Kode ini akan kedaluwarsa dalam <strong>10 menit</strong>. Jika Anda tidak mendaftar, abaikan email ini.
+      Link ini akan kedaluwarsa dalam <strong>10 menit</strong>. Jika Anda tidak mendaftar, abaikan email ini.
     </p>
   `;
   return await sendEmail(
     email,
-    "🔐 Kode Verifikasi Ultramaxo AI",
+    "🔐 Verifikasi Akun Ultramaxo AI",
     getEmailWrapper(content)
   );
 }

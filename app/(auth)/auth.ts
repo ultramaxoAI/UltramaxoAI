@@ -131,6 +131,14 @@ export const {
         const isAdminUsername = (username || "").toLowerCase() === "admin";
         const isAdmin = isEnvAdminEmail || isAdminUsername;
 
+        const emailVerificationEnabled =
+          process.env.ENABLE_EMAIL_VERIFICATION === "true";
+
+        if (emailVerificationEnabled && !user.emailVerified && !isAdmin) {
+          // Explicitly block unverified regular users from logging in with password
+          throw new Error("unverified");
+        }
+
         return {
           ...user,
           type: user.isPro ? "pro" : "regular",

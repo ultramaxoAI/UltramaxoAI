@@ -1,21 +1,13 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { ArrowRight, Loader2, Lock, Mail } from "lucide-react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { ArrowRight, Loader2, Mail } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { Suspense, useState } from "react";
 
 function ForgotPasswordForm() {
   const router = useRouter();
-  const searchParams = useSearchParams();
-  const token = searchParams.get("token");
-
-  const [step, _setStep] = useState<"email" | "reset">(
-    token ? "reset" : "email"
-  );
   const [email, setEmail] = useState("");
-  const [newPassword, setNewPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
@@ -71,59 +63,6 @@ function ForgotPasswordForm() {
     }
   };
 
-  const handleResetPassword = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError("");
-    setSuccess("");
-
-    if (!newPassword || !confirmPassword) {
-      setError("Semua field harus diisi");
-      return;
-    }
-
-    if (newPassword.length < 6) {
-      setError("Password minimal 6 karakter");
-      return;
-    }
-
-    if (newPassword !== confirmPassword) {
-      setError("Password dan konfirmasi password tidak cocok");
-      return;
-    }
-
-    setLoading(true);
-
-    try {
-      const response = await fetch("/api/auth/forgot-password", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ token, newPassword }),
-      });
-
-      const text = await response.text();
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      let data: any;
-      try {
-        data = JSON.parse(text);
-      } catch {
-        throw new Error("Server error: Invalid response");
-      }
-
-      if (!response.ok) {
-        throw new Error(data.error || "Gagal reset password");
-      }
-
-      setSuccess(data.message || "Password berhasil direset!");
-      setTimeout(() => {
-        router.push("/login");
-      }, 2000);
-    } catch (err: any) {
-      setError(err.message || "Terjadi kesalahan");
-    } finally {
-      setLoading(false);
-    }
-  };
-
   return (
     <div className="min-h-screen flex flex-col items-center justify-center p-4 md:p-6 bg-[#111111] text-slate-200 relative overflow-hidden">
       <div
@@ -136,7 +75,7 @@ function ForgotPasswordForm() {
       />
       <motion.div
         animate={{ opacity: 1, y: 0 }}
-        className="relative w-full max-w-md"
+        className="relative w-full max-w-md z-10"
         initial={{ opacity: 0, y: 20 }}
       >
         <div className="flex items-center justify-center mb-6">
@@ -147,146 +86,66 @@ function ForgotPasswordForm() {
 
         <div className="rounded-3xl border border-white/10 bg-[#050509]/90 backdrop-blur-xl p-7 shadow-[0_18px_45px_rgba(0,0,0,0.9)]">
           <h1 className="text-2xl font-semibold text-white mb-1 text-center tracking-tight">
-            {step === "email" ? "Lupa Password" : "Reset Password"}
+            Lupa Password
           </h1>
           <p className="text-zinc-400 text-sm text-center mb-6">
-            {step === "email"
-              ? "Masukkan email Anda untuk menerima link reset password"
-              : "Masukkan password baru Anda"}
+            Masukkan email Anda untuk menerima link reset password
           </p>
 
-          {step === "email" ? (
-            <form className="space-y-4" onSubmit={handleSendResetLink}>
-              <div>
-                <label
-                  className="block text-xs font-medium text-zinc-300 mb-2"
-                  htmlFor="email"
-                >
-                  Email
-                </label>
-                <div className="relative">
-                  <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
-                  <input
-                    className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-white/10 bg-[#060711] text-sm text-white placeholder:text-zinc-500 focus:border-white/40 focus:ring-1 focus:ring-white/30 outline-none transition-all"
-                    id="email"
-                    onChange={(e) => setEmail(e.target.value)}
-                    placeholder="nama@email.com"
-                    required
-                    type="email"
-                    value={email}
-                  />
-                </div>
-              </div>
-
-              {(error || success) && (
-                <motion.div
-                  animate={{ opacity: 1, y: 0 }}
-                  className={`p-3 rounded-xl text-xs ${
-                    success
-                      ? "bg-emerald-500/10 border border-emerald-500/50 text-emerald-300"
-                      : "bg-red-500/10 border border-red-500/50 text-red-300"
-                  }`}
-                  initial={{ opacity: 0, y: -10 }}
-                >
-                  {error || success}
-                </motion.div>
-              )}
-
-              <button
-                className="w-full py-2.5 rounded-2xl bg-white text-black font-semibold hover:bg-zinc-100 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 text-sm shadow-lg shadow-white/10"
-                disabled={loading}
-                type="submit"
+          <form className="space-y-4" onSubmit={handleSendResetLink}>
+            <div>
+              <label
+                className="block text-xs font-medium text-zinc-300 mb-2"
+                htmlFor="email"
               >
-                {loading ? (
-                  <>
-                    <Loader2 className="w-4 h-4 animate-spin" />
-                    Mengirim...
-                  </>
-                ) : (
-                  <>
-                    Kirim Link Reset
-                    <ArrowRight className="w-4 h-4" />
-                  </>
-                )}
-              </button>
-            </form>
-          ) : (
-            <form className="space-y-4" onSubmit={handleResetPassword}>
-              <div>
-                <label
-                  className="block text-xs font-medium text-zinc-300 mb-2"
-                  htmlFor="new-password"
-                >
-                  Password Baru
-                </label>
-                <div className="relative">
-                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
-                  <input
-                    className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-white/10 bg-[#060711] text-sm text-white placeholder:text-zinc-500 focus:border-white/40 focus:ring-1 focus:ring-white/30 outline-none transition-all"
-                    id="new-password"
-                    onChange={(e) => setNewPassword(e.target.value)}
-                    placeholder="••••••••"
-                    required
-                    type="password"
-                    value={newPassword}
-                  />
-                </div>
+                Email
+              </label>
+              <div className="relative">
+                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
+                <input
+                  className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-white/10 bg-[#060711] text-sm text-white placeholder:text-zinc-500 focus:border-white/40 focus:ring-1 focus:ring-white/30 outline-none transition-all"
+                  id="email"
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="nama@email.com"
+                  required
+                  type="email"
+                  value={email}
+                />
               </div>
+            </div>
 
-              <div>
-                <label
-                  className="block text-xs font-medium text-zinc-300 mb-2"
-                  htmlFor="confirm-password"
-                >
-                  Konfirmasi Password
-                </label>
-                <div className="relative">
-                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
-                  <input
-                    className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-white/10 bg-[#060711] text-sm text-white placeholder:text-zinc-500 focus:border-white/40 focus:ring-1 focus:ring-white/30 outline-none transition-all"
-                    id="confirm-password"
-                    onChange={(e) => setConfirmPassword(e.target.value)}
-                    placeholder="••••••••"
-                    required
-                    type="password"
-                    value={confirmPassword}
-                  />
-                </div>
-              </div>
-
-              {(error || success) && (
-                <motion.div
-                  animate={{ opacity: 1, y: 0 }}
-                  className={`p-3 rounded-xl text-xs ${
-                    success
-                      ? "bg-emerald-500/10 border border-emerald-500/50 text-emerald-300"
-                      : "bg-red-500/10 border border-red-500/50 text-red-300"
-                  }`}
-                  initial={{ opacity: 0, y: -10 }}
-                >
-                  {error || success}
-                </motion.div>
-              )}
-
-              <button
-                className="w-full py-2.5 rounded-2xl bg-white text-black font-semibold hover:bg-zinc-100 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 text-sm shadow-lg shadow-white/10"
-                disabled={loading}
-                type="submit"
+            {(error || success) && (
+              <motion.div
+                animate={{ opacity: 1, y: 0 }}
+                className={`p-3 rounded-xl text-xs ${
+                  success
+                    ? "bg-emerald-500/10 border border-emerald-500/50 text-emerald-300"
+                    : "bg-red-500/10 border border-red-500/50 text-red-300"
+                }`}
+                initial={{ opacity: 0, y: -10 }}
               >
-                {loading ? (
-                  <>
-                    <Loader2 className="w-4 h-4 animate-spin" />
-                    Memproses...
-                  </>
-                ) : (
-                  <>
-                    Reset Password
-                    <ArrowRight className="w-4 h-4" />
-                  </>
-                )}
-              </button>
-            </form>
-          )}
+                {error || success}
+              </motion.div>
+            )}
+
+            <button
+              className="w-full py-2.5 rounded-2xl bg-white text-black font-semibold hover:bg-zinc-100 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 text-sm shadow-lg shadow-white/10"
+              disabled={loading}
+              type="submit"
+            >
+              {loading ? (
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  Mengirim...
+                </>
+              ) : (
+                <>
+                  Kirim Link Reset
+                  <ArrowRight className="w-4 h-4" />
+                </>
+              )}
+            </button>
+          </form>
         </div>
       </motion.div>
     </div>

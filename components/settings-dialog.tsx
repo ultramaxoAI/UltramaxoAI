@@ -52,7 +52,7 @@ export function SettingsDialog({
       fetchUserData();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [open]);
+  }, [open, fetchUserData]);
 
   const handlePasswordChange = async (e: React.FormEvent) => {
     e.preventDefault();

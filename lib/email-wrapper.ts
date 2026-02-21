@@ -59,8 +59,8 @@ export function getEmailWrapper(content: string) {
         <div class="footer">
           <p style="margin-bottom: 10px;">&copy; ${new Date().getFullYear()} Ultramaxo AI. All rights reserved.</p>
           <p>
-            You received this email because you are a registered user of Ultramaxo AI.<br>
-            <a href="#" style="color: #52525b;">Unsubscribe</a> &bull; <a href="https://ultramaxo.tech/privacy" style="color: #52525b;">Privacy Policy</a>
+            Email otomatis, mohon tidak membalas email ini.<br>
+            <a href="https://ultramaxo.tech/privacy" style="color: #52525b;">Privacy Policy</a> &bull; <a href="https://ultramaxo.tech/terms" style="color: #52525b;">Terms of Service</a>
           </p>
         </div>
       </div>

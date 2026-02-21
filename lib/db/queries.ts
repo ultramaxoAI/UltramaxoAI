@@ -21,22 +21,26 @@ import type { VisibilityType } from "@/components/visibility-selector";
 import { ChatSDKError } from "../errors";
 import { generateUUID } from "../utils";
 import {
+  authenticator,
   type Chat,
   chat,
   type DBMessage,
   document,
   message,
+  messageDeprecated,
   pageVisit,
   passwordResetToken,
   purchaseRequest,
   redeemCode,
   type Suggestion,
+  session,
   stream,
   suggestion,
   type User,
   user,
   verificationToken,
   vote,
+  voteDeprecated,
 } from "./schema";
 import { generateHashedPassword } from "./utils";
 
@@ -276,8 +280,12 @@ export async function getChatById({ id }: { id: string }) {
     }
 
     return selectedChat;
-  } catch (_error) {
-    throw new ChatSDKError("bad_request:database", "Failed to get chat by id");
+  } catch (error) {
+    console.warn(
+      "Database Error (getChatById): Failed to find or parse chat ID",
+      error
+    );
+    return null;
   }
 }
 
@@ -1144,7 +1152,52 @@ export async function expireProIfNeeded(userId: string) {
 
 export async function deleteUserById(id: string) {
   try {
-    return await db.delete(user).where(eq(user.id, id));
+    return await db.transaction(async (tx) => {
+      // 1. Unlink redeem codes (leave them used but with null user,
+      //    since they are already consumed and we want to keep code uniqueness history)
+      await tx
+        .update(redeemCode)
+        .set({ usedBy: null })
+        .where(eq(redeemCode.usedBy, id));
+
+      // 2. Delete auth/session dependencies
+      await tx.delete(session).where(eq(session.userId, id));
+      await tx.delete(authenticator).where(eq(authenticator.userId, id));
+      await tx
+        .delete(passwordResetToken)
+        .where(eq(passwordResetToken.userId, id));
+      await tx.delete(purchaseRequest).where(eq(purchaseRequest.userId, id));
+
+      // 3. Delete suggestions & documents
+      await tx.delete(suggestion).where(eq(suggestion.userId, id));
+      await tx.delete(document).where(eq(document.userId, id));
+
+      // 3. Get user's chats to delete associated data
+      const userChats = await tx
+        .select({ id: chat.id })
+        .from(chat)
+        .where(eq(chat.userId, id));
+      const chatIds = userChats.map((c) => c.id);
+
+      if (chatIds.length > 0) {
+        // 4. Delete messages, votes, streams for those chats
+        await tx.delete(vote).where(inArray(vote.chatId, chatIds));
+        await tx
+          .delete(voteDeprecated)
+          .where(inArray(voteDeprecated.chatId, chatIds));
+        await tx.delete(message).where(inArray(message.chatId, chatIds));
+        await tx
+          .delete(messageDeprecated)
+          .where(inArray(messageDeprecated.chatId, chatIds));
+        await tx.delete(stream).where(inArray(stream.chatId, chatIds));
+      }
+
+      // 5. Delete chats
+      await tx.delete(chat).where(eq(chat.userId, id));
+
+      // 6. Finally delete the user
+      await tx.delete(user).where(eq(user.id, id));
+    });
   } catch (error) {
     console.error("Database Error (deleteUserById):", error);
     throw new ChatSDKError("bad_request:database", "Failed to delete user");

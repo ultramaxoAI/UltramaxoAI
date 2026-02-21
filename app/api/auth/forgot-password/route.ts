@@ -25,12 +25,8 @@ export async function POST(request: Request) {
         return NextResponse.json({ success: true });
       }
 
-      const baseUrl =
-        process.env.NEXT_PUBLIC_APP_URL ||
-        process.env.NEXTAUTH_URL ||
-        (process.env.VERCEL_URL
-          ? `https://${process.env.VERCEL_URL}`
-          : "http://localhost:3000");
+      const { origin } = new URL(request.url);
+      const baseUrl = origin;
       const resetUrl = `${baseUrl}/reset-password?token=${encodeURIComponent(
         result.token
       )}`;

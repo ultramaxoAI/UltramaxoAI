@@ -1,8 +1,6 @@
 import Link from "next/link";
 import { signIn } from "next-auth/react";
-import { useEffect, useState } from "react";
 import { GitIcon, LogoGoogle } from "./icons";
-import { toast } from "./toast";
 import { Input } from "./ui/input";
 import { Label } from "./ui/label";
 
@@ -19,56 +17,6 @@ export function AuthForm({
   type: "login" | "register";
   defaultEmail?: string;
 }) {
-  const [email, setEmail] = useState(defaultEmail);
-  const [isSendingCode, setIsSendingCode] = useState(false);
-  const [countdown, setCountdown] = useState(0);
-
-  useEffect(() => {
-    if (countdown > 0) {
-      const timer = setTimeout(() => setCountdown(countdown - 1), 1000);
-      return () => clearTimeout(timer);
-    }
-  }, [countdown]);
-
-  const handleSendCode = async () => {
-    if (!email || !email.includes("@")) {
-      toast({
-        type: "error",
-        description: "Silakan masukkan email yang valid.",
-      });
-      return;
-    }
-
-    setIsSendingCode(true);
-    try {
-      const res = await fetch("/api/auth/send-code", {
-        method: "POST",
-        body: JSON.stringify({ email }),
-      });
-
-      const data = await res.json();
-      if (res.ok) {
-        toast({
-          type: "success",
-          description: "Kode verifikasi telah dikirim ke email kamu!",
-        });
-        setCountdown(60);
-      } else {
-        toast({
-          type: "error",
-          description: data.error || "Gagal mengirim kode.",
-        });
-      }
-    } catch (_error) {
-      toast({
-        type: "error",
-        description: "Terjadi kesalahan saat mengirim kode.",
-      });
-    } finally {
-      setIsSendingCode(false);
-    }
-  };
-
   return (
     <div className="relative w-full mx-auto">
       <div className="flex flex-col gap-8 w-full p-10 rounded-4xl border border-white/5 bg-[#18181b] shadow-2xl relative z-10 mx-auto">
@@ -83,15 +31,7 @@ export function AuthForm({
           </p>
         </div>
 
-        <form
-          action={action}
-          className="flex flex-col gap-6 w-full"
-          onKeyDown={(e) => {
-            if (e.key === "Enter" && e.target instanceof HTMLInputElement) {
-              e.currentTarget.requestSubmit();
-            }
-          }}
-        >
+        <form action={action} className="flex flex-col gap-6 w-full">
           {type === "register" && (
             <div className="flex flex-col gap-2">
               <Label
@@ -119,71 +59,34 @@ export function AuthForm({
             >
               {type === "login" ? "Email or Username" : "Email Address"}
             </Label>
-            <div className="relative">
-              <Input
-                autoComplete={type === "login" ? "username" : "email"}
-                autoFocus={type === "login"}
-                className="bg-zinc-900 border-zinc-800 focus:border-zinc-700 focus:ring-1 focus:ring-zinc-700 transition-all text-sm h-11 rounded-xl text-white placeholder:text-zinc-600 w-full px-4 pr-24"
-                defaultValue={defaultEmail}
-                id={type === "login" ? "username" : "email"}
-                name={type === "login" ? "username" : "email"}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder={
-                  type === "login"
-                    ? "your@email.com or johndoe"
-                    : "name@email.com"
-                }
-                required
-                type={type === "login" ? "text" : "email"}
-              />
-              {type === "register" && (
-                <button
-                  className="absolute right-2 top-1.5 h-8 px-3 rounded-lg bg-zinc-800 hover:bg-zinc-700 disabled:opacity-50 text-[11px] font-bold text-white transition-all"
-                  disabled={isSendingCode || countdown > 0}
-                  onClick={handleSendCode}
-                  type="button"
-                >
-                  {isSendingCode
-                    ? "Sending..."
-                    : countdown > 0
-                      ? `${countdown}s`
-                      : "Get Code"}
-                </button>
-              )}
-            </div>
+            <Input
+              autoComplete={type === "login" ? "username" : "email"}
+              autoFocus={type === "login"}
+              className="bg-zinc-900 border-zinc-800 focus:border-zinc-700 focus:ring-1 focus:ring-zinc-700 transition-all text-sm h-11 rounded-xl text-white placeholder:text-zinc-600 w-full px-4"
+              defaultValue={defaultEmail}
+              id={type === "login" ? "username" : "email"}
+              name={type === "login" ? "username" : "email"}
+              placeholder={
+                type === "login"
+                  ? "your@email.com or johndoe"
+                  : "name@email.com"
+              }
+              required
+              type={type === "login" ? "text" : "email"}
+            />
           </div>
 
-          {type === "register" && (
-            <div className="flex flex-col gap-2">
-              <Label
-                className="font-medium text-zinc-400 text-sm ml-1"
-                htmlFor="code"
-              >
-                Verification Code
-              </Label>
-              <Input
-                className="bg-zinc-900 border-zinc-800 focus:border-zinc-700 focus:ring-1 focus:ring-zinc-700 transition-all text-sm h-11 rounded-xl text-white placeholder:text-zinc-600 w-full px-4"
-                id="code"
-                maxLength={6}
-                name="code"
-                placeholder="123456"
-                required
-                type="text"
-              />
-            </div>
-          )}
-
           <div className="flex flex-col gap-2">
-            <div className="flex justify-between items-center ml-1">
+            <div className="flex justify-between items-center ml-1 relative z-10 w-full cursor-pointer pointer-events-auto">
               <Label
-                className="font-medium text-zinc-400 text-sm"
+                className="font-medium text-zinc-400 text-sm cursor-pointer"
                 htmlFor="password"
               >
                 Password
               </Label>
               {type === "login" && (
                 <Link
-                  className="text-xs text-zinc-400 hover:text-white transition-colors font-medium"
+                  className="text-xs text-zinc-400 hover:text-white transition-colors font-medium pointer-events-auto cursor-pointer"
                   href="/forgot-password"
                 >
                   Forgot password?

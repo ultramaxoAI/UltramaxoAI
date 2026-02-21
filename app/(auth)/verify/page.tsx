@@ -1,255 +1,166 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { ArrowRight, CheckCircle2, Key, Loader2, Mail } from "lucide-react";
-import { useRouter } from "next/navigation";
-import { signIn } from "next-auth/react";
-import { useState } from "react";
+import { CheckCircle2, Loader2, XCircle } from "lucide-react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { Suspense, useEffect, useState } from "react";
 
-export default function VerifyPage() {
+function VerifyContent() {
   const router = useRouter();
-  const [step, setStep] = useState<"resend" | "verify">("verify");
-  const [email, setEmail] = useState("");
-  const [code, setCode] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
-  const [success, setSuccess] = useState("");
+  const searchParams = useSearchParams();
 
-  const handleResendCode = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError("");
-    setSuccess("");
+  const token = searchParams.get("token");
+  const email = searchParams.get("email");
 
-    if (!email) {
-      setError("Email harus diisi");
+  const [status, setStatus] = useState<"loading" | "success" | "error">(
+    "loading"
+  );
+  const [errorMessage, setErrorMessage] = useState("");
+
+  useEffect(() => {
+    if (!token || !email) {
+      setStatus("error");
+      setErrorMessage("Link verifikasi tidak valid atau tidak lengkap.");
       return;
     }
 
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(email)) {
-      setError("Format email tidak valid");
-      return;
-    }
-
-    setLoading(true);
-
-    try {
-      const response = await fetch("/api/auth/resend-code", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email }),
-      });
-
-      const text = await response.text();
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      let data: any;
+    const verifyEmail = async () => {
       try {
-        data = JSON.parse(text);
-      } catch {
-        throw new Error("Server error: Invalid response");
+        const response = await fetch("/api/auth/verify", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email, code: token }),
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+          throw new Error(data.error || "Gagal memverifikasi akun.");
+        }
+
+        setStatus("success");
+
+        // Refresh session if already logged in via email (optional but safe)
+        router.refresh();
+
+        setTimeout(() => {
+          router.push("/login"); // Redirect to login page to sign in automatically or manually
+        }, 3000);
+      } catch (err: any) {
+        setStatus("error");
+        setErrorMessage(err.message || "Terjadi kesalahan saat verifikasi.");
       }
+    };
 
-      if (!response.ok) {
-        throw new Error(data.error || "Gagal mengirim kode");
-      }
-
-      setSuccess(
-        data.message || "Kode verifikasi baru telah dikirim ke email Anda"
-      );
-      setStep("verify");
-    } catch (err: any) {
-      setError(err.message || "Terjadi kesalahan");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleVerify = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError("");
-    setSuccess("");
-
-    if (!email || !code) {
-      setError("Email dan kode verifikasi harus diisi");
-      return;
-    }
-
-    if (code.length !== 6) {
-      setError("Kode verifikasi harus 6 digit");
-      return;
-    }
-
-    setLoading(true);
-
-    try {
-      // Use signIn with "credentials" provider
-      const result = await signIn("credentials", {
-        email,
-        code,
-        redirect: false, // Handle redirect manually
-      });
-
-      if (result?.error) {
-        throw new Error("Kode verifikasi salah atau kedaluwarsa");
-      }
-
-      setSuccess("Verifikasi berhasil! Mengalihkan ke chat...");
-
-      // Force refresh data session
-      router.refresh();
-
-      setTimeout(() => {
-        router.push("/chat"); // Direct to chat page
-      }, 1500);
-    } catch (err: any) {
-      setError(err.message || "Terjadi kesalahan saat verifikasi");
-    } finally {
-      setLoading(false);
-    }
-  };
+    // Run verification immediately
+    verifyEmail();
+  }, [token, email, router]);
 
   return (
-    <div className="min-h-screen bg-linear-to-br from-slate-900 via-slate-800 to-slate-900 flex flex-col items-center justify-center p-4">
+    <div className="min-h-screen bg-[#050505] flex flex-col items-center justify-center p-4">
       <motion.div
         animate={{ opacity: 1, y: 0 }}
         className="w-full max-w-md"
         initial={{ opacity: 0, y: 20 }}
       >
         <div className="flex items-center justify-center mb-8">
-          <div className="w-12 h-12 rounded-lg bg-slate-700 flex items-center justify-center">
-            <span className="text-2xl font-bold text-white">N</span>
+          <div className="w-12 h-12 rounded-lg bg-white flex items-center justify-center shadow-[0_0_20px_rgba(255,255,255,0.2)]">
+            <span className="text-2xl font-black text-black">U</span>
           </div>
         </div>
 
-        <div className="bg-slate-900/50 backdrop-blur-xl rounded-2xl p-8 border border-slate-700/50 shadow-2xl">
-          <div className="flex items-center justify-center mb-4">
-            {step === "verify" ? (
-              <CheckCircle2 className="w-12 h-12 text-blue-400" />
-            ) : (
-              <Mail className="w-12 h-12 text-blue-400" />
-            )}
-          </div>
-
-          <h1 className="text-2xl font-bold text-white mb-2 text-center">
-            {step === "verify" ? "Verifikasi Akun" : "Kirim Ulang Kode"}
-          </h1>
-          <p className="text-slate-400 text-sm text-center mb-6">
-            {step === "verify"
-              ? "Masukkan email dan kode verifikasi yang dikirim ke email Anda"
-              : "Masukkan email untuk menerima kode verifikasi baru"}
-          </p>
-
-          <form
-            className="space-y-4"
-            onSubmit={step === "verify" ? handleVerify : handleResendCode}
-          >
-            <div>
-              <label
-                className="block text-sm font-medium text-slate-300 mb-2"
-                htmlFor="verify-email"
-              >
-                Email
-              </label>
-              <div className="relative">
-                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-500" />
-                <input
-                  className="w-full pl-10 pr-4 py-2.5 bg-slate-800 border border-slate-700 rounded-lg text-white placeholder-slate-500 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 outline-none transition-all"
-                  id="verify-email"
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="nama@email.com"
-                  required
-                  type="email"
-                  value={email}
-                />
-              </div>
-            </div>
-
-            {step === "verify" && (
-              <div>
-                <label
-                  className="block text-sm font-medium text-slate-300 mb-2"
-                  htmlFor="verification-code"
+        <div className="bg-[#121214] rounded-3xl p-8 border border-white/5 shadow-2xl relative overflow-hidden">
+          <div className="flex flex-col items-center justify-center text-center space-y-4 relative z-10">
+            {status === "loading" && (
+              <>
+                <motion.div
+                  animate={{ rotate: 360 }}
+                  className="w-16 h-16 rounded-full bg-blue-500/10 flex items-center justify-center mb-2 shadow-[0_0_15px_rgba(59,130,246,0.2)]"
+                  transition={{
+                    duration: 2,
+                    repeat: Number.POSITIVE_INFINITY,
+                    ease: "linear",
+                  }}
                 >
-                  Kode Verifikasi (6 digit)
-                </label>
-                <div className="relative">
-                  <Key className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-500" />
-                  <input
-                    className="w-full pl-10 pr-4 py-2.5 bg-slate-800 border border-slate-700 rounded-lg text-white placeholder-slate-500 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 outline-none transition-all text-center text-2xl tracking-widest"
-                    id="verification-code"
-                    maxLength={6}
-                    onChange={(e) =>
-                      setCode(e.target.value.replace(/\D/g, "").slice(0, 6))
-                    }
-                    placeholder="123456"
-                    required
-                    type="text"
-                    value={code}
-                  />
-                </div>
-              </div>
+                  <Loader2 className="w-8 h-8 text-blue-500" />
+                </motion.div>
+                <h1 className="text-2xl font-bold text-white tracking-tight">
+                  Memverifikasi Akun...
+                </h1>
+                <p className="text-zinc-400 text-sm leading-relaxed">
+                  Harap tunggu sebentar selagi kami mengkonfirmasi kredensial
+                  Anda yang aman.
+                </p>
+              </>
             )}
 
-            {(error || success) && (
+            {status === "success" && (
               <motion.div
-                animate={{ opacity: 1, y: 0 }}
-                className={`p-3 rounded-lg text-sm ${
-                  success
-                    ? "bg-green-500/10 border border-green-500/50 text-green-400"
-                    : "bg-red-500/10 border border-red-500/50 text-red-400"
-                }`}
-                initial={{ opacity: 0, y: -10 }}
+                animate={{ scale: 1, opacity: 1 }}
+                className="flex flex-col items-center"
+                initial={{ scale: 0.8, opacity: 0 }}
               >
-                {error || success}
+                <div className="w-16 h-16 rounded-full bg-emerald-500/10 flex items-center justify-center mb-4 shadow-[0_0_15px_rgba(16,185,129,0.2)]">
+                  <CheckCircle2 className="w-8 h-8 text-emerald-500" />
+                </div>
+                <h1 className="text-2xl font-bold text-white mb-2 tracking-tight">
+                  Verifikasi Berhasil!
+                </h1>
+                <p className="text-zinc-400 text-sm mb-8 leading-relaxed">
+                  Selamat, akun Anda telah diaktifkan secara utuh. Anda akan
+                  dialihkan secara otomatis sesaat lagi...
+                </p>
+                <button
+                  className="px-8 py-3 bg-white text-black font-bold rounded-full hover:bg-zinc-200 transition-colors text-sm shadow-[0_0_20px_rgba(255,255,255,0.15)]"
+                  onClick={() => router.push("/login")}
+                  type="button"
+                >
+                  Masuk Sekarang Secara Manual
+                </button>
               </motion.div>
             )}
 
-            <button
-              className="w-full py-2.5 bg-white text-slate-900 rounded-lg font-medium hover:bg-slate-200 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-              disabled={loading}
-              type="submit"
-            >
-              {loading ? (
-                <>
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                  Memproses...
-                </>
-              ) : (
-                <>
-                  {step === "verify" ? "Verifikasi" : "Kirim Ulang Kode"}
-                  <ArrowRight className="w-4 h-4" />
-                </>
-              )}
-            </button>
-          </form>
-
-          <div className="mt-6 text-center">
-            <button
-              className="text-slate-400 hover:text-white text-sm transition-colors"
-              onClick={() => {
-                setStep(step === "verify" ? "resend" : "verify");
-                setError("");
-                setSuccess("");
-              }}
-              type="button"
-            >
-              {step === "verify"
-                ? "Belum menerima kode? Kirim ulang"
-                : "Sudah punya kode? Verifikasi"}
-            </button>
-          </div>
-
-          <div className="mt-4 text-center">
-            <button
-              className="text-slate-400 hover:text-white text-sm flex items-center justify-center gap-2 mx-auto transition-colors"
-              onClick={() => router.push("/login")}
-              type="button"
-            >
-              Kembali ke Login
-            </button>
+            {status === "error" && (
+              <motion.div
+                animate={{ scale: 1, opacity: 1 }}
+                className="flex flex-col items-center"
+                initial={{ scale: 0.8, opacity: 0 }}
+              >
+                <div className="w-16 h-16 rounded-full bg-red-500/10 flex items-center justify-center mb-4 shadow-[0_0_15px_rgba(239,68,68,0.2)]">
+                  <XCircle className="w-8 h-8 text-red-500" />
+                </div>
+                <h1 className="text-2xl font-bold text-white mb-2 tracking-tight">
+                  Gagal Memverifikasi
+                </h1>
+                <p className="text-red-400 text-sm mb-8 max-w-[260px] leading-relaxed font-medium">
+                  {errorMessage}
+                </p>
+                <button
+                  className="px-8 py-3 bg-zinc-800 text-white font-bold rounded-full hover:bg-zinc-700 transition-colors text-sm"
+                  onClick={() => router.push("/login")}
+                  type="button"
+                >
+                  Kembali ke Halaman Login
+                </button>
+              </motion.div>
+            )}
           </div>
         </div>
       </motion.div>
     </div>
+  );
+}
+
+export default function VerifyPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-screen bg-[#050505] flex items-center justify-center">
+          <Loader2 className="w-8 h-8 text-blue-500 animate-spin" />
+        </div>
+      }
+    >
+      <VerifyContent />
+    </Suspense>
   );
 }

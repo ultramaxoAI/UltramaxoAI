@@ -13,7 +13,7 @@ import {
   Trash2Icon,
   UsersIcon,
 } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
 import { EMAIL_TEMPLATES } from "@/lib/email-templates";
 import { getEmailWrapper } from "@/lib/email-wrapper";
@@ -40,7 +40,7 @@ export default function AdminDashboardClient() {
     authenticatedVisitors: any[];
   } | null>(null);
 
-  const fetchInsights = async () => {
+  const fetchInsights = useCallback(async () => {
     setLoading(true);
     try {
       const res = await fetch("/api/admin/insights");
@@ -56,9 +56,9 @@ export default function AdminDashboardClient() {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
-  const fetchUsers = async () => {
+  const fetchUsers = useCallback(async () => {
     setLoading(true);
     try {
       const res = await fetch("/api/admin/users");
@@ -71,9 +71,9 @@ export default function AdminDashboardClient() {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
-  const fetchUpgradeRequests = async () => {
+  const fetchUpgradeRequests = useCallback(async () => {
     setLoading(true);
     try {
       const res = await fetch("/api/admin/upgrade-requests");
@@ -86,9 +86,9 @@ export default function AdminDashboardClient() {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
-  const fetchStats = async () => {
+  const fetchStats = useCallback(async () => {
     try {
       const res = await fetch("/api/admin/stats");
       const data = await res.json();
@@ -98,7 +98,7 @@ export default function AdminDashboardClient() {
     } catch {
       console.error("Failed to fetch stats");
     }
-  };
+  }, []);
 
   useEffect(() => {
     if (activeTab === "users") {
@@ -109,8 +109,7 @@ export default function AdminDashboardClient() {
     } else if (activeTab === "insights") {
       fetchInsights();
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [activeTab]);
+  }, [activeTab, fetchInsights, fetchStats, fetchUpgradeRequests, fetchUsers]);
 
   const handleVoucherSubmit = async () => {
     try {
