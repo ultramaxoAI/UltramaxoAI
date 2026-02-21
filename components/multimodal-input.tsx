@@ -133,10 +133,10 @@ function PureMultimodalInput({
       // Temporarily set height to 0 to correctly calculate shrink
       textareaRef.current.style.height = "0px";
       const scrollHeight = textareaRef.current.scrollHeight;
-      // Re-apply height based on scrollHeight, clamped between 24px and 350px
+      // Re-apply height based on scrollHeight, clamped between 20px and 200px
       textareaRef.current.style.height = `${Math.min(
-        Math.max(scrollHeight, 24),
-        350
+        Math.max(scrollHeight, 20),
+        200
       )}px`;
     }
   }, []);
@@ -160,7 +160,7 @@ function PureMultimodalInput({
 
   const resetHeight = useCallback(() => {
     if (textareaRef.current) {
-      textareaRef.current.style.height = "24px";
+      textareaRef.current.style.height = "20px";
     }
   }, []);
 
@@ -552,13 +552,13 @@ function PureMultimodalInput({
             )}
           </div>
         )}
-        <div className="flex flex-row items-start px-3 pt-3 pb-1">
+        <div className="flex flex-row items-start px-2 pt-1 pb-0">
           <PromptInputTextarea
-            className="grow resize-none border-0! bg-transparent px-1 py-1 sm:px-2 sm:py-1 text-base leading-relaxed outline-none ring-0 [-ms-overflow-style:none] [scrollbar-width:none] placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 [&::-webkit-scrollbar]:hidden"
+            className="grow resize-none border-0! bg-transparent px-1 py-0 sm:px-2 sm:py-0 text-base leading-relaxed outline-none ring-0 [-ms-overflow-style:none] [scrollbar-width:none] placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 [&::-webkit-scrollbar]:hidden"
             data-testid="multimodal-input"
             disableAutoResize={true}
-            maxHeight={350}
-            minHeight={24}
+            maxHeight={200}
+            minHeight={20}
             onChange={handleInput}
             placeholder="Send a message..."
             ref={textareaRef}
@@ -566,7 +566,7 @@ function PureMultimodalInput({
             value={input}
           />
         </div>
-        <PromptInputToolbar className="p-2 sm:px-3 sm:pb-3 sm:pt-1">
+        <PromptInputToolbar className="p-2 sm:px-3 sm:pb-1.5 sm:pt-0.5">
           <PromptInputTools className="gap-0 sm:gap-0.5">
             {/* Dropdown Menu All-in-One - Kiri (Gemini Style) */}
             <DropdownMenu>
