@@ -6,7 +6,12 @@ import { auth } from "@/app/(auth)/auth";
 import { Chat } from "@/components/chat";
 import { DataStreamHandler } from "@/components/data-stream-handler";
 import { DEFAULT_CHAT_MODEL } from "@/lib/ai/models";
-import { getChatById, getMessagesByChatId } from "@/lib/db/queries";
+import {
+  getChatById,
+  getMessagesByChatId,
+  getTodayMessageCount,
+  getUserById,
+} from "@/lib/db/queries";
 import { convertToUIMessages } from "@/lib/utils";
 
 export default function Page(props: { params: Promise<{ id: string }> }) {
@@ -43,6 +48,20 @@ async function ChatPage({ params }: { params: Promise<{ id: string }> }) {
 
   const isReadonly = !session || session.user?.id !== chat.userId;
 
+  let isAtLimit = false;
+  if (session?.user?.id) {
+    const todayCount = await getTodayMessageCount(session.user.id);
+    const [currentUser] = await getUserById(session.user.id);
+    if (
+      !currentUser?.isPro &&
+      currentUser?.role !== "admin" &&
+      todayCount >= 10 &&
+      (currentUser?.limitCount || 0) <= 0
+    ) {
+      isAtLimit = true;
+    }
+  }
+
   const messagesFromDb = await getMessagesByChatId({
     id,
   });
@@ -61,6 +80,7 @@ async function ChatPage({ params }: { params: Promise<{ id: string }> }) {
           initialChatModel={DEFAULT_CHAT_MODEL}
           initialMessages={uiMessages}
           initialVisibilityType={chat.visibility}
+          isAtLimit={isAtLimit}
           isReadonly={isReadonly}
           user={session?.user}
         />
@@ -77,6 +97,7 @@ async function ChatPage({ params }: { params: Promise<{ id: string }> }) {
         initialChatModel={chatModelFromCookie.value}
         initialMessages={uiMessages}
         initialVisibilityType={chat.visibility}
+        isAtLimit={isAtLimit}
         isReadonly={session?.user?.id !== chat.userId}
         user={session?.user}
       />

@@ -17,10 +17,13 @@ import { webSearch } from "@/lib/ai/tools/web-search";
 import { isProductionEnvironment } from "@/lib/constants";
 import {
   createStreamId,
+  deductUserLimitCount,
   deleteChatById,
   expireProIfNeeded,
   getChatById,
   getMessagesByChatId,
+  getTodayMessageCount,
+  getUserById,
   saveChat,
   saveMessages,
   updateChatTitleById,
@@ -120,10 +123,23 @@ export async function POST(request: Request) {
       }
 
       await expireProIfNeeded(session.user.id);
-      // userType checking done via DB and session role
 
-      // No daily message limit - users can chat unlimited in conversations
-      // Only rate limited by requests per minute (10/min)
+      // Daily Message Limit for Free Users
+      const [currentUser] = await getUserById(session.user.id);
+      if (!currentUser?.isPro && currentUser?.role !== "admin") {
+        const todayCount = await getTodayMessageCount(session.user.id);
+        // Free users get 10 messages per day
+        if (todayCount >= 10) {
+          // If exceeded 10 daily limits, try deducting from extra limitCount
+          const deducted = await deductUserLimitCount(session.user.id);
+          if (!deducted) {
+            return new Response(
+              "Out of Limits! You have reached your 10 daily free messages. Please upgrade to PRO for unlimited chats or wait until tomorrow.",
+              { status: 429 }
+            );
+          }
+        }
+      }
 
       const isToolApprovalFlow = Boolean(messages);
 

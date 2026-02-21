@@ -326,6 +326,44 @@ export async function getMessagesByChatId({ id }: { id: string }) {
   }
 }
 
+export async function getTodayMessageCount(userId: string): Promise<number> {
+  try {
+    const startOfDay = new Date();
+    startOfDay.setHours(0, 0, 0, 0);
+
+    const result = await db
+      .select({ count: count() })
+      .from(message)
+      .innerJoin(chat, eq(message.chatId, chat.id))
+      .where(and(eq(chat.userId, userId), gte(message.createdAt, startOfDay)));
+    return result[0]?.count || 0;
+  } catch (error) {
+    console.error("Database Error (getTodayMessageCount):", error);
+    return 0; // Safe fallback
+  }
+}
+
+export async function deductUserLimitCount(userId: string): Promise<boolean> {
+  try {
+    const currentUser = await getUserById(userId);
+    const limit = currentUser[0]?.limitCount || 0;
+
+    if (limit <= 0) {
+      return false;
+    }
+
+    await db
+      .update(user)
+      .set({ limitCount: limit - 1 })
+      .where(eq(user.id, userId));
+
+    return true;
+  } catch (error) {
+    console.error("Database Error (deductUserLimitCount):", error);
+    return false;
+  }
+}
+
 export async function voteMessage({
   chatId,
   messageId,
@@ -753,10 +791,13 @@ export async function listUsersWithChatCount() {
         isPro: user.isPro,
         limitCount: user.limitCount,
         createdAt: user.createdAt,
-        chatCount: count(chat.id),
+        chatCount: sql<number>`count(DISTINCT ${chat.id})`,
+        messageCount: sql<number>`count(DISTINCT ${message.id})`,
+        todayMessageCount: sql<number>`cast(count(DISTINCT CASE WHEN ${message.createdAt} >= CURRENT_DATE THEN ${message.id} ELSE NULL END) as integer)`,
       })
       .from(user)
       .leftJoin(chat, eq(user.id, chat.userId))
+      .leftJoin(message, eq(chat.id, message.chatId))
       .groupBy(user.id)
       .orderBy(desc(user.createdAt));
 

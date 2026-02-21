@@ -31,6 +31,7 @@ export function Chat({
   initialChatModel,
   initialVisibilityType,
   isReadonly,
+  isAtLimit,
   autoResume,
   user,
 }: {
@@ -39,6 +40,7 @@ export function Chat({
   initialChatModel: string;
   initialVisibilityType: VisibilityType;
   isReadonly: boolean;
+  isAtLimit?: boolean;
   autoResume: boolean;
   user?: User;
 }) {
@@ -315,6 +317,23 @@ export function Chat({
                     </div>
                   </div>
                 </div>
+              ) : isAtLimit ? (
+                <div className="flex w-full items-center justify-center p-4">
+                  <div className="flex flex-col items-center gap-3 rounded-xl border-dashed border-zinc-200 bg-zinc-50/50 p-6 text-center dark:border-zinc-800 dark:bg-zinc-900/50 w-full border">
+                    <p className="text-sm font-medium text-zinc-900 dark:text-zinc-100">
+                      You have reached your free daily limit of 10 messages.
+                    </p>
+                    <p className="text-xs text-zinc-500 dark:text-zinc-400 mb-2">
+                      Upgrade to PRO for unlimited messages, or wait until
+                      tomorrow.
+                    </p>
+                    <div className="flex gap-4">
+                      <Button asChild size="sm">
+                        <Link href="/plan">Upgrade to PRO</Link>
+                      </Button>
+                    </div>
+                  </div>
+                </div>
               ) : (
                 <MultimodalInput
                   attachments={attachments}
@@ -359,6 +378,23 @@ export function Chat({
                       </Button>
                       <Button asChild size="sm">
                         <Link href="/register">Create Account</Link>
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              ) : isAtLimit ? (
+                <div className="flex w-full items-center justify-center p-4">
+                  <div className="flex flex-col items-center gap-3 rounded-xl border-dashed border-zinc-200 bg-zinc-50/50 p-6 text-center dark:border-zinc-800 dark:bg-zinc-900/50 w-full border">
+                    <p className="text-sm font-medium text-zinc-900 dark:text-zinc-100">
+                      You have reached your free daily limit of 10 messages.
+                    </p>
+                    <p className="text-xs text-zinc-500 dark:text-zinc-400 mb-2">
+                      Upgrade to PRO for unlimited messages, or wait until
+                      tomorrow.
+                    </p>
+                    <div className="flex gap-4">
+                      <Button asChild size="sm">
+                        <Link href="/plan">Upgrade to PRO</Link>
                       </Button>
                     </div>
                   </div>

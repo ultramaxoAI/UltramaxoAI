@@ -647,7 +647,7 @@ export default function AdminDashboardClient() {
                         User
                       </th>
                       <th className="p-4 text-xs font-bold text-zinc-500 uppercase tracking-widest whitespace-nowrap">
-                        Chats
+                        Msgs (Total)
                       </th>
                       <th className="p-4 text-xs font-bold text-zinc-500 uppercase tracking-widest whitespace-nowrap">
                         Limit
@@ -710,17 +710,21 @@ export default function AdminDashboardClient() {
                             </div>
                           </td>
                           <td className="p-4">
-                            <div className="flex items-center gap-2 text-zinc-300 font-medium">
+                            <div className="flex items-center gap-2 text-zinc-300 font-medium whitespace-nowrap">
                               <MessageSquareIcon
                                 className="text-zinc-500"
                                 size={14}
                               />
-                              <span>{user.chatCount || 0}</span>
+                              <span>{user.todayMessageCount || 0} / 10</span>
                             </div>
                           </td>
                           <td className="p-4">
                             <span className="text-zinc-300 font-medium">
-                              {user.limitCount}
+                              {user.isPro
+                                ? "Unlimited"
+                                : user.limitCount && user.limitCount > 0
+                                  ? `10/Day + ${user.limitCount}`
+                                  : "10/Day"}
                             </span>
                           </td>
                           <td className="p-4">
