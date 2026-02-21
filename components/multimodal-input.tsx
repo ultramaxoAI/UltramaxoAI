@@ -5,10 +5,8 @@ import type { UIMessage } from "ai";
 import equal from "fast-deep-equal";
 import {
   CheckIcon,
-  CodeIcon,
   CpuIcon,
   FileTextIcon,
-  FolderIcon,
   GlobeIcon,
   ImageIcon,
   PlusIcon,
@@ -16,6 +14,7 @@ import {
   Wand2Icon,
   XIcon,
 } from "lucide-react";
+
 import { nanoid } from "nanoid";
 import {
   type ChangeEvent,
@@ -122,11 +121,6 @@ function PureMultimodalInput({
   const { width } = useWindowSize();
   const [imageGenerationOpen, setImageGenerationOpen] = useState(false);
   const [imageGenerationMode, setImageGenerationMode] = useState(false);
-  // Grant image gen access to PRO users and admins
-  const isPro =
-    (user as any)?.type === "pro" ||
-    (user as any)?.isPro === true ||
-    (user as any)?.role === "admin";
 
   const adjustHeight = useCallback(() => {
     if (textareaRef.current) {
@@ -446,7 +440,7 @@ function PureMultimodalInput({
       />
 
       <PromptInput
-        className="rounded-3xl border border-zinc-300 dark:border-zinc-700/50 bg-zinc-100 dark:bg-zinc-900/50 backdrop-blur-sm p-3 shadow-lg shadow-black/10 transition-all duration-200 focus-within:border-purple-500/50 focus-within:shadow-purple-500/20 hover:border-zinc-400 dark:hover:border-zinc-600"
+        className="mx-auto w-full max-w-[768px] rounded-[32px] bg-[#1a1a1a] border border-white/5 p-2 shadow-2xl transition-all duration-200 focus-within:ring-1 focus-within:ring-white/10"
         onSubmit={(event) => {
           event.preventDefault();
           if (!input.trim() && attachments.length === 0) {
@@ -552,9 +546,9 @@ function PureMultimodalInput({
             )}
           </div>
         )}
-        <div className="flex flex-row items-start px-2 pt-1 pb-0">
+        <div className="flex flex-row items-start px-3 pt-2 pb-0">
           <PromptInputTextarea
-            className="grow resize-none border-0! bg-transparent px-1 py-0 sm:px-2 sm:py-0 text-base leading-relaxed outline-none ring-0 [-ms-overflow-style:none] [scrollbar-width:none] placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 [&::-webkit-scrollbar]:hidden"
+            className="grow resize-none border-0! bg-transparent px-1 py-0 text-base leading-relaxed text-zinc-100 outline-none ring-0 [-ms-overflow-style:none] [scrollbar-width:none] placeholder:text-zinc-500 focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 [&::-webkit-scrollbar]:hidden"
             data-testid="multimodal-input"
             disableAutoResize={true}
             maxHeight={200}
@@ -566,82 +560,27 @@ function PureMultimodalInput({
             value={input}
           />
         </div>
-        <PromptInputToolbar className="p-2 sm:px-3 sm:pb-1.5 sm:pt-0.5">
-          <PromptInputTools className="gap-0 sm:gap-0.5">
-            {/* Dropdown Menu All-in-One - Kiri (Gemini Style) */}
+        <PromptInputToolbar className="flex items-center justify-between px-3 pb-2 pt-1 relative">
+          <PromptInputTools className="flex items-center gap-1.5">
+            {/* Dropdown Menu All-in-One - + Icon */}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button
-                  className="size-8 rounded-lg p-1.5 transition-colors hover:bg-zinc-200 dark:hover:bg-zinc-800"
+                  className="size-9 rounded-full p-2 transition-colors hover:bg-zinc-800 text-zinc-400 hover:text-zinc-200"
                   data-testid="all-options-button"
                   title="Options"
                   variant="ghost"
                 >
-                  <PlusIcon className="text-muted-foreground" size={18} />
+                  <PlusIcon size={18} />
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent
-                align="end"
-                className="w-56 bg-white dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800 rounded-xl shadow-lg"
+                align="start"
+                className="w-56 bg-[#1a1a1a] border-white/10 rounded-xl shadow-lg text-zinc-300"
               >
-                {/* Mode Settings */}
-                <DropdownMenuItem
-                  className="cursor-pointer hover:bg-zinc-200 dark:hover:bg-zinc-800 rounded-lg focus:bg-zinc-200 dark:focus:bg-zinc-800"
-                  onClick={() => setWormgptEnabled(!wormgptEnabled)}
-                >
-                  <SparklesIcon
-                    className={cn(
-                      "mr-2 h-4 w-4",
-                      wormgptEnabled && "fill-current"
-                    )}
-                  />
-                  <span>WormGPT Mode</span>
-                  {wormgptEnabled && <CheckIcon className="ml-auto h-4 w-4" />}
-                </DropdownMenuItem>
-                <DropdownMenuItem
-                  className="cursor-pointer hover:bg-zinc-200 dark:hover:bg-zinc-800 rounded-lg focus:bg-zinc-200 dark:focus:bg-zinc-800"
-                  onClick={() => setDeepThinkingEnabled(!deepThinkingEnabled)}
-                >
-                  <CpuIcon className="mr-2 h-4 w-4" />
-                  <span>Deep Thinking</span>
-                  {deepThinkingEnabled && (
-                    <CheckIcon className="ml-auto h-4 w-4" />
-                  )}
-                </DropdownMenuItem>
-                <DropdownMenuItem
-                  className="cursor-pointer hover:bg-zinc-200 dark:hover:bg-zinc-800 rounded-lg focus:bg-zinc-200 dark:focus:bg-zinc-800"
-                  onClick={() => setWebSearchEnabled(!webSearchEnabled)}
-                >
-                  <GlobeIcon className="mr-2 h-4 w-4" />
-                  <span>Web Search</span>
-                  {webSearchEnabled && (
-                    <CheckIcon className="ml-auto h-4 w-4" />
-                  )}
-                </DropdownMenuItem>
-                <DropdownMenuItem
-                  className={cn(
-                    "cursor-pointer hover:bg-zinc-200 dark:hover:bg-zinc-800 rounded-lg focus:bg-zinc-200 dark:focus:bg-zinc-800",
-                    !isPro && "cursor-not-allowed opacity-40"
-                  )}
-                  disabled={!isPro}
-                  onClick={() => {
-                    if (isPro) {
-                      setImageGenerationMode(!imageGenerationMode);
-                    }
-                  }}
-                >
-                  <Wand2Icon className="mr-2 h-4 w-4" />
-                  <span>Image Generation</span>
-                  {imageGenerationMode && (
-                    <CheckIcon className="ml-auto h-4 w-4" />
-                  )}
-                </DropdownMenuItem>
-
-                <DropdownMenuSeparator className="bg-zinc-200 dark:bg-zinc-800" />
-
                 {/* File Upload Options */}
                 <DropdownMenuItem
-                  className="cursor-pointer hover:bg-zinc-200 dark:hover:bg-zinc-800 rounded-lg focus:bg-zinc-200 dark:focus:bg-zinc-800"
+                  className="cursor-pointer hover:bg-white/10 rounded-lg focus:bg-white/10"
                   disabled={status !== "ready"}
                   onClick={() => fileInputRef.current?.click()}
                 >
@@ -649,7 +588,7 @@ function PureMultimodalInput({
                   <span>Upload files</span>
                 </DropdownMenuItem>
                 <DropdownMenuItem
-                  className="cursor-pointer hover:bg-zinc-200 dark:hover:bg-zinc-800 rounded-lg focus:bg-zinc-200 dark:focus:bg-zinc-800"
+                  className="cursor-pointer hover:bg-white/10 rounded-lg focus:bg-white/10"
                   disabled={status !== "ready"}
                   onClick={() => {
                     if (fileInputRef.current && status === "ready") {
@@ -667,23 +606,60 @@ function PureMultimodalInput({
                   <ImageIcon className="mr-2 h-4 w-4" />
                   <span>Photos</span>
                 </DropdownMenuItem>
-                <DropdownMenuItem className="opacity-50" disabled>
-                  <FolderIcon className="mr-2 h-4 w-4" />
-                  <span>Add from Drive</span>
+
+                <DropdownMenuSeparator className="bg-white/10" />
+
+                {/* Mode Settings */}
+                <DropdownMenuItem
+                  className="cursor-pointer hover:bg-white/10 rounded-lg focus:bg-white/10"
+                  onClick={() => setWormgptEnabled(!wormgptEnabled)}
+                >
+                  <SparklesIcon
+                    className={cn(
+                      "mr-2 h-4 w-4",
+                      wormgptEnabled && "fill-current text-red-500"
+                    )}
+                  />
+                  <span>WormGPT Mode</span>
+                  {wormgptEnabled && (
+                    <CheckIcon className="ml-auto h-4 w-4 text-red-500" />
+                  )}
                 </DropdownMenuItem>
-                <DropdownMenuItem className="opacity-50" disabled>
-                  <CodeIcon className="mr-2 h-4 w-4" />
-                  <span>Import code</span>
+                <DropdownMenuItem
+                  className="cursor-pointer hover:bg-white/10 rounded-lg focus:bg-white/10"
+                  onClick={() => setDeepThinkingEnabled(!deepThinkingEnabled)}
+                >
+                  <CpuIcon className="mr-2 h-4 w-4" />
+                  <span>Deep Thinking</span>
+                  {deepThinkingEnabled && (
+                    <CheckIcon className="ml-auto h-4 w-4 text-blue-500" />
+                  )}
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  className="cursor-pointer hover:bg-white/10 rounded-lg focus:bg-white/10 opacity-40"
+                  disabled
+                >
+                  <Wand2Icon className="mr-2 h-4 w-4" />
+                  <span>Image Gen (Pro)</span>
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
 
-            {/* Model Selector - Samping Kanan + */}
-            <ModelSelectorCompact
-              onModelChange={onModelChange}
-              selectedModelId={selectedModelId}
-              user={user}
-            />
+            {/* Globe Button for Web Search Mode */}
+            <Button
+              className={cn(
+                "size-9 rounded-full p-2 transition-colors",
+                webSearchEnabled
+                  ? "bg-blue-500/20 text-blue-400 hover:bg-blue-500/30"
+                  : "hover:bg-zinc-800 text-zinc-400 hover:text-zinc-200"
+              )}
+              onClick={() => setWebSearchEnabled(!webSearchEnabled)}
+              title="Web Search"
+              type="button"
+              variant="ghost"
+            >
+              <GlobeIcon size={18} />
+            </Button>
 
             <input
               accept="image/*,text/plain,application/pdf,application/json"
@@ -696,18 +672,44 @@ function PureMultimodalInput({
             />
           </PromptInputTools>
 
-          {status === "submitted" ? (
-            <StopButton setMessages={setMessages} stop={stop} />
-          ) : (
-            <PromptInputSubmit
-              className="size-8 rounded-full bg-primary text-primary-foreground transition-colors duration-200 hover:bg-primary/90 disabled:bg-muted disabled:text-muted-foreground"
-              data-testid="send-button"
-              disabled={!input.trim() || uploadQueue.length > 0}
-              status={status}
-            >
-              <ArrowUpIcon size={14} />
-            </PromptInputSubmit>
-          )}
+          {/* Right side: Model Selector + Submit */}
+          <div className="flex items-center gap-2">
+            <div className="bg-[#2a2a2a] rounded-full px-2 py-0.5 flex items-center h-9 text-sm text-zinc-300">
+              <ModelSelectorCompact
+                onModelChange={onModelChange}
+                selectedModelId={selectedModelId}
+                user={user}
+              />
+            </div>
+
+            {status === "submitted" ? (
+              <StopButton
+                className="size-9"
+                setMessages={setMessages}
+                stop={stop}
+              />
+            ) : (
+              <PromptInputSubmit
+                className={cn(
+                  "size-9 rounded-full transition-all duration-200 flex items-center justify-center",
+                  !input.trim() &&
+                    uploadQueue.length === 0 &&
+                    attachments.length === 0
+                    ? "bg-[#2a2a2a] text-zinc-500"
+                    : "bg-white text-black hover:bg-zinc-200"
+                )}
+                data-testid="send-button"
+                disabled={
+                  !input.trim() &&
+                  uploadQueue.length === 0 &&
+                  attachments.length === 0
+                }
+                status={status}
+              >
+                <ArrowUpIcon size={18} />
+              </PromptInputSubmit>
+            )}
+          </div>
         </PromptInputToolbar>
       </PromptInput>
 
@@ -866,13 +868,18 @@ const ModelSelectorCompact = memo(PureModelSelectorCompact);
 function PureStopButton({
   stop,
   setMessages,
+  className,
 }: {
   stop: () => void;
   setMessages: UseChatHelpers<ChatMessage>["setMessages"];
+  className?: string;
 }) {
   return (
     <Button
-      className="size-7 rounded-full bg-foreground p-1 text-background transition-colors duration-200 hover:bg-foreground/90 disabled:bg-muted disabled:text-muted-foreground"
+      className={cn(
+        "size-7 rounded-full bg-foreground p-1 text-background transition-colors duration-200 hover:bg-foreground/90 disabled:bg-muted disabled:text-muted-foreground",
+        className
+      )}
       data-testid="stop-button"
       onClick={(event) => {
         event.preventDefault();
