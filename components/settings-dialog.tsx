@@ -7,7 +7,7 @@ import {
   UserIcon,
   ZapIcon,
 } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
 import { Button } from "./ui/button";
 import { Dialog, DialogContent, DialogTitle } from "./ui/dialog";
@@ -32,7 +32,7 @@ export function SettingsDialog({
   });
   const [updateLoading, setUpdateLoading] = useState(false);
 
-  async function fetchUserData() {
+  const fetchUserData = useCallback(async () => {
     setLoading(true);
     try {
       const res = await fetch("/api/user/settings");
@@ -45,7 +45,7 @@ export function SettingsDialog({
     } finally {
       setLoading(false);
     }
-  }
+  }, []);
 
   useEffect(() => {
     if (open) {

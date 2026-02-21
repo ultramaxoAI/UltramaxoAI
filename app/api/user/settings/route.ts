@@ -1,5 +1,7 @@
 import { compare } from "bcrypt-ts";
 import { NextResponse } from "next/server";
+export const dynamic = "force-dynamic";
+
 import { auth } from "@/app/(auth)/auth";
 import { getUserById, updateUserPassword } from "@/lib/db/queries";
 
