@@ -10,7 +10,7 @@ import { VisitorTracker } from "@/components/visitor-tracker";
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://ultramaxo.tech"),
-  title: "UltramaxoAI",
+  title: "UltramaxoAI UNCENSORED AI",
   description: "UltramaxoAI – multimodal chatbot and code workspace.",
   icons: {
     icon: "/favicon.svg",
