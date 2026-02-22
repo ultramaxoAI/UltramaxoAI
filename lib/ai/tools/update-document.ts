@@ -15,22 +15,42 @@ export const updateDocument = ({
 			content: z
 				.string()
 				.describe("The new content to replace the document with"),
+			kind: z
+				.enum(["code", "text", "sheet", "image"])
+				.optional()
+				.describe(
+					"The type of document (optional, to determine stream format)",
+				),
 		}),
-		execute: ({ id, content }: { id: string; content: string }) => {
+		execute: ({
+			id,
+			content,
+			kind,
+		}: {
+			id: string;
+			content: string;
+			kind?: "code" | "text" | "sheet" | "image";
+		}) => {
 			console.log(`[Tool: updateDocument] Triggered for id: ${id}`);
 
-			// Stream the document update event to the client
-			dataStream.write({
-				type: "message_annotation",
-				data: [
-					{
-						type: "update-document",
-						id,
-						content,
-					},
-				],
-				transient: true,
-			} as unknown as JSONValue);
+			// Clear previous content then send new content
+			dataStream.write({ type: "data-clear", data: "" } as JSONValue);
+
+			// Send content in the appropriate format based on kind
+			if (kind === "text") {
+				dataStream.write({
+					type: "data-textDelta",
+					data: content,
+				} as JSONValue);
+			} else {
+				// default to codeDelta for code, sheet, image, or unknown kind
+				dataStream.write({
+					type: "data-codeDelta",
+					data: content,
+				} as JSONValue);
+			}
+
+			dataStream.write({ type: "data-finish", data: "" } as JSONValue);
 
 			return {
 				id,

@@ -36,21 +36,27 @@ export const createDocument = ({
 				`[Tool: createDocument] Triggered for title: ${title}, kind: ${kind}`,
 			);
 
-			// Stream the document creation event to the client using official message annotations if needed,
-			// or rely entirely on the tool output part of Vercel AI SDK.
-			dataStream.write({
-				type: "message_annotation",
-				data: [
-					{
-						type: "create-document",
-						id,
-						title,
-						kind,
-						content,
-					},
-				],
-				transient: true,
-			} as unknown as JSONValue);
+			// Send document metadata events in the correct format
+			dataStream.write({ type: "data-id", data: id } as JSONValue);
+			dataStream.write({ type: "data-title", data: title } as JSONValue);
+			dataStream.write({ type: "data-kind", data: kind } as JSONValue);
+			dataStream.write({ type: "data-clear", data: "" } as JSONValue);
+
+			// Send content in the appropriate format based on kind
+			if (kind === "text") {
+				dataStream.write({
+					type: "data-textDelta",
+					data: content,
+				} as JSONValue);
+			} else {
+				// code, sheet, image
+				dataStream.write({
+					type: "data-codeDelta",
+					data: content,
+				} as JSONValue);
+			}
+
+			dataStream.write({ type: "data-finish", data: "" } as JSONValue);
 
 			return {
 				id,
