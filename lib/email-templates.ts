@@ -1,29 +1,29 @@
 export interface EmailTemplate {
-  id: string;
-  name: string;
-  subject: string;
-  body: string;
-  type:
-    | "custom"
-    | "upgrade-reminder"
-    | "verification-test"
-    | "welcome"
-    | "announcement";
+	id: string;
+	name: string;
+	subject: string;
+	body: string;
+	type:
+		| "custom"
+		| "upgrade-reminder"
+		| "verification-test"
+		| "welcome"
+		| "announcement";
 }
 
 export const EMAIL_TEMPLATES: EmailTemplate[] = [
-  {
-    id: "custom",
-    name: "Custom Email (Blank)",
-    subject: "",
-    body: "",
-    type: "custom",
-  },
-  {
-    id: "upgrade-reminder",
-    name: "Upgrade Reminder (Professional)",
-    subject: "✨ Unlock Full Potential dengan Ultramaxo PRO!",
-    body: `
+	{
+		id: "custom",
+		name: "Custom Email (Blank)",
+		subject: "",
+		body: "",
+		type: "custom",
+	},
+	{
+		id: "upgrade-reminder",
+		name: "Upgrade Reminder (Professional)",
+		subject: "✨ Unlock Full Potential dengan Ultramaxo PRO!",
+		body: `
 <p>Halo <strong>User</strong>,</p>
 
 <p>Kami melihat Anda sangat aktif menggunakan Ultramaxo AI. Maksimalkan pengalaman Anda dengan fitur <strong>PRO</strong>:</p>
@@ -41,13 +41,13 @@ export const EMAIL_TEMPLATES: EmailTemplate[] = [
 
 <p style="text-align: center;">Jangan lewatkan kesempatan untuk meningkatkan produktivitas Anda!</p>
     `,
-    type: "upgrade-reminder",
-  },
-  {
-    id: "welcome",
-    name: "Welcome Email (Onboarding)",
-    subject: "👋 Selamat Datang di Era Baru AI",
-    body: `
+		type: "upgrade-reminder",
+	},
+	{
+		id: "welcome",
+		name: "Welcome Email (Onboarding)",
+		subject: "👋 Selamat Datang di Era Baru AI",
+		body: `
 <p>Halo <strong>User</strong>,</p>
 
 <p>Selamat datang di <strong>Ultramaxo AI</strong>! Kami sangat senang Anda bergabung dengan komunitas kami yang terus berkembang.</p>
@@ -65,13 +65,13 @@ export const EMAIL_TEMPLATES: EmailTemplate[] = [
   <a href="https://ultramaxo.tech/chat" class="button">Mulai Chatting</a>
 </div>
     `,
-    type: "welcome",
-  },
-  {
-    id: "announcement",
-    name: "General Announcement",
-    subject: "📢 Update Penting dari Ultramaxo AI",
-    body: `
+		type: "welcome",
+	},
+	{
+		id: "announcement",
+		name: "General Announcement",
+		subject: "📢 Update Penting dari Ultramaxo AI",
+		body: `
 <p>Halo Semuanya,</p>
 
 <p>Kami memiliki kabar gembira untuk Anda! Tim kami telah bekerja keras untuk menghadirkan fitur-fitur baru yang akan membuat pengalaman Anda semakin luar biasa.</p>
@@ -85,6 +85,6 @@ export const EMAIL_TEMPLATES: EmailTemplate[] = [
 
 <p>Terima kasih telah menjadi bagian dari perjalanan kami. Nikmati fitur baru sekarang juga!</p>
     `,
-    type: "announcement",
-  },
+		type: "announcement",
+	},
 ];

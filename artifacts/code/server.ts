@@ -4,47 +4,47 @@ import { getArtifactModel } from "@/lib/ai/providers";
 import { createDocumentHandler } from "@/lib/artifacts/server";
 
 export const codeDocumentHandler = createDocumentHandler<"code">({
-  kind: "code",
-  onCreateDocument: async ({ title, dataStream }) => {
-    let draftContent = "";
+	kind: "code",
+	onCreateDocument: async ({ title, dataStream }) => {
+		let draftContent = "";
 
-    const { textStream } = streamText({
-      model: getArtifactModel(),
-      system: `${codePrompt}\n\nGenerate ONLY the code, no explanations, no markdown formatting, no \`\`\` blocks. Just the raw code.`,
-      prompt: title,
-    });
+		const { textStream } = streamText({
+			model: getArtifactModel(),
+			system: `${codePrompt}\n\nGenerate ONLY the code, no explanations, no markdown formatting, no \`\`\` blocks. Just the raw code.`,
+			prompt: title,
+		});
 
-    for await (const delta of textStream) {
-      draftContent += delta;
+		for await (const delta of textStream) {
+			draftContent += delta;
 
-      dataStream.write({
-        type: "data-codeDelta",
-        data: draftContent,
-        transient: true,
-      });
-    }
+			dataStream.write({
+				type: "data-codeDelta",
+				data: draftContent,
+				transient: true,
+			});
+		}
 
-    return draftContent;
-  },
-  onUpdateDocument: async ({ document, description, dataStream }) => {
-    let draftContent = "";
+		return draftContent;
+	},
+	onUpdateDocument: async ({ document, description, dataStream }) => {
+		let draftContent = "";
 
-    const { textStream } = streamText({
-      model: getArtifactModel(),
-      system: `${updateDocumentPrompt(document.content, "code")}\n\nGenerate ONLY the code, no explanations, no markdown formatting, no \`\`\` blocks. Just the raw code.`,
-      prompt: description,
-    });
+		const { textStream } = streamText({
+			model: getArtifactModel(),
+			system: `${updateDocumentPrompt(document.content, "code")}\n\nGenerate ONLY the code, no explanations, no markdown formatting, no \`\`\` blocks. Just the raw code.`,
+			prompt: description,
+		});
 
-    for await (const delta of textStream) {
-      draftContent += delta;
+		for await (const delta of textStream) {
+			draftContent += delta;
 
-      dataStream.write({
-        type: "data-codeDelta",
-        data: draftContent,
-        transient: true,
-      });
-    }
+			dataStream.write({
+				type: "data-codeDelta",
+				data: draftContent,
+				transient: true,
+			});
+		}
 
-    return draftContent;
-  },
+		return draftContent;
+	},
 });

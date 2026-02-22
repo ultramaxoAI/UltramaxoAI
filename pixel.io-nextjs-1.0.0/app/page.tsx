@@ -6,13 +6,13 @@ import Hero from "@/components/Hero";
 import Pricing from "@/components/Pricing";
 
 export default function Page() {
-  return (
-    <>
-      <Hero />
-      <Features />
-      <Pricing />
-      <Faq />
-      <CTA />
-    </>
-  );
+	return (
+		<>
+			<Hero />
+			<Features />
+			<Pricing />
+			<Faq />
+			<CTA />
+		</>
+	);
 }

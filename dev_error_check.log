@@ -1,0 +1,65 @@
+[baseline-browser-mapping] The data in this module is over two months old.  To ensure accurate Baseline data, please update: `npm i baseline-browser-mapping@latest -D`
+ ⚠ Warning: Next.js inferred your workspace root, but it may not be correct.
+ We detected multiple lockfiles and selected the directory of C:\Users\HYPE R Series\package-lock.json as the root directory.
+ To silence this warning, set `turbopack.root` in your Next.js config, or consider removing one of the lockfiles if it's not needed.
+   See https://nextjs.org/docs/app/api-reference/config/next-config-js/turbopack#root-directory for more information.
+ Detected additional lockfiles: 
+   * C:\Users\HYPE R Series\OneDrive\Dokumen\UltramaxoV2\package-lock.json
+   * C:\Users\HYPE R Series\OneDrive\Dokumen\package-lock.json
+
+   ▲ Next.js 16.0.10 (Turbopack)
+   - Local:         http://localhost:3001
+   - Network:       http://192.168.1.8:3001
+   - Environments: .env.local
+
+ ✓ Starting...
+ ⚠ The "middleware" file convention is deprecated. Please use "proxy" instead. Learn more: https://nextjs.org/docs/messages/middleware-to-proxy
+ ✓ Ready in 6.4s
+ ○ Compiling / ...
+
+-----
+[1m[31mFATAL[39m[0m: An unexpected Turbopack error occurred. A panic log has been written to C:\Users\HYPERS~1\AppData\Local\Temp\next-panic-b255ac936775c7f87d7045c703bdab54.log.
+
+To help make Turbopack better, report this error by ]8;;https://github.com/vercel/next.js/discussions/new?category=turbopack-error-report&title=Turbopack%20Error%3A%20reading%20file%20C%3A%5CUsers%5CHYPE%20R%20Series%5COneDrive%5CDokumen%5CUltramaxoV2%5C.next%5Cdev%5Cstatic%5Cchunks%5C3fecd_next_dist_build_polyfills_polyfill-nomodule.js&body=Turbopack%20version%3A%20%603f6a39f6%60%0ANext.js%20version%3A%20%600.0.0%60%0A%0AError%20message%3A%0A%60%60%60%0Areading%20file%20C%3A%5CUsers%5CHYPE%20R%20Series%5COneDrive%5CDokumen%5CUltramaxoV2%5C.next%5Cdev%5Cstatic%5Cchunks%5C3fecd_next_dist_build_polyfills_polyfill-nomodule.js%0A%0ACaused%20by%3A%0A-%20Access%20is%20denied.%20%28os%20error%205%29%0A%60%60%60&labels=Turbopack,Turbopack%20Panic%20Backtrace\clicking here.]8;;\
+-----
+
+ ○ Compiling /_error ...
+
+-----
+[1m[31mFATAL[39m[0m: An unexpected Turbopack error occurred. A panic log has been written to C:\Users\HYPERS~1\AppData\Local\Temp\next-panic-b255ac936775c7f87d7045c703bdab54.log.
+
+To help make Turbopack better, report this error by ]8;;https://github.com/vercel/next.js/discussions/new?category=turbopack-error-report&title=Turbopack%20Error%3A%20reading%20file%20C%3A%5CUsers%5CHYPE%20R%20Series%5COneDrive%5CDokumen%5CUltramaxoV2%5C.next%5Cdev%5Cstatic%5Cchunks%5C3fecd_next_dist_compiled_ad2495fc._.js&body=Turbopack%20version%3A%20%603f6a39f6%60%0ANext.js%20version%3A%20%600.0.0%60%0A%0AError%20message%3A%0A%60%60%60%0Areading%20file%20C%3A%5CUsers%5CHYPE%20R%20Series%5COneDrive%5CDokumen%5CUltramaxoV2%5C.next%5Cdev%5Cstatic%5Cchunks%5C3fecd_next_dist_compiled_ad2495fc._.js%0A%0ACaused%20by%3A%0A-%20Access%20is%20denied.%20%28os%20error%205%29%0A%60%60%60&labels=Turbopack,Turbopack%20Panic%20Backtrace\clicking here.]8;;\
+-----
+
+C:\Users\HYPE R Series\OneDrive\Dokumen\UltramaxoV2\node_modules\next\dist\shared\lib\turbopack\internal-error.js: Invalid source map. Only conformant source maps can be used to find the original code. Cause: Error: sourceMapURL could not be parsed
+ ⨯ Error [TurbopackInternalError]: reading file C:\Users\HYPE R Series\OneDrive\Dokumen\UltramaxoV2\.next\dev\static\chunks\3fecd_next_dist_compiled_ad2495fc._.js
+
+Caused by:
+- Access is denied. (os error 5)
+    at <unknown> (TurbopackInternalError: reading file C:\Users\HYPE R Series\OneDrive\Dokumen\UltramaxoV2\.next\dev\static\chunks\3fecd_next_dist_compiled_ad2495fc._.js) {
+  location: undefined
+}
+C:\Users\HYPE R Series\OneDrive\Dokumen\UltramaxoV2\node_modules\next\dist\shared\lib\turbopack\internal-error.js: Invalid source map. Only conformant source maps can be used to find the original code. Cause: Error: sourceMapURL could not be parsed
+Error [TurbopackInternalError]: reading file C:\Users\HYPE R Series\OneDrive\Dokumen\UltramaxoV2\.next\dev\static\chunks\3fecd_next_dist_build_polyfills_polyfill-nomodule.js
+
+Caused by:
+- Access is denied. (os error 5)
+    at <unknown> (TurbopackInternalError: reading file C:\Users\HYPE R Series\OneDrive\Dokumen\UltramaxoV2\.next\dev\static\chunks\3fecd_next_dist_build_polyfills_polyfill-nomodule.js) {
+  location: undefined
+}
+C:\Users\HYPE R Series\OneDrive\Dokumen\UltramaxoV2\node_modules\next\dist\shared\lib\turbopack\internal-error.js: Invalid source map. Only conformant source maps can be used to find the original code. Cause: Error: sourceMapURL could not be parsed
+ ⨯ Error [TurbopackInternalError]: reading file C:\Users\HYPE R Series\OneDrive\Dokumen\UltramaxoV2\.next\dev\static\chunks\3fecd_next_dist_compiled_ad2495fc._.js
+
+Caused by:
+- Access is denied. (os error 5)
+    at <unknown> (TurbopackInternalError: reading file C:\Users\HYPE R Series\OneDrive\Dokumen\UltramaxoV2\.next\dev\static\chunks\3fecd_next_dist_compiled_ad2495fc._.js) {
+  location: undefined
+}
+C:\Users\HYPE R Series\OneDrive\Dokumen\UltramaxoV2\node_modules\next\dist\shared\lib\turbopack\internal-error.js: Invalid source map. Only conformant source maps can be used to find the original code. Cause: Error: sourceMapURL could not be parsed
+Error [TurbopackInternalError]: reading file C:\Users\HYPE R Series\OneDrive\Dokumen\UltramaxoV2\.next\dev\static\chunks\3fecd_next_dist_compiled_ad2495fc._.js
+
+Caused by:
+- Access is denied. (os error 5)
+    at <unknown> (TurbopackInternalError: reading file C:\Users\HYPE R Series\OneDrive\Dokumen\UltramaxoV2\.next\dev\static\chunks\3fecd_next_dist_compiled_ad2495fc._.js) {
+  location: undefined
+}

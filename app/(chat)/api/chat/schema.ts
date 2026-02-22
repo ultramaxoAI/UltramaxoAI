@@ -1,42 +1,44 @@
 import { z } from "zod";
 
 const textPartSchema = z.object({
-  type: z.enum(["text"]),
-  text: z.string().min(1).max(100_000),
+	type: z.enum(["text"]),
+	text: z.string().min(1).max(100_000),
 });
 
 const filePartSchema = z.object({
-  type: z.enum(["file"]),
-  mediaType: z.string(),
-  name: z.string().min(1).max(255),
-  url: z.string().url(),
+	type: z.enum(["file"]),
+	mediaType: z.string(),
+	name: z.string().min(1).max(255),
+	url: z.string().url(),
 });
 
 const partSchema = z.union([textPartSchema, filePartSchema]);
 
 const userMessageSchema = z.object({
-  id: z.string().uuid(),
-  role: z.enum(["user"]),
-  parts: z.array(partSchema),
+	id: z.string().uuid(),
+	role: z.enum(["user"]),
+	parts: z.array(partSchema),
 });
 
 // For tool approval flows, we accept all messages (more permissive schema)
 const messageSchema = z.object({
-  id: z.string(),
-  role: z.string(),
-  parts: z.array(z.any()),
+	id: z.string(),
+	role: z.string(),
+	parts: z.array(z.any()),
 });
 
 export const postRequestBodySchema = z.object({
-  id: z.string().uuid(),
-  // Either a single new message or all messages (for tool approvals)
-  message: userMessageSchema.optional(),
-  messages: z.array(messageSchema).optional(),
-  selectedChatModel: z.string(),
-  selectedVisibilityType: z.enum(["public", "private"]),
-  wormgptEnabled: z.boolean().optional(),
-  deepThinkingEnabled: z.boolean().optional(),
-  webSearchEnabled: z.boolean().optional(),
+	id: z.string().uuid(),
+	// Either a single new message or all messages (for tool approvals)
+	message: userMessageSchema.optional(),
+	messages: z.array(messageSchema).optional(),
+	selectedChatModel: z.string(),
+	selectedVisibilityType: z.enum(["public", "private"]),
+	wormgptEnabled: z.boolean().optional(),
+	deepThinkingEnabled: z.boolean().optional(),
+	webSearchEnabled: z.boolean().optional(),
+	fullstackModeEnabled: z.boolean().optional(),
+	mobileModeEnabled: z.boolean().optional(),
 });
 
 export type PostRequestBody = z.infer<typeof postRequestBodySchema>;

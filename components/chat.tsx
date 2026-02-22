@@ -26,432 +26,450 @@ import { Button } from "./ui/button";
 import type { VisibilityType } from "./visibility-selector";
 
 export function Chat({
-  id,
-  initialMessages,
-  initialChatModel,
-  initialVisibilityType,
-  isReadonly,
-  isAtLimit,
-  autoResume,
-  user,
+	id,
+	initialMessages,
+	initialChatModel,
+	initialVisibilityType,
+	isReadonly,
+	isAtLimit,
+	autoResume,
+	user,
 }: {
-  id: string;
-  initialMessages: ChatMessage[];
-  initialChatModel: string;
-  initialVisibilityType: VisibilityType;
-  isReadonly: boolean;
-  isAtLimit?: boolean;
-  autoResume: boolean;
-  user?: User;
+	id: string;
+	initialMessages: ChatMessage[];
+	initialChatModel: string;
+	initialVisibilityType: VisibilityType;
+	isReadonly: boolean;
+	isAtLimit?: boolean;
+	autoResume: boolean;
+	user?: User;
 }) {
-  const router = useRouter();
+	const router = useRouter();
 
-  const { visibilityType } = useChatVisibility({
-    chatId: id,
-    initialVisibilityType,
-  });
+	const { visibilityType } = useChatVisibility({
+		chatId: id,
+		initialVisibilityType,
+	});
 
-  const { mutate } = useSWRConfig();
+	const { mutate } = useSWRConfig();
 
-  // Handle browser back/forward navigation
-  useEffect(() => {
-    const handlePopState = () => {
-      // When user navigates back/forward, refresh to sync with URL
-      router.refresh();
-    };
+	// Handle browser back/forward navigation
+	useEffect(() => {
+		const handlePopState = () => {
+			// When user navigates back/forward, refresh to sync with URL
+			router.refresh();
+		};
 
-    window.addEventListener("popstate", handlePopState);
-    return () => window.removeEventListener("popstate", handlePopState);
-  }, [router]);
-  const { setDataStream } = useDataStream();
+		window.addEventListener("popstate", handlePopState);
+		return () => window.removeEventListener("popstate", handlePopState);
+	}, [router]);
+	const { setDataStream } = useDataStream();
 
-  const [input, setInput] = useState<string>("");
-  const [currentModelId, setCurrentModelId] = useState(initialChatModel);
-  const [wormgptEnabled, setWormgptEnabled] = useState(false);
-  const [deepThinkingEnabled, setDeepThinkingEnabled] = useState(false);
-  const [webSearchEnabled, setWebSearchEnabled] = useState(false);
-  const currentModelIdRef = useRef(currentModelId);
-  const togglesRef = useRef({
-    wormgptEnabled,
-    deepThinkingEnabled,
-    webSearchEnabled,
-    visibilityType,
-  });
+	const [input, setInput] = useState<string>("");
+	const [currentModelId, setCurrentModelId] = useState(initialChatModel);
+	const [wormgptEnabled, setWormgptEnabled] = useState(false);
+	const [deepThinkingEnabled, setDeepThinkingEnabled] = useState(false);
+	const [webSearchEnabled, setWebSearchEnabled] = useState(false);
+	const [fullstackModeEnabled, setFullstackModeEnabled] = useState(false);
+	const [mobileModeEnabled, setMobileModeEnabled] = useState(false);
+	const currentModelIdRef = useRef(currentModelId);
+	const togglesRef = useRef({
+		wormgptEnabled,
+		deepThinkingEnabled,
+		webSearchEnabled,
+		fullstackModeEnabled,
+		mobileModeEnabled,
+		visibilityType,
+	});
 
-  useEffect(() => {
-    currentModelIdRef.current = currentModelId;
-    togglesRef.current = {
-      wormgptEnabled,
-      deepThinkingEnabled,
-      webSearchEnabled,
-      visibilityType,
-    };
-  }, [
-    currentModelId,
-    wormgptEnabled,
-    deepThinkingEnabled,
-    webSearchEnabled,
-    visibilityType,
-  ]);
+	useEffect(() => {
+		currentModelIdRef.current = currentModelId;
+		togglesRef.current = {
+			wormgptEnabled,
+			deepThinkingEnabled,
+			webSearchEnabled,
+			fullstackModeEnabled,
+			mobileModeEnabled,
+			visibilityType,
+		};
+	}, [
+		currentModelId,
+		wormgptEnabled,
+		deepThinkingEnabled,
+		webSearchEnabled,
+		fullstackModeEnabled,
+		mobileModeEnabled,
+		visibilityType,
+	]);
 
-  const {
-    messages,
-    setMessages,
-    sendMessage,
-    status,
-    stop,
-    regenerate,
-    resumeStream,
-    addToolApprovalResponse,
-  } = useChat<ChatMessage>({
-    id,
-    messages: initialMessages,
-    generateId: generateUUID,
-    sendAutomaticallyWhen: ({ messages: currentMessages }) => {
-      const lastMessage = currentMessages.at(-1);
-      const shouldContinue =
-        lastMessage?.parts?.some(
-          (part) =>
-            "state" in part &&
-            part.state === "approval-responded" &&
-            "approval" in part &&
-            (part.approval as { approved?: boolean })?.approved === true
-        ) ?? false;
-      return shouldContinue;
-    },
-    transport: new DefaultChatTransport({
-      api: "/api/chat",
-      fetch: fetchWithErrorHandlers,
-      prepareSendMessagesRequest(request) {
-        const lastMessage = request.messages.at(-1);
-        const isToolApprovalContinuation =
-          lastMessage?.role !== "user" ||
-          request.messages.some((msg) =>
-            msg.parts?.some((part) => {
-              const state = (part as { state?: string }).state;
-              return (
-                state === "approval-responded" || state === "output-denied"
-              );
-            })
-          );
+	const {
+		messages,
+		setMessages,
+		sendMessage,
+		status,
+		stop,
+		regenerate,
+		resumeStream,
+		addToolApprovalResponse,
+	} = useChat<ChatMessage>({
+		id,
+		messages: initialMessages,
+		generateId: generateUUID,
+		sendAutomaticallyWhen: ({ messages: currentMessages }) => {
+			const lastMessage = currentMessages.at(-1);
+			const shouldContinue =
+				lastMessage?.parts?.some(
+					(part) =>
+						"state" in part &&
+						part.state === "approval-responded" &&
+						"approval" in part &&
+						(part.approval as { approved?: boolean })?.approved === true,
+				) ?? false;
+			return shouldContinue;
+		},
+		transport: new DefaultChatTransport({
+			api: "/api/chat",
+			fetch: fetchWithErrorHandlers,
+			prepareSendMessagesRequest(request) {
+				const lastMessage = request.messages.at(-1);
+				const isToolApprovalContinuation =
+					lastMessage?.role !== "user" ||
+					request.messages.some((msg) =>
+						msg.parts?.some((part) => {
+							const state = (part as { state?: string }).state;
+							return (
+								state === "approval-responded" || state === "output-denied"
+							);
+						}),
+					);
 
-        return {
-          body: {
-            id: request.id,
-            ...(isToolApprovalContinuation
-              ? { messages: request.messages }
-              : { message: lastMessage }),
-            selectedChatModel: currentModelIdRef.current,
-            selectedVisibilityType: togglesRef.current.visibilityType,
-            wormgptEnabled: togglesRef.current.wormgptEnabled,
-            deepThinkingEnabled: togglesRef.current.deepThinkingEnabled,
-            webSearchEnabled: togglesRef.current.webSearchEnabled,
-            ...request.body,
-          },
-        };
-      },
-    }),
-    onData: (dataPart) => {
-      setDataStream((ds) => (ds ? [...ds, dataPart] : []));
-    },
-    onFinish: () => {
-      mutate(unstable_serialize(getChatHistoryPaginationKey));
-    },
-    onError: (error) => {
-      // Log detailed error on client side
-      console.error("=== CLIENT CHAT ERROR ===");
-      console.error(
-        "Error Type:",
-        error instanceof Error ? error.constructor.name : typeof error
-      );
-      console.error(
-        "Error Message:",
-        error instanceof Error ? error.message : String(error)
-      );
-      console.error(
-        "Error Stack:",
-        error instanceof Error ? error.stack : "N/A"
-      );
-      console.error("Chat ID:", id);
-      console.error("Current Model:", currentModelId);
-      console.error("Messages Count:", messages.length);
+				return {
+					body: {
+						id: request.id,
+						...(isToolApprovalContinuation
+							? { messages: request.messages }
+							: { message: lastMessage }),
+						selectedChatModel: currentModelIdRef.current,
+						selectedVisibilityType: togglesRef.current.visibilityType,
+						wormgptEnabled: togglesRef.current.wormgptEnabled,
+						deepThinkingEnabled: togglesRef.current.deepThinkingEnabled,
+						webSearchEnabled: togglesRef.current.webSearchEnabled,
+						fullstackModeEnabled: togglesRef.current.fullstackModeEnabled,
+						mobileModeEnabled: togglesRef.current.mobileModeEnabled,
+						...request.body,
+					},
+				};
+			},
+		}),
+		onData: (dataPart) => {
+			setDataStream((ds) => (ds ? [...ds, dataPart] : []));
+		},
+		onFinish: () => {
+			mutate(unstable_serialize(getChatHistoryPaginationKey));
+		},
+		onError: (error) => {
+			// Log detailed error on client side
+			console.error("=== CLIENT CHAT ERROR ===");
+			console.error(
+				"Error Type:",
+				error instanceof Error ? error.constructor.name : typeof error,
+			);
+			console.error(
+				"Error Message:",
+				error instanceof Error ? error.message : String(error),
+			);
+			console.error(
+				"Error Stack:",
+				error instanceof Error ? error.stack : "N/A",
+			);
+			console.error("Chat ID:", id);
+			console.error("Current Model:", currentModelId);
+			console.error("Messages Count:", messages.length);
 
-      if (error && typeof error === "object") {
-        console.error(
-          "Error Details:",
-          JSON.stringify(error, Object.getOwnPropertyNames(error), 2)
-        );
-      }
-      console.error("=== END CLIENT ERROR ===");
+			if (error && typeof error === "object") {
+				console.error(
+					"Error Details:",
+					JSON.stringify(error, Object.getOwnPropertyNames(error), 2),
+				);
+			}
+			console.error("=== END CLIENT ERROR ===");
 
-      if (error instanceof ChatSDKError) {
-        if (
-          error.message?.includes("AI Gateway requires a valid credit card")
-        ) {
-          // This is a Groq-based app, not using AI Gateway
-          toast({
-            type: "error",
-            description:
-              "Terjadi kesalahan dengan layanan AI. Silakan coba lagi.",
-          });
-        } else {
-          toast({
-            type: "error",
-            description: error.message,
-          });
-        }
-      } else {
-        // Show generic error for non-ChatSDKError
-        toast({
-          type: "error",
-          description:
-            "Terjadi kesalahan saat berkomunikasi dengan AI. Silakan coba lagi.",
-        });
-      }
-    },
-  });
+			if (error instanceof ChatSDKError) {
+				if (
+					error.message?.includes("AI Gateway requires a valid credit card")
+				) {
+					// This is a Groq-based app, not using AI Gateway
+					toast({
+						type: "error",
+						description:
+							"Terjadi kesalahan dengan layanan AI. Silakan coba lagi.",
+					});
+				} else {
+					toast({
+						type: "error",
+						description: error.message,
+					});
+				}
+			} else {
+				// Show generic error for non-ChatSDKError
+				toast({
+					type: "error",
+					description:
+						"Terjadi kesalahan saat berkomunikasi dengan AI. Silakan coba lagi.",
+				});
+			}
+		},
+	});
 
-  const searchParams = useSearchParams();
-  const query = searchParams.get("query");
+	const searchParams = useSearchParams();
+	const query = searchParams.get("query");
 
-  const [hasAppendedQuery, setHasAppendedQuery] = useState(false);
+	const [hasAppendedQuery, setHasAppendedQuery] = useState(false);
 
-  useEffect(() => {
-    if (query && !hasAppendedQuery) {
-      sendMessage({
-        role: "user" as const,
-        parts: [{ type: "text", text: query }],
-      });
+	useEffect(() => {
+		if (query && !hasAppendedQuery) {
+			sendMessage({
+				role: "user" as const,
+				parts: [{ type: "text", text: query }],
+			});
 
-      setHasAppendedQuery(true);
-      window.history.replaceState({}, "", `/chat/${id}`);
-    }
-  }, [query, sendMessage, hasAppendedQuery, id]);
+			setHasAppendedQuery(true);
+			window.history.replaceState({}, "", `/chat/${id}`);
+		}
+	}, [query, sendMessage, hasAppendedQuery, id]);
 
-  const { data: votes } = useSWR<Vote[]>(
-    messages.length >= 2 ? `/api/vote?chatId=${id}` : null,
-    fetcher
-  );
+	const { data: votes } = useSWR<Vote[]>(
+		messages.length >= 2 ? `/api/vote?chatId=${id}` : null,
+		fetcher,
+	);
 
-  const [attachments, setAttachments] = useState<Attachment[]>([]);
-  const isArtifactVisible = useArtifactSelector((state) => state.isVisible);
+	const [attachments, setAttachments] = useState<Attachment[]>([]);
+	const isArtifactVisible = useArtifactSelector((state) => state.isVisible);
 
-  useAutoResume({
-    autoResume,
-    initialMessages,
-    resumeStream,
-    setMessages,
-  });
+	useAutoResume({
+		autoResume,
+		initialMessages,
+		resumeStream,
+		setMessages,
+	});
 
-  return (
-    <>
-      <div
-        className={cn(
-          "flex h-dvh min-w-0 flex-col bg-background relative transition-all duration-300 ease-in-out",
-          isArtifactVisible ? "lg:w-[55%]" : "w-full"
-        )}
-      >
-        {/* Header dengan absolute positioning agar center */}
-        <div className="absolute top-0 left-0 right-0 z-20">
-          <ChatContextHeader
-            chatId={id}
-            isReadonly={isReadonly}
-            selectedVisibilityType={initialVisibilityType}
-            user={user}
-          />
-        </div>
+	return (
+		<>
+			<div
+				className={cn(
+					"flex h-dvh min-w-0 flex-col bg-background relative transition-all duration-300 ease-in-out",
+					isArtifactVisible ? "lg:w-[55%]" : "w-full",
+				)}
+			>
+				{/* Header dengan absolute positioning agar center */}
+				<div className="absolute top-0 left-0 right-0 z-20">
+					<ChatContextHeader
+						chatId={id}
+						isReadonly={isReadonly}
+						selectedVisibilityType={initialVisibilityType}
+						user={user}
+					/>
+				</div>
 
-        {/* Main content area with proper centering - offset untuk header */}
-        <div
-          className={`flex flex-1 flex-col min-w-0 overflow-hidden pt-13 ${
-            messages.length === 0 ? "items-center justify-center" : ""
-          }`}
-        >
-          {/* Messages container with centered max-width */}
-          {messages.length > 0 && (
-            <div className="flex flex-1 flex-col overflow-hidden">
-              <Messages
-                addToolApprovalResponse={addToolApprovalResponse}
-                chatId={id}
-                isArtifactVisible={isArtifactVisible}
-                isReadonly={isReadonly}
-                messages={messages}
-                regenerate={regenerate}
-                selectedModelId={initialChatModel}
-                setMessages={setMessages}
-                status={status}
-                votes={votes}
-              />
-            </div>
-          )}
+				{/* Main content area with proper centering - offset untuk header */}
+				<div
+					className={`flex flex-1 flex-col min-w-0 overflow-hidden pt-13 ${
+						messages.length === 0 ? "items-center justify-center" : ""
+					}`}
+				>
+					{/* Messages container with centered max-width */}
+					{messages.length > 0 && (
+						<div className="flex flex-1 flex-col overflow-hidden">
+							<Messages
+								addToolApprovalResponse={addToolApprovalResponse}
+								chatId={id}
+								isArtifactVisible={isArtifactVisible}
+								isReadonly={isReadonly}
+								messages={messages}
+								regenerate={regenerate}
+								selectedModelId={initialChatModel}
+								setMessages={setMessages}
+								status={status}
+								votes={votes}
+							/>
+						</div>
+					)}
 
-          {/* Centered greeting + input container for empty state */}
-          {messages.length === 0 && (
-            <div className="w-full max-w-3xl px-4 space-y-8">
-              <Messages
-                addToolApprovalResponse={addToolApprovalResponse}
-                chatId={id}
-                isArtifactVisible={isArtifactVisible}
-                isReadonly={isReadonly}
-                messages={messages}
-                regenerate={regenerate}
-                selectedModelId={initialChatModel}
-                setMessages={setMessages}
-                status={status}
-                votes={votes}
-              />
+					{/* Centered greeting + input container for empty state */}
+					{messages.length === 0 && (
+						<div className="w-full max-w-3xl px-4 space-y-8">
+							<Messages
+								addToolApprovalResponse={addToolApprovalResponse}
+								chatId={id}
+								isArtifactVisible={isArtifactVisible}
+								isReadonly={isReadonly}
+								messages={messages}
+								regenerate={regenerate}
+								selectedModelId={initialChatModel}
+								setMessages={setMessages}
+								status={status}
+								votes={votes}
+							/>
 
-              {isReadonly ? (
-                <div className="flex w-full items-center justify-center p-4">
-                  <div className="flex flex-col items-center gap-2 rounded-xl border border-dashed border-zinc-200 bg-zinc-50/50 p-6 text-center dark:border-zinc-800 dark:bg-zinc-900/50 w-full">
-                    <p className="text-sm text-zinc-500 dark:text-zinc-400">
-                      Please sign in to start chatting with Ultramaxo AI.
-                    </p>
-                    <div className="flex gap-4 mt-2">
-                      <Button asChild size="sm" variant="outline">
-                        <Link href="/login">Sign In</Link>
-                      </Button>
-                      <Button asChild size="sm">
-                        <Link href="/register">Create Account</Link>
-                      </Button>
-                    </div>
-                  </div>
-                </div>
-              ) : isAtLimit ? (
-                <div className="flex w-full items-center justify-center p-4">
-                  <div className="flex flex-col items-center gap-3 rounded-xl border-dashed border-zinc-200 bg-zinc-50/50 p-6 text-center dark:border-zinc-800 dark:bg-zinc-900/50 w-full border">
-                    <p className="text-sm font-medium text-zinc-900 dark:text-zinc-100">
-                      You have reached your free daily limit of 10 messages.
-                    </p>
-                    <p className="text-xs text-zinc-500 dark:text-zinc-400 mb-2">
-                      Upgrade to PRO for unlimited messages, or wait until
-                      tomorrow.
-                    </p>
-                    <div className="flex gap-4">
-                      <Button asChild size="sm">
-                        <Link href="/plan">Upgrade to PRO</Link>
-                      </Button>
-                    </div>
-                  </div>
-                </div>
-              ) : (
-                <MultimodalInput
-                  attachments={attachments}
-                  chatId={id}
-                  deepThinkingEnabled={deepThinkingEnabled}
-                  input={input}
-                  messages={messages}
-                  onModelChange={setCurrentModelId}
-                  selectedModelId={currentModelId}
-                  selectedVisibilityType={visibilityType}
-                  sendMessage={sendMessage}
-                  setAttachments={setAttachments}
-                  setDeepThinkingEnabled={setDeepThinkingEnabled}
-                  setInput={setInput}
-                  setMessages={setMessages}
-                  setWebSearchEnabled={setWebSearchEnabled}
-                  setWormgptEnabled={setWormgptEnabled}
-                  status={status}
-                  stop={stop}
-                  user={user}
-                  webSearchEnabled={webSearchEnabled}
-                  wormgptEnabled={wormgptEnabled}
-                />
-              )}
-            </div>
-          )}
-        </div>
+							{isReadonly ? (
+								<div className="flex w-full items-center justify-center p-4">
+									<div className="flex flex-col items-center gap-2 rounded-xl border border-dashed border-zinc-200 bg-zinc-50/50 p-6 text-center dark:border-zinc-800 dark:bg-zinc-900/50 w-full">
+										<p className="text-sm text-zinc-500 dark:text-zinc-400">
+											Please sign in to start chatting with Ultramaxo AI.
+										</p>
+										<div className="flex gap-4 mt-2">
+											<Button asChild size="sm" variant="outline">
+												<Link href="/login">Sign In</Link>
+											</Button>
+											<Button asChild size="sm">
+												<Link href="/register">Create Account</Link>
+											</Button>
+										</div>
+									</div>
+								</div>
+							) : isAtLimit ? (
+								<div className="flex w-full items-center justify-center p-4">
+									<div className="flex flex-col items-center gap-3 rounded-xl border-dashed border-zinc-200 bg-zinc-50/50 p-6 text-center dark:border-zinc-800 dark:bg-zinc-900/50 w-full border">
+										<p className="text-sm font-medium text-zinc-900 dark:text-zinc-100">
+											You have reached your free daily limit of 10 messages.
+										</p>
+										<p className="text-xs text-zinc-500 dark:text-zinc-400 mb-2">
+											Upgrade to PRO for unlimited messages, or wait until
+											tomorrow.
+										</p>
+										<div className="flex gap-4">
+											<Button asChild size="sm">
+												<Link href="/plan">Upgrade to PRO</Link>
+											</Button>
+										</div>
+									</div>
+								</div>
+							) : (
+								<MultimodalInput
+									attachments={attachments}
+									chatId={id}
+									deepThinkingEnabled={deepThinkingEnabled}
+									input={input}
+									messages={messages}
+									onModelChange={setCurrentModelId}
+									selectedModelId={currentModelId}
+									selectedVisibilityType={visibilityType}
+									sendMessage={sendMessage}
+									setAttachments={setAttachments}
+									setDeepThinkingEnabled={setDeepThinkingEnabled}
+									setInput={setInput}
+									setMessages={setMessages}
+									setWebSearchEnabled={setWebSearchEnabled}
+									setWormgptEnabled={setWormgptEnabled}
+									fullstackModeEnabled={fullstackModeEnabled}
+									setFullstackModeEnabled={setFullstackModeEnabled}
+									mobileModeEnabled={mobileModeEnabled}
+									setMobileModeEnabled={setMobileModeEnabled}
+									status={status}
+									stop={stop}
+									user={user}
+									webSearchEnabled={webSearchEnabled}
+									wormgptEnabled={wormgptEnabled}
+								/>
+							)}
+						</div>
+					)}
+				</div>
 
-        {/* Bottom input for active chat state */}
-        {messages.length > 0 && (
-          <div className="w-full px-4 pb-4">
-            <div className="mx-auto w-full max-w-3xl">
-              {isReadonly ? (
-                <div className="flex w-full items-center justify-center p-4">
-                  <div className="flex flex-col items-center gap-2 rounded-xl border border-dashed border-zinc-200 bg-zinc-50/50 p-6 text-center dark:border-zinc-800 dark:bg-zinc-900/50 w-full">
-                    <p className="text-sm text-zinc-500 dark:text-zinc-400">
-                      Please sign in to start chatting with Ultramaxo AI.
-                    </p>
-                    <div className="flex gap-4 mt-2">
-                      <Button asChild size="sm" variant="outline">
-                        <Link href="/login">Sign In</Link>
-                      </Button>
-                      <Button asChild size="sm">
-                        <Link href="/register">Create Account</Link>
-                      </Button>
-                    </div>
-                  </div>
-                </div>
-              ) : isAtLimit ? (
-                <div className="flex w-full items-center justify-center p-4">
-                  <div className="flex flex-col items-center gap-3 rounded-xl border-dashed border-zinc-200 bg-zinc-50/50 p-6 text-center dark:border-zinc-800 dark:bg-zinc-900/50 w-full border">
-                    <p className="text-sm font-medium text-zinc-900 dark:text-zinc-100">
-                      You have reached your free daily limit of 10 messages.
-                    </p>
-                    <p className="text-xs text-zinc-500 dark:text-zinc-400 mb-2">
-                      Upgrade to PRO for unlimited messages, or wait until
-                      tomorrow.
-                    </p>
-                    <div className="flex gap-4">
-                      <Button asChild size="sm">
-                        <Link href="/plan">Upgrade to PRO</Link>
-                      </Button>
-                    </div>
-                  </div>
-                </div>
-              ) : (
-                <MultimodalInput
-                  attachments={attachments}
-                  chatId={id}
-                  deepThinkingEnabled={deepThinkingEnabled}
-                  input={input}
-                  messages={messages}
-                  onModelChange={setCurrentModelId}
-                  selectedModelId={currentModelId}
-                  selectedVisibilityType={visibilityType}
-                  sendMessage={sendMessage}
-                  setAttachments={setAttachments}
-                  setDeepThinkingEnabled={setDeepThinkingEnabled}
-                  setInput={setInput}
-                  setMessages={setMessages}
-                  setWebSearchEnabled={setWebSearchEnabled}
-                  setWormgptEnabled={setWormgptEnabled}
-                  status={status}
-                  stop={stop}
-                  user={user}
-                  webSearchEnabled={webSearchEnabled}
-                  wormgptEnabled={wormgptEnabled}
-                />
-              )}
-            </div>
-          </div>
-        )}
-      </div>
+				{/* Bottom input for active chat state */}
+				{messages.length > 0 && (
+					<div className="w-full px-4 pb-4">
+						<div className="mx-auto w-full max-w-3xl">
+							{isReadonly ? (
+								<div className="flex w-full items-center justify-center p-4">
+									<div className="flex flex-col items-center gap-2 rounded-xl border border-dashed border-zinc-200 bg-zinc-50/50 p-6 text-center dark:border-zinc-800 dark:bg-zinc-900/50 w-full">
+										<p className="text-sm text-zinc-500 dark:text-zinc-400">
+											Please sign in to start chatting with Ultramaxo AI.
+										</p>
+										<div className="flex gap-4 mt-2">
+											<Button asChild size="sm" variant="outline">
+												<Link href="/login">Sign In</Link>
+											</Button>
+											<Button asChild size="sm">
+												<Link href="/register">Create Account</Link>
+											</Button>
+										</div>
+									</div>
+								</div>
+							) : isAtLimit ? (
+								<div className="flex w-full items-center justify-center p-4">
+									<div className="flex flex-col items-center gap-3 rounded-xl border-dashed border-zinc-200 bg-zinc-50/50 p-6 text-center dark:border-zinc-800 dark:bg-zinc-900/50 w-full border">
+										<p className="text-sm font-medium text-zinc-900 dark:text-zinc-100">
+											You have reached your free daily limit of 10 messages.
+										</p>
+										<p className="text-xs text-zinc-500 dark:text-zinc-400 mb-2">
+											Upgrade to PRO for unlimited messages, or wait until
+											tomorrow.
+										</p>
+										<div className="flex gap-4">
+											<Button asChild size="sm">
+												<Link href="/plan">Upgrade to PRO</Link>
+											</Button>
+										</div>
+									</div>
+								</div>
+							) : (
+								<MultimodalInput
+									attachments={attachments}
+									chatId={id}
+									deepThinkingEnabled={deepThinkingEnabled}
+									input={input}
+									messages={messages}
+									onModelChange={setCurrentModelId}
+									selectedModelId={currentModelId}
+									selectedVisibilityType={visibilityType}
+									sendMessage={sendMessage}
+									setAttachments={setAttachments}
+									setDeepThinkingEnabled={setDeepThinkingEnabled}
+									setInput={setInput}
+									setMessages={setMessages}
+									setWebSearchEnabled={setWebSearchEnabled}
+									setWormgptEnabled={setWormgptEnabled}
+									fullstackModeEnabled={fullstackModeEnabled}
+									setFullstackModeEnabled={setFullstackModeEnabled}
+									mobileModeEnabled={mobileModeEnabled}
+									setMobileModeEnabled={setMobileModeEnabled}
+									status={status}
+									stop={stop}
+									user={user}
+									webSearchEnabled={webSearchEnabled}
+									wormgptEnabled={wormgptEnabled}
+								/>
+							)}
+						</div>
+					</div>
+				)}
+			</div>
 
-      <Artifact
-        addToolApprovalResponse={addToolApprovalResponse}
-        attachments={attachments}
-        chatId={id}
-        deepThinkingEnabled={deepThinkingEnabled}
-        input={input}
-        isReadonly={isReadonly}
-        messages={messages}
-        regenerate={regenerate}
-        selectedModelId={currentModelId}
-        selectedVisibilityType={visibilityType}
-        sendMessage={sendMessage}
-        setAttachments={setAttachments}
-        setDeepThinkingEnabled={setDeepThinkingEnabled}
-        setInput={setInput}
-        setMessages={setMessages}
-        setWebSearchEnabled={setWebSearchEnabled}
-        setWormgptEnabled={setWormgptEnabled}
-        status={status}
-        stop={stop}
-        votes={votes}
-        webSearchEnabled={webSearchEnabled}
-        wormgptEnabled={wormgptEnabled}
-      />
-    </>
-  );
+			<Artifact
+				addToolApprovalResponse={addToolApprovalResponse}
+				attachments={attachments}
+				chatId={id}
+				deepThinkingEnabled={deepThinkingEnabled}
+				input={input}
+				isReadonly={isReadonly}
+				messages={messages}
+				regenerate={regenerate}
+				selectedModelId={currentModelId}
+				selectedVisibilityType={visibilityType}
+				sendMessage={sendMessage}
+				setAttachments={setAttachments}
+				setDeepThinkingEnabled={setDeepThinkingEnabled}
+				setInput={setInput}
+				setMessages={setMessages}
+				setWebSearchEnabled={setWebSearchEnabled}
+				setWormgptEnabled={setWormgptEnabled}
+				status={status}
+				stop={stop}
+				votes={votes}
+				webSearchEnabled={webSearchEnabled}
+				wormgptEnabled={wormgptEnabled}
+			/>
+		</>
+	);
 }

@@ -1,0 +1,468 @@
+
+> ai-chatbot@3.1.0 lint
+> ultracite check
+
+.next\dev\build\chunks\[root-of-the-server]__566dcc9c._.js:4:59 lint/style/useNodejsImportProtocol  FIXABLE  ━━━━━━━━━━
+
+  i A Node.js builtin module should be imported with the node: protocol.
+  
+    2 │ "[externals]/path [external] (path, cjs)", ((__turbopack_context__, module, exports) => {
+    3 │ 
+  > 4 │ const mod = __turbopack_context__.x("path", () => require("path"));
+      │                                                           ^^^^^^
+    5 │ 
+    6 │ module.exports = mod;
+  
+  i Using the node: protocol is more explicit and signals that the imported module belongs to Node.js.
+  
+  i Unsafe fix: Add the node: protocol.
+  
+      2   2 │   "[externals]/path [external] (path, cjs)", ((__turbopack_context__, module, exports) => {
+      3   3 │   
+      4     │ - const·mod·=·__turbopack_context__.x("path",·()·=>·require("path"));
+          4 │ + const·mod·=·__turbopack_context__.x("path",·()·=>·require("node:path"));
+      5   5 │   
+      6   6 │   module.exports = mod;
+  
+
+.next\dev\build\chunks\[root-of-the-server]__566dcc9c._.js:10:58 lint/style/useNodejsImportProtocol  FIXABLE  ━━━━━━━━━━
+
+  i A Node.js builtin module should be imported with the node: protocol.
+  
+     8 │ "[externals]/url [external] (url, cjs)", ((__turbopack_context__, module, exports) => {
+     9 │ 
+  > 10 │ const mod = __turbopack_context__.x("url", () => require("url"));
+       │                                                          ^^^^^
+    11 │ 
+    12 │ module.exports = mod;
+  
+  i Using the node: protocol is more explicit and signals that the imported module belongs to Node.js.
+  
+  i Unsafe fix: Add the node: protocol.
+  
+      8   8 │   "[externals]/url [external] (url, cjs)", ((__turbopack_context__, module, exports) => {
+      9   9 │   
+     10     │ - const·mod·=·__turbopack_context__.x("url",·()·=>·require("url"));
+         10 │ + const·mod·=·__turbopack_context__.x("url",·()·=>·require("node:url"));
+     11  11 │   
+     12  12 │   module.exports = mod;
+  
+
+.next\dev\build\chunks\[root-of-the-server]__566dcc9c._.js:16:57 lint/style/useNodejsImportProtocol  FIXABLE  ━━━━━━━━━━
+
+  i A Node.js builtin module should be imported with the node: protocol.
+  
+    14 │ "[externals]/fs [external] (fs, cjs)", ((__turbopack_context__, module, exports) => {
+    15 │ 
+  > 16 │ const mod = __turbopack_context__.x("fs", () => require("fs"));
+       │                                                         ^^^^
+    17 │ 
+    18 │ module.exports = mod;
+  
+  i Using the node: protocol is more explicit and signals that the imported module belongs to Node.js.
+  
+  i Unsafe fix: Add the node: protocol.
+  
+     14  14 │   "[externals]/fs [external] (fs, cjs)", ((__turbopack_context__, module, exports) => {
+     15  15 │   
+     16     │ - const·mod·=·__turbopack_context__.x("fs",·()·=>·require("fs"));
+         16 │ + const·mod·=·__turbopack_context__.x("fs",·()·=>·require("node:fs"));
+     17  17 │   
+     18  18 │   module.exports = mod;
+  
+
+.next\build-manifest.json format ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  × Formatter would have printed the following content:
+  
+     1  1 │   {
+     2    │ - ··"pages":·{
+     3    │ - ····"/_app":·[]
+     4    │ - ··},
+     5    │ - ··"devFiles":·[],
+     6    │ - ··"polyfillFiles":·[
+     7    │ - ····"static/chunks/a6dad97d9634a72d.js"
+     8    │ - ··],
+     9    │ - ··"lowPriorityFiles":·[
+    10    │ - ····"static/tD-XUZDXBPet_Vin_yPKw/_ssgManifest.js",
+    11    │ - ····"static/tD-XUZDXBPet_Vin_yPKw/_buildManifest.js"
+    12    │ - ··],
+    13    │ - ··"rootMainFiles":·[
+    14    │ - ····"static/chunks/793351f2cb9a1a80.js",
+    15    │ - ····"static/chunks/2668a1db3c55da41.js",
+    16    │ - ····"static/chunks/d0d911397ede62f0.js",
+    17    │ - ····"static/chunks/c5e717dd7980f253.js",
+    18    │ - ····"static/chunks/e4c4b5eab19ff52f.js",
+    19    │ - ····"static/chunks/turbopack-403b8e14f0e9523a.js"
+    20    │ - ··]
+    21    │ - }
+        2 │ + → "pages":·{
+        3 │ + → → "/_app":·[]
+        4 │ + → },
+        5 │ + → "devFiles":·[],
+        6 │ + → "polyfillFiles":·["static/chunks/a6dad97d9634a72d.js"],
+        7 │ + → "lowPriorityFiles":·[
+        8 │ + → → "static/tD-XUZDXBPet_Vin_yPKw/_ssgManifest.js",
+        9 │ + → → "static/tD-XUZDXBPet_Vin_yPKw/_buildManifest.js"
+       10 │ + → ],
+       11 │ + → "rootMainFiles":·[
+       12 │ + → → "static/chunks/793351f2cb9a1a80.js",
+       13 │ + → → "static/chunks/2668a1db3c55da41.js",
+       14 │ + → → "static/chunks/d0d911397ede62f0.js",
+       15 │ + → → "static/chunks/c5e717dd7980f253.js",
+       16 │ + → → "static/chunks/e4c4b5eab19ff52f.js",
+       17 │ + → → "static/chunks/turbopack-403b8e14f0e9523a.js"
+       18 │ + → ]
+       19 │ + }
+       20 │ + 
+  
+
+.next\build\chunks\[turbopack-node]_transforms_postcss_ts_eeb35326._.js format ━━━━━━━━━━━━━━━━━━━━━
+
+  × Formatter would have printed the following content:
+  
+     1  1 │   module.exports = [
+     2    │ - "[turbopack-node]/transforms/postcss.ts·{·CONFIG·=>·\"[project]/OneDrive/Dokumen/UltramaxoV2/postcss.config.mjs·[postcss]·(ecmascript)\"·}·[postcss]·(ecmascript,·async·loader)",·((__turbopack_context__)·=>·{
+     3    │ - 
+     4    │ - __turbopack_context__.v((parentImport)·=>·{
+     5    │ - ····return·Promise.all([
+     6    │ - ··"chunks/3fecd_03172903._.js",
+     7    │ - ··"chunks/[root-of-the-server]__566dcc9c._.js"
+     8    │ - ].map((chunk)·=>·__turbopack_context__.l(chunk))).then(()·=>·{
+     9    │ - ········return·parentImport("[turbopack-node]/transforms/postcss.ts·{·CONFIG·=>·\"[project]/OneDrive/Dokumen/UltramaxoV2/postcss.config.mjs·[postcss]·(ecmascript)\"·}·[postcss]·(ecmascript)");
+    10    │ - ····});
+    11    │ - });
+    12    │ - }),
+    13    │ - ];
+        2 │ + → '[turbopack-node]/transforms/postcss.ts·{·CONFIG·=>·"[project]/OneDrive/Dokumen/UltramaxoV2/postcss.config.mjs·[postcss]·(ecmascript)"·}·[postcss]·(ecmascript,·async·loader)',
+        3 │ + → (__turbopack_context__)·=>·{
+        4 │ + → → __turbopack_context__.v((parentImport)·=>·{
+        5 │ + → → → return·Promise.all(
+        6 │ + → → → → [
+        7 │ + → → → → → "chunks/3fecd_03172903._.js",
+        8 │ + → → → → → "chunks/[root-of-the-server]__566dcc9c._.js",
+        9 │ + → → → → ].map((chunk)·=>·__turbopack_context__.l(chunk)),
+       10 │ + → → → ).then(()·=>·{
+       11 │ + → → → → return·parentImport(
+       12 │ + → → → → → '[turbopack-node]/transforms/postcss.ts·{·CONFIG·=>·"[project]/OneDrive/Dokumen/UltramaxoV2/postcss.config.mjs·[postcss]·(ecmascript)"·}·[postcss]·(ecmascript)',
+       13 │ + → → → → );
+       14 │ + → → → });
+       15 │ + → → });
+       16 │ + → },
+       17 │ + ];
+       18 │ + 
+  
+
+.next\build\package.json format ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  × Formatter would have printed the following content:
+  
+    1   │ - {"type":·"commonjs"}
+      1 │ + {
+      2 │ + → "type":·"commonjs"
+      3 │ + }
+      4 │ + 
+  
+
+.next\build\postcss.js format ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  × Formatter would have printed the following content:
+  
+    1    │ - var·R=require("./chunks/[turbopack]_runtime.js")("postcss.js")
+    2    │ - R.c("chunks/[turbopack-node]_transforms_postcss_ts_eeb35326._.js")
+    3    │ - R.c("chunks/[root-of-the-server]__750eea17._.js")
+    4    │ - R.m("[turbopack-node]/globals.ts·[postcss]·(ecmascript)")
+    5    │ - R.m("[turbopack-node]/ipc/evaluate.ts/evaluate.js·{·INNER·=>·\"[turbopack-node]/transforms/postcss.ts·{·CONFIG·=>·\\\"[project]/OneDrive/Dokumen/UltramaxoV2/postcss.config.mjs·[postcss]·(ecmascript)\\\"·}·[postcss]·(ecmascript)\",·RUNTIME·=>·\"[turbopack-node]/ipc/evaluate.ts·[postcss]·(ecmascript)\"·}·[postcss]·(ecmascript)")
+    6    │ - module.exports=R.m("[turbopack-node]/ipc/evaluate.ts/evaluate.js·{·INNER·=>·\"[turbopack-node]/transforms/postcss.ts·{·CONFIG·=>·\\\"[project]/OneDrive/Dokumen/UltramaxoV2/postcss.config.mjs·[postcss]·(ecmascript)\\\"·}·[postcss]·(ecmascript)\",·RUNTIME·=>·\"[turbopack-node]/ipc/evaluate.ts·[postcss]·(ecmascript)\"·}·[postcss]·(ecmascript)").exports
+       1 │ + var·R·=·require("./chunks/[turbopack]_runtime.js")("postcss.js");
+       2 │ + R.c("chunks/[turbopack-node]_transforms_postcss_ts_eeb35326._.js");
+       3 │ + R.c("chunks/[root-of-the-server]__750eea17._.js");
+       4 │ + R.m("[turbopack-node]/globals.ts·[postcss]·(ecmascript)");
+       5 │ + R.m(
+       6 │ + → '[turbopack-node]/ipc/evaluate.ts/evaluate.js·{·INNER·=>·"[turbopack-node]/transforms/postcss.ts·{·CONFIG·=>·\\"[project]/OneDrive/Dokumen/UltramaxoV2/postcss.config.mjs·[postcss]·(ecmascript)\\"·}·[postcss]·(ecmascript)",·RUNTIME·=>·"[turbopack-node]/ipc/evaluate.ts·[postcss]·(ecmascript)"·}·[postcss]·(ecmascript)',
+       7 │ + );
+       8 │ + module.exports·=·R.m(
+       9 │ + → '[turbopack-node]/ipc/evaluate.ts/evaluate.js·{·INNER·=>·"[turbopack-node]/transforms/postcss.ts·{·CONFIG·=>·\\"[project]/OneDrive/Dokumen/UltramaxoV2/postcss.config.mjs·[postcss]·(ecmascript)\\"·}·[postcss]·(ecmascript)",·RUNTIME·=>·"[turbopack-node]/ipc/evaluate.ts·[postcss]·(ecmascript)"·}·[postcss]·(ecmascript)',
+      10 │ + ).exports;
+    7 11 │   
+  
+
+.next\dev\build-manifest.json format ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  × Formatter would have printed the following content:
+  
+     1  1 │   {
+     2    │ - ··"pages":·{
+     3    │ - ····"/_app":·[]
+     4    │ - ··},
+     5    │ - ··"devFiles":·[],
+     6    │ - ··"polyfillFiles":·[
+     7    │ - ····"static/chunks/3fecd_next_dist_build_polyfills_polyfill-nomodule.js"
+     8    │ - ··],
+     9    │ - ··"lowPriorityFiles":·[
+    10    │ - ····"static/development/_ssgManifest.js",
+    11    │ - ····"static/development/_buildManifest.js"
+    12    │ - ··],
+    13    │ - ··"rootMainFiles":·[
+    14    │ - ····"static/chunks/[turbopack]_browser_dev_hmr-client_hmr-client_ts_1f213222._.js",
+    15    │ - ····"static/chunks/3fecd_next_dist_compiled_react-dom_59e396cb._.js",
+    16    │ - ····"static/chunks/3fecd_next_dist_compiled_react-server-dom-turbopack_afb2b032._.js",
+    17    │ - ····"static/chunks/3fecd_next_dist_compiled_next-devtools_index_d4f5eb73.js",
+    18    │ - ····"static/chunks/3fecd_next_dist_compiled_8534c593._.js",
+    19    │ - ····"static/chunks/3fecd_next_dist_client_d9cf5050._.js",
+    20    │ - ····"static/chunks/3fecd_next_dist_61f20027._.js",
+    21    │ - ····"static/chunks/3fecd_@swc_helpers_cjs_3b5ba664._.js",
+    22    │ - ····"static/chunks/OneDrive_Dokumen_UltramaxoV2_a0ff3932._.js",
+    23    │ - ····"static/chunks/turbopack-OneDrive_Dokumen_UltramaxoV2_28e3435b._.js"
+    24    │ - ··]
+    25    │ - }
+        2 │ + → "pages":·{
+        3 │ + → → "/_app":·[]
+        4 │ + → },
+        5 │ + → "devFiles":·[],
+        6 │ + → "polyfillFiles":·[
+        7 │ + → → "static/chunks/3fecd_next_dist_build_polyfills_polyfill-nomodule.js"
+        8 │ + → ],
+        9 │ + → "lowPriorityFiles":·[
+       10 │ + → → "static/development/_ssgManifest.js",
+       11 │ + → → "static/development/_buildManifest.js"
+       12 │ + → ],
+       13 │ + → "rootMainFiles":·[
+       14 │ + → → "static/chunks/[turbopack]_browser_dev_hmr-client_hmr-client_ts_1f213222._.js",
+       15 │ + → → "static/chunks/3fecd_next_dist_compiled_react-dom_59e396cb._.js",
+       16 │ + → → "static/chunks/3fecd_next_dist_compiled_react-server-dom-turbopack_afb2b032._.js",
+       17 │ + → → "static/chunks/3fecd_next_dist_compiled_next-devtools_index_d4f5eb73.js",
+       18 │ + → → "static/chunks/3fecd_next_dist_compiled_8534c593._.js",
+       19 │ + → → "static/chunks/3fecd_next_dist_client_d9cf5050._.js",
+       20 │ + → → "static/chunks/3fecd_next_dist_61f20027._.js",
+       21 │ + → → "static/chunks/3fecd_@swc_helpers_cjs_3b5ba664._.js",
+       22 │ + → → "static/chunks/OneDrive_Dokumen_UltramaxoV2_a0ff3932._.js",
+       23 │ + → → "static/chunks/turbopack-OneDrive_Dokumen_UltramaxoV2_28e3435b._.js"
+       24 │ + → ]
+       25 │ + }
+       26 │ + 
+  
+
+.next\dev\build\chunks\[turbopack-node]_transforms_postcss_ts_eeb35326._.js format ━━━━━━━━━━━━━━━━━
+
+  × Formatter would have printed the following content:
+  
+     1  1 │   module.exports = [
+     2    │ - "[turbopack-node]/transforms/postcss.ts·{·CONFIG·=>·\"[project]/OneDrive/Dokumen/UltramaxoV2/postcss.config.mjs·[postcss]·(ecmascript)\"·}·[postcss]·(ecmascript,·async·loader)",·((__turbopack_context__)·=>·{
+     3    │ - 
+     4    │ - __turbopack_context__.v((parentImport)·=>·{
+     5    │ - ····return·Promise.all([
+     6    │ - ··"chunks/3fecd_03172903._.js",
+     7    │ - ··"chunks/[root-of-the-server]__566dcc9c._.js"
+     8    │ - ].map((chunk)·=>·__turbopack_context__.l(chunk))).then(()·=>·{
+     9    │ - ········return·parentImport("[turbopack-node]/transforms/postcss.ts·{·CONFIG·=>·\"[project]/OneDrive/Dokumen/UltramaxoV2/postcss.config.mjs·[postcss]·(ecmascript)\"·}·[postcss]·(ecmascript)");
+    10    │ - ····});
+    11    │ - });
+    12    │ - }),
+    13    │ - ];
+        2 │ + → '[turbopack-node]/transforms/postcss.ts·{·CONFIG·=>·"[project]/OneDrive/Dokumen/UltramaxoV2/postcss.config.mjs·[postcss]·(ecmascript)"·}·[postcss]·(ecmascript,·async·loader)',
+        3 │ + → (__turbopack_context__)·=>·{
+        4 │ + → → __turbopack_context__.v((parentImport)·=>·{
+        5 │ + → → → return·Promise.all(
+        6 │ + → → → → [
+        7 │ + → → → → → "chunks/3fecd_03172903._.js",
+        8 │ + → → → → → "chunks/[root-of-the-server]__566dcc9c._.js",
+        9 │ + → → → → ].map((chunk)·=>·__turbopack_context__.l(chunk)),
+       10 │ + → → → ).then(()·=>·{
+       11 │ + → → → → return·parentImport(
+       12 │ + → → → → → '[turbopack-node]/transforms/postcss.ts·{·CONFIG·=>·"[project]/OneDrive/Dokumen/UltramaxoV2/postcss.config.mjs·[postcss]·(ecmascript)"·}·[postcss]·(ecmascript)',
+       13 │ + → → → → );
+       14 │ + → → → });
+       15 │ + → → });
+       16 │ + → },
+       17 │ + ];
+       18 │ + 
+  
+
+.next\dev\build\package.json format ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  × Formatter would have printed the following content:
+  
+    1   │ - {"type":·"commonjs"}
+      1 │ + {
+      2 │ + → "type":·"commonjs"
+      3 │ + }
+      4 │ + 
+  
+
+.next\dev\build\postcss.js format ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  × Formatter would have printed the following content:
+  
+    1    │ - var·R=require("./chunks/[turbopack]_runtime.js")("postcss.js")
+    2    │ - R.c("chunks/[turbopack-node]_transforms_postcss_ts_eeb35326._.js")
+    3    │ - R.c("chunks/[root-of-the-server]__750eea17._.js")
+    4    │ - R.m("[turbopack-node]/globals.ts·[postcss]·(ecmascript)")
+    5    │ - R.m("[turbopack-node]/ipc/evaluate.ts/evaluate.js·{·INNER·=>·\"[turbopack-node]/transforms/postcss.ts·{·CONFIG·=>·\\\"[project]/OneDrive/Dokumen/UltramaxoV2/postcss.config.mjs·[postcss]·(ecmascript)\\\"·}·[postcss]·(ecmascript)\",·RUNTIME·=>·\"[turbopack-node]/ipc/evaluate.ts·[postcss]·(ecmascript)\"·}·[postcss]·(ecmascript)")
+    6    │ - module.exports=R.m("[turbopack-node]/ipc/evaluate.ts/evaluate.js·{·INNER·=>·\"[turbopack-node]/transforms/postcss.ts·{·CONFIG·=>·\\\"[project]/OneDrive/Dokumen/UltramaxoV2/postcss.config.mjs·[postcss]·(ecmascript)\\\"·}·[postcss]·(ecmascript)\",·RUNTIME·=>·\"[turbopack-node]/ipc/evaluate.ts·[postcss]·(ecmascript)\"·}·[postcss]·(ecmascript)").exports
+       1 │ + var·R·=·require("./chunks/[turbopack]_runtime.js")("postcss.js");
+       2 │ + R.c("chunks/[turbopack-node]_transforms_postcss_ts_eeb35326._.js");
+       3 │ + R.c("chunks/[root-of-the-server]__750eea17._.js");
+       4 │ + R.m("[turbopack-node]/globals.ts·[postcss]·(ecmascript)");
+       5 │ + R.m(
+       6 │ + → '[turbopack-node]/ipc/evaluate.ts/evaluate.js·{·INNER·=>·"[turbopack-node]/transforms/postcss.ts·{·CONFIG·=>·\\"[project]/OneDrive/Dokumen/UltramaxoV2/postcss.config.mjs·[postcss]·(ecmascript)\\"·}·[postcss]·(ecmascript)",·RUNTIME·=>·"[turbopack-node]/ipc/evaluate.ts·[postcss]·(ecmascript)"·}·[postcss]·(ecmascript)',
+       7 │ + );
+       8 │ + module.exports·=·R.m(
+       9 │ + → '[turbopack-node]/ipc/evaluate.ts/evaluate.js·{·INNER·=>·"[turbopack-node]/transforms/postcss.ts·{·CONFIG·=>·\\"[project]/OneDrive/Dokumen/UltramaxoV2/postcss.config.mjs·[postcss]·(ecmascript)\\"·}·[postcss]·(ecmascript)",·RUNTIME·=>·"[turbopack-node]/ipc/evaluate.ts·[postcss]·(ecmascript)"·}·[postcss]·(ecmascript)',
+      10 │ + ).exports;
+    7 11 │   
+  
+
+.next\dev\cache\next-devtools-config.json format ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  × Formatter would have printed the following content:
+  
+    1 1 │   {
+    2   │ - ··"devToolsPosition":·"bottom-left",
+    3   │ - ··"devToolsPanelPosition":·{
+    4   │ - ····"__nextjs-dev-tools-shared-panel-location":·"bottom-left"
+    5   │ - ··}
+    6   │ - }
+      2 │ + → "devToolsPosition":·"bottom-left",
+      3 │ + → "devToolsPanelPosition":·{
+      4 │ + → → "__nextjs-dev-tools-shared-panel-location":·"bottom-left"
+      5 │ + → }
+      6 │ + }
+      7 │ + 
+  
+
+.next\dev\fallback-build-manifest.json format ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  × Formatter would have printed the following content:
+  
+     1  1 │   {
+     2    │ - ··"pages":·{
+     3    │ - ····"/_app":·[]
+     4    │ - ··},
+     5    │ - ··"devFiles":·[],
+     6    │ - ··"polyfillFiles":·[],
+     7    │ - ··"lowPriorityFiles":·[
+     8    │ - ····"static/development/_ssgManifest.js",
+     9    │ - ····"static/development/_buildManifest.js"
+    10    │ - ··],
+    11    │ - ··"rootMainFiles":·[]
+    12    │ - }
+        2 │ + → "pages":·{
+        3 │ + → → "/_app":·[]
+        4 │ + → },
+        5 │ + → "devFiles":·[],
+        6 │ + → "polyfillFiles":·[],
+        7 │ + → "lowPriorityFiles":·[
+        8 │ + → → "static/development/_ssgManifest.js",
+        9 │ + → → "static/development/_buildManifest.js"
+       10 │ + → ],
+       11 │ + → "rootMainFiles":·[]
+       12 │ + }
+       13 │ + 
+  
+
+.next\dev\package.json format ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  × Formatter would have printed the following content:
+  
+    1 1 │   {
+    2   │ - ··"type":·"commonjs"
+    3   │ - }
+      2 │ + → "type":·"commonjs"
+      3 │ + }
+      4 │ + 
+  
+
+.next\dev\server\app\(auth)\api\auth\[...nextauth]\route\app-paths-manifest.json format ━━━━━━━━━━━━
+
+  × Formatter would have printed the following content:
+  
+    1 1 │   {
+    2   │ - ··"/(auth)/api/auth/[...nextauth]/route":·"app/(auth)/api/auth/[...nextauth]/route.js"
+    3   │ - }
+      2 │ + → "/(auth)/api/auth/[...nextauth]/route":·"app/(auth)/api/auth/[...nextauth]/route.js"
+      3 │ + }
+      4 │ + 
+  
+
+.next\dev\server\app\(auth)\api\auth\[...nextauth]\route\build-manifest.json format ━━━━━━━━━━━━━━━━
+
+  × Formatter would have printed the following content:
+  
+     1  1 │   {
+     2    │ - ··"devFiles":·[],
+     3    │ - ··"ampDevFiles":·[],
+     4    │ - ··"polyfillFiles":·[
+     5    │ - ····"static/chunks/3fecd_next_dist_build_polyfills_polyfill-nomodule.js"
+     6    │ - ··],
+     7    │ - ··"lowPriorityFiles":·[],
+     8    │ - ··"rootMainFiles":·[],
+     9    │ - ··"pages":·{},
+    10    │ - ··"ampFirstPages":·[]
+    11    │ - }
+        2 │ + → "devFiles":·[],
+        3 │ + → "ampDevFiles":·[],
+        4 │ + → "polyfillFiles":·[
+        5 │ + → → "static/chunks/3fecd_next_dist_build_polyfills_polyfill-nomodule.js"
+        6 │ + → ],
+        7 │ + → "lowPriorityFiles":·[],
+        8 │ + → "rootMainFiles":·[],
+        9 │ + → "pages":·{},
+       10 │ + → "ampFirstPages":·[]
+       11 │ + }
+       12 │ + 
+  
+
+.next\package.json format ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  × Formatter would have printed the following content:
+  
+    1   │ - {"type":·"commonjs"}
+      1 │ + {
+      2 │ + → "type":·"commonjs"
+      3 │ + }
+      4 │ + 
+  
+
+biome.json:1:1 parse ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  × Expected an array, an object, or a literal but instead found the end of the file.
+  
+  > 1 │ 
+      │ 
+  
+  i Expected an array, an object, or a literal here.
+  
+  > 1 │ 
+      │ 
+  
+
+biome.json:1:1 parse ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  × Expected an array, an object, or a literal but instead found the end of the file.
+  
+  > 1 │ 
+      │ 
+  
+  i Expected an array, an object, or a literal here.
+  
+  > 1 │ 
+      │ 
+  
+
+biome.json format ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  × Code formatting aborted due to parsing errors. To format code with errors, enable the 'formatter.formatWithErrors' option.
+  
+
+The number of diagnostics exceeds the limit allowed. Use --max-diagnostics to increase it.
+Diagnostics not shown: 446489.
+Checked 1605 files in 1986s. No fixes applied.
+Found 103024 errors.
+Found 217458 warnings.
+Found 126025 infos.
+check ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  × Some errors were emitted while running checks.
+  
+

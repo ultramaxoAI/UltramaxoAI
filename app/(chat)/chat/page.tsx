@@ -8,46 +8,46 @@ import { getTodayMessageCount, getUserById } from "@/lib/db/queries";
 import { generateUUID } from "@/lib/utils";
 
 export default function Page() {
-  return (
-    <Suspense fallback={<div className="flex h-dvh" />}>
-      <NewChatPage />
-    </Suspense>
-  );
+	return (
+		<Suspense fallback={<div className="flex h-dvh" />}>
+			<NewChatPage />
+		</Suspense>
+	);
 }
 
 async function NewChatPage() {
-  const [session, cookieStore] = await Promise.all([auth(), cookies()]);
-  const modelIdFromCookie = cookieStore.get("chat-model");
-  const id = generateUUID();
+	const [session, cookieStore] = await Promise.all([auth(), cookies()]);
+	const modelIdFromCookie = cookieStore.get("chat-model");
+	const id = generateUUID();
 
-  let isAtLimit = false;
-  if (session?.user?.id) {
-    const todayCount = await getTodayMessageCount(session.user.id);
-    const [currentUser] = await getUserById(session.user.id);
-    if (
-      !currentUser?.isPro &&
-      currentUser?.role !== "admin" &&
-      todayCount >= 10 &&
-      (currentUser?.limitCount || 0) <= 0
-    ) {
-      isAtLimit = true;
-    }
-  }
+	let isAtLimit = false;
+	if (session?.user?.id) {
+		const todayCount = await getTodayMessageCount(session.user.id);
+		const [currentUser] = await getUserById(session.user.id);
+		if (
+			!currentUser?.isPro &&
+			currentUser?.role !== "admin" &&
+			todayCount >= 10 &&
+			(currentUser?.limitCount || 0) <= 0
+		) {
+			isAtLimit = true;
+		}
+	}
 
-  return (
-    <>
-      <Chat
-        autoResume={false}
-        id={id}
-        initialChatModel={modelIdFromCookie?.value ?? DEFAULT_CHAT_MODEL}
-        initialMessages={[]}
-        initialVisibilityType="private"
-        isAtLimit={isAtLimit}
-        isReadonly={!session}
-        key={id}
-        user={session?.user}
-      />
-      <DataStreamHandler />
-    </>
-  );
+	return (
+		<>
+			<Chat
+				autoResume={false}
+				id={id}
+				initialChatModel={modelIdFromCookie?.value ?? DEFAULT_CHAT_MODEL}
+				initialMessages={[]}
+				initialVisibilityType="private"
+				isAtLimit={isAtLimit}
+				isReadonly={!session}
+				key={id}
+				user={session?.user}
+			/>
+			<DataStreamHandler />
+		</>
+	);
 }

@@ -1,0 +1,34 @@
+
+> ai-chatbot@3.1.0 build
+> next build
+
+[baseline-browser-mapping] The data in this module is over two months old.  To ensure accurate Baseline data, please update: `npm i baseline-browser-mapping@latest -D`
+ ⚠ Warning: Next.js inferred your workspace root, but it may not be correct.
+ We detected multiple lockfiles and selected the directory of C:\Users\HYPE R Series\package-lock.json as the root directory.
+ To silence this warning, set `turbopack.root` in your Next.js config, or consider removing one of the lockfiles if it's not needed.
+   See https://nextjs.org/docs/app/api-reference/config/next-config-js/turbopack#root-directory for more information.
+ Detected additional lockfiles: 
+   * C:\Users\HYPE R Series\OneDrive\Dokumen\UltramaxoV2\package-lock.json
+   * C:\Users\HYPE R Series\OneDrive\Dokumen\package-lock.json
+
+   ▲ Next.js 16.0.10 (Turbopack)
+   - Environments: .env.local
+
+ ⚠ The "middleware" file convention is deprecated. Please use "proxy" instead. Learn more: https://nextjs.org/docs/messages/middleware-to-proxy
+   Creating an optimized production build ...
+[baseline-browser-mapping] The data in this module is over two months old.  To ensure accurate Baseline data, please update: `npm i baseline-browser-mapping@latest -D`
+ ✓ Compiled successfully in 41s
+   Running TypeScript ...
+Failed to compile.
+
+./components/chat.tsx:87:3
+Type error: Type '{ wormgptEnabled: boolean; deepThinkingEnabled: boolean; webSearchEnabled: boolean; visibilityType: any; }' is missing the following properties from type '{ wormgptEnabled: boolean; deepThinkingEnabled: boolean; webSearchEnabled: boolean; fullstackModeEnabled: boolean; mobileModeEnabled: boolean; visibilityType: any; }': fullstackModeEnabled, mobileModeEnabled
+
+[0m [90m 85 |[39m 	useEffect(() [33m=>[39m {
+ [90m 86 |[39m 		currentModelIdRef[33m.[39mcurrent [33m=[39m currentModelId[33m;[39m
+[31m[1m>[22m[39m[90m 87 |[39m 		togglesRef[33m.[39mcurrent [33m=[39m {
+ [90m    |[39m 		[31m[1m^[22m[39m
+ [90m 88 |[39m 			wormgptEnabled[33m,[39m
+ [90m 89 |[39m 			deepThinkingEnabled[33m,[39m
+ [90m 90 |[39m 			webSearchEnabled[33m,[39m[0m
+Next.js build worker exited with code: 1 and signal: null

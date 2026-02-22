@@ -9,324 +9,292 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 
 interface PricingPageProps {
-  user?: User;
+	user?: User;
 }
 
 const pricingPlans = [
-  {
-    name: "Free",
-    price: "Rp 0",
-    period: "selamanya",
-    desc: "Coba semua fitur dasar tanpa biaya",
-    features: [
-      "AI Chat (UltraAgent)",
-      "Basic code editor",
-      "Riwayat chat terbatas",
-      "Syntax highlighting",
-      "Upload file standar",
-    ],
-    popular: false,
-    ctaText: "Paket Saat Ini",
-    ctaDisabled: true,
-  },
-  {
-    name: "Pro",
-    price: "Rp 20.000",
-    period: "per bulan",
-    desc: "Untuk yang butuh lebih — tanpa batas",
-    features: [
-      "AI Chat (UltraAgent Pro)",
-      "Semua fitur Free",
-      "Chat tanpa limit",
-      "Riwayat chat permanen",
-      "Code workspace lengkap",
-      "Full artifacts system",
-      "Priority support",
-    ],
-    popular: true,
-    ctaText: "Upgrade Sekarang",
-    ctaDisabled: false,
-  },
-  {
-    name: "1 Tahun",
-    price: "Rp 120.000",
-    period: "per tahun",
-    desc: "Hemat lebih banyak dengan paket tahunan",
-    features: [
-      "Semua fitur Pro",
-      "Dedicated support",
-      "Custom deployment",
-      "SLA guarantee",
-      "Advanced analytics",
-    ],
-    popular: false,
-    ctaText: "Upgrade Sekarang",
-    ctaDisabled: false,
-  },
+	{
+		name: "Free",
+		price: "Rp 0",
+		period: "selamanya",
+		desc: "Coba semua fitur dasar tanpa biaya",
+		features: [
+			"AI Chat (UltraAgent)",
+			"Basic code editor",
+			"Riwayat chat terbatas",
+			"Syntax highlighting",
+			"Upload file standar",
+		],
+		popular: false,
+		ctaText: "Paket Saat Ini",
+		ctaDisabled: true,
+	},
+	{
+		name: "Pro",
+		price: "Rp 20.000",
+		period: "per bulan",
+		desc: "Untuk yang butuh lebih — tanpa batas",
+		features: [
+			"AI Chat (UltraAgent Pro)",
+			"Semua fitur Free",
+			"Chat tanpa limit",
+			"Riwayat chat permanen",
+			"Code workspace lengkap",
+			"Full artifacts system",
+			"Priority support",
+		],
+		popular: true,
+		ctaText: "Upgrade Sekarang",
+		ctaDisabled: false,
+	},
+	{
+		name: "1 Tahun",
+		price: "Rp 120.000",
+		period: "per tahun",
+		desc: "Hemat lebih banyak dengan paket tahunan",
+		features: [
+			"Semua fitur Pro",
+			"Dedicated support",
+			"Custom deployment",
+			"SLA guarantee",
+			"Advanced analytics",
+		],
+		popular: false,
+		ctaText: "Upgrade Sekarang",
+		ctaDisabled: false,
+	},
 ];
 
 export function PricingPage({ user }: PricingPageProps) {
-  const router = useRouter();
-  const [selectedPlan, setSelectedPlan] = useState<string | null>(null);
-  const [loading, setLoading] = useState(false);
-  const [hasPendingRequest, setHasPendingRequest] = useState(false);
+	const router = useRouter();
+	const [selectedPlan, setSelectedPlan] = useState<string | null>(null);
+	const [loading, setLoading] = useState(false);
+	const [hasPendingRequest, setHasPendingRequest] = useState(false);
 
-  // Auto-redirect if user is already PRO
-  useEffect(() => {
-    if (user?.type === "pro") {
-      toast.success("Anda sudah menjadi member PRO!");
-      router.push("/chat");
-    }
-  }, [user, router]);
+	// Auto-redirect if user is already PRO
+	useEffect(() => {
+		if (user?.type === "pro") {
+			toast.success("Anda sudah menjadi member PRO!");
+			router.push("/chat");
+		}
+	}, [user, router]);
 
-  // Poll for upgrade status when there's a pending request
-  useEffect(() => {
-    if (!hasPendingRequest || !user) {
-      return;
-    }
+	// Poll for upgrade status when there's a pending request
+	useEffect(() => {
+		if (!hasPendingRequest || !user) {
+			return;
+		}
 
-    const pollInterval = setInterval(async () => {
-      try {
-        const response = await fetch("/api/user/upgrade-status");
-        const data = await response.json();
+		const pollInterval = setInterval(async () => {
+			try {
+				const response = await fetch("/api/user/upgrade-status");
+				const data = await response.json();
 
-        if (data.isPro) {
-          // User has been upgraded!
-          clearInterval(pollInterval);
-          setHasPendingRequest(false);
+				if (data.isPro) {
+					// User has been upgraded!
+					clearInterval(pollInterval);
+					setHasPendingRequest(false);
 
-          // Refresh session to get updated user data
-          await fetch("/api/auth/session/refresh", { method: "POST" });
+					// Refresh session to get updated user data
+					await fetch("/api/auth/session/refresh", { method: "POST" });
 
-          toast.success("🎉 Upgrade berhasil! Selamat datang di PRO!");
+					toast.success("🎉 Upgrade berhasil! Selamat datang di PRO!");
 
-          // Redirect to chat
-          setTimeout(() => {
-            window.location.href = "/chat"; // Force reload to ensure session is fresh
-          }, 1500);
-        }
-      } catch (error) {
-        console.error("Error polling upgrade status:", error);
-      }
-    }, 3000); // Poll every 3 seconds
+					// Redirect to chat
+					setTimeout(() => {
+						window.location.href = "/chat"; // Force reload to ensure session is fresh
+					}, 1500);
+				}
+			} catch (error) {
+				console.error("Error polling upgrade status:", error);
+			}
+		}, 3000); // Poll every 3 seconds
 
-    return () => clearInterval(pollInterval);
-  }, [hasPendingRequest, user]);
+		return () => clearInterval(pollInterval);
+	}, [hasPendingRequest, user]);
 
-  const handleUpgrade = async (planName: string) => {
-    setSelectedPlan(planName);
+	const handleUpgrade = async (planName: string) => {
+		setSelectedPlan(planName);
 
-    // If user is not logged in, redirect to login
-    if (!user) {
-      toast.error("Silakan login terlebih dahulu");
-      router.push("/login");
-      return;
-    }
+		// If user is not logged in, redirect to login
+		if (!user) {
+			toast.error("Silakan login terlebih dahulu");
+			router.push("/login");
+			return;
+		}
 
-    const plan = pricingPlans.find((p) => p.name === planName);
-    if (!plan) {
-      return;
-    }
+		const plan = pricingPlans.find((p) => p.name === planName);
+		if (!plan) return;
 
-    setLoading(true);
+		setLoading(true);
 
-    try {
-      // 1. Log request to database
-      const response = await fetch("/api/upgrade", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          planId: plan.name,
-          price: Number(plan.price.replace(/\D/g, "")),
-          months: plan.name === "1 Tahun" ? 12 : 1,
-        }),
-      });
+		try {
+			// Buat Invoice DompetX & dapatkan URL checkout
+			const response = await fetch("/api/payment/create-invoice", {
+				method: "POST",
+				headers: { "Content-Type": "application/json" },
+				body: JSON.stringify({
+					planId: plan.name,
+					price: Number(plan.price.replace(/\D/g, "")),
+					months: plan.name === "1 Tahun" ? 12 : 1,
+				}),
+			});
 
-      if (!response.ok) {
-        throw new Error("Failed to log request");
-      }
+			const data = await response.json();
 
-      toast.success("Request berhasil dicatat!");
+			if (response.status === 401 && data.code === "SESSION_INVALID") {
+				toast.error(
+					"Sesi tidak valid. Silakan logout dan login ulang terlebih dahulu.",
+				);
+				router.push("/login");
+				return;
+			}
 
-      // Start polling for approval
-      setHasPendingRequest(true);
-      toast.info("Menunggu admin approve upgrade Anda...", {
-        duration: 5000,
-      });
-    } catch (error) {
-      console.error("Failed to log upgrade request:", error);
-      toast.warning(
-        "Request dicatat dengan masalah, tapi tetap lanjut ke WhatsApp"
-      );
-      // We continue to WhatsApp even if logging fails, to not block the user
-    } finally {
-      setLoading(false);
-    }
+			if (data.checkoutUrl) {
+				// Redirect ke halaman checkout DompetX
+				toast.success("Mengarahkan ke halaman pembayaran...");
+				window.location.href = data.checkoutUrl;
+			} else if (data.fallback) {
+				// Fallback: polling manual (admin approvals)
+				toast.info("Invoice dibuat, menunggu konfirmasi...", {
+					duration: 5000,
+				});
+				setHasPendingRequest(true);
+			} else {
+				throw new Error(data.error || "Gagal membuat invoice");
+			}
+		} catch (error) {
+			console.error("Failed to create invoice:", error);
+			toast.error("Gagal membuat invoice pembayaran. Coba lagi nanti.");
+		} finally {
+			setLoading(false);
+			setTimeout(() => setSelectedPlan(null), 500);
+		}
+	};
 
-    // 2. Create WhatsApp message with complete format
-    const message =
-      "Halo admin Ultramaxo! 👋\n\n" +
-      "Saya ingin melakukan upgrade akun:\n\n" +
-      "━━━━━━━━━━━━━━━━━━━\n" +
-      "👤 INFORMASI USER:\n" +
-      `Nama: ${user.name || "User"}\n` +
-      `Email: ${user.email}\n\n` +
-      "📦 PAKET YANG DIPILIH:\n" +
-      `Paket: ${planName}\n` +
-      `Harga: ${plan.price}\n` +
-      `Periode: ${plan.period}\n` +
-      "━━━━━━━━━━━━━━━━━━━\n\n" +
-      "Mohon konfirmasi untuk proses pembayaran dan aktivasi. Terima kasih! 🙏";
+	return (
+		<div className="min-h-screen bg-gradient-to-b from-zinc-950 via-zinc-900 to-black">
+			{/* Background Effects */}
+			<div className="fixed inset-0 overflow-hidden pointer-events-none">
+				<div className="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-[600px] bg-indigo-600/5 rounded-full blur-3xl" />
+				<div className="absolute bottom-0 right-0 w-[500px] h-[500px] bg-purple-600/5 rounded-full blur-3xl" />
+			</div>
 
-    // Encode message for URL
-    const encodedMessage = encodeURIComponent(message);
-    const whatsappUrl = `https://wa.me/6285191689131?text=${encodedMessage}`;
+			<div className="relative max-w-7xl mx-auto px-4 py-12 sm:px-6 lg:px-8">
+				{/* Back Button */}
+				<Link
+					className="inline-flex items-center gap-2 text-sm text-gray-400 hover:text-white transition-colors mb-8"
+					href="/chat"
+				>
+					<ArrowLeft className="h-4 w-4" />
+					Kembali ke Chat
+				</Link>
 
-    // Open WhatsApp in new tab
-    const newWindow = window.open(whatsappUrl, "_blank");
+				{/* Header */}
+				<div className="text-center mb-16">
+					<h1 className="text-4xl sm:text-5xl font-bold mb-4 bg-gradient-to-r from-white via-gray-200 to-gray-400 bg-clip-text text-transparent">
+						Pilih Paket Anda
+					</h1>
+					<p className="text-gray-400 text-lg max-w-2xl mx-auto">
+						Tidak ada biaya tersembunyi. Upgrade kapan saja, downgrade kapan
+						saja.
+					</p>
+					<p className="text-sm text-gray-500 mt-2">
+						Pakai gratis selamanya atau upgrade untuk fitur unlimited
+					</p>
+				</div>
 
-    if (
-      !newWindow ||
-      newWindow.closed ||
-      typeof newWindow.closed === "undefined"
-    ) {
-      // Popup was blocked
-      toast.error("Popup diblokir! Silakan izinkan popup di browser Anda");
-      // Fallback: try to navigate in same tab
-      window.location.href = whatsappUrl;
-    } else {
-      toast.success("Mengarahkan ke WhatsApp...");
-    }
+				{/* Pricing Cards */}
+				<div className="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto">
+					{pricingPlans.map((plan, i) => (
+						<div
+							className={`relative rounded-3xl p-8 backdrop-blur-sm transition-all duration-300 hover:scale-105 ${
+								plan.popular
+									? "border-2 border-indigo-500/40 bg-gradient-to-b from-indigo-950/50 to-purple-950/30 shadow-[0_0_60px_rgba(99,102,241,0.15)]"
+									: "border border-white/10 bg-gradient-to-b from-white/5 to-white/[0.02] hover:border-white/20"
+							}`}
+							key={i}
+						>
+							{plan.popular && (
+								<div className="absolute -top-4 left-1/2 -translate-x-1/2 px-5 py-1.5 bg-gradient-to-r from-indigo-500 to-purple-600 rounded-full text-xs font-semibold shadow-lg shadow-indigo-500/30">
+									Paling Populer
+								</div>
+							)}
 
-    // Reset selection
-    setTimeout(() => {
-      setSelectedPlan(null);
-    }, 500);
-  };
+							<div className="mb-8">
+								<p className="font-semibold text-white text-lg mb-2">
+									{plan.name}
+								</p>
+								<div className="flex items-end gap-2 mb-3">
+									<span className="text-4xl font-extrabold text-white">
+										{plan.price}
+									</span>
+									<span className="text-sm text-gray-500 mb-2">
+										/ {plan.period}
+									</span>
+								</div>
+								<p className="text-sm text-gray-400 leading-relaxed">
+									{plan.desc}
+								</p>
+							</div>
 
-  return (
-    <div className="min-h-screen bg-gradient-to-b from-zinc-950 via-zinc-900 to-black">
-      {/* Background Effects */}
-      <div className="fixed inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-[600px] bg-indigo-600/5 rounded-full blur-3xl" />
-        <div className="absolute bottom-0 right-0 w-[500px] h-[500px] bg-purple-600/5 rounded-full blur-3xl" />
-      </div>
+							<ul className="space-y-4 mb-8">
+								{plan.features.map((feat, j) => (
+									<li
+										className="flex items-start gap-3 text-sm text-gray-300"
+										key={j}
+									>
+										<Check className="w-5 h-5 text-indigo-400 mt-0.5 shrink-0" />
+										<span className="leading-relaxed">{feat}</span>
+									</li>
+								))}
+							</ul>
 
-      <div className="relative max-w-7xl mx-auto px-4 py-12 sm:px-6 lg:px-8">
-        {/* Back Button */}
-        <Link
-          className="inline-flex items-center gap-2 text-sm text-gray-400 hover:text-white transition-colors mb-8"
-          href="/chat"
-        >
-          <ArrowLeft className="h-4 w-4" />
-          Kembali ke Chat
-        </Link>
+							<Button
+								className={`w-full justify-center h-11 rounded-2xl font-medium transition-all ${
+									plan.popular
+										? "bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white shadow-lg shadow-indigo-500/30"
+										: plan.ctaDisabled
+											? "bg-white/10 text-gray-400 cursor-not-allowed"
+											: "bg-white/10 hover:bg-white/20 text-white"
+								}`}
+								disabled={plan.ctaDisabled || loading}
+								onClick={(e) => {
+									e.preventDefault();
+									e.stopPropagation();
+									if (!plan.ctaDisabled) {
+										handleUpgrade(plan.name);
+									}
+								}}
+								type="button"
+							>
+								{loading && selectedPlan === plan.name
+									? "Processing..."
+									: plan.ctaText}
+							</Button>
+						</div>
+					))}
+				</div>
 
-        {/* Header */}
-        <div className="text-center mb-16">
-          <h1 className="text-4xl sm:text-5xl font-bold mb-4 bg-gradient-to-r from-white via-gray-200 to-gray-400 bg-clip-text text-transparent">
-            Pilih Paket Anda
-          </h1>
-          <p className="text-gray-400 text-lg max-w-2xl mx-auto">
-            Tidak ada biaya tersembunyi. Upgrade kapan saja, downgrade kapan
-            saja.
-          </p>
-          <p className="text-sm text-gray-500 mt-2">
-            Pakai gratis selamanya atau upgrade untuk fitur unlimited
-          </p>
-        </div>
-
-        {/* Pricing Cards */}
-        <div className="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto">
-          {pricingPlans.map((plan, i) => (
-            <div
-              className={`relative rounded-3xl p-8 backdrop-blur-sm transition-all duration-300 hover:scale-105 ${
-                plan.popular
-                  ? "border-2 border-indigo-500/40 bg-gradient-to-b from-indigo-950/50 to-purple-950/30 shadow-[0_0_60px_rgba(99,102,241,0.15)]"
-                  : "border border-white/10 bg-gradient-to-b from-white/5 to-white/[0.02] hover:border-white/20"
-              }`}
-              key={i}
-            >
-              {plan.popular && (
-                <div className="absolute -top-4 left-1/2 -translate-x-1/2 px-5 py-1.5 bg-gradient-to-r from-indigo-500 to-purple-600 rounded-full text-xs font-semibold shadow-lg shadow-indigo-500/30">
-                  Paling Populer
-                </div>
-              )}
-
-              <div className="mb-8">
-                <p className="font-semibold text-white text-lg mb-2">
-                  {plan.name}
-                </p>
-                <div className="flex items-end gap-2 mb-3">
-                  <span className="text-4xl font-extrabold text-white">
-                    {plan.price}
-                  </span>
-                  <span className="text-sm text-gray-500 mb-2">
-                    / {plan.period}
-                  </span>
-                </div>
-                <p className="text-sm text-gray-400 leading-relaxed">
-                  {plan.desc}
-                </p>
-              </div>
-
-              <ul className="space-y-4 mb-8">
-                {plan.features.map((feat, j) => (
-                  <li
-                    className="flex items-start gap-3 text-sm text-gray-300"
-                    key={j}
-                  >
-                    <Check className="w-5 h-5 text-indigo-400 mt-0.5 shrink-0" />
-                    <span className="leading-relaxed">{feat}</span>
-                  </li>
-                ))}
-              </ul>
-
-              <Button
-                className={`w-full justify-center h-11 rounded-2xl font-medium transition-all ${
-                  plan.popular
-                    ? "bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white shadow-lg shadow-indigo-500/30"
-                    : plan.ctaDisabled
-                      ? "bg-white/10 text-gray-400 cursor-not-allowed"
-                      : "bg-white/10 hover:bg-white/20 text-white"
-                }`}
-                disabled={plan.ctaDisabled || loading}
-                onClick={(e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  if (!plan.ctaDisabled) {
-                    handleUpgrade(plan.name);
-                  }
-                }}
-                type="button"
-              >
-                {loading && selectedPlan === plan.name
-                  ? "Processing..."
-                  : plan.ctaText}
-              </Button>
-            </div>
-          ))}
-        </div>
-
-        {/* Footer Note */}
-        <div className="text-center mt-16 space-y-4">
-          <p className="text-sm text-gray-500">
-            Dengan melanjutkan, Anda menyetujui{" "}
-            <Link
-              className="text-indigo-400 hover:text-indigo-300 underline"
-              href="/terms"
-            >
-              Syarat & Ketentuan
-            </Link>{" "}
-            kami.
-          </p>
-          <div className="flex items-center justify-center gap-6 text-xs text-gray-600">
-            <span>🔒 Pembayaran Aman</span>
-            <span>📱 Via WhatsApp</span>
-            <span>⚡ Aktivasi Instant</span>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
+				{/* Footer Note */}
+				<div className="text-center mt-16 space-y-4">
+					<p className="text-sm text-gray-500">
+						Dengan melanjutkan, Anda menyetujui{" "}
+						<Link
+							className="text-indigo-400 hover:text-indigo-300 underline"
+							href="/terms"
+						>
+							Syarat & Ketentuan
+						</Link>{" "}
+						kami.
+					</p>
+					<div className="flex items-center justify-center gap-6 text-xs text-gray-600">
+						<span>🔒 Pembayaran Aman</span>
+						<span>💳 Via DompetX</span>
+						<span>⚡ Aktivasi Instant</span>
+					</div>
+				</div>
+			</div>
+		</div>
+	);
 }

@@ -4,7 +4,7 @@
  * Separated from email.ts to allow client-side preview without nodemailer dependency.
  */
 export function getEmailWrapper(content: string) {
-  return `
+	return `
     <!DOCTYPE html>
     <html lang="id">
     <head>
