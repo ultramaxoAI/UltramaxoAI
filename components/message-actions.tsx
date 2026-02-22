@@ -40,7 +40,30 @@ export function PureMessageActions({
 			return;
 		}
 
-		await copyToClipboard(textFromParts);
+		let textToCopy = textFromParts;
+
+		// Jika teks mengandung raw p.call_tool("createDocument"...), ekstrak content-nya
+		const createDocMatch = textFromParts.match(
+			/p\.call_tool\s*\(\s*["']createDocument["']\s*,\s*(\{[\s\S]*\})\s*\)/,
+		);
+		if (createDocMatch) {
+			try {
+				const parsed = JSON.parse(createDocMatch[1]);
+				if (parsed?.content) {
+					textToCopy = parsed.content;
+				}
+			} catch {
+				// fallback ke text asli
+			}
+		}
+
+		// Unescape \n dan \t ke karakter aslinya
+		textToCopy = textToCopy
+			.replace(/\\n/g, "\n")
+			.replace(/\\t/g, "\t")
+			.replace(/\\"/g, '"');
+
+		await copyToClipboard(textToCopy);
 		toast.success("Copied to clipboard!");
 	};
 

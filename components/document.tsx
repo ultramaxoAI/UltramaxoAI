@@ -142,9 +142,9 @@ function PureDocumentToolCall({
 
 				<div className="text-left">
 					{`${getActionText(type, "present")} ${
-						type === "create" && "title" in args && args.title
+						type === "create" && args && "title" in args && args.title
 							? `"${args.title}"`
-							: type === "update" && "description" in args
+							: type === "update" && args && "description" in args
 								? `"${args.description}"`
 								: type === "request-suggestions"
 									? "for document"

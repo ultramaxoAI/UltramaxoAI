@@ -28,7 +28,18 @@ export function useAutoResume({
 		const mostRecentMessage = initialMessages.at(-1);
 
 		if (mostRecentMessage?.role === "user") {
-			resumeStream();
+			// Wrap in try-catch to handle TypeValidationError from old chats
+			// that have message_annotation format which no longer matches current schema
+			Promise.resolve()
+				.then(() => resumeStream())
+				.catch((err) => {
+					// Silently ignore resume errors for old chat formats
+					// The chat will still display stored messages normally
+					console.warn(
+						"[AutoResume] Stream resume failed (old format):",
+						err?.message || err,
+					);
+				});
 		}
 
 		// we intentionally run this once
