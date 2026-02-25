@@ -7,13 +7,18 @@ import {
 	UserIcon,
 	ZapIcon,
 } from "lucide-react";
-import type { User } from "next-auth";
 import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
 import { Button } from "./ui/button";
 import { Dialog, DialogContent, DialogTitle } from "./ui/dialog";
 import { Input } from "./ui/input";
 import { Label } from "./ui/label";
+
+interface SettingsUser {
+	email?: string | null;
+	isPro?: boolean;
+	messageCount?: number;
+}
 
 export function SettingsDialog({
 	open,
@@ -23,7 +28,7 @@ export function SettingsDialog({
 	onOpenChange: (open: boolean) => void;
 }) {
 	const [activeTab, setActiveTab] = useState<"profile" | "security">("profile");
-	const [user, setUser] = useState<User | null>(null);
+	const [user, setUser] = useState<SettingsUser | null>(null);
 	const [loading, setLoading] = useState(false);
 
 	const [passwordData, setPasswordData] = useState({
