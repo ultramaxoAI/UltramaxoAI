@@ -129,43 +129,24 @@ export function PricingPage({ user }: PricingPageProps) {
 		setLoading(true);
 
 		try {
-			// Buat Invoice DompetX & dapatkan URL checkout
-			const response = await fetch("/api/payment/create-invoice", {
+			const text = `Halo Admin, saya ingin upgrade ke paket *${planName}* seharga ${plan.price} untuk akun saya dengan email *${user.email}*. Mohon panduannya.`;
+			const waUrl = `https://wa.me/6285191689131?text=${encodeURIComponent(text)}`;
+
+			// Optionally log the request to the database
+			await fetch("/api/user/upgrade-request", {
 				method: "POST",
 				headers: { "Content-Type": "application/json" },
 				body: JSON.stringify({
-					planId: plan.name,
-					price: Number(plan.price.replace(/\D/g, "")),
-					months: plan.name === "1 Tahun" ? 12 : 1,
+					plan: planName,
+					price: plan.price,
 				}),
-			});
+			}).catch(() => {});
 
-			const data = await response.json();
-
-			if (response.status === 401 && data.code === "SESSION_INVALID") {
-				toast.error(
-					"Sesi tidak valid. Silakan logout dan login ulang terlebih dahulu.",
-				);
-				router.push("/login");
-				return;
-			}
-
-			if (data.checkoutUrl) {
-				// Redirect ke halaman checkout DompetX
-				toast.success("Mengarahkan ke halaman pembayaran...");
-				window.location.href = data.checkoutUrl;
-			} else if (data.fallback) {
-				// Fallback: polling manual (admin approvals)
-				toast.info("Invoice dibuat, menunggu konfirmasi...", {
-					duration: 5000,
-				});
-				setHasPendingRequest(true);
-			} else {
-				throw new Error(data.error || "Gagal membuat invoice");
-			}
+			toast.success("Mengarahkan ke WhatsApp Admin...");
+			window.open(waUrl, "_blank");
 		} catch (error) {
-			console.error("Failed to create invoice:", error);
-			toast.error("Gagal membuat invoice pembayaran. Coba lagi nanti.");
+			console.error("Failed to process upgrade:", error);
+			toast.error("Terjadi kesalahan. Silakan coba lagi.");
 		} finally {
 			setLoading(false);
 			setTimeout(() => setSelectedPlan(null), 500);
@@ -173,7 +154,7 @@ export function PricingPage({ user }: PricingPageProps) {
 	};
 
 	return (
-		<div className="min-h-screen bg-gradient-to-b from-zinc-950 via-zinc-900 to-black">
+		<div className="min-h-screen bg-linear-to-b from-zinc-950 via-zinc-900 to-black">
 			{/* Background Effects */}
 			<div className="fixed inset-0 overflow-hidden pointer-events-none">
 				<div className="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-[600px] bg-indigo-600/5 rounded-full blur-3xl" />
@@ -192,7 +173,7 @@ export function PricingPage({ user }: PricingPageProps) {
 
 				{/* Header */}
 				<div className="text-center mb-16">
-					<h1 className="text-4xl sm:text-5xl font-bold mb-4 bg-gradient-to-r from-white via-gray-200 to-gray-400 bg-clip-text text-transparent">
+					<h1 className="text-4xl sm:text-5xl font-bold mb-4 bg-linear-to-r from-white via-gray-200 to-gray-400 bg-clip-text text-transparent">
 						Pilih Paket Anda
 					</h1>
 					<p className="text-gray-400 text-lg max-w-2xl mx-auto">
@@ -206,17 +187,17 @@ export function PricingPage({ user }: PricingPageProps) {
 
 				{/* Pricing Cards */}
 				<div className="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto">
-					{pricingPlans.map((plan, i) => (
+					{pricingPlans.map((plan) => (
 						<div
 							className={`relative rounded-3xl p-8 backdrop-blur-sm transition-all duration-300 hover:scale-105 ${
 								plan.popular
-									? "border-2 border-indigo-500/40 bg-gradient-to-b from-indigo-950/50 to-purple-950/30 shadow-[0_0_60px_rgba(99,102,241,0.15)]"
-									: "border border-white/10 bg-gradient-to-b from-white/5 to-white/[0.02] hover:border-white/20"
+									? "border-2 border-indigo-500/40 bg-linear-to-b from-indigo-950/50 to-purple-950/30 shadow-[0_0_60px_rgba(99,102,241,0.15)]"
+									: "border border-white/10 bg-linear-to-b from-white/5 to-white/2 hover:border-white/20"
 							}`}
-							key={i}
+							key={plan.name}
 						>
 							{plan.popular && (
-								<div className="absolute -top-4 left-1/2 -translate-x-1/2 px-5 py-1.5 bg-gradient-to-r from-indigo-500 to-purple-600 rounded-full text-xs font-semibold shadow-lg shadow-indigo-500/30">
+								<div className="absolute -top-4 left-1/2 -translate-x-1/2 px-5 py-1.5 bg-linear-to-r from-indigo-500 to-purple-600 rounded-full text-xs font-semibold shadow-lg shadow-indigo-500/30">
 									Paling Populer
 								</div>
 							)}
@@ -239,10 +220,10 @@ export function PricingPage({ user }: PricingPageProps) {
 							</div>
 
 							<ul className="space-y-4 mb-8">
-								{plan.features.map((feat, j) => (
+								{plan.features.map((feat) => (
 									<li
 										className="flex items-start gap-3 text-sm text-gray-300"
-										key={j}
+										key={feat}
 									>
 										<Check className="w-5 h-5 text-indigo-400 mt-0.5 shrink-0" />
 										<span className="leading-relaxed">{feat}</span>
@@ -253,7 +234,7 @@ export function PricingPage({ user }: PricingPageProps) {
 							<Button
 								className={`w-full justify-center h-11 rounded-2xl font-medium transition-all ${
 									plan.popular
-										? "bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white shadow-lg shadow-indigo-500/30"
+										? "bg-linear-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white shadow-lg shadow-indigo-500/30"
 										: plan.ctaDisabled
 											? "bg-white/10 text-gray-400 cursor-not-allowed"
 											: "bg-white/10 hover:bg-white/20 text-white"

@@ -414,32 +414,38 @@ export function Chat({
 									</div>
 								</div>
 							) : (
-								<MultimodalInput
-									attachments={attachments}
-									chatId={id}
-									deepThinkingEnabled={deepThinkingEnabled}
-									input={input}
-									messages={messages}
-									onModelChange={setCurrentModelId}
-									selectedModelId={currentModelId}
-									selectedVisibilityType={visibilityType}
-									sendMessage={sendMessage}
-									setAttachments={setAttachments}
-									setDeepThinkingEnabled={setDeepThinkingEnabled}
-									setInput={setInput}
-									setMessages={setMessages}
-									setWebSearchEnabled={setWebSearchEnabled}
-									setWormgptEnabled={setWormgptEnabled}
-									fullstackModeEnabled={fullstackModeEnabled}
-									setFullstackModeEnabled={setFullstackModeEnabled}
-									mobileModeEnabled={mobileModeEnabled}
-									setMobileModeEnabled={setMobileModeEnabled}
-									status={status}
-									stop={stop}
-									user={user}
-									webSearchEnabled={webSearchEnabled}
-									wormgptEnabled={wormgptEnabled}
-								/>
+								<div className="flex flex-col gap-2 relative">
+									<MultimodalInput
+										attachments={attachments}
+										chatId={id}
+										deepThinkingEnabled={deepThinkingEnabled}
+										input={input}
+										messages={messages}
+										onModelChange={setCurrentModelId}
+										selectedModelId={currentModelId}
+										selectedVisibilityType={visibilityType}
+										sendMessage={sendMessage}
+										setAttachments={setAttachments}
+										setDeepThinkingEnabled={setDeepThinkingEnabled}
+										setInput={setInput}
+										setMessages={setMessages}
+										setWebSearchEnabled={setWebSearchEnabled}
+										setWormgptEnabled={setWormgptEnabled}
+										fullstackModeEnabled={fullstackModeEnabled}
+										setFullstackModeEnabled={setFullstackModeEnabled}
+										mobileModeEnabled={mobileModeEnabled}
+										setMobileModeEnabled={setMobileModeEnabled}
+										status={status}
+										stop={stop}
+										user={user}
+										webSearchEnabled={webSearchEnabled}
+										wormgptEnabled={wormgptEnabled}
+									/>
+									<p className="text-center text-[10px] text-zinc-500 max-w-xl mx-auto mt-1 absolute -bottom-6 left-0 right-0">
+										UltraAgent can make mistakes. Consider verifying important
+										information.
+									</p>
+								</div>
 							)}
 						</div>
 					</div>

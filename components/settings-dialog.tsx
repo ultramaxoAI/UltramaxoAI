@@ -7,6 +7,7 @@ import {
 	UserIcon,
 	ZapIcon,
 } from "lucide-react";
+import type { User } from "next-auth";
 import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
 import { Button } from "./ui/button";
@@ -22,7 +23,7 @@ export function SettingsDialog({
 	onOpenChange: (open: boolean) => void;
 }) {
 	const [activeTab, setActiveTab] = useState<"profile" | "security">("profile");
-	const [user, setUser] = useState<any>(null);
+	const [user, setUser] = useState<User | null>(null);
 	const [loading, setLoading] = useState(false);
 
 	const [passwordData, setPasswordData] = useState({
@@ -98,6 +99,7 @@ export function SettingsDialog({
 						<button
 							className={`flex items-center gap-3 px-3 py-2 rounded-xl text-sm transition-all ${activeTab === "profile" ? "bg-white text-black font-bold shadow-lg" : "text-zinc-500 hover:text-white hover:bg-zinc-800/50"}`}
 							onClick={() => setActiveTab("profile")}
+							type="button"
 						>
 							<UserIcon size={16} />
 							Profil
@@ -105,6 +107,7 @@ export function SettingsDialog({
 						<button
 							className={`flex items-center gap-3 px-3 py-2 rounded-xl text-sm transition-all ${activeTab === "security" ? "bg-white text-black font-bold shadow-lg" : "text-zinc-500 hover:text-white hover:bg-zinc-800/50"}`}
 							onClick={() => setActiveTab("security")}
+							type="button"
 						>
 							<LockIcon size={16} />
 							Keamanan
@@ -195,7 +198,7 @@ export function SettingsDialog({
 									</div>
 								</div>
 							</div>
-						) : (
+						) : activeTab === "security" ? (
 							<form
 								className="flex flex-col gap-5"
 								onSubmit={handlePasswordChange}
@@ -269,7 +272,7 @@ export function SettingsDialog({
 									)}
 								</Button>
 							</form>
-						)}
+						) : null}
 					</main>
 				</div>
 			</DialogContent>

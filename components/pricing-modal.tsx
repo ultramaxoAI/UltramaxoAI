@@ -129,33 +129,24 @@ export function PricingModal({ open, onOpenChange, user }: PricingModalProps) {
 		setLoading(true);
 
 		try {
-			// Buat Invoice DompetX & redirect ke URL checkout
-			const response = await fetch("/api/payment/create-invoice", {
+			const text = `Halo Admin, saya ingin upgrade ke paket *${planName}* seharga ${plan.price} untuk akun saya dengan email *${user.email}*. Mohon panduannya.`;
+			const waUrl = `https://wa.me/6285191689131?text=${encodeURIComponent(text)}`;
+
+			// Optionally log the request to the database
+			await fetch("/api/user/upgrade-request", {
 				method: "POST",
 				headers: { "Content-Type": "application/json" },
 				body: JSON.stringify({
-					planId: plan.name,
-					price: Number(plan.price.replace(/\D/g, "")),
-					months: plan.name === "1 Tahun" ? 12 : 1,
+					plan: planName,
+					price: plan.price,
 				}),
-			});
+			}).catch(() => {});
 
-			const data = await response.json();
-
-			if (data.checkoutUrl) {
-				toast.success("Mengarahkan ke halaman pembayaran...");
-				window.location.href = data.checkoutUrl;
-			} else if (data.fallback) {
-				toast.info("Invoice dibuat, menunggu konfirmasi...", {
-					duration: 5000,
-				});
-				setHasPendingRequest(true);
-			} else {
-				throw new Error(data.error || "Gagal membuat invoice");
-			}
+			toast.success("Mengarahkan ke WhatsApp Admin...");
+			window.open(waUrl, "_blank");
 		} catch (error) {
-			console.error("Failed to create invoice:", error);
-			toast.error("Gagal membuat invoice. Coba lagi nanti.");
+			console.error("Failed to process upgrade:", error);
+			toast.error("Gagal memproses upgrade. Coba lagi nanti.");
 		} finally {
 			setLoading(false);
 			setTimeout(() => {

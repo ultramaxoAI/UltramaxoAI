@@ -3,6 +3,7 @@
 import {
 	LayoutDashboard,
 	LogOut,
+	MessageCircle,
 	MoreVertical,
 	Settings,
 	User as UserIcon,
@@ -193,6 +194,14 @@ export function SidebarUserNav({
 								}
 							>
 								{resolvedTheme === "light" ? "Dark Mode" : "Light Mode"}
+							</DropdownMenuItem>
+
+							<DropdownMenuItem
+								className="cursor-pointer gap-2 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-lg focus:bg-zinc-100 dark:focus:bg-zinc-800"
+								onSelect={() => window.open("https://t.me/anjiingg", "_blank")}
+							>
+								<MessageCircle className="h-4 w-4" />
+								Hubungi Kami
 							</DropdownMenuItem>
 
 							<DropdownMenuSeparator className="bg-zinc-200 dark:bg-zinc-800" />
