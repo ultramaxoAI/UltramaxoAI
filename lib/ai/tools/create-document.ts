@@ -19,7 +19,9 @@ export const createDocument = ({
 				.describe("The type of document to create"),
 			content: z
 				.string()
-				.describe("The initial content of the document (code, text, or csv)"),
+				.describe(
+					"The FULL initial content of the document (code, text, or csv). YOU MUST PUT THE FINAL, COMPLETE CODE OR TEXT HERE. DO NOT LEAVE THIS EMPTY.",
+				),
 		}),
 		execute: ({
 			title,
@@ -34,6 +36,9 @@ export const createDocument = ({
 
 			console.log(
 				`[Tool: createDocument] Triggered for title: ${title}, kind: ${kind}`,
+			);
+			console.log(
+				`[Tool: createDocument] Content length received: ${content?.length || 0} chars. Preview: ${content ? content.substring(0, 50).replace(/\n/g, "\\n") : "EMPTY"}`,
 			);
 
 			// Send document metadata events in the correct format
