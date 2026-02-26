@@ -38,10 +38,9 @@ function ForgotPasswordForm() {
 			});
 
 			const text = await response.text();
-			// eslint-disable-next-line @typescript-eslint/no-explicit-any
-			let data: any;
+			let data: { error?: string; message?: string };
 			try {
-				data = JSON.parse(text);
+				data = JSON.parse(text) as { error?: string; message?: string };
 			} catch {
 				throw new Error("Server error: Invalid response");
 			}
@@ -56,8 +55,9 @@ function ForgotPasswordForm() {
 			setTimeout(() => {
 				router.push("/login");
 			}, 3000);
-		} catch (err: any) {
-			setError(err.message || "Terjadi kesalahan");
+		} catch (err) {
+			const error = err as Error;
+			setError(error.message || "Terjadi kesalahan");
 		} finally {
 			setLoading(false);
 		}

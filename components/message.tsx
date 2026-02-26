@@ -299,6 +299,7 @@ const PurePreviewMessage = ({
 														id: string;
 														title: string;
 														kind: "image" | "text" | "code" | "sheet";
+														content?: string;
 													}
 												}
 												isReadonly={isReadonly}
