@@ -332,14 +332,13 @@ export async function getMessagesByChatId({ id }: { id: string }) {
 
 export async function getTodayMessageCount(userId: string): Promise<number> {
 	try {
-		const startOfDay = new Date();
-		startOfDay.setHours(0, 0, 0, 0);
-
 		const result = await db
 			.select({ count: count() })
 			.from(message)
 			.innerJoin(chat, eq(message.chatId, chat.id))
-			.where(and(eq(chat.userId, userId), gte(message.createdAt, startOfDay)));
+			.where(
+				and(eq(chat.userId, userId), sql`${message.createdAt} >= CURRENT_DATE`),
+			);
 		return result[0]?.count || 0;
 	} catch (error) {
 		console.error("Database Error (getTodayMessageCount):", error);
