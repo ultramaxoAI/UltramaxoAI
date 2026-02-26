@@ -98,17 +98,27 @@ export async function POST(request: Request) {
 				contentType: mimeType,
 				contentDisposition: `inline; filename="${safeName}"`,
 			});
-		} catch (error: any) {
+		} catch (error: unknown) {
 			console.error("Upload error details:", error);
 			return NextResponse.json(
-				{ error: error?.message || "Upload failed" },
+				{
+					error:
+						error instanceof Error
+							? error.message
+							: "Gagal mengunggah file. Silakan coba lagi.",
+				},
 				{ status: 500 },
 			);
 		}
-	} catch (error: any) {
+	} catch (error: unknown) {
 		console.error("Outer upload error details:", error);
 		return NextResponse.json(
-			{ error: "Failed to process request" },
+			{
+				error:
+					error instanceof Error
+						? error.message
+						: "Terjadi kesalahan internal server.",
+			},
 			{ status: 500 },
 		);
 	}

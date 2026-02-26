@@ -17,7 +17,7 @@ class Logger {
 		return level === "warn" || level === "error";
 	}
 
-	private sanitize(data: any): any {
+	private sanitize(data: unknown): unknown {
 		if (typeof data === "string") {
 			// Mask sensitive patterns
 			return data
@@ -28,7 +28,7 @@ class Logger {
 		}
 
 		if (typeof data === "object" && data !== null) {
-			const sanitized = { ...data };
+			const sanitized = { ...data } as Record<string, any>;
 			const sensitiveKeys = [
 				"password",
 				"token",
@@ -50,25 +50,25 @@ class Logger {
 		return data;
 	}
 
-	debug(message: string, ...args: any[]) {
+	debug(message: string, ...args: unknown[]) {
 		if (this.shouldLog("debug")) {
 			console.log(`[DEBUG] ${message}`, ...args.map((a) => this.sanitize(a)));
 		}
 	}
 
-	info(message: string, ...args: any[]) {
+	info(message: string, ...args: unknown[]) {
 		if (this.shouldLog("info")) {
 			console.info(`[INFO] ${message}`, ...args.map((a) => this.sanitize(a)));
 		}
 	}
 
-	warn(message: string, ...args: any[]) {
+	warn(message: string, ...args: unknown[]) {
 		if (this.shouldLog("warn")) {
 			console.warn(`[WARN] ${message}`, ...args.map((a) => this.sanitize(a)));
 		}
 	}
 
-	error(message: string, error?: any, ...args: any[]) {
+	error(message: string, error?: unknown, ...args: unknown[]) {
 		if (this.shouldLog("error")) {
 			const sanitizedError =
 				error instanceof Error

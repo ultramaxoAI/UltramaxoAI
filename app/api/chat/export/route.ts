@@ -107,7 +107,10 @@ export async function GET(request: Request) {
 	}
 }
 
-function formatAsMarkdown(title: string, messages: any[]): string {
+function formatAsMarkdown(
+	title: string,
+	messages: { role: string; parts: unknown; attachments?: unknown }[],
+): string {
 	let md = `# ${title}\n\n`;
 	md += `*Exported on ${new Date().toLocaleString()}*\n\n---\n\n`;
 
@@ -115,7 +118,9 @@ function formatAsMarkdown(title: string, messages: any[]): string {
 		const role = msg.role === "user" ? "👤 User" : "🤖 Assistant";
 		md += `## ${role}\n\n`;
 
-		const textParts = msg.parts.filter((p: any) => p.type === "text");
+		const textParts = (Array.isArray(msg.parts) ? msg.parts : []).filter(
+			(p: { type?: string }) => p && typeof p === "object" && p.type === "text",
+		) as { type: string; text?: string }[];
 		for (const part of textParts) {
 			md += `${part.text}\n\n`;
 		}
@@ -126,7 +131,10 @@ function formatAsMarkdown(title: string, messages: any[]): string {
 	return md;
 }
 
-function formatAsText(title: string, messages: any[]): string {
+function formatAsText(
+	title: string,
+	messages: { role: string; parts: unknown; attachments?: unknown }[],
+): string {
 	let txt = `${title}\n`;
 	txt += `${"=".repeat(title.length)}\n\n`;
 	txt += `Exported on ${new Date().toLocaleString()}\n\n`;
@@ -136,9 +144,13 @@ function formatAsText(title: string, messages: any[]): string {
 		const role = msg.role === "user" ? "USER" : "ASSISTANT";
 		txt += `[${role}]\n`;
 
-		const textParts = msg.parts.filter((p: any) => p.type === "text");
+		const textParts = (Array.isArray(msg.parts) ? msg.parts : []).filter(
+			(p: any) => p && typeof p === "object" && p.type === "text",
+		);
 		for (const part of textParts) {
-			txt += `${part.text}\n\n`;
+			if (part.text) {
+				txt += `${part.text}\n\n`;
+			}
 		}
 
 		txt += `${"-".repeat(50)}\n\n`;

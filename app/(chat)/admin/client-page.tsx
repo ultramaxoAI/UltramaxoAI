@@ -20,10 +20,27 @@ import { getEmailWrapper } from "@/lib/email-wrapper";
 
 export default function AdminDashboardClient() {
 	const [activeTab, setActiveTab] = useState<
-		"vouchers" | "users" | "upgrade-requests" | "insights"
+		"vouchers" | "users" | "upgrade-requests" | "insights" | "email-tools"
 	>("vouchers");
-	const [users, setUsers] = useState<any[]>([]);
-	const [upgradeRequests, setUpgradeRequests] = useState<any[]>([]);
+	const [users, setUsers] = useState<
+		{
+			id: string;
+			email: string;
+			name?: string;
+			role: string;
+			planType: string;
+		}[]
+	>([]);
+	const [upgradeRequests, setUpgradeRequests] = useState<
+		{
+			id: string;
+			userId: string;
+			status: string;
+			createdAt: string;
+			planType: string;
+			User?: { email: string };
+		}[]
+	>([]);
 	const [loading, setLoading] = useState(false);
 	const [searchQuery, setSearchQuery] = useState("");
 
@@ -34,10 +51,25 @@ export default function AdminDashboardClient() {
 		durationMonths: 1,
 	});
 	const [_voucherMessage, _setVoucherMessage] = useState("");
-	const [stats, setStats] = useState({ totalUsers: 0, activeUsers: 0 });
+	const [stats, setStats] = useState<{
+		totalUsers: number;
+		activeUsers: number;
+	}>({ totalUsers: 0, activeUsers: 0 });
 	const [insights, setInsights] = useState<{
-		realtimeTraffic: any[];
-		authenticatedVisitors: any[];
+		realtimeTraffic: {
+			path: string;
+			totalHits: number;
+			uniqueVisitors: number;
+		}[];
+		authenticatedVisitors: {
+			id: string;
+			name: string | null;
+			email: string | null;
+			isPro: boolean;
+			chatCount: number;
+			messageCount: number;
+			lastActiveAt: string | null;
+		}[];
 	} | null>(null);
 
 	const fetchInsights = useCallback(async () => {
@@ -130,7 +162,10 @@ export default function AdminDashboardClient() {
 		}
 	};
 
-	const handleUpdateUser = async (userId: string, updates: any) => {
+	const handleUpdateUser = async (
+		userId: string,
+		updates: Record<string, unknown>,
+	) => {
 		try {
 			const res = await fetch("/api/admin/users", {
 				method: "PATCH",
@@ -269,6 +304,7 @@ export default function AdminDashboardClient() {
 
 				<nav className="flex flex-col gap-2">
 					<button
+						type="button"
 						className={`flex items-center gap-3 px-4 py-2.5 rounded-xl transition-all ${activeTab === "vouchers" ? "bg-zinc-800 text-white shadow-lg" : "text-zinc-500 hover:text-white hover:bg-zinc-800/50"}`}
 						onClick={() => setActiveTab("vouchers")}
 					>
@@ -276,6 +312,7 @@ export default function AdminDashboardClient() {
 						<span className="text-sm font-medium">Vouchers</span>
 					</button>
 					<button
+						type="button"
 						className={`flex items-center gap-3 px-4 py-2.5 rounded-xl transition-all ${activeTab === "insights" ? "bg-zinc-800 text-white shadow-lg" : "text-zinc-500 hover:text-white hover:bg-zinc-800/50"}`}
 						onClick={() => setActiveTab("insights")}
 					>
@@ -283,6 +320,7 @@ export default function AdminDashboardClient() {
 						<span className="text-sm font-medium">Insights</span>
 					</button>
 					<button
+						type="button"
 						className={`flex items-center gap-3 px-4 py-2.5 rounded-xl transition-all ${activeTab === "users" ? "bg-zinc-800 text-white shadow-lg" : "text-zinc-500 hover:text-white hover:bg-zinc-800/50"}`}
 						onClick={() => setActiveTab("users")}
 					>
@@ -290,6 +328,7 @@ export default function AdminDashboardClient() {
 						<span className="text-sm font-medium">Users</span>
 					</button>
 					<button
+						type="button"
 						className={`flex items-center gap-3 px-4 py-2.5 rounded-xl transition-all ${activeTab === "upgrade-requests" ? "bg-zinc-800 text-white shadow-lg" : "text-zinc-500 hover:text-white hover:bg-zinc-800/50"}`}
 						onClick={() => setActiveTab("upgrade-requests")}
 					>
@@ -297,8 +336,9 @@ export default function AdminDashboardClient() {
 						<span className="text-sm font-medium">Upgrade Requests</span>
 					</button>
 					<button
-						className={`flex items-center gap-3 px-4 py-2.5 rounded-xl transition-all ${activeTab === ("email-tools" as any) ? "bg-zinc-800 text-white shadow-lg" : "text-zinc-500 hover:text-white hover:bg-zinc-800/50"}`}
-						onClick={() => setActiveTab("email-tools" as any)}
+						type="button"
+						className={`flex items-center gap-3 px-4 py-2.5 rounded-xl transition-all ${activeTab === "email-tools" ? "bg-zinc-800 text-white shadow-lg" : "text-zinc-500 hover:text-white hover:bg-zinc-800/50"}`}
+						onClick={() => setActiveTab("email-tools")}
 					>
 						<MessageSquareIcon size={18} />
 						<span className="text-sm font-medium">Email Tools</span>
@@ -306,7 +346,10 @@ export default function AdminDashboardClient() {
 				</nav>
 
 				<div className="mt-auto">
-					<button className="flex items-center gap-3 px-4 py-2.5 rounded-xl text-zinc-500 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-400/10 transition-all w-full leading-none">
+					<button
+						type="button"
+						className="flex items-center gap-3 px-4 py-2.5 rounded-xl text-zinc-500 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-400/10 transition-all w-full leading-none"
+					>
 						<LogOutIcon size={18} />
 						<span className="text-sm font-medium">Exit Admin</span>
 					</button>
@@ -339,10 +382,14 @@ export default function AdminDashboardClient() {
 
 							<div className="space-y-5">
 								<div className="space-y-2">
-									<label className="text-xs font-bold text-zinc-500 uppercase tracking-widest ml-1">
+									<label
+										htmlFor="voucher_code"
+										className="text-xs font-bold text-zinc-500 uppercase tracking-widest ml-1"
+									>
 										Voucher Code
 									</label>
 									<input
+										id="voucher_code"
 										className="w-full bg-zinc-50 dark:bg-[#18181b] border border-zinc-200 dark:border-zinc-800 rounded-2xl p-4 text-sm focus:outline-none focus:ring-2 focus:ring-zinc-300 dark:focus:ring-zinc-700 transition-all placeholder:text-zinc-400 dark:placeholder:text-zinc-700"
 										onChange={(e) =>
 											setVoucherData({ ...voucherData, code: e.target.value })
@@ -353,10 +400,14 @@ export default function AdminDashboardClient() {
 								</div>
 
 								<div className="space-y-2">
-									<label className="text-xs font-bold text-zinc-500 uppercase tracking-widest ml-1">
+									<label
+										htmlFor="voucher_type"
+										className="text-xs font-bold text-zinc-500 uppercase tracking-widest ml-1"
+									>
 										Voucher Type
 									</label>
 									<select
+										id="voucher_type"
 										className="w-full bg-zinc-50 dark:bg-[#18181b] border border-zinc-200 dark:border-zinc-800 rounded-2xl p-4 text-sm focus:outline-none appearance-none"
 										onChange={(e) =>
 											setVoucherData({ ...voucherData, type: e.target.value })
@@ -370,10 +421,14 @@ export default function AdminDashboardClient() {
 
 								{voucherData.type === "PRO" ? (
 									<div className="space-y-2 animate-in fade-in slide-in-from-top-2">
-										<label className="text-xs font-bold text-zinc-500 uppercase tracking-widest ml-1">
+										<label
+											htmlFor="voucher_duration"
+											className="text-xs font-bold text-zinc-500 uppercase tracking-widest ml-1"
+										>
 											Duration (Months)
 										</label>
 										<input
+											id="voucher_duration"
 											className="w-full bg-zinc-50 dark:bg-[#18181b] border border-zinc-200 dark:border-zinc-800 rounded-2xl p-4 text-sm focus:outline-none focus:ring-2 focus:ring-zinc-300 dark:focus:ring-zinc-700"
 											onChange={(e) =>
 												setVoucherData({
@@ -387,10 +442,14 @@ export default function AdminDashboardClient() {
 									</div>
 								) : (
 									<div className="space-y-2 animate-in fade-in slide-in-from-top-2">
-										<label className="text-xs font-bold text-zinc-500 uppercase tracking-widest ml-1">
+										<label
+											htmlFor="voucher_credit"
+											className="text-xs font-bold text-zinc-500 uppercase tracking-widest ml-1"
+										>
 											Credit Amount
 										</label>
 										<input
+											id="voucher_credit"
 											className="w-full bg-zinc-50 dark:bg-[#18181b] border border-zinc-200 dark:border-zinc-800 rounded-2xl p-4 text-sm focus:outline-none focus:ring-2 focus:ring-zinc-300 dark:focus:ring-zinc-700"
 											onChange={(e) =>
 												setVoucherData({
@@ -405,6 +464,7 @@ export default function AdminDashboardClient() {
 								)}
 
 								<button
+									type="button"
 									className="w-full bg-zinc-900 text-white dark:bg-white dark:text-black font-bold py-4 rounded-2xl hover:bg-zinc-800 dark:hover:bg-zinc-200 transition-all active:scale-[0.98] shadow-xl mt-4"
 									onClick={handleVoucherSubmit}
 								>
@@ -636,6 +696,7 @@ export default function AdminDashboardClient() {
 								/>
 							</div>
 							<button
+								type="button"
 								className="text-white bg-zinc-900 dark:bg-zinc-800 py-2 px-4 rounded-xl text-xs font-bold hover:bg-zinc-800 dark:hover:bg-zinc-700 transition-all"
 								onClick={fetchUsers}
 							>
@@ -684,7 +745,7 @@ export default function AdminDashboardClient() {
 												</td>
 											</tr>
 										) : (
-											filteredUsers.map((user) => (
+											filteredUsers.map((user: any) => (
 												<tr
 													className="hover:bg-zinc-800/20 transition-colors group"
 													key={user.id}
@@ -740,6 +801,7 @@ export default function AdminDashboardClient() {
 													<td className="p-4 text-right">
 														<div className="flex flex-wrap sm:flex-nowrap items-center justify-end gap-1.5 sm:gap-2 opacity-100 lg:opacity-0 group-hover:opacity-100 transition-opacity">
 															<button
+																type="button"
 																className="p-2.5 rounded-xl bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-900 dark:text-white transition-all shadow-lg border border-zinc-200 dark:border-zinc-700/50"
 																onClick={() =>
 																	handleUpdateUser(user.id, {
@@ -756,6 +818,7 @@ export default function AdminDashboardClient() {
 																)}
 															</button>
 															<button
+																type="button"
 																className="p-2.5 rounded-xl bg-zinc-100 dark:bg-zinc-800 hover:bg-blue-50 dark:hover:bg-blue-500/20 text-zinc-500 hover:text-blue-600 dark:text-zinc-400 dark:hover:text-blue-400 transition-all shadow-lg border border-zinc-200 dark:border-zinc-700/50"
 																onClick={() => {
 																	// Pre-fill email in Email Tools
@@ -772,6 +835,7 @@ export default function AdminDashboardClient() {
 																<MessageSquareIcon size={16} />
 															</button>
 															<button
+																type="button"
 																className="p-2.5 rounded-xl bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-900 dark:text-white transition-all shadow-lg border border-zinc-200 dark:border-zinc-700/50"
 																onClick={() => {
 																	const newLimit = prompt(
@@ -789,6 +853,7 @@ export default function AdminDashboardClient() {
 																<Settings2Icon size={16} />
 															</button>
 															<button
+																type="button"
 																className="p-2.5 rounded-xl bg-zinc-100 dark:bg-zinc-800 hover:bg-red-50 dark:hover:bg-red-500/20 text-zinc-500 hover:text-red-600 dark:text-zinc-400 dark:hover:text-red-400 transition-all shadow-lg border border-zinc-200 dark:border-zinc-700/50"
 																onClick={() => handleDeleteUser(user.id)}
 																title="Delete User"
@@ -855,42 +920,42 @@ export default function AdminDashboardClient() {
 												</td>
 											</tr>
 										) : (
-											upgradeRequests.map((req) => (
+											upgradeRequests.map((request: any) => (
 												<tr
 													className="hover:bg-zinc-800/20 transition-colors group border-b border-zinc-800/30"
-													key={req.id}
+													key={request.id}
 												>
 													<td className="p-4">
 														<div className="flex flex-col">
 															<span className="font-bold text-white text-sm">
-																{req.username || "Unnamed"}
+																{request.username || "Unnamed"}
 															</span>
 															<span className="text-zinc-500 text-xs">
-																{req.email}
+																{request.email}
 															</span>
 														</div>
 													</td>
 													<td className="p-4">
 														<span className="text-zinc-300 font-medium text-sm">
-															{req.planId}
+															{request.planId}
 														</span>
 													</td>
 													<td className="p-4">
 														<span className="text-zinc-300 font-medium">
-															{req.months} bulan
+															{request.months} bulan
 														</span>
 													</td>
 													<td className="p-4">
 														<span className="text-yellow-400 font-bold">
-															Rp {req.price?.toLocaleString("id-ID")}
+															Rp {request.price?.toLocaleString("id-ID")}
 														</span>
 													</td>
 													<td className="p-4">
-														{req.status === "approved" ? (
+														{request.status === "approved" ? (
 															<span className="px-2.5 py-0.5 bg-green-400/10 text-green-400 text-[10px] font-black uppercase tracking-widest border border-green-400/20 rounded-full w-fit">
 																Approved
 															</span>
-														) : req.status === "rejected" ? (
+														) : request.status === "rejected" ? (
 															<span className="px-2.5 py-0.5 bg-red-400/10 text-red-400 text-[10px] font-black uppercase tracking-widest border border-red-400/20 rounded-full w-fit">
 																Rejected
 															</span>
@@ -902,15 +967,16 @@ export default function AdminDashboardClient() {
 													</td>
 													<td className="p-4">
 														<span className="text-zinc-500 text-xs">
-															{new Date(req.createdAt).toLocaleDateString(
+															{new Date(request.createdAt).toLocaleDateString(
 																"id-ID",
 															)}
 														</span>
 													</td>
 													<td className="p-4 text-right">
-														{req.status === "pending" && (
+														{request.status === "pending" && (
 															<div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
 																<button
+																	type="button"
 																	className="px-3 py-1.5 rounded-lg bg-green-500/20 hover:bg-green-500/30 text-green-400 text-xs font-bold transition-all border border-green-500/30"
 																	onClick={async () => {
 																		try {
@@ -922,7 +988,7 @@ export default function AdminDashboardClient() {
 																						"Content-Type": "application/json",
 																					},
 																					body: JSON.stringify({
-																						id: req.id,
+																						requestId: request.id,
 																						status: "approved",
 																					}),
 																				},
@@ -946,6 +1012,7 @@ export default function AdminDashboardClient() {
 																	Approve
 																</button>
 																<button
+																	type="button"
 																	className="px-3 py-1.5 rounded-lg bg-red-500/20 hover:bg-red-500/30 text-red-400 text-xs font-bold transition-all border border-red-500/30"
 																	onClick={async () => {
 																		try {
@@ -957,7 +1024,7 @@ export default function AdminDashboardClient() {
 																						"Content-Type": "application/json",
 																					},
 																					body: JSON.stringify({
-																						id: req.id,
+																						requestId: request.id,
 																						status: "rejected",
 																					}),
 																				},
@@ -1003,10 +1070,14 @@ export default function AdminDashboardClient() {
 
 							<div className="space-y-5 max-w-2xl">
 								<div className="space-y-2">
-									<label className="text-xs font-bold text-zinc-500 uppercase tracking-widest ml-1">
+									<label
+										htmlFor="target_plan"
+										className="block text-sm font-medium text-zinc-700 dark:text-zinc-300"
+									>
 										Target Audience
 									</label>
 									<select
+										id="target_plan"
 										className="w-full bg-[#18181b] border border-zinc-800 rounded-2xl p-4 text-sm focus:outline-none appearance-none"
 										onChange={(e) =>
 											setEmailData({
@@ -1026,10 +1097,14 @@ export default function AdminDashboardClient() {
 								{emailData.recipientType === "single" && (
 									<div className="grid grid-cols-2 gap-4 animate-in fade-in slide-in-from-top-2">
 										<div className="space-y-2">
-											<label className="text-xs font-bold text-zinc-500 uppercase tracking-widest ml-1">
+											<label
+												htmlFor="recipient_email"
+												className="block text-sm font-medium text-zinc-700 dark:text-zinc-300"
+											>
 												Recipient Email
 											</label>
 											<input
+												id="recipient_email"
 												className="w-full bg-[#18181b] border border-zinc-800 rounded-2xl p-4 text-sm focus:outline-none focus:ring-2 focus:ring-zinc-700 transition-all placeholder:text-zinc-700"
 												onChange={(e) =>
 													setEmailData({ ...emailData, email: e.target.value })
@@ -1039,10 +1114,14 @@ export default function AdminDashboardClient() {
 											/>
 										</div>
 										<div className="space-y-2">
-											<label className="text-xs font-bold text-zinc-500 uppercase tracking-widest ml-1">
+											<label
+												htmlFor="recipient_name"
+												className="block text-sm font-medium text-zinc-700 dark:text-zinc-300"
+											>
 												Recipient Name
 											</label>
 											<input
+												id="recipient_name"
 												className="w-full bg-[#18181b] border border-zinc-800 rounded-2xl p-4 text-sm focus:outline-none focus:ring-2 focus:ring-zinc-700 transition-all placeholder:text-zinc-700"
 												onChange={(e) =>
 													setEmailData({ ...emailData, name: e.target.value })
@@ -1055,10 +1134,14 @@ export default function AdminDashboardClient() {
 								)}
 
 								<div className="space-y-2">
-									<label className="text-xs font-bold text-zinc-500 uppercase tracking-widest ml-1">
+									<label
+										htmlFor="email_template"
+										className="block text-sm font-medium text-zinc-700 dark:text-zinc-300"
+									>
 										Email Template
 									</label>
 									<select
+										id="email_template"
 										className="w-full bg-[#18181b] border border-zinc-800 rounded-2xl p-4 text-sm focus:outline-none appearance-none"
 										onChange={(e) => setSelectedTemplate(e.target.value)}
 										value={selectedTemplate}
@@ -1074,10 +1157,14 @@ export default function AdminDashboardClient() {
 								{/* Always show editor for Custom or any Template (since they become custom on select) */}
 								<div className="space-y-4 animate-in fade-in slide-in-from-top-2">
 									<div className="space-y-2">
-										<label className="text-xs font-bold text-zinc-500 uppercase tracking-widest ml-1">
-											Subject
+										<label
+											htmlFor="email_subject"
+											className="block text-sm font-medium text-zinc-700 dark:text-zinc-300"
+										>
+											Subject Line
 										</label>
 										<input
+											id="email_subject"
 											className="w-full bg-[#18181b] border border-zinc-800 rounded-2xl p-4 text-sm focus:outline-none focus:ring-2 focus:ring-zinc-700 transition-all font-medium"
 											onChange={(e) =>
 												setEmailData({
@@ -1092,10 +1179,14 @@ export default function AdminDashboardClient() {
 									</div>
 
 									<div className="space-y-2">
-										<label className="text-xs font-bold text-zinc-500 uppercase tracking-widest ml-1">
-											Message Body (HTML Supported)
+										<label
+											htmlFor="email_content"
+											className="block text-sm font-medium text-zinc-700 dark:text-zinc-300"
+										>
+											Email Content (Markdown supported)
 										</label>
 										<textarea
+											id="email_content"
 											className="w-full bg-[#18181b] border border-zinc-800 rounded-2xl p-4 text-sm focus:outline-none focus:ring-2 focus:ring-zinc-700 transition-all min-h-[200px] font-mono leading-relaxed"
 											onChange={(e) =>
 												setEmailData({

@@ -42,12 +42,10 @@ export async function POST(request: Request) {
 			status: "pending",
 			note: validatedData.note,
 		});
-
-		return NextResponse.json({ success: true });
-	} catch (error: any) {
+	} catch (error: unknown) {
 		console.error("Error creating upgrade request:", error);
 
-		if (error.name === "ZodError") {
+		if ((error as any).name === "ZodError") {
 			return NextResponse.json(
 				{ error: "Invalid request data" },
 				{ status: 400 },

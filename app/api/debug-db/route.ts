@@ -32,12 +32,12 @@ export async function GET() {
 			result: result[0],
 			env_check: vars,
 		});
-	} catch (error: any) {
+	} catch (error: unknown) {
 		return NextResponse.json(
 			{
 				status: "error",
-				message: error.message,
-				stack: error.stack,
+				message: (error as any).message,
+				stack: (error as any).stack,
 				env_check: vars,
 				hint: "If error is 'Tenant or user not found', it means the Database URL/Pass is wrong or Project is Paused.",
 			},

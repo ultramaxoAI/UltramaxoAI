@@ -46,9 +46,13 @@ function VerifyContent() {
 				setTimeout(() => {
 					router.push("/login"); // Redirect to login page to sign in automatically or manually
 				}, 3000);
-			} catch (err: any) {
+			} catch (err: unknown) {
 				setStatus("error");
-				setErrorMessage(err.message || "Terjadi kesalahan saat verifikasi.");
+				const errorMessage =
+					err instanceof Error
+						? err.message
+						: "Terjadi kesalahan saat verifikasi.";
+				setErrorMessage(errorMessage);
 			}
 		};
 

@@ -1,4 +1,4 @@
-import { createHmac } from "crypto";
+import { createHmac } from "node:crypto";
 import { eq } from "drizzle-orm";
 import { NextResponse } from "next/server";
 import { auth } from "@/app/(auth)/auth";

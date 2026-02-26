@@ -459,9 +459,9 @@ export default function LandingPage() {
 								<div className="flex -space-x-2">
 									{["Felix", "Aneka", "Mia"].map((seed, i) => (
 										<img
-											alt=""
+											alt={`Avatar ${seed}`}
 											className="w-6 h-6 rounded-full border-2 border-[#09090b]"
-											key={i}
+											key={seed}
 											src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${seed}`}
 										/>
 									))}

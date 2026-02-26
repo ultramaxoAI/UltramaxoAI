@@ -15,8 +15,8 @@ export async function POST(request: NextRequest) {
 		}
 
 		// PRO-only feature — check type (set in JWT callback) or role
-		const userType = (session.user as any).type;
-		const userRole = (session.user as any).role;
+		const userType = (session.user as { type?: string }).type;
+		const userRole = (session.user as { role?: string }).role;
 		const hasPro = userType === "pro" || userRole === "admin";
 
 		if (!hasPro) {
@@ -77,7 +77,7 @@ export async function POST(request: NextRequest) {
 			);
 		}
 
-		let data: any;
+		let data: unknown;
 		try {
 			data = JSON.parse(rawText);
 		} catch {
@@ -88,7 +88,7 @@ export async function POST(request: NextRequest) {
 		}
 
 		// Extract image from Gemini response: candidates[0].content.parts[].inlineData
-		const parts = data?.candidates?.[0]?.content?.parts ?? [];
+		const parts = (data as any)?.candidates?.[0]?.content?.parts ?? [];
 		for (const part of parts) {
 			if (part?.inlineData?.data) {
 				const mimeType =
@@ -100,8 +100,8 @@ export async function POST(request: NextRequest) {
 		}
 
 		// Fallback: check standard OpenAI images format just in case
-		const urlImg = data?.data?.[0]?.url;
-		const b64Img = data?.data?.[0]?.b64_json;
+		const urlImg = (data as any)?.data?.[0]?.url;
+		const b64Img = (data as any)?.data?.[0]?.b64_json;
 		if (urlImg) {
 			return NextResponse.json({ imageUrl: urlImg });
 		}

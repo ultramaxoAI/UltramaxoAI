@@ -35,8 +35,7 @@ export async function PATCH(request: Request) {
 			}
 		}
 
-		// Update user in database
-		const updates: any = {};
+		const updates: Partial<typeof user.$inferInsert> = {};
 		if (name) {
 			updates.name = name;
 		}

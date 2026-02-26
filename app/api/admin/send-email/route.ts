@@ -69,22 +69,19 @@ export async function POST(request: Request) {
 		}
 
 		// BROADCAST LOGIC
-		// eslint-disable-next-line @typescript-eslint/no-explicit-any
-		let query: any;
+		let users: (typeof user.$inferSelect)[] = [];
 		if (actualRecipientType === "all") {
-			query = db.select().from(user);
+			users = await db.select().from(user);
 		} else if (actualRecipientType === "pro") {
-			query = db.select().from(user).where(eq(user.isPro, true));
+			users = await db.select().from(user).where(eq(user.isPro, true));
 		} else if (actualRecipientType === "free") {
-			query = db.select().from(user).where(eq(user.isPro, false));
+			users = await db.select().from(user).where(eq(user.isPro, false));
 		} else {
 			return NextResponse.json(
 				{ error: "Invalid recipient type" },
 				{ status: 400 },
 			);
 		}
-
-		const users = await query;
 		let sentCount = 0;
 		let failCount = 0;
 

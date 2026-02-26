@@ -291,11 +291,11 @@ export async function POST(request: Request) {
 											createDocument: createDocument({
 												session,
 												dataStream,
-											} as any),
+											} as { session: any; dataStream: any }),
 											updateDocument: updateDocument({
 												session,
 												dataStream,
-											} as any),
+											} as { session: any; dataStream: any }),
 											requestSuggestions: requestSuggestions({
 												session,
 												dataStream,
@@ -322,51 +322,63 @@ export async function POST(request: Request) {
 									// This should NOT crash the chat stream — just log it
 									console.warn(
 										"[Chat API] Title generation failed (non-fatal):",
-										(titleError as any)?.message || titleError,
+										(titleError as Error)?.message || titleError,
 									);
 								}
 							}
 
 							// Success - break retry loop
 							break;
-						} catch (error: any) {
+						} catch (error: unknown) {
 							console.error(
 								`[Chat API] Error during streaming (attempt ${retryCount + 1}/${maxRetries + 1}):`,
 								error,
 							);
 							console.error("[Chat API] Error details:", {
-								message: error?.message,
-								type: error?.type,
-								statusCode: error?.statusCode,
-								cause: error?.cause,
-								stack: error?.stack?.split("\n").slice(0, 3),
+								message: (error as any)?.message,
+								type: (error as any)?.type,
+								statusCode: (error as any)?.statusCode,
+								cause: (error as any)?.cause,
+								stack: (error as any)?.stack?.split("\n").slice(0, 3),
 							});
 
-							// Check if error is function call related
 							const isFunctionError =
-								error?.message?.includes("Failed to call a function") ||
-								error?.message?.includes("failed_generation") ||
-								error?.message?.includes("invalid_request_error") ||
-								error?.message?.includes("tool call validation") ||
-								error?.type === "invalid_request_error" ||
-								error?.cause?.message?.includes("tool") ||
-								error?.message?.includes("support tool use");
+								(error instanceof Error &&
+									error.message.includes("Failed to call a function")) ||
+								(error instanceof Error &&
+									error.message.includes("failed_generation")) ||
+								(error instanceof Error &&
+									error.message.includes("invalid_request_error")) ||
+								(error instanceof Error &&
+									error.message.includes("tool call validation")) ||
+								(error as { type?: string })?.type ===
+									"invalid_request_error" ||
+								(
+									error as { cause?: { message?: string } }
+								)?.cause?.message?.includes("tool") ||
+								(error instanceof Error &&
+									error.message.includes("support tool use"));
 
 							// Check if error is Invalid API Key
 							const isInvalidKey =
-								error?.message?.includes("Invalid API Key") ||
-								error?.message?.includes("invalid_api_key") ||
-								error?.message?.includes("Unauthorized") ||
-								error?.statusCode === 401;
+								(error instanceof Error &&
+									error.message.includes("Invalid API Key")) ||
+								(error instanceof Error &&
+									error.message.includes("invalid_api_key")) ||
+								(error instanceof Error &&
+									error.message.includes("Unauthorized")) ||
+								(error as { statusCode?: number })?.statusCode === 401;
 
 							// Check if error is rate limit or API error
 							const isRateLimit =
-								error?.message?.includes("rate limit") ||
-								error?.message?.includes("429") ||
-								error?.statusCode === 429;
+								(error instanceof Error &&
+									error.message.includes("rate limit")) ||
+								(error instanceof Error && error.message.includes("429")) ||
+								(error as { statusCode?: number })?.statusCode === 429;
 
 							const isApiError =
-								error?.message?.includes("API") || error?.statusCode >= 500;
+								(error instanceof Error && error.message.includes("API")) ||
+								((error as { statusCode?: number })?.statusCode ?? 0) >= 500;
 
 							if (isInvalidKey) {
 								console.error(
@@ -443,8 +455,11 @@ export async function POST(request: Request) {
 				},
 				onError: (error) => {
 					console.error("[Stream Error] Raw error:", error);
-					console.error("[Stream Error] Message:", (error as any)?.message);
-					console.error("[Stream Error] Cause:", (error as any)?.cause);
+					console.error("[Stream Error] Message:", (error as Error)?.message);
+					console.error(
+						"[Stream Error] Cause:",
+						(error as { cause?: unknown })?.cause,
+					);
 					return "Oops, an error occurred!";
 				},
 			});
@@ -519,11 +534,16 @@ export async function POST(request: Request) {
 			console.error("Unhandled error in chat API:", error, { vercelId });
 			return new ChatSDKError("offline:chat").toResponse();
 		}
-	} catch (panic: any) {
+	} catch (panic: unknown) {
 		console.error("[Chat API] PANIC:", panic);
-		return new Response(JSON.stringify({ error: panic.message }), {
-			status: 500,
-		});
+		return new Response(
+			JSON.stringify({
+				error: panic instanceof Error ? panic.message : "Unknown error",
+			}),
+			{
+				status: 500,
+			},
+		);
 	}
 }
 

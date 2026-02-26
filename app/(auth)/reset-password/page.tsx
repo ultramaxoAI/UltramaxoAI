@@ -59,8 +59,12 @@ function ResetPasswordContent() {
 			setTimeout(() => {
 				router.push("/login");
 			}, 2000);
-		} catch (err: any) {
-			setError(err.message);
+		} catch (err: unknown) {
+			const errorMessage =
+				err instanceof Error
+					? err.message
+					: "Terjadi kesalahan yang tidak diketahui.";
+			setError(errorMessage);
 		} finally {
 			setLoading(false);
 		}
@@ -70,11 +74,18 @@ function ResetPasswordContent() {
 		<div className="login-bg text-zinc-100 flex items-center justify-center px-4 py-8 relative min-h-screen">
 			<motion.svg
 				animate={{ opacity: 0.4 }}
-				className="absolute inset-0 w-full h-full pointer-events-none"
+				className="absolute -top-1/4 -right-1/4 w-[800px] h-[800px] text-zinc-800/50 pointer-events-none"
+				fill="none"
 				initial={{ opacity: 0 }}
-				transition={{ duration: 0.8 }}
+				stroke="currentColor"
+				strokeWidth="0.5"
+				transition={{ duration: 2, ease: "easeOut" }}
+				viewBox="0 0 100 100"
 				xmlns="http://www.w3.org/2000/svg"
+				role="img"
+				aria-label="Background Decor"
 			>
+				<title>Background Decor</title>
 				<motion.g
 					animate={{ opacity: 1 }}
 					fill="none"

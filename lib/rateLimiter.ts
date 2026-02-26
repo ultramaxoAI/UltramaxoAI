@@ -27,7 +27,5 @@ export function checkRateLimit(key: string, limit: number, windowMs: number) {
 export function getClientIp(request: Request) {
 	const header = request.headers.get("x-forwarded-for") || "";
 	const ip = header.split(",")[0]?.trim();
-	// next/server Request may expose ip, but keep a generic fallback
-	// eslint-disable-next-line @typescript-eslint/no-explicit-any
-	return ip || (request as any).ip || "unknown";
+	return ip || (request as { ip?: string }).ip || "unknown";
 }

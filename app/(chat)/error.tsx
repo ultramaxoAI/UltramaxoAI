@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useEffect } from "react";
 import { Button } from "@/components/ui/button";
 
-export default function Error({
+export default function ChatErrorComponent({
 	error,
 	reset,
 }: {
@@ -27,6 +27,7 @@ export default function Error({
 						viewBox="0 0 24 24"
 						xmlns="http://www.w3.org/2000/svg"
 					>
+						<title>Error icon</title>
 						<path
 							strokeLinecap="round"
 							strokeLinejoin="round"

@@ -20,9 +20,8 @@ export function parseResponse(content: string): ParsedResponse {
 	const explanationParts: string[] = [];
 
 	let lastIndex = 0;
-	let match: RegExpExecArray | null;
-
-	while ((match = CODE_BLOCK_REGEX.exec(content)) !== null) {
+	const match: RegExpExecArray | null = CODE_BLOCK_REGEX.exec(content);
+	while (match !== null) {
 		const [fullMatch, langRaw, codeRaw] = match;
 
 		// teks sebelum blok kode dianggap bagian dari penjelasan
