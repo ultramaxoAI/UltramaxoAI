@@ -337,7 +337,11 @@ export async function getTodayMessageCount(userId: string): Promise<number> {
 			.from(message)
 			.innerJoin(chat, eq(message.chatId, chat.id))
 			.where(
-				and(eq(chat.userId, userId), sql`${message.createdAt} >= CURRENT_DATE`),
+				and(
+					eq(chat.userId, userId),
+					sql`${message.createdAt} >= CURRENT_DATE`,
+					eq(message.role, "user"),
+				),
 			);
 		return result[0]?.count || 0;
 	} catch (error) {
@@ -796,8 +800,8 @@ export async function listUsersWithChatCount() {
 				limitCount: user.limitCount,
 				createdAt: user.createdAt,
 				chatCount: sql<number>`count(DISTINCT ${chat.id})`,
-				messageCount: sql<number>`count(DISTINCT ${message.id})`,
-				todayMessageCount: sql<number>`cast(count(DISTINCT CASE WHEN ${message.createdAt} >= CURRENT_DATE THEN ${message.id} ELSE NULL END) as integer)`,
+				messageCount: sql<number>`cast(count(DISTINCT CASE WHEN ${message.role} = 'user' THEN ${message.id} ELSE NULL END) as integer)`,
+				todayMessageCount: sql<number>`cast(count(DISTINCT CASE WHEN ${message.createdAt} >= CURRENT_DATE AND ${message.role} = 'user' THEN ${message.id} ELSE NULL END) as integer)`,
 			})
 			.from(user)
 			.leftJoin(chat, eq(user.id, chat.userId))
