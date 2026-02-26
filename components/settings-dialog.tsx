@@ -97,12 +97,12 @@ export function SettingsDialog({
 
 	return (
 		<Dialog onOpenChange={onOpenChange} open={open}>
-			<DialogContent className="sm:max-w-[500px] p-0 overflow-hidden bg-[#09090b] border-zinc-800 rounded-3xl shadow-2xl">
+			<DialogContent className="sm:max-w-[500px] p-0 overflow-hidden bg-white dark:bg-[#09090b] border-zinc-200 dark:border-zinc-800 rounded-3xl shadow-2xl">
 				<div className="flex h-[500px]">
 					{/* Sidebar Tabs */}
-					<aside className="w-40 border-r border-zinc-800/50 bg-zinc-900/20 p-4 flex flex-col gap-2">
+					<aside className="w-40 border-r border-zinc-200 dark:border-zinc-800/50 bg-zinc-50 dark:bg-zinc-900/20 p-4 flex flex-col gap-2">
 						<button
-							className={`flex items-center gap-3 px-3 py-2 rounded-xl text-sm transition-all ${activeTab === "profile" ? "bg-white text-black font-bold shadow-lg" : "text-zinc-500 hover:text-white hover:bg-zinc-800/50"}`}
+							className={`flex items-center gap-3 px-3 py-2 rounded-xl text-sm transition-all ${activeTab === "profile" ? "bg-zinc-900 text-white dark:bg-white dark:text-black font-bold shadow-lg" : "text-zinc-500 hover:text-zinc-900 dark:hover:text-white hover:bg-zinc-200/50 dark:hover:bg-zinc-800/50"}`}
 							onClick={() => setActiveTab("profile")}
 							type="button"
 						>
@@ -110,7 +110,7 @@ export function SettingsDialog({
 							Profil
 						</button>
 						<button
-							className={`flex items-center gap-3 px-3 py-2 rounded-xl text-sm transition-all ${activeTab === "security" ? "bg-white text-black font-bold shadow-lg" : "text-zinc-500 hover:text-white hover:bg-zinc-800/50"}`}
+							className={`flex items-center gap-3 px-3 py-2 rounded-xl text-sm transition-all ${activeTab === "security" ? "bg-zinc-900 text-white dark:bg-white dark:text-black font-bold shadow-lg" : "text-zinc-500 hover:text-zinc-900 dark:hover:text-white hover:bg-zinc-200/50 dark:hover:bg-zinc-800/50"}`}
 							onClick={() => setActiveTab("security")}
 							type="button"
 						>
@@ -122,7 +122,7 @@ export function SettingsDialog({
 					{/* Tab Content */}
 					<main className="flex-1 p-8 flex flex-col gap-6 overflow-y-auto">
 						<header className="flex flex-col gap-1">
-							<DialogTitle className="text-xl font-bold text-white leading-none">
+							<DialogTitle className="text-xl font-bold text-zinc-900 dark:text-white leading-none">
 								{activeTab === "profile" ? "Informasi Akun" : "Ganti Password"}
 							</DialogTitle>
 							<p className="text-zinc-500 text-xs">
@@ -140,38 +140,38 @@ export function SettingsDialog({
 						) : activeTab === "profile" ? (
 							<div className="flex flex-col gap-6">
 								<div className="space-y-4">
-									<div className="flex flex-col gap-1.5 p-4 rounded-2xl bg-zinc-900/50 border border-zinc-800/50">
+									<div className="flex flex-col gap-1.5 p-4 rounded-2xl bg-zinc-50 dark:bg-zinc-900/50 border border-zinc-200 dark:border-zinc-800/50">
 										<Label className="text-[10px] font-black uppercase tracking-widest text-zinc-500">
 											Email Address
 										</Label>
-										<div className="text-sm text-white font-medium truncate">
+										<div className="text-sm text-zinc-900 dark:text-white font-medium truncate">
 											{user?.email || "N/A"}
 										</div>
 									</div>
 
 									<div className="grid grid-cols-2 gap-4">
-										<div className="flex flex-col gap-1.5 p-4 rounded-2xl bg-zinc-900/50 border border-zinc-800/50">
+										<div className="flex flex-col gap-1.5 p-4 rounded-2xl bg-zinc-50 dark:bg-zinc-900/50 border border-zinc-200 dark:border-zinc-800/50">
 											<Label className="text-[10px] font-black uppercase tracking-widest text-zinc-500">
 												Tier Status
 											</Label>
 											<div className="flex items-center gap-2">
 												{user?.isPro ? (
-													<div className="text-xs px-2 py-0.5 bg-yellow-400/10 text-yellow-500 rounded-full font-bold border border-yellow-500/20">
+													<div className="text-xs px-2 py-0.5 bg-yellow-400/10 text-yellow-600 dark:text-yellow-500 rounded-full font-bold border border-yellow-500/20">
 														PRO
 													</div>
 												) : (
-													<div className="text-xs px-2 py-0.5 bg-zinc-800 text-zinc-400 rounded-full font-bold">
+													<div className="text-xs px-2 py-0.5 bg-zinc-200 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-400 rounded-full font-bold">
 														FREE
 													</div>
 												)}
 											</div>
 										</div>
-										<div className="flex flex-col gap-1.5 p-4 rounded-2xl bg-zinc-900/50 border border-zinc-800/50">
+										<div className="flex flex-col gap-1.5 p-4 rounded-2xl bg-zinc-50 dark:bg-zinc-900/50 border border-zinc-200 dark:border-zinc-800/50">
 											<Label className="text-[10px] font-black uppercase tracking-widest text-zinc-500">
 												Chat Quota
 											</Label>
 											<div className="flex flex-col gap-0.5">
-												<div className="flex items-center gap-1.5 text-sm text-white font-bold">
+												<div className="flex items-center gap-1.5 text-sm text-zinc-900 dark:text-white font-bold">
 													<ZapIcon
 														className="text-blue-500 fill-blue-500"
 														size={14}
@@ -188,15 +188,15 @@ export function SettingsDialog({
 									</div>
 								</div>
 
-								<div className="mt-4 p-4 rounded-2xl bg-blue-500/5 border border-blue-500/10 flex items-start gap-4">
-									<div className="p-2 rounded-xl bg-blue-500/10 text-blue-500">
+								<div className="mt-4 p-4 rounded-2xl bg-blue-500/10 dark:bg-blue-500/5 border border-blue-500/20 dark:border-blue-500/10 flex items-start gap-4">
+									<div className="p-2 rounded-xl bg-blue-500/10 text-blue-600 dark:text-blue-500">
 										<ShieldCheckIcon size={20} />
 									</div>
 									<div className="flex flex-col gap-1">
-										<span className="text-xs font-bold text-white">
+										<span className="text-xs font-bold text-zinc-900 dark:text-white">
 											Akun kamu aman
 										</span>
-										<p className="text-[10px] text-zinc-500 leading-relaxed">
+										<p className="text-[10px] text-zinc-600 dark:text-zinc-500 leading-relaxed">
 											Gunakan fitur ini untuk memantau sisa kuota chat kamu
 											secara real-time.
 										</p>
@@ -210,11 +210,11 @@ export function SettingsDialog({
 							>
 								<div className="space-y-4">
 									<div className="space-y-2">
-										<Label className="text-xs font-medium text-zinc-400 ml-1">
+										<Label className="text-xs font-medium text-zinc-600 dark:text-zinc-400 ml-1">
 											Password Saat Ini
 										</Label>
 										<Input
-											className="bg-zinc-900 border-zinc-800 rounded-xl h-11 text-sm focus:ring-zinc-700"
+											className="bg-white dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800 rounded-xl h-11 text-sm focus:ring-zinc-300 dark:focus:ring-zinc-700"
 											onChange={(e) =>
 												setPasswordData({
 													...passwordData,
@@ -228,11 +228,11 @@ export function SettingsDialog({
 										/>
 									</div>
 									<div className="space-y-2">
-										<Label className="text-xs font-medium text-zinc-400 ml-1">
+										<Label className="text-xs font-medium text-zinc-600 dark:text-zinc-400 ml-1">
 											Password Baru
 										</Label>
 										<Input
-											className="bg-zinc-900 border-zinc-800 rounded-xl h-11 text-sm focus:ring-zinc-700"
+											className="bg-white dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800 rounded-xl h-11 text-sm focus:ring-zinc-300 dark:focus:ring-zinc-700"
 											onChange={(e) =>
 												setPasswordData({
 													...passwordData,
@@ -246,11 +246,11 @@ export function SettingsDialog({
 										/>
 									</div>
 									<div className="space-y-2">
-										<Label className="text-xs font-medium text-zinc-400 ml-1">
+										<Label className="text-xs font-medium text-zinc-600 dark:text-zinc-400 ml-1">
 											Konfirmasi Password Baru
 										</Label>
 										<Input
-											className="bg-zinc-900 border-zinc-800 rounded-xl h-11 text-sm focus:ring-zinc-700"
+											className="bg-white dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800 rounded-xl h-11 text-sm focus:ring-zinc-300 dark:focus:ring-zinc-700"
 											onChange={(e) =>
 												setPasswordData({
 													...passwordData,
@@ -266,7 +266,7 @@ export function SettingsDialog({
 								</div>
 
 								<Button
-									className="w-full bg-white text-black font-bold h-11 rounded-xl hover:bg-zinc-200 transition-all active:scale-[0.98] mt-2 shadow-xl"
+									className="w-full bg-zinc-900 text-white dark:bg-white dark:text-black font-bold h-11 rounded-xl hover:bg-zinc-800 dark:hover:bg-zinc-200 transition-all active:scale-[0.98] mt-2 shadow-xl"
 									disabled={updateLoading}
 									type="submit"
 								>

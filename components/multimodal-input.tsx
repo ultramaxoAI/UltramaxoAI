@@ -454,7 +454,7 @@ function PureMultimodalInput({
 			/>
 
 			<PromptInput
-				className="mx-auto w-full max-w-[768px] rounded-[32px] bg-[#1a1a1a] border border-white/5 p-2 shadow-2xl transition-all duration-200 focus-within:ring-1 focus-within:ring-white/10"
+				className="mx-auto w-full max-w-[768px] rounded-[32px] bg-white dark:bg-[#1a1a1a] border border-zinc-200 dark:border-white/5 p-2 shadow-2xl transition-all duration-200 focus-within:ring-1 focus-within:ring-zinc-300 dark:focus-within:ring-white/10"
 				onSubmit={(event) => {
 					event.preventDefault();
 					if (!input.trim() && attachments.length === 0) {
@@ -590,7 +590,7 @@ function PureMultimodalInput({
 				)}
 				<div className="flex flex-row items-start px-3 pt-2 pb-0">
 					<PromptInputTextarea
-						className="grow resize-none border-0! bg-transparent px-1 py-0 text-base leading-relaxed text-zinc-100 outline-none ring-0 [-ms-overflow-style:none] [scrollbar-width:none] placeholder:text-zinc-500 focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 [&::-webkit-scrollbar]:hidden"
+						className="grow resize-none border-0! bg-transparent px-1 py-0 text-base leading-relaxed text-zinc-900 dark:text-zinc-100 outline-none ring-0 [-ms-overflow-style:none] [scrollbar-width:none] placeholder:text-zinc-500 focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 [&::-webkit-scrollbar]:hidden"
 						data-testid="multimodal-input"
 						disableAutoResize={true}
 						maxHeight={200}
@@ -608,7 +608,7 @@ function PureMultimodalInput({
 						<DropdownMenu>
 							<DropdownMenuTrigger asChild>
 								<Button
-									className="size-9 rounded-full p-2 transition-colors hover:bg-zinc-800 text-zinc-400 hover:text-zinc-200"
+									className="size-9 rounded-full p-2 transition-colors hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-200"
 									data-testid="all-options-button"
 									title="Options"
 									variant="ghost"
@@ -618,11 +618,11 @@ function PureMultimodalInput({
 							</DropdownMenuTrigger>
 							<DropdownMenuContent
 								align="start"
-								className="w-56 bg-[#1a1a1a] border-white/10 rounded-xl shadow-lg text-zinc-300"
+								className="w-56 bg-white dark:bg-[#1a1a1a] border-zinc-200 dark:border-white/10 rounded-xl shadow-lg text-zinc-700 dark:text-zinc-300"
 							>
 								{/* File Upload Options */}
 								<DropdownMenuItem
-									className="cursor-pointer hover:bg-white/10 rounded-lg focus:bg-white/10"
+									className="cursor-pointer hover:bg-zinc-100 dark:hover:bg-white/10 rounded-lg focus:bg-zinc-100 dark:focus:bg-white/10"
 									disabled={status !== "ready"}
 									onClick={() => fileInputRef.current?.click()}
 								>
@@ -630,7 +630,7 @@ function PureMultimodalInput({
 									<span>Upload files</span>
 								</DropdownMenuItem>
 								<DropdownMenuItem
-									className="cursor-pointer hover:bg-white/10 rounded-lg focus:bg-white/10"
+									className="cursor-pointer hover:bg-zinc-100 dark:hover:bg-white/10 rounded-lg focus:bg-zinc-100 dark:focus:bg-white/10"
 									disabled={status !== "ready"}
 									onClick={() => {
 										if (fileInputRef.current && status === "ready") {
@@ -649,11 +649,11 @@ function PureMultimodalInput({
 									<span>Photos</span>
 								</DropdownMenuItem>
 
-								<DropdownMenuSeparator className="bg-white/10" />
+								<DropdownMenuSeparator className="bg-zinc-200 dark:bg-white/10" />
 
 								{/* Mode Settings */}
 								<DropdownMenuItem
-									className="cursor-pointer hover:bg-white/10 rounded-lg focus:bg-white/10"
+									className="cursor-pointer hover:bg-zinc-100 dark:hover:bg-white/10 rounded-lg focus:bg-zinc-100 dark:focus:bg-white/10"
 									onClick={() => setWormgptEnabled(!wormgptEnabled)}
 								>
 									<SparklesIcon
@@ -668,7 +668,7 @@ function PureMultimodalInput({
 									)}
 								</DropdownMenuItem>
 								<DropdownMenuItem
-									className="cursor-pointer hover:bg-white/10 rounded-lg focus:bg-white/10"
+									className="cursor-pointer hover:bg-zinc-100 dark:hover:bg-white/10 rounded-lg focus:bg-zinc-100 dark:focus:bg-white/10"
 									onClick={() => setDeepThinkingEnabled(!deepThinkingEnabled)}
 								>
 									<CpuIcon className="mr-2 h-4 w-4" />
@@ -699,7 +699,7 @@ function PureMultimodalInput({
 								</DropdownMenuItem>
 								<DropdownMenuItem
 									className={cn(
-										"cursor-pointer hover:bg-white/10 rounded-lg focus:bg-white/10",
+										"cursor-pointer hover:bg-zinc-100 dark:hover:bg-white/10 rounded-lg focus:bg-zinc-100 dark:focus:bg-white/10",
 										!isPro && "cursor-not-allowed opacity-40",
 									)}
 									disabled={!isPro}
@@ -723,8 +723,8 @@ function PureMultimodalInput({
 							className={cn(
 								"size-9 rounded-full p-2 transition-colors",
 								webSearchEnabled
-									? "bg-blue-500/20 text-blue-400 hover:bg-blue-500/30"
-									: "hover:bg-zinc-800 text-zinc-400 hover:text-zinc-200",
+									? "bg-blue-500/20 text-blue-600 dark:text-blue-400 hover:bg-blue-500/30"
+									: "hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-200",
 							)}
 							onClick={() => setWebSearchEnabled(!webSearchEnabled)}
 							title="Web Search"
@@ -747,7 +747,7 @@ function PureMultimodalInput({
 
 					{/* Right side: Model Selector + Submit */}
 					<div className="flex items-center gap-2">
-						<div className="bg-[#2a2a2a] rounded-full px-2 py-0.5 flex items-center h-9 text-sm text-zinc-300">
+						<div className="bg-zinc-100 dark:bg-[#2a2a2a] rounded-full px-2 py-0.5 flex items-center h-9 text-sm text-zinc-700 dark:text-zinc-300">
 							<ModelSelectorCompact
 								onModelChange={onModelChange}
 								selectedModelId={selectedModelId}
@@ -768,8 +768,8 @@ function PureMultimodalInput({
 									!input.trim() &&
 										uploadQueue.length === 0 &&
 										attachments.length === 0
-										? "bg-[#2a2a2a] text-zinc-500"
-										: "bg-white text-black hover:bg-zinc-200",
+										? "bg-zinc-100 dark:bg-[#2a2a2a] text-zinc-400 dark:text-zinc-500"
+										: "bg-zinc-900 text-white dark:bg-white dark:text-black hover:bg-zinc-800 dark:hover:bg-zinc-200",
 								)}
 								data-testid="send-button"
 								disabled={

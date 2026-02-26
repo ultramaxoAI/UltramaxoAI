@@ -91,7 +91,7 @@ export function AppSidebar({ user }: { user: User | undefined }) {
 										href="/chat"
 										onClick={() => setOpenMobile(false)}
 									>
-										<span className="font-semibold text-base tracking-tight text-white">
+										<span className="font-semibold text-base tracking-tight text-zinc-900 dark:text-white">
 											UltramaxoAI
 										</span>
 									</Link>

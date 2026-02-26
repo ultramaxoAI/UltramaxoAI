@@ -255,14 +255,16 @@ export default function AdminDashboardClient() {
 	);
 
 	return (
-		<div className="flex min-h-screen bg-[#09090b] text-zinc-100 font-sans">
+		<div className="flex min-h-screen bg-zinc-50 dark:bg-[#09090b] text-zinc-900 dark:text-zinc-100 font-sans">
 			{/* Sidebar */}
-			<aside className="w-56 border-r border-zinc-800 flex flex-col p-4 gap-6 bg-[#0c0c0e] shrink-0">
+			<aside className="w-56 border-r border-zinc-200 dark:border-zinc-800 flex flex-col p-4 gap-6 bg-white dark:bg-[#0c0c0e] shrink-0">
 				<div className="flex items-center gap-3 px-2">
-					<div className="size-8 rounded-lg bg-white flex items-center justify-center">
-						<Settings2Icon className="text-black size-5" />
+					<div className="size-8 rounded-lg bg-zinc-900 dark:bg-white flex items-center justify-center">
+						<Settings2Icon className="text-white dark:text-black size-5" />
 					</div>
-					<span className="font-bold text-lg tracking-tight">Admin OS</span>
+					<span className="font-bold text-lg tracking-tight text-zinc-900 dark:text-white">
+						Admin OS
+					</span>
 				</div>
 
 				<nav className="flex flex-col gap-2">
@@ -304,7 +306,7 @@ export default function AdminDashboardClient() {
 				</nav>
 
 				<div className="mt-auto">
-					<button className="flex items-center gap-3 px-4 py-2.5 rounded-xl text-zinc-500 hover:text-red-400 hover:bg-red-400/10 transition-all w-full leading-none">
+					<button className="flex items-center gap-3 px-4 py-2.5 rounded-xl text-zinc-500 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-400/10 transition-all w-full leading-none">
 						<LogOutIcon size={18} />
 						<span className="text-sm font-medium">Exit Admin</span>
 					</button>
@@ -314,7 +316,7 @@ export default function AdminDashboardClient() {
 			{/* Main Content */}
 			<main className="flex-1 flex flex-col p-6 gap-8 overflow-y-auto min-w-0">
 				<header className="flex flex-col gap-1">
-					<h1 className="text-4xl font-bold tracking-tight text-white capitalize">
+					<h1 className="text-4xl font-bold tracking-tight text-zinc-900 dark:text-white capitalize">
 						{activeTab.replace("-", " ")} Management
 					</h1>
 					<p className="text-zinc-500 text-sm">
@@ -325,9 +327,9 @@ export default function AdminDashboardClient() {
 
 				{activeTab === "vouchers" ? (
 					<div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-						<section className="bg-[#121214] border border-zinc-800/50 rounded-3xl p-8 flex flex-col gap-6 shadow-2xl">
+						<section className="bg-white dark:bg-[#121214] border border-zinc-200 dark:border-zinc-800/50 rounded-3xl p-8 flex flex-col gap-6 shadow-2xl">
 							<div className="flex flex-col gap-1.5">
-								<h2 className="text-xl font-bold text-white">
+								<h2 className="text-xl font-bold text-zinc-900 dark:text-white">
 									Generate Voucher
 								</h2>
 								<p className="text-zinc-500 text-sm">
@@ -341,7 +343,7 @@ export default function AdminDashboardClient() {
 										Voucher Code
 									</label>
 									<input
-										className="w-full bg-[#18181b] border border-zinc-800 rounded-2xl p-4 text-sm focus:outline-none focus:ring-2 focus:ring-zinc-700 transition-all placeholder:text-zinc-700"
+										className="w-full bg-zinc-50 dark:bg-[#18181b] border border-zinc-200 dark:border-zinc-800 rounded-2xl p-4 text-sm focus:outline-none focus:ring-2 focus:ring-zinc-300 dark:focus:ring-zinc-700 transition-all placeholder:text-zinc-400 dark:placeholder:text-zinc-700"
 										onChange={(e) =>
 											setVoucherData({ ...voucherData, code: e.target.value })
 										}
@@ -355,7 +357,7 @@ export default function AdminDashboardClient() {
 										Voucher Type
 									</label>
 									<select
-										className="w-full bg-[#18181b] border border-zinc-800 rounded-2xl p-4 text-sm focus:outline-none appearance-none"
+										className="w-full bg-zinc-50 dark:bg-[#18181b] border border-zinc-200 dark:border-zinc-800 rounded-2xl p-4 text-sm focus:outline-none appearance-none"
 										onChange={(e) =>
 											setVoucherData({ ...voucherData, type: e.target.value })
 										}
@@ -372,7 +374,7 @@ export default function AdminDashboardClient() {
 											Duration (Months)
 										</label>
 										<input
-											className="w-full bg-[#18181b] border border-zinc-800 rounded-2xl p-4 text-sm focus:outline-none"
+											className="w-full bg-zinc-50 dark:bg-[#18181b] border border-zinc-200 dark:border-zinc-800 rounded-2xl p-4 text-sm focus:outline-none focus:ring-2 focus:ring-zinc-300 dark:focus:ring-zinc-700"
 											onChange={(e) =>
 												setVoucherData({
 													...voucherData,
@@ -389,7 +391,7 @@ export default function AdminDashboardClient() {
 											Credit Amount
 										</label>
 										<input
-											className="w-full bg-[#18181b] border border-zinc-800 rounded-2xl p-4 text-sm focus:outline-none"
+											className="w-full bg-zinc-50 dark:bg-[#18181b] border border-zinc-200 dark:border-zinc-800 rounded-2xl p-4 text-sm focus:outline-none focus:ring-2 focus:ring-zinc-300 dark:focus:ring-zinc-700"
 											onChange={(e) =>
 												setVoucherData({
 													...voucherData,
@@ -403,7 +405,7 @@ export default function AdminDashboardClient() {
 								)}
 
 								<button
-									className="w-full bg-white text-black font-bold py-4 rounded-2xl hover:bg-zinc-200 transition-all active:scale-[0.98] shadow-xl mt-4"
+									className="w-full bg-zinc-900 text-white dark:bg-white dark:text-black font-bold py-4 rounded-2xl hover:bg-zinc-800 dark:hover:bg-zinc-200 transition-all active:scale-[0.98] shadow-xl mt-4"
 									onClick={handleVoucherSubmit}
 								>
 									Create Voucher
@@ -411,12 +413,15 @@ export default function AdminDashboardClient() {
 							</div>
 						</section>
 
-						<section className="flex items-center justify-center p-8 bg-[#121214]/30 border border-dashed border-zinc-800 rounded-3xl">
+						<section className="flex items-center justify-center p-8 bg-zinc-50 dark:bg-[#121214]/30 border border-dashed border-zinc-200 dark:border-zinc-800 rounded-3xl">
 							<div className="text-center flex flex-col items-center gap-4">
-								<div className="size-16 rounded-full bg-zinc-800/50 flex items-center justify-center">
-									<TicketIcon className="text-zinc-600" size={32} />
+								<div className="size-16 rounded-full bg-zinc-100 dark:bg-zinc-800/50 flex items-center justify-center">
+									<TicketIcon
+										className="text-zinc-400 dark:text-zinc-600"
+										size={32}
+									/>
 								</div>
-								<p className="text-zinc-600 text-sm max-w-[200px]">
+								<p className="text-zinc-500 dark:text-zinc-600 text-sm max-w-[200px]">
 									Active vouchers and history will appear here in the next
 									update.
 								</p>
@@ -425,7 +430,7 @@ export default function AdminDashboardClient() {
 					</div>
 				) : activeTab === "insights" ? (
 					<div className="flex flex-col gap-6">
-						<h2 className="text-xl font-bold text-white mb-2">
+						<h2 className="text-xl font-bold text-zinc-900 dark:text-white mb-2">
 							Lalu Lintas Semua Pengunjung (24 Jam)
 						</h2>
 
@@ -441,24 +446,24 @@ export default function AdminDashboardClient() {
 									</h3>
 									<div className="flex items-end gap-6 mt-2">
 										<div>
-											<p className="text-5xl font-black text-white">
+											<p className="text-5xl font-black text-zinc-900 dark:text-white">
 												{insights.realtimeTraffic.reduce(
 													(acc, curr) => acc + Number(curr.totalHits),
 													0,
 												)}
 											</p>
-											<p className="text-xs text-zinc-400 uppercase font-bold tracking-wider mt-1">
+											<p className="text-xs text-zinc-500 dark:text-zinc-400 uppercase font-bold tracking-wider mt-1">
 												Total Dilihat
 											</p>
 										</div>
 										<div>
-											<p className="text-5xl font-black text-blue-400">
+											<p className="text-5xl font-black text-blue-500 dark:text-blue-400">
 												{insights.realtimeTraffic.reduce(
 													(acc, curr) => acc + Number(curr.uniqueVisitors),
 													0,
 												)}
 											</p>
-											<p className="text-xs text-zinc-400 uppercase font-bold tracking-wider mt-1">
+											<p className="text-xs text-zinc-500 dark:text-zinc-400 uppercase font-bold tracking-wider mt-1">
 												Jumlah Orang (Unik)
 											</p>
 										</div>
@@ -472,7 +477,7 @@ export default function AdminDashboardClient() {
 						<div className="grid grid-cols-1 md:grid-cols-2 gap-4 animate-in fade-in slide-in-from-bottom-4">
 							{insights?.realtimeTraffic?.map((traffic) => (
 								<div
-									className="bg-[#121214] border border-zinc-800/50 p-6 rounded-3xl relative overflow-hidden group"
+									className="bg-white dark:bg-[#121214] border border-zinc-200 dark:border-zinc-800/50 p-6 rounded-3xl relative overflow-hidden group shadow-sm dark:shadow-none"
 									key={traffic.path}
 								>
 									<div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
@@ -483,7 +488,7 @@ export default function AdminDashboardClient() {
 									</h3>
 									<div className="flex items-end gap-4 mt-2">
 										<div>
-											<p className="text-4xl font-black text-white">
+											<p className="text-4xl font-black text-zinc-900 dark:text-white">
 												{traffic.totalHits}
 											</p>
 											<p className="text-xs text-zinc-500 uppercase font-bold tracking-wider mt-1">
@@ -491,7 +496,7 @@ export default function AdminDashboardClient() {
 											</p>
 										</div>
 										<div>
-											<p className="text-4xl font-black text-blue-400">
+											<p className="text-4xl font-black text-blue-500 dark:text-blue-400">
 												{traffic.uniqueVisitors}
 											</p>
 											<p className="text-xs text-zinc-500 uppercase font-bold tracking-wider mt-1">
@@ -502,20 +507,20 @@ export default function AdminDashboardClient() {
 								</div>
 							))}
 							{!insights?.realtimeTraffic?.length && !loading && (
-								<div className="bg-[#121214] border border-zinc-800/50 p-6 rounded-3xl col-span-2 text-center text-zinc-500 py-12">
+								<div className="bg-white dark:bg-[#121214] border border-zinc-200 dark:border-zinc-800/50 p-6 rounded-3xl col-span-2 text-center text-zinc-500 py-12">
 									Belum ada kunjungan ke halaman mana pun dalam 24 jam terakhir.
 								</div>
 							)}
 						</div>
 
-						<h2 className="text-xl font-bold text-white mt-8 mb-2">
+						<h2 className="text-xl font-bold text-zinc-900 dark:text-white mt-8 mb-2">
 							Aktivitas Pengguna (Yang Sudah Login)
 						</h2>
-						<div className="bg-[#121214] border border-zinc-800/50 rounded-3xl overflow-hidden shadow-2xl">
+						<div className="bg-white dark:bg-[#121214] border border-zinc-200 dark:border-zinc-800/50 rounded-3xl overflow-hidden shadow-2xl">
 							<div className="overflow-x-auto">
 								<table className="w-full text-left">
 									<thead>
-										<tr className="border-b border-zinc-800 bg-zinc-900/30">
+										<tr className="border-b border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900/30">
 											<th className="p-4 text-xs font-bold text-zinc-500 uppercase tracking-widest whitespace-nowrap">
 												Nama & Email
 											</th>
@@ -533,31 +538,31 @@ export default function AdminDashboardClient() {
 									<tbody>
 										{insights?.authenticatedVisitors?.map((user) => (
 											<tr
-												className="border-b border-zinc-800/50 hover:bg-zinc-800/20 transition-colors"
+												className="border-b border-zinc-200 dark:border-zinc-800/50 hover:bg-zinc-50 dark:hover:bg-zinc-800/20 transition-colors"
 												key={user.id}
 											>
 												<td className="p-4">
 													<div className="flex flex-col">
-														<span className="font-bold text-sm text-white">
+														<span className="font-bold text-sm text-zinc-900 dark:text-white">
 															{user.name || "Unknown"}
 														</span>
 														<span className="text-xs text-zinc-500">
 															{user.email}
 														</span>
 														{user.isPro && (
-															<span className="text-[10px] bg-amber-500/10 text-amber-500 uppercase font-bold px-2 py-0.5 rounded-full w-max mt-1">
+															<span className="text-[10px] bg-yellow-100 dark:bg-amber-500/10 text-yellow-600 dark:text-amber-500 border border-yellow-200 dark:border-amber-500/20 uppercase font-bold px-2 py-0.5 rounded-full w-max mt-1">
 																Pro
 															</span>
 														)}
 													</div>
 												</td>
-												<td className="p-4 text-center text-sm font-medium text-white">
+												<td className="p-4 text-center text-sm font-medium text-zinc-900 dark:text-white">
 													{user.chatCount}
 												</td>
-												<td className="p-4 text-center text-sm font-medium text-white">
+												<td className="p-4 text-center text-sm font-medium text-zinc-900 dark:text-white">
 													{user.messageCount}
 												</td>
-												<td className="p-4 text-right text-xs text-zinc-400">
+												<td className="p-4 text-right text-xs text-zinc-500 dark:text-zinc-400">
 													{user.lastActiveAt
 														? formatDistanceToNow(new Date(user.lastActiveAt), {
 																addSuffix: true,
@@ -597,52 +602,52 @@ export default function AdminDashboardClient() {
 				) : activeTab === "users" ? (
 					<div className="flex flex-col gap-6">
 						<div className="grid grid-cols-1 md:grid-cols-2 gap-4 animate-in fade-in slide-in-from-bottom-4">
-							<div className="bg-[#121214] border border-zinc-800/50 p-6 rounded-3xl relative overflow-hidden group">
+							<div className="bg-white dark:bg-[#121214] border border-zinc-200 dark:border-zinc-800/50 p-6 rounded-3xl relative overflow-hidden group shadow-sm dark:shadow-none">
 								<div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
 									<UsersIcon size={60} />
 								</div>
 								<h3 className="text-zinc-500 text-xs font-bold uppercase tracking-widest mb-1">
 									Total Users
 								</h3>
-								<p className="text-4xl font-black text-white">
+								<p className="text-4xl font-black text-zinc-900 dark:text-white">
 									{stats.totalUsers}
 								</p>
 							</div>
-							<div className="bg-[#121214] border border-zinc-800/50 p-6 rounded-3xl relative overflow-hidden group">
+							<div className="bg-white dark:bg-[#121214] border border-zinc-200 dark:border-zinc-800/50 p-6 rounded-3xl relative overflow-hidden group shadow-sm dark:shadow-none">
 								<div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
 									<MessageSquareIcon size={60} />
 								</div>
 								<h3 className="text-zinc-500 text-xs font-bold uppercase tracking-widest mb-1">
 									Active Users (24h)
 								</h3>
-								<p className="text-4xl font-black text-green-400">
+								<p className="text-4xl font-black text-green-600 dark:text-green-400">
 									{stats.activeUsers}
 								</p>
 							</div>
 						</div>
-						<div className="flex justify-between items-center bg-[#121214] border border-zinc-800/50 rounded-2xl p-2 px-6">
+						<div className="flex justify-between items-center bg-white dark:bg-[#121214] border border-zinc-200 dark:border-zinc-800/50 rounded-2xl p-2 px-6 shadow-sm dark:shadow-none">
 							<div className="flex items-center gap-3 flex-1 max-w-md">
 								<SearchIcon className="text-zinc-500" size={18} />
 								<input
-									className="bg-transparent w-full py-4 text-sm focus:outline-none"
+									className="bg-transparent w-full py-4 text-sm focus:outline-none text-zinc-900 dark:text-white placeholder:text-zinc-400 dark:placeholder:text-zinc-500"
 									onChange={(e) => setSearchQuery(e.target.value)}
 									placeholder="Search users by name or email..."
 									value={searchQuery}
 								/>
 							</div>
 							<button
-								className="text-white bg-zinc-800 py-2 px-4 rounded-xl text-xs font-bold hover:bg-zinc-700 transition-all"
+								className="text-white bg-zinc-900 dark:bg-zinc-800 py-2 px-4 rounded-xl text-xs font-bold hover:bg-zinc-800 dark:hover:bg-zinc-700 transition-all"
 								onClick={fetchUsers}
 							>
 								Refresh
 							</button>
 						</div>
 
-						<div className="bg-[#121214] border border-zinc-800/50 rounded-3xl overflow-hidden shadow-2xl">
+						<div className="bg-white dark:bg-[#121214] border border-zinc-200 dark:border-zinc-800/50 rounded-3xl overflow-hidden shadow-2xl">
 							<div className="overflow-x-auto">
 								<table className="w-full text-left">
 									<thead>
-										<tr className="border-b border-zinc-800 bg-zinc-900/30">
+										<tr className="border-b border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900/30">
 											<th className="p-4 text-xs font-bold text-zinc-500 uppercase tracking-widest whitespace-nowrap">
 												User
 											</th>
@@ -654,7 +659,7 @@ export default function AdminDashboardClient() {
 											</th>
 										</tr>
 									</thead>
-									<tbody className="divide-y divide-zinc-800/50">
+									<tbody className="divide-y divide-zinc-200 dark:divide-zinc-800/50">
 										{loading ? (
 											<tr>
 												<td
@@ -662,7 +667,7 @@ export default function AdminDashboardClient() {
 													colSpan={6}
 												>
 													<div className="animate-pulse flex flex-col items-center gap-4">
-														<div className="size-10 rounded-full bg-zinc-800" />
+														<div className="size-10 rounded-full bg-zinc-200 dark:bg-zinc-800" />
 														<span className="text-sm">
 															Retrieving user records...
 														</span>
@@ -735,7 +740,7 @@ export default function AdminDashboardClient() {
 													<td className="p-4 text-right">
 														<div className="flex flex-wrap sm:flex-nowrap items-center justify-end gap-1.5 sm:gap-2 opacity-100 lg:opacity-0 group-hover:opacity-100 transition-opacity">
 															<button
-																className="p-2.5 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-white transition-all shadow-lg border border-zinc-700/50"
+																className="p-2.5 rounded-xl bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-900 dark:text-white transition-all shadow-lg border border-zinc-200 dark:border-zinc-700/50"
 																onClick={() =>
 																	handleUpdateUser(user.id, {
 																		isPro: !user.isPro,
@@ -751,7 +756,7 @@ export default function AdminDashboardClient() {
 																)}
 															</button>
 															<button
-																className="p-2.5 rounded-xl bg-zinc-800 hover:bg-blue-500/20 text-zinc-400 hover:text-blue-400 transition-all shadow-lg border border-zinc-700/50"
+																className="p-2.5 rounded-xl bg-zinc-100 dark:bg-zinc-800 hover:bg-blue-50 dark:hover:bg-blue-500/20 text-zinc-500 hover:text-blue-600 dark:text-zinc-400 dark:hover:text-blue-400 transition-all shadow-lg border border-zinc-200 dark:border-zinc-700/50"
 																onClick={() => {
 																	// Pre-fill email in Email Tools
 																	setEmailData({
@@ -767,7 +772,7 @@ export default function AdminDashboardClient() {
 																<MessageSquareIcon size={16} />
 															</button>
 															<button
-																className="p-2.5 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-white transition-all shadow-lg border border-zinc-700/50"
+																className="p-2.5 rounded-xl bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-900 dark:text-white transition-all shadow-lg border border-zinc-200 dark:border-zinc-700/50"
 																onClick={() => {
 																	const newLimit = prompt(
 																		"Enter new limit count:",
@@ -784,7 +789,7 @@ export default function AdminDashboardClient() {
 																<Settings2Icon size={16} />
 															</button>
 															<button
-																className="p-2.5 rounded-xl bg-zinc-800 hover:bg-red-500/20 text-zinc-400 hover:text-red-400 transition-all shadow-lg border border-zinc-700/50"
+																className="p-2.5 rounded-xl bg-zinc-100 dark:bg-zinc-800 hover:bg-red-50 dark:hover:bg-red-500/20 text-zinc-500 hover:text-red-600 dark:text-zinc-400 dark:hover:text-red-400 transition-all shadow-lg border border-zinc-200 dark:border-zinc-700/50"
 																onClick={() => handleDeleteUser(user.id)}
 																title="Delete User"
 															>

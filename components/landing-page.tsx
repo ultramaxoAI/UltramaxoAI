@@ -208,7 +208,7 @@ export default function LandingPage() {
 	const heroScale = useTransform(scrollYProgress, [0, 1], [1, 0.96]);
 
 	const navLinks = [
-		{ name: "Home", href: "#home" },
+		{ name: "Beranda", href: "#home" },
 		{ name: "Fitur", href: "#features" },
 		{ name: "Harga", href: "#pricing" },
 		{ name: "FAQ", href: "#faq" },
@@ -226,48 +226,48 @@ export default function LandingPage() {
 	const features = [
 		{
 			icon: <Zap className="w-5 h-5" />,
-			title: "Response Instan",
-			desc: "Jawaban muncul dalam hitungan detik — UltraAgent dioptimalkan untuk inferensi tercepat.",
+			title: "Respons Instan",
+			desc: "Jawaban tersedia dalam hitungan detik — UltraAgent dioptimalkan untuk kecepatan inferensi tertinggi.",
 		},
 		{
 			icon: <Code2 className="w-5 h-5" />,
-			title: "Code Editor Langsung",
-			desc: "Tulis, edit, dan jalankan kode langsung di dalam chat tanpa pindah aplikasi.",
+			title: "Editor Kode Terintegrasi",
+			desc: "Tulis, edit, dan jalankan kode secara langsung di dalam percakapan tanpa berpindah aplikasi.",
 		},
 		{
 			icon: <Layers className="w-5 h-5" />,
-			title: "Artifacts System",
-			desc: "Buat dokumen, spreadsheet, atau gambar langsung dari percakapan — export kapan saja.",
+			title: "Sistem Artifacts",
+			desc: "Buat dokumen, spreadsheet, atau gambar langsung dari percakapan — ekspor kapan saja.",
 		},
 		{
 			icon: <Upload className="w-5 h-5" />,
-			title: "Upload & Analisis File",
-			desc: "Upload file apapun dan biarkan AI membantu menganalisis isinya secara otomatis.",
+			title: "Unggah & Analisis Berkas",
+			desc: "Unggah berkas dalam format apa pun dan biarkan AI menganalisis isinya secara otomatis.",
 		},
 		{
 			icon: <MessageSquare className="w-5 h-5" />,
-			title: "Chat yang Bisa Diedit",
-			desc: "Edit pesan, regenerate jawaban, dan simpan seluruh riwayat percakapanmu.",
+			title: "Percakapan yang Dapat Diedit",
+			desc: "Edit pesan, buat ulang jawaban, dan simpan seluruh riwayat percakapan Anda.",
 		},
 		{
 			icon: <Shield className="w-5 h-5" />,
 			title: "Aman & Privat",
-			desc: "Data terenkripsi, autentikasi aman, dan tidak pernah dibagikan ke pihak ketiga.",
+			desc: "Data terenkripsi, autentikasi aman, dan tidak pernah dibagikan kepada pihak ketiga.",
 		},
 	];
 
 	const pricingPlans = [
 		{
-			name: "Free",
+			name: "Gratis",
 			price: "Rp 0",
 			period: "selamanya",
-			desc: "Coba semua fitur dasar tanpa biaya",
+			desc: "Coba seluruh fitur dasar tanpa biaya",
 			features: [
 				"AI Chat (UltraAgent)",
-				"Basic code editor",
-				"Riwayat chat terbatas",
+				"Editor kode dasar",
+				"Riwayat percakapan terbatas",
 				"Syntax highlighting",
-				"Upload file standar",
+				"Unggah berkas standar",
 			],
 			popular: false,
 		},
@@ -275,15 +275,15 @@ export default function LandingPage() {
 			name: "Pro",
 			price: "Rp 20.000",
 			period: "per bulan",
-			desc: "Untuk yang butuh lebih — tanpa batas",
+			desc: "Untuk kebutuhan lebih — tanpa batasan",
 			features: [
 				"AI Chat (UltraAgent Pro)",
-				"Semua fitur Free",
-				"Chat tanpa limit",
-				"Riwayat chat permanen",
-				"Code workspace lengkap",
-				"Full artifacts system",
-				"Priority support",
+				"Semua fitur paket Gratis",
+				"Percakapan tanpa batas",
+				"Riwayat percakapan permanen",
+				"Ruang kerja kode lengkap",
+				"Sistem Artifacts penuh",
+				"Dukungan prioritas",
 			],
 			popular: true,
 		},
@@ -291,13 +291,13 @@ export default function LandingPage() {
 			name: "1 Tahun",
 			price: "Rp 120.000",
 			period: "per tahun",
-			desc: "Hemat lebih banyak dengan paket tahunan",
+			desc: "Hemat lebih besar dengan paket tahunan",
 			features: [
 				"Semua fitur Pro",
-				"Dedicated support",
-				"Custom deployment",
-				"SLA guarantee",
-				"Advanced analytics",
+				"Dukungan khusus",
+				"Penerapan kustom",
+				"Jaminan SLA",
+				"Analitik lanjutan",
 			],
 			popular: false,
 		},
@@ -306,23 +306,23 @@ export default function LandingPage() {
 	const faqData = [
 		{
 			q: "Apakah Ultramaxo benar-benar gratis?",
-			a: "Ya. Paket Free bisa langsung dipakai tanpa kartu kredit, tanpa batas waktu. Upgrade kapan saja kalau butuh fitur lebih.",
+			a: "Ya. Paket Gratis dapat langsung digunakan tanpa kartu kredit dan tanpa batas waktu. Anda dapat melakukan upgrade kapan saja jika membutuhkan fitur tambahan.",
 		},
 		{
-			q: "Model AI apa yang dipakai?",
-			a: "Kami menggunakan UltraAgent — model AI yang dioptimalkan untuk kecepatan dan akurasi tinggi. Hasilnya: response hampir instan.",
+			q: "Model AI apa yang digunakan?",
+			a: "Kami menggunakan UltraAgent — model AI yang dioptimalkan untuk kecepatan dan akurasi tinggi, sehingga menghasilkan respons hampir secara instan.",
 		},
 		{
-			q: "Apa itu Artifacts?",
-			a: "Artifacts memungkinkan kamu membuat dokumen, spreadsheet, dan gambar langsung dari percakapan AI. Hasilnya bisa di-export dan dibagikan.",
+			q: "Apa yang dimaksud dengan Artifacts?",
+			a: "Artifacts memungkinkan Anda membuat dokumen, spreadsheet, dan gambar langsung dari percakapan AI. Hasilnya dapat diekspor dan dibagikan dengan mudah.",
 		},
 		{
-			q: "Bagaimana cara upgrade ke Pro?",
-			a: "Redeem kode Pro lewat menu Settings > Redeem Code setelah login. Kode bisa didapatkan dari admin.",
+			q: "Bagaimana cara melakukan upgrade ke Pro?",
+			a: "Tukarkan kode Pro melalui menu Pengaturan > Tukar Kode setelah masuk. Kode dapat diperoleh dari administrator.",
 		},
 		{
 			q: "Apakah data saya aman?",
-			a: "Aman. Kami menggunakan NextAuth.js, database terenkripsi, dan tidak pernah membagikan data ke pihak manapun.",
+			a: "Data Anda aman. Kami menggunakan NextAuth.js, basis data terenkripsi, dan tidak pernah membagikan data kepada pihak mana pun.",
 		},
 	];
 
@@ -467,7 +467,7 @@ export default function LandingPage() {
 									))}
 								</div>
 								<span className="text-xs text-gray-300">
-									Dipercaya developer Indonesia
+									Dipercaya oleh pengembang di Indonesia
 								</span>
 							</motion.div>
 
@@ -478,9 +478,9 @@ export default function LandingPage() {
 								initial="hidden"
 								variants={fadeUp}
 							>
-								AI yang Bantu Kamu{" "}
+								Asisten AI yang Membantu Anda{" "}
 								<span className="bg-clip-text text-transparent bg-gradient-to-r from-indigo-400 via-violet-400 to-indigo-300">
-									Kerja Lebih Cepat
+									Bekerja Lebih Cepat
 								</span>
 							</motion.h1>
 
@@ -491,9 +491,9 @@ export default function LandingPage() {
 								initial="hidden"
 								variants={fadeUp}
 							>
-								Ultramaxo adalah AI workspace untuk chat, coding, dan bikin
-								dokumen — semua di satu tempat. Response instan, gratis untuk
-								mulai.
+								Ultramaxo adalah ruang kerja AI untuk percakapan, pengembangan
+								kode, dan pembuatan dokumen — semuanya dalam satu platform.
+								Respons instan, gratis untuk memulai.
 							</motion.p>
 
 							<motion.div
@@ -513,7 +513,7 @@ export default function LandingPage() {
 									className="w-full sm:w-auto justify-center py-3.5"
 									onClick={() => scrollToSection("#features")}
 								>
-									<Play className="w-4 h-4" /> Lihat Fitur
+									<Play className="w-4 h-4" /> Pelajari Fitur
 								</GhostButton>
 							</motion.div>
 
@@ -613,8 +613,8 @@ export default function LandingPage() {
 			<section className="relative z-10 py-28 lg:py-36" id="features">
 				<div className="max-w-6xl mx-auto px-5">
 					<SectionTitle
-						description="Chat, code, dan buat konten — tanpa pindah-pindah aplikasi. AI-nya cepat, editor-nya lengkap."
-						heading="Semua yang kamu butuhkan, satu tempat"
+						description="Percakapan, pengembangan kode, dan pembuatan konten — tanpa berpindah aplikasi. AI-nya cepat, editornya lengkap."
+						heading="Semua yang Anda Butuhkan dalam Satu Platform"
 						tag="Fitur Unggulan"
 					/>
 
@@ -663,8 +663,8 @@ export default function LandingPage() {
 
 				<div className="max-w-5xl mx-auto px-5">
 					<SectionTitle
-						description="Tidak ada biaya tersembunyi. Pakai gratis selama yang kamu mau, upgrade kapan saja untuk fitur penuh."
-						heading="Mulai gratis, upgrade kalau butuh"
+						description="Tanpa biaya tersembunyi. Gunakan secara gratis selama yang Anda inginkan, tingkatkan paket kapan saja untuk fitur penuh."
+						heading="Mulai Gratis, Tingkatkan Sesuai Kebutuhan"
 						tag="Harga"
 					/>
 
@@ -748,8 +748,8 @@ export default function LandingPage() {
 
 				<div className="max-w-2xl mx-auto px-5">
 					<SectionTitle
-						description="Jawaban singkat untuk hal-hal yang paling sering ditanyakan."
-						heading="Pertanyaan yang sering muncul"
+						description="Jawaban singkat untuk pertanyaan yang paling sering diajukan."
+						heading="Pertanyaan yang Sering Diajukan"
 						tag="FAQ"
 					/>
 
@@ -783,11 +783,11 @@ export default function LandingPage() {
 
 					<div className="relative z-10">
 						<h2 className="text-2xl sm:text-4xl font-bold mb-5 text-white">
-							Siap kerja lebih cepat dengan AI?
+							Siap Bekerja Lebih Cepat dengan AI?
 						</h2>
 						<p className="text-gray-400 mb-10 max-w-md mx-auto leading-relaxed">
-							Bergabung sekarang — gratis, tanpa kartu kredit, langsung bisa
-							pakai.
+							Bergabung sekarang — gratis, tanpa kartu kredit, langsung dapat
+							digunakan.
 						</p>
 						<PrimaryButton
 							className="px-10 py-4 text-base"
@@ -814,7 +814,8 @@ export default function LandingPage() {
 								<span className="font-bold text-base">Ultramaxo AI</span>
 							</div>
 							<p className="text-sm text-gray-500 leading-relaxed">
-								AI workspace untuk chat, code, dan buat dokumen.
+								Ruang kerja AI untuk percakapan, pengembangan kode, dan
+								pembuatan dokumen.
 							</p>
 						</div>
 
@@ -829,7 +830,7 @@ export default function LandingPage() {
 										className="hover:text-gray-300 transition-colors"
 										onClick={() => scrollToSection("#home")}
 									>
-										Home
+										Beranda
 									</button>
 								</li>
 								<li>
@@ -896,7 +897,7 @@ export default function LandingPage() {
 					</div>
 
 					<div className="border-t border-white/[0.06] pt-7 text-center text-sm text-gray-600">
-						© 2025 Ultramaxo AI. All rights reserved.
+						© 2025 Ultramaxo AI. Hak cipta dilindungi undang-undang.
 					</div>
 				</div>
 			</footer>
