@@ -401,8 +401,8 @@
 .text-gradient {
 	background: linear-gradient(
 		135deg,
-		oklch(0.98 0.005 110),
-		oklch(0.7 0.005 110)
+		var(--color-indigo-500),
+		var(--color-violet-500)
 	);
 	-webkit-background-clip: text;
 	-webkit-text-fill-color: transparent;
@@ -1003,3 +1003,21 @@ pre:has(code) button {
 		transform: scale(1.02);
 	}
 }
+
+/* Optimized Theme Transition that doesn't target every * child */
+.theme-transition body,
+.theme-transition .bg-background {
+	transition: background-color 0.5s ease, border-color 0.5s ease, color 0.5s ease !important;
+}
+
+
+
+/* Google Translate Overrides */
+body { top: 0 !important; }
+.skiptranslate iframe, .skiptranslate.goog-te-banner-frame { display: none !important; }
+#goog-gt-tt { display: none !important; }
+.goog-te-gadget { font-size: 0 !important; color: transparent !important; }
+.goog-te-gadget .goog-te-combo { font-size: 14px; margin: 0; padding: 2px 4px; border-radius: 4px; background: transparent; border: none; color: inherit; cursor: pointer; outline: none; }
+.goog-te-gadget .goog-te-combo:focus { outline: none; }
+.dark .goog-te-combo { background: #18181b; color: #fff; }
+.dark .goog-te-combo option { background: #18181b; color: #fff; }

@@ -1,5 +1,10 @@
 import type { NextAuthConfig } from "next-auth";
 
+const CHAT_URL =
+	process.env.NODE_ENV === "production"
+		? "https://chat.ultramaxo.tech"
+		: "/chat";
+
 export const authConfig = {
 	pages: {
 		signIn: "/login",
@@ -11,9 +16,9 @@ export const authConfig = {
 	],
 	callbacks: {
 		redirect({ url, baseUrl }) {
-			// After sign in, send to /chat instead of the landing page
+			// After sign in, send to chat subdomain (production) or /chat (dev)
 			if (url === baseUrl || url === `${baseUrl}/`) {
-				return `${baseUrl}/chat`;
+				return CHAT_URL.startsWith("http") ? CHAT_URL : `${baseUrl}${CHAT_URL}`;
 			}
 			// Allow relative callbacks within the app
 			if (url.startsWith("/")) {
@@ -23,7 +28,11 @@ export const authConfig = {
 			if (new URL(url).origin === baseUrl) {
 				return url;
 			}
-			return `${baseUrl}/chat`;
+			// Allow chat subdomain in production
+			if (url.startsWith("https://chat.ultramaxo.tech")) {
+				return url;
+			}
+			return CHAT_URL.startsWith("http") ? CHAT_URL : `${baseUrl}${CHAT_URL}`;
 		},
 	},
 } satisfies NextAuthConfig;

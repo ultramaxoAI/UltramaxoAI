@@ -1,311 +1,297 @@
 import { ArrowLeft, Bot } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
+import { ThemeToggle } from "@/components/theme-toggle";
+import { GoogleTranslate } from "@/components/google-translate";
 
 export const metadata: Metadata = {
-	title: "Syarat & Ketentuan — Ultramaxo AI",
+	title: "Terms & Conditions — Ultramaxo AI",
 	description:
-		"Syarat dan ketentuan penggunaan Ultramaxo AI — aturan dan pedoman penggunaan layanan.",
+		"Terms and conditions for using Ultramaxo AI — rules and guidelines for service usage.",
 };
 
 export default function TermsPage() {
 	return (
-		<div className="min-h-screen bg-gradient-to-b from-[#f7f9fc] via-white to-[#eef2f7] text-slate-900">
+		<div className="min-h-screen bg-background text-foreground transition-colors duration-500 ease-in-out">
 			{/* Header */}
-			<header className="sticky top-0 z-50 w-full border-b border-slate-200 bg-white/90 backdrop-blur-md shadow-sm">
+			<header className="sticky top-0 z-50 w-full border-b border-border bg-background/90 backdrop-blur-md shadow-sm">
 				<div className="max-w-4xl mx-auto flex items-center justify-between px-6 py-3">
 					<Link className="flex items-center gap-2" href="/">
-						<div className="w-8 h-8 rounded-lg bg-slate-900 flex items-center justify-center">
-							<Bot className="w-4 h-4 text-white" />
+						<div className="w-8 h-8 rounded-lg bg-zinc-900 dark:bg-white flex items-center justify-center">
+							<Bot className="w-4 h-4 text-white dark:text-zinc-900" />
 						</div>
-						<span className="text-base font-bold text-slate-900">
+						<span className="text-base font-bold text-foreground">
 							Ultramaxo AI
 						</span>
 					</Link>
-					<Link
-						className="flex items-center gap-1.5 text-sm text-slate-500 hover:text-slate-800 transition-colors"
-						href="/"
-					>
-						<ArrowLeft className="w-4 h-4" />
-						Kembali
-					</Link>
+                    <div className="flex items-center gap-4">
+                        <GoogleTranslate />
+                        <ThemeToggle />
+                        <Link
+                            className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors"
+                            href="/"
+                        >
+                            <ArrowLeft className="w-4 h-4" />
+                            Back
+                        </Link>
+                    </div>
 				</div>
 			</header>
 
 			{/* Content */}
 			<main className="max-w-4xl mx-auto px-6 py-12 sm:py-20">
 				<div className="mb-12">
-					<h1 className="text-3xl sm:text-4xl font-bold text-slate-900 mb-3">
-						Syarat & Ketentuan
+					<h1 className="text-3xl sm:text-4xl font-bold text-foreground mb-3">
+						Terms & Conditions
 					</h1>
-					<p className="text-slate-500 text-sm">
-						Terakhir diperbarui: 15 Februari 2025
+					<p className="text-muted-foreground text-sm">
+						Last updated: February 15, 2025
 					</p>
 				</div>
 
-				<div className="prose prose-slate max-w-none space-y-8">
+				<div className="prose prose-slate dark:prose-invert max-w-none space-y-8">
 					<section>
-						<h2 className="text-xl font-bold text-slate-900 mb-3">
-							1. Penerimaan Syarat
+						<h2 className="text-xl font-bold text-foreground mb-3">
+							1. Acceptance of Terms
 						</h2>
-						<p className="text-slate-700 leading-relaxed">
-							Dengan mengakses atau menggunakan Ultramaxo AI
-							(&quot;Layanan&quot;) yang tersedia di{" "}
-							<strong>ultramaxo.tech</strong>, Anda menyetujui untuk terikat
-							oleh Syarat dan Ketentuan ini. Jika Anda tidak menyetujui
-							syarat-syarat ini, harap jangan gunakan layanan kami.
+						<p className="text-foreground/80 leading-relaxed">
+							By accessing or using Ultramaxo AI
+							(&quot;Service&quot;) available at{" "}
+							<strong>ultramaxo.tech</strong>, you agree to be bound
+							by these Terms and Conditions. If you do not agree to
+							these terms, please do not use our service.
 						</p>
 					</section>
 
 					<section>
-						<h2 className="text-xl font-bold text-slate-900 mb-3">
-							2. Deskripsi Layanan
+						<h2 className="text-xl font-bold text-foreground mb-3">
+							2. Description of Service
 						</h2>
-						<p className="text-slate-700 leading-relaxed">
-							Ultramaxo AI adalah platform kecerdasan buatan yang menyediakan
-							akses ke berbagai model AI untuk keperluan penulisan, pemrograman,
-							analisis, dan percakapan umum. Layanan kami tersedia dalam paket
-							Gratis dan Pro dengan fitur dan batasan yang berbeda.
+						<p className="text-foreground/80 leading-relaxed">
+							Ultramaxo AI is an artificial intelligence platform providing
+							access to various AI models for writing, programming,
+							analysis, and general conversation. Our services are available in
+							Free and Pro plans with different features and limitations.
 						</p>
 					</section>
 
 					<section>
-						<h2 className="text-xl font-bold text-slate-900 mb-3">
-							3. Akun Pengguna
+						<h2 className="text-xl font-bold text-foreground mb-3">
+							3. User Accounts
 						</h2>
-						<h3 className="text-lg font-semibold text-slate-800 mb-2">
-							3.1 Pendaftaran
-						</h3>
-						<p className="text-slate-700 leading-relaxed">
-							Untuk menggunakan layanan ini, Anda wajib membuat akun dengan
-							memberikan informasi yang akurat dan lengkap. Anda bertanggung
-							jawab untuk menjaga kerahasiaan kredensial akun Anda.
+						
+						<p className="text-foreground/80 leading-relaxed">
+							To use this service, you must create an account by providing
+							accurate and complete information. You are responsible
+							for maintaining the confidentiality of your account credentials.
 						</p>
 
-						<h3 className="text-lg font-semibold text-slate-800 mb-2 mt-4">
-							3.2 Verifikasi Email
-						</h3>
-						<p className="text-slate-700 leading-relaxed">
-							Pendaftaran memerlukan verifikasi email melalui kode OTP. Akun
-							yang tidak diverifikasi tidak akan dapat mengakses layanan
-							sepenuhnya.
-						</p>
-
-						<h3 className="text-lg font-semibold text-slate-800 mb-2 mt-4">
-							3.3 Keamanan Akun
-						</h3>
-						<p className="text-slate-700 leading-relaxed">
-							Anda bertanggung jawab penuh atas semua aktivitas yang terjadi di
-							bawah akun Anda. Segera laporkan kepada kami jika ada akses tidak
-							sah ke akun Anda.
+						<p className="text-foreground/80 leading-relaxed mt-4">
+							To use full features safely, we recommend verifying your email address. 
+							You are fully responsible for all activities that occur under
+							your account. Immediately report to us if there is unauthorized
+							access to your account.
 						</p>
 					</section>
 
 					<section>
-						<h2 className="text-xl font-bold text-slate-900 mb-3">
-							4. Paket Layanan
+						<h2 className="text-xl font-bold text-foreground mb-3">
+							4. Service Plans
 						</h2>
-						<h3 className="text-lg font-semibold text-slate-800 mb-2">
-							4.1 Paket Gratis
+						<h3 className="text-lg font-semibold text-foreground/90 mb-2">
+							4.1 Free Plan
 						</h3>
-						<ul className="list-disc pl-6 text-slate-700 space-y-1">
+						<ul className="list-disc pl-6 text-foreground/80 space-y-1">
 							<li>
-								Akses ke 3 model AI (WormGPT, Gemini 2.0 Flash, Groq Llama 3.3
-								70B)
+								Access to smart AI models (UltraAgent)
 							</li>
-							<li>Batas 20 chat per hari (reset setiap 24 jam)</li>
-							<li>Riwayat chat disimpan selama 7 hari</li>
-							<li>Upload file hingga 5MB</li>
+							<li>Limit of 10 chats per day (resets every 24 hours)</li>
+							<li>Chat history saved for 7 days</li>
+							<li>File upload up to 5MB</li>
 						</ul>
 
-						<h3 className="text-lg font-semibold text-slate-800 mb-2 mt-4">
-							4.2 Paket Pro
+						<h3 className="text-lg font-semibold text-foreground/90 mb-2 mt-4">
+							4.2 Pro Plan
 						</h3>
-						<ul className="list-disc pl-6 text-slate-700 space-y-1">
-							<li>Akses ke seluruh 26 model AI</li>
-							<li>Chat tanpa batas</li>
-							<li>Riwayat chat tanpa batas</li>
-							<li>Upload file hingga 100MB</li>
-							<li>Dukungan prioritas</li>
-							<li>Akses API</li>
+						<ul className="list-disc pl-6 text-foreground/80 space-y-1">
+							<li>Priority access to both AI models</li>
+							<li>Unlimited chat</li>
+							<li>Unlimited chat history</li>
+							<li>File upload up to 100MB</li>
+							<li>Priority support</li>
+							<li>API Access</li>
 						</ul>
 
-						<h3 className="text-lg font-semibold text-slate-800 mb-2 mt-4">
-							4.3 Pembayaran
+						<h3 className="text-lg font-semibold text-foreground/90 mb-2 mt-4">
+							4.3 Payment
 						</h3>
-						<p className="text-slate-700 leading-relaxed">
-							Paket Pro diaktifkan melalui sistem kode voucher (redeem code).
-							Harga paket Pro adalah Rp 30.000/bulan. Pembayaran bersifat
-							non-refundable kecuali ditentukan lain.
+						<p className="text-foreground/80 leading-relaxed">
+							The Pro plan is activated via a voucher code system (redeem code).
+							The price of the Pro plan is Rp 20.000/month. Payments are
+							non-refundable unless specified otherwise.
 						</p>
 					</section>
 
 					<section>
-						<h2 className="text-xl font-bold text-slate-900 mb-3">
-							5. Penggunaan yang Diperbolehkan
+						<h2 className="text-xl font-bold text-foreground mb-3">
+							5. Acceptable Use
 						</h2>
-						<p className="text-slate-700 leading-relaxed">
-							Anda setuju untuk menggunakan layanan kami hanya untuk tujuan yang
-							sah. Anda <strong>dilarang</strong>:
+						<p className="text-foreground/80 leading-relaxed">
+							You agree to use our service only for lawful purposes.
+							You are <strong>prohibited</strong> from:
 						</p>
-						<ul className="list-disc pl-6 text-slate-700 space-y-1 mt-2">
+						<ul className="list-disc pl-6 text-foreground/80 space-y-1 mt-2">
 							<li>
-								Menggunakan layanan untuk aktivitas ilegal atau melanggar hukum
+								Using the service for illegal or unlawful activities
 							</li>
 							<li>
-								Mencoba mengeksploitasi, meretas, atau merusak infrastruktur
-								kami
+								Attempting to exploit, hack, or damage our infrastructure
 							</li>
 							<li>
-								Menggunakan bot atau skrip otomatis untuk mengakses layanan
-								secara berlebihan
+								Using bots or automated scripts to excessively access the service
 							</li>
 							<li>
-								Membuat konten yang mengandung ujaran kebencian, kekerasan, atau
-								konten dewasa
+								Creating content that contains hate speech, violence, or
+								adult content
 							</li>
-							<li>Membagikan akun atau kredensial kepada pihak lain</li>
+							<li>Sharing accounts or credentials with third parties</li>
 							<li>
-								Membalikkan rekayasa (reverse-engineer) atau menyalin layanan
-								kami
+								Reverse-engineering or copying our service
 							</li>
-							<li>Menggunakan layanan untuk spam atau phishing</li>
+							<li>Using the service for spam or phishing</li>
 						</ul>
 					</section>
 
 					<section>
-						<h2 className="text-xl font-bold text-slate-900 mb-3">
-							6. Konten yang Dihasilkan AI
+						<h2 className="text-xl font-bold text-foreground mb-3">
+							6. AI-Generated Content
 						</h2>
-						<p className="text-slate-700 leading-relaxed">
-							Respons yang dihasilkan oleh model AI diberikan apa adanya
-							(&quot;as-is&quot;). Kami tidak menjamin keakuratan, kelengkapan,
-							atau keandalan konten yang dihasilkan. Anda bertanggung jawab
-							untuk memverifikasi informasi yang diterima sebelum
-							menggunakannya.
+						<p className="text-foreground/80 leading-relaxed">
+							Responses generated by AI models are provided &quot;as-is&quot;.
+							We do not guarantee the accuracy, completeness, or reliability
+							of the generated content. You are responsible for
+							verifying the information received before using it.
 						</p>
-						<p className="text-slate-700 leading-relaxed mt-2">
-							Ultramaxo AI tidak bertanggung jawab atas keputusan yang diambil
-							berdasarkan output AI, termasuk namun tidak terbatas pada
-							keputusan bisnis, medis, hukum, atau keuangan.
+						<p className="text-foreground/80 leading-relaxed mt-2">
+							Ultramaxo AI is not liable for decisions made based
+							on AI output, including but not limited to business,
+							medical, legal, or financial decisions.
 						</p>
 					</section>
 
 					<section>
-						<h2 className="text-xl font-bold text-slate-900 mb-3">
-							7. Hak Kekayaan Intelektual
+						<h2 className="text-xl font-bold text-foreground mb-3">
+							7. Intellectual Property Rights
 						</h2>
-						<p className="text-slate-700 leading-relaxed">
-							Platform Ultramaxo AI, termasuk desain, kode, logo, dan konten
-							asli, merupakan hak milik kami dan dilindungi oleh hukum hak
-							cipta. Konten yang Anda hasilkan melalui interaksi dengan AI
-							menjadi milik Anda, dengan ketentuan bahwa kami berhak
-							menggunakannya secara anonim untuk peningkatan layanan.
+						<p className="text-foreground/80 leading-relaxed">
+							The Ultramaxo AI platform, including design, code, logos, and
+							original content, is our property and protected by copyright
+							laws. The content you generate through interaction with the AI
+							becomes yours, provided that we retain the right to anonymously
+							use it to improve our services.
 						</p>
 					</section>
 
 					<section>
-						<h2 className="text-xl font-bold text-slate-900 mb-3">
-							8. Batasan Tanggung Jawab
+						<h2 className="text-xl font-bold text-foreground mb-3">
+							8. Limitation of Liability
 						</h2>
-						<p className="text-slate-700 leading-relaxed">
-							Sejauh diizinkan oleh hukum, Ultramaxo AI tidak bertanggung jawab
-							atas:
+						<p className="text-foreground/80 leading-relaxed">
+							To the extent permitted by law, Ultramaxo AI is not liable for:
 						</p>
-						<ul className="list-disc pl-6 text-slate-700 space-y-1 mt-2">
+						<ul className="list-disc pl-6 text-foreground/80 space-y-1 mt-2">
 							<li>
-								Kerugian langsung atau tidak langsung yang timbul dari
-								penggunaan layanan
+								Direct or indirect damages arising from the use of the service
 							</li>
-							<li>Gangguan layanan, downtime, atau kehilangan data</li>
-							<li>Tindakan pihak ketiga termasuk penyedia model AI</li>
-							<li>Konten yang dihasilkan oleh model AI</li>
+							<li>Service interruptions, downtime, or data loss</li>
+							<li>Actions of third parties including AI model providers</li>
+							<li>Content generated by AI models</li>
 						</ul>
 					</section>
 
 					<section>
-						<h2 className="text-xl font-bold text-slate-900 mb-3">
-							9. Penghentian Layanan
+						<h2 className="text-xl font-bold text-foreground mb-3">
+							9. Termination of Service
 						</h2>
-						<p className="text-slate-700 leading-relaxed">
-							Kami berhak menangguhkan atau menghentikan akun Anda tanpa
-							pemberitahuan sebelumnya jika Anda melanggar Syarat dan Ketentuan
-							ini. Anda juga dapat menghapus akun Anda kapan saja melalui
-							pengaturan akun atau dengan menghubungi kami.
+						<p className="text-foreground/80 leading-relaxed">
+							We reserve the right to suspend or terminate your account without
+							prior notice if you violate these Terms and Conditions.
+							You can also delete your account at any time through
+							account settings or by contacting us.
 						</p>
 					</section>
 
 					<section>
-						<h2 className="text-xl font-bold text-slate-900 mb-3">
-							10. Ketersediaan Layanan
+						<h2 className="text-xl font-bold text-foreground mb-3">
+							10. Service Availability
 						</h2>
-						<p className="text-slate-700 leading-relaxed">
-							Kami berusaha menjaga ketersediaan layanan 99.9%, namun kami tidak
-							menjamin layanan akan tersedia tanpa gangguan. Pemeliharaan
-							terjadwal akan diinformasikan sebelumnya jika memungkinkan.
+						<p className="text-foreground/80 leading-relaxed">
+							We strive to maintain 99.9% service availability, but we do not
+							guarantee the service will be available without interruption. Scheduled
+							maintenance will be communicated in advance if possible.
 						</p>
 					</section>
 
 					<section>
-						<h2 className="text-xl font-bold text-slate-900 mb-3">
-							11. Perubahan Syarat
+						<h2 className="text-xl font-bold text-foreground mb-3">
+							11. Changes to Terms
 						</h2>
-						<p className="text-slate-700 leading-relaxed">
-							Kami dapat memperbarui Syarat dan Ketentuan ini kapan saja.
-							Perubahan signifikan akan diberitahukan melalui email atau
-							notifikasi di platform. Penggunaan berkelanjutan setelah perubahan
-							dianggap sebagai persetujuan Anda.
+						<p className="text-foreground/80 leading-relaxed">
+							We may update these Terms and Conditions at any time.
+							Significant changes will be communicated via email or
+							platform notifications. Continued use after changes
+							implies your consent.
 						</p>
 					</section>
 
 					<section>
-						<h2 className="text-xl font-bold text-slate-900 mb-3">
-							12. Hukum yang Berlaku
+						<h2 className="text-xl font-bold text-foreground mb-3">
+							12. Governing Law
 						</h2>
-						<p className="text-slate-700 leading-relaxed">
-							Syarat dan Ketentuan ini diatur oleh dan ditafsirkan sesuai dengan
-							hukum yang berlaku di Republik Indonesia. Segala sengketa yang
-							timbul akan diselesaikan melalui musyawarah terlebih dahulu.
+						<p className="text-foreground/80 leading-relaxed">
+							These Terms and Conditions are governed by and construed in
+							accordance with the applicable laws of the Republic of Indonesia.
+							Any disputes arising will be resolved through deliberation first.
 						</p>
 					</section>
 
 					<section>
-						<h2 className="text-xl font-bold text-slate-900 mb-3">
-							13. Hubungi Kami
+						<h2 className="text-xl font-bold text-foreground mb-3">
+							13. Contact Us
 						</h2>
-						<p className="text-slate-700 leading-relaxed">
-							Jika Anda memiliki pertanyaan mengenai Syarat dan Ketentuan ini,
-							silakan hubungi kami di:
+						<p className="text-foreground/80 leading-relaxed">
+							If you have any questions regarding these Terms and Conditions,
+							please contact us at:
 						</p>
-						<div className="mt-3 p-4 bg-slate-50 border border-slate-200 rounded-xl">
-							<p className="text-slate-800 font-semibold">Ultramaxo AI</p>
-							<p className="text-slate-600 text-sm mt-1">
+						<div className="mt-3 p-4 bg-muted border border-border rounded-xl">
+							<p className="text-foreground font-semibold">Ultramaxo AI</p>
+							<p className="text-muted-foreground text-sm mt-1">
 								Email: admin@ultramaxo.tech
 							</p>
-							<p className="text-slate-600 text-sm">Website: ultramaxo.tech</p>
+							<p className="text-muted-foreground text-sm">Website: ultramaxo.tech</p>
 						</div>
 					</section>
 				</div>
 			</main>
 
 			{/* Footer */}
-			<footer className="border-t border-slate-200 bg-white py-6">
+			<footer className="border-t border-border bg-background py-6">
 				<div className="max-w-4xl mx-auto px-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-					<p className="text-slate-500 text-sm">
-						© 2025 Ultramaxo AI. Hak cipta dilindungi.
+					<p className="text-muted-foreground text-sm">
+						© 2025 Ultramaxo AI. All rights reserved.
 					</p>
 					<div className="flex gap-4 text-sm">
 						<Link
-							className="text-slate-500 hover:text-slate-800 transition-colors"
+							className="text-muted-foreground hover:text-foreground transition-colors"
 							href="/privacy"
 						>
-							Kebijakan Privasi
+							Privacy Policy
 						</Link>
 						<Link
-							className="text-slate-500 hover:text-slate-800 transition-colors"
+							className="text-muted-foreground hover:text-foreground transition-colors"
 							href="/"
 						>
-							Beranda
+							Home
 						</Link>
 					</div>
 				</div>

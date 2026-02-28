@@ -137,7 +137,14 @@ export function AuthForm({
 				<div className="flex flex-col gap-3 relative z-10">
 					<button
 						className="flex w-full items-center justify-center gap-3 rounded-xl border border-zinc-800 bg-transparent py-2.5 text-sm font-semibold text-white hover:bg-zinc-800 transition-all active:scale-[0.98]"
-						onClick={() => signIn("google", { callbackUrl: "/chat" })}
+						onClick={() => {
+							const chatUrl =
+								typeof window !== "undefined" &&
+								window.location.hostname.endsWith("ultramaxo.tech")
+									? "https://chat.ultramaxo.tech"
+									: "/chat";
+							signIn("google", { callbackUrl: chatUrl });
+						}}
 						type="button"
 					>
 						<LogoGoogle size={18} />
@@ -145,7 +152,14 @@ export function AuthForm({
 					</button>
 					<button
 						className="flex w-full items-center justify-center gap-3 rounded-xl border border-zinc-800 bg-transparent py-2.5 text-sm font-semibold text-white hover:bg-zinc-800 transition-all active:scale-[0.98]"
-						onClick={() => signIn("github", { callbackUrl: "/chat" })}
+						onClick={() => {
+							const chatUrl =
+								typeof window !== "undefined" &&
+								window.location.hostname.endsWith("ultramaxo.tech")
+									? "https://chat.ultramaxo.tech"
+									: "/chat";
+							signIn("github", { callbackUrl: chatUrl });
+						}}
 						type="button"
 					>
 						<GitIcon size={18} />

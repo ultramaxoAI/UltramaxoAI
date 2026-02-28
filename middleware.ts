@@ -3,6 +3,19 @@ import { getToken } from "next-auth/jwt";
 import { guestRegex, isDevelopmentEnvironment } from "./lib/constants";
 import { securityHeaders } from "./middleware.security";
 
+const CHAT_SUBDOMAIN = "chat.ultramaxo.tech";
+const MAIN_DOMAIN = "ultramaxo.tech";
+
+function isChatSubdomain(request: NextRequest): boolean {
+	const hostname = request.headers.get("host") || "";
+	return hostname.startsWith("chat.");
+}
+
+function isProduction(request: NextRequest): boolean {
+	const hostname = request.headers.get("host") || "";
+	return hostname.endsWith("ultramaxo.tech");
+}
+
 export async function middleware(request: NextRequest) {
 	const { pathname } = request.nextUrl;
 
@@ -23,9 +36,36 @@ export async function middleware(request: NextRequest) {
 		req: request,
 		secret: process.env.AUTH_SECRET,
 		secureCookie: !isDevelopmentEnvironment,
+		// Use the same cookie name as configured in auth.ts for production
+		...(isProduction(request) && {
+			cookieName: "__Secure-authjs.session-token",
+		}),
 	});
 
-	// Allow access to home and chat pages without a token
+	const chatSubdomain = isChatSubdomain(request);
+	const production = isProduction(request);
+
+	// If user hits chat subdomain without auth → redirect to main domain login
+	if (chatSubdomain && !token) {
+		// Allow API routes and static assets on chat subdomain
+		if (pathname.startsWith("/api/") || pathname.startsWith("/_next/")) {
+			return NextResponse.next();
+		}
+		return NextResponse.redirect(new URL("/login", `https://${MAIN_DOMAIN}`));
+	}
+
+	// If user is on main domain and hits /chat while in production → redirect to chat subdomain
+	if (production && !chatSubdomain && pathname.startsWith("/chat") && token) {
+		const chatPath = pathname.replace("/chat", "") || "";
+		return NextResponse.redirect(
+			new URL(
+				`/chat${chatPath}${request.nextUrl.search}`,
+				`https://${CHAT_SUBDOMAIN}`,
+			),
+		);
+	}
+
+	// Allow access to home and public pages without a token
 	if (
 		!token &&
 		[
@@ -54,7 +94,13 @@ export async function middleware(request: NextRequest) {
 
 	const isGuest = guestRegex.test(token?.email ?? "");
 
+	// Authenticated non-guest users on login/register → redirect to chat
 	if (token && !isGuest && ["/login", "/register"].includes(pathname)) {
+		if (production) {
+			return NextResponse.redirect(
+				new URL("/chat", `https://${CHAT_SUBDOMAIN}`),
+			);
+		}
 		return NextResponse.redirect(new URL("/chat", request.url));
 	}
 

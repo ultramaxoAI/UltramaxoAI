@@ -69,10 +69,10 @@ export default function RootLayout({
 					}}
 				/>
 			</head>
-			<body className="antialiased">
+			<body className="antialiased bg-background text-foreground transition-colors duration-500 ease-in-out">
 				<ThemeProvider
 					attribute="class"
-					defaultTheme="system"
+					defaultTheme="light"
 					disableTransitionOnChange
 					enableSystem
 				>

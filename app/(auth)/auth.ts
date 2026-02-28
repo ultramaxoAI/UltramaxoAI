@@ -57,6 +57,9 @@ declare module "@auth/core/adapters" {
 	}
 }
 
+const isProduction = process.env.NODE_ENV === "production";
+const cookieDomain = isProduction ? ".ultramaxo.tech" : undefined;
+
 export const {
 	handlers: { GET, POST },
 	auth,
@@ -66,6 +69,38 @@ export const {
 	...authConfig,
 	adapter: DrizzleAdapter(db) as Adapter,
 	session: { strategy: "jwt" },
+	...(isProduction && {
+		cookies: {
+			sessionToken: {
+				name: "__Secure-authjs.session-token",
+				options: {
+					httpOnly: true,
+					sameSite: "lax",
+					path: "/",
+					secure: true,
+					domain: cookieDomain,
+				},
+			},
+			callbackUrl: {
+				name: "__Secure-authjs.callback-url",
+				options: {
+					sameSite: "lax",
+					path: "/",
+					secure: true,
+					domain: cookieDomain,
+				},
+			},
+			csrfToken: {
+				name: "__Host-authjs.csrf-token",
+				options: {
+					httpOnly: true,
+					sameSite: "lax",
+					path: "/",
+					secure: true,
+				},
+			},
+		},
+	}),
 	providers: [
 		Google({
 			clientId: process.env.AUTH_GOOGLE_ID,
