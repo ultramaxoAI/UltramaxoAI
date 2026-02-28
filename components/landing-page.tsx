@@ -12,16 +12,14 @@ import {
 	Code2,
 	ExternalLink,
 	Github,
-	Globe,
 	Layers,
 	Menu,
 	MessageSquare,
 	Shield,
+	Sparkles,
 	Upload,
 	X,
 	Zap,
-	Twitter,
-	Sparkles,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useRef, useState } from "react";
@@ -58,9 +56,11 @@ const staggerContainer = {
    ──────────────────────────────────────────── */
 const UltramaxoLogo = ({ size = 32 }: { size?: number }) => (
 	<svg
-		className="flex-shrink-0"
+		aria-label="Ultramaxo Logo"
+		className="shrink-0"
 		fill="none"
 		height={size}
+		role="img"
 		viewBox="0 0 64 64"
 		width={size}
 		xmlns="http://www.w3.org/2000/svg"
@@ -273,7 +273,13 @@ export default function LandingPage() {
 		},
 	];
 
-	const capabilities = ["Chat", "Code Editor", "Artifacts", "File Upload", "Image Generation"];
+	const capabilities = [
+		"Chat",
+		"Code Editor",
+		"Artifacts",
+		"File Upload",
+		"Image Generation",
+	];
 
 	return (
 		<div className="min-h-screen bg-background text-foreground overflow-hidden selection:bg-indigo-500/20 transition-colors duration-500 ease-in-out">
@@ -296,6 +302,7 @@ export default function LandingPage() {
 					<button
 						className="flex items-center gap-2.5 group"
 						onClick={() => scrollToSection("#home")}
+						type="button"
 					>
 						<div className="rounded-lg overflow-hidden">
 							<UltramaxoLogo size={28} />
@@ -313,6 +320,7 @@ export default function LandingPage() {
 								className="text-sm text-zinc-600 dark:text-gray-400 hover:text-zinc-900 dark:text-white transition-colors duration-200"
 								key={l.name}
 								onClick={() => scrollToSection(l.href)}
+								type="button"
 							>
 								{l.name}
 							</button>
@@ -324,6 +332,7 @@ export default function LandingPage() {
 						<button
 							className="text-sm text-zinc-600 dark:text-gray-400 hover:text-zinc-900 dark:text-white transition-colors cursor-pointer"
 							onClick={() => router.push("/login")}
+							type="button"
 						>
 							Sign In
 						</button>
@@ -345,6 +354,7 @@ export default function LandingPage() {
 						<button
 							className="text-zinc-600 dark:text-gray-400 hover:text-zinc-900 dark:text-white p-1 transition-colors"
 							onClick={() => setMobileNavOpen(!mobileNavOpen)}
+							type="button"
 						>
 							{mobileNavOpen ? <X size={22} /> : <Menu size={22} />}
 						</button>
@@ -364,6 +374,7 @@ export default function LandingPage() {
 									key={l.name}
 									onClick={() => scrollToSection(l.href)}
 									className="text-sm text-zinc-600 dark:text-gray-400 hover:text-zinc-900 dark:text-white transition-colors text-left"
+									type="button"
 								>
 									{l.name}
 								</button>
@@ -374,6 +385,7 @@ export default function LandingPage() {
 									setMobileNavOpen(false);
 									router.push("/login");
 								}}
+								type="button"
 							>
 								Sign In
 							</button>
@@ -396,7 +408,11 @@ export default function LandingPage() {
 			{/* ═══════════════════════════════════════════
           HERO
           ═══════════════════════════════════════════ */}
-			<section className="relative z-10 pt-32 pb-20 sm:pt-40 sm:pb-28" id="home" ref={heroRef}>
+			<section
+				className="relative z-10 pt-32 pb-20 sm:pt-40 sm:pb-28"
+				id="home"
+				ref={heroRef}
+			>
 				<motion.div
 					className="max-w-6xl mx-auto px-5"
 					style={{ opacity: heroOpacity, scale: heroScale }}
@@ -425,9 +441,7 @@ export default function LandingPage() {
 							>
 								The AI Assistant
 								<br />
-								<span className="text-gradient">
-									That Works Faster
-								</span>
+								<span className="text-gradient">That Works Faster</span>
 							</motion.h1>
 
 							<motion.p
@@ -437,8 +451,8 @@ export default function LandingPage() {
 								initial="hidden"
 								variants={fadeUp}
 							>
-								Ultramaxo is an AI workspace for conversations, code development,
-								and document creation — all in one platform.
+								Ultramaxo is an AI workspace for conversations, code
+								development, and document creation — all in one platform.
 								Instant responses, free to start.
 							</motion.p>
 
@@ -484,8 +498,8 @@ export default function LandingPage() {
 									"UltraAgent Powered",
 									"End-to-End Encrypted",
 									"Free Forever Tier",
-								].map((t, i) => (
-									<span className="flex items-center gap-1.5" key={i}>
+								].map((t) => (
+									<span className="flex items-center gap-1.5" key={t}>
 										<Check className="w-3.5 h-3.5 text-primary" />
 										{t}
 									</span>
@@ -512,7 +526,9 @@ export default function LandingPage() {
 											<span className="font-semibold text-sm text-zinc-900 dark:text-white">
 												Ultramaxo AI
 											</span>
-											<p className="text-[10px] text-zinc-600 dark:text-gray-400">UltraAgent</p>
+											<p className="text-[10px] text-zinc-600 dark:text-gray-400">
+												UltraAgent
+											</p>
 										</div>
 									</div>
 									<span className="px-2.5 py-1 rounded-full bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 text-[10px] font-medium">
@@ -532,8 +548,8 @@ export default function LandingPage() {
 									<div className="flex justify-start">
 										<div className="bg-black/[0.04] dark:bg-white/[0.04] border border-black/[0.06] dark:border-white/[0.06] rounded-2xl rounded-tl-md px-4 py-3 max-w-[80%]">
 											<p className="text-sm text-zinc-900 dark:text-white leading-relaxed">
-												Here&apos;s a strategy summary for Gen Z: Focus on
-												short visual content, authenticity, social commerce, and
+												Here&apos;s a strategy summary for Gen Z: Focus on short
+												visual content, authenticity, social commerce, and
 												community-driven campaigns...
 											</p>
 										</div>
@@ -574,8 +590,12 @@ export default function LandingPage() {
 							{ value: "∞", label: "Conversations" },
 						].map((stat) => (
 							<div key={stat.label} className="text-center">
-								<div className="text-3xl sm:text-4xl font-bold text-zinc-900 dark:text-white">{stat.value}</div>
-								<div className="text-sm text-zinc-600 dark:text-gray-400 mt-1">{stat.label}</div>
+								<div className="text-3xl sm:text-4xl font-bold text-zinc-900 dark:text-white">
+									{stat.value}
+								</div>
+								<div className="text-sm text-zinc-600 dark:text-gray-400 mt-1">
+									{stat.label}
+								</div>
 							</div>
 						))}
 					</motion.div>
@@ -638,9 +658,16 @@ export default function LandingPage() {
 								<div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center mb-4 text-primary">
 									<feature.icon size={20} />
 								</div>
-								<h3 className="text-base font-semibold mb-2 text-zinc-900 dark:text-white">{feature.title}</h3>
-								<p className="text-sm text-zinc-600 dark:text-gray-400 leading-relaxed flex-1">{feature.desc}</p>
-								<button className="inline-flex items-center gap-1 text-sm text-primary hover:underline mt-4 cursor-pointer self-start">
+								<h3 className="text-base font-semibold mb-2 text-zinc-900 dark:text-white">
+									{feature.title}
+								</h3>
+								<p className="text-sm text-zinc-600 dark:text-gray-400 leading-relaxed flex-1">
+									{feature.desc}
+								</p>
+								<button
+									className="inline-flex items-center gap-1 text-sm text-primary hover:underline mt-4 cursor-pointer self-start"
+									type="button"
+								>
 									{feature.link}
 									<ExternalLink size={12} />
 								</button>
@@ -651,9 +678,83 @@ export default function LandingPage() {
 			</section>
 
 			{/* ═══════════════════════════════════════════
+          HOW IT WORKS
+          ═══════════════════════════════════════════ */}
+			<section className="relative z-10 py-20 sm:py-28 bg-black/[0.02] dark:bg-white/[0.02]">
+				<div className="max-w-5xl mx-auto px-5">
+					<motion.div
+						initial={{ opacity: 0, y: 16 }}
+						whileInView={{ opacity: 1, y: 0 }}
+						viewport={{ once: true }}
+						transition={{ duration: 0.5 }}
+						className="text-center mb-14"
+					>
+						<span className="inline-block text-primary text-xs font-semibold tracking-widest uppercase mb-4">
+							How It Works
+						</span>
+						<h2 className="text-3xl sm:text-4xl font-bold mb-3 text-zinc-900 dark:text-white">
+							Get Started in{" "}
+							<span className="text-gradient">3 Simple Steps</span>
+						</h2>
+						<p className="text-zinc-600 dark:text-gray-400 max-w-md mx-auto">
+							From sign up to your first AI conversation in under a minute.
+						</p>
+					</motion.div>
+
+					<div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+						{[
+							{
+								step: "01",
+								title: "Create Your Account",
+								desc: "Sign up for free in seconds. No credit card required — just your email and you're in.",
+								icon: Zap,
+							},
+							{
+								step: "02",
+								title: "Choose Your Model",
+								desc: "Pick UltraAgent for fast responses or UltraAgent Pro for advanced reasoning and coding tasks.",
+								icon: Layers,
+							},
+							{
+								step: "03",
+								title: "Start Creating",
+								desc: "Chat, write code, create documents, and upload files — all in one powerful workspace.",
+								icon: Code2,
+							},
+						].map((item, i) => (
+							<motion.div
+								key={item.step}
+								initial={{ opacity: 0, y: 20 }}
+								whileInView={{ opacity: 1, y: 0 }}
+								viewport={{ once: true }}
+								transition={{ duration: 0.4, delay: i * 0.1 }}
+								className="relative p-7 rounded-2xl border border-black/[0.06] dark:border-white/[0.06] bg-white/50 dark:bg-white/[0.02] text-center"
+							>
+								<div className="text-5xl font-black text-primary/10 absolute top-4 right-5">
+									{item.step}
+								</div>
+								<div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center mb-5 mx-auto text-primary">
+									<item.icon size={24} />
+								</div>
+								<h3 className="text-lg font-semibold mb-2 text-zinc-900 dark:text-white">
+									{item.title}
+								</h3>
+								<p className="text-sm text-zinc-600 dark:text-gray-400 leading-relaxed">
+									{item.desc}
+								</p>
+							</motion.div>
+						))}
+					</div>
+				</div>
+			</section>
+
+			{/* ═══════════════════════════════════════════
           ABOUT / CODE EXAMPLE
           ═══════════════════════════════════════════ */}
-			<section className="relative z-10 py-20 sm:py-28 bg-black/[0.02] dark:bg-white/[0.02]" id="about">
+			<section
+				className="relative z-10 py-20 sm:py-28 bg-black/[0.02] dark:bg-white/[0.02]"
+				id="about"
+			>
 				<div className="max-w-5xl mx-auto px-5">
 					<div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
 						{/* Code block */}
@@ -668,7 +769,9 @@ export default function LandingPage() {
 									<div className="w-2.5 h-2.5 rounded-full bg-red-500/60" />
 									<div className="w-2.5 h-2.5 rounded-full bg-yellow-500/60" />
 									<div className="w-2.5 h-2.5 rounded-full bg-green-500/60" />
-									<span className="ml-2 text-xs text-zinc-600 dark:text-gray-400">chat-example.ts</span>
+									<span className="ml-2 text-xs text-zinc-600 dark:text-gray-400">
+										chat-example.ts
+									</span>
 								</div>
 								<pre className="p-4 text-sm leading-relaxed overflow-x-auto">
 									<code className="text-zinc-700 dark:text-gray-300">{`// Start a conversation with UltraAgent
@@ -696,13 +799,12 @@ console.log(data.message); // "Hi! How can I help?"`}</code>
 							transition={{ duration: 0.6 }}
 						>
 							<h2 className="text-3xl sm:text-4xl font-bold mb-5 text-zinc-900 dark:text-white">
-								Get started in{" "}
-								<span className="text-gradient">
-									seconds
-								</span>
+								Get started in <span className="text-gradient">seconds</span>
 							</h2>
 							<p className="text-zinc-600 dark:text-gray-400 mb-6 leading-relaxed">
-								Ultramaxo is designed for instant productivity. Sign up, start chatting, and let AI handle the rest. Access all tools — from code editing to document creation — in one interface.
+								Ultramaxo is designed for instant productivity. Sign up, start
+								chatting, and let AI handle the rest. Access all tools — from
+								code editing to document creation — in one interface.
 							</p>
 							<ul className="space-y-3 text-sm">
 								{[
@@ -713,7 +815,127 @@ console.log(data.message); // "Hi! How can I help?"`}</code>
 								].map((item) => (
 									<li key={item} className="flex items-start gap-2.5">
 										<span className="mt-0.5 w-1.5 h-1.5 rounded-full bg-primary shrink-0" />
-										<span className="text-zinc-900 dark:text-white">{item}</span>
+										<span className="text-zinc-900 dark:text-white">
+											{item}
+										</span>
+									</li>
+								))}
+							</ul>
+						</motion.div>
+					</div>
+				</div>
+			</section>
+
+			{/* ═══════════════════════════════════════════
+          AI MODELS
+          ═══════════════════════════════════════════ */}
+			<section className="relative z-10 py-20 sm:py-28">
+				<div className="max-w-5xl mx-auto px-5">
+					<motion.div
+						initial={{ opacity: 0, y: 16 }}
+						whileInView={{ opacity: 1, y: 0 }}
+						viewport={{ once: true }}
+						transition={{ duration: 0.5 }}
+						className="text-center mb-14"
+					>
+						<span className="inline-block text-primary text-xs font-semibold tracking-widest uppercase mb-4">
+							AI Models
+						</span>
+						<h2 className="text-3xl sm:text-4xl font-bold mb-3 text-zinc-900 dark:text-white">
+							Choose Your <span className="text-gradient">AI Assistant</span>
+						</h2>
+						<p className="text-zinc-600 dark:text-gray-400 max-w-lg mx-auto">
+							Two powerful models tailored for different needs — from quick
+							conversations to deep reasoning.
+						</p>
+					</motion.div>
+
+					<div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+						{/* UltraAgent */}
+						<motion.div
+							initial={{ opacity: 0, x: -20 }}
+							whileInView={{ opacity: 1, x: 0 }}
+							viewport={{ once: true }}
+							transition={{ duration: 0.5 }}
+							className="relative p-8 rounded-2xl border border-black/[0.06] dark:border-white/[0.06] bg-black/[0.02] dark:bg-white/[0.02] hover:border-primary/30 transition-all duration-300"
+						>
+							<div className="flex items-center gap-3 mb-6">
+								<div className="w-12 h-12 rounded-xl bg-emerald-500/10 flex items-center justify-center">
+									<Zap className="w-6 h-6 text-emerald-500" />
+								</div>
+								<div>
+									<h3 className="text-xl font-bold text-zinc-900 dark:text-white">
+										UltraAgent
+									</h3>
+									<span className="text-xs text-emerald-500 font-medium">
+										Free
+									</span>
+								</div>
+							</div>
+							<p className="text-sm text-zinc-600 dark:text-gray-400 mb-6 leading-relaxed">
+								Fast and capable AI assistant optimized for speed. Perfect for
+								everyday conversations, quick answers, and general tasks.
+							</p>
+							<ul className="space-y-3">
+								{[
+									"⚡ Ultra-fast response time",
+									"💬 General chat & Q&A",
+									"📝 Basic document creation",
+									"📎 File upload & analysis",
+								].map((feat) => (
+									<li
+										key={feat}
+										className="flex items-center gap-2 text-sm text-zinc-700 dark:text-gray-300"
+									>
+										<Check className="w-4 h-4 text-emerald-500 shrink-0" />
+										{feat}
+									</li>
+								))}
+							</ul>
+						</motion.div>
+
+						{/* UltraAgent Pro */}
+						<motion.div
+							initial={{ opacity: 0, x: 20 }}
+							whileInView={{ opacity: 1, x: 0 }}
+							viewport={{ once: true }}
+							transition={{ duration: 0.5 }}
+							className="relative p-8 rounded-2xl border border-primary/40 bg-primary/5 shadow-sm shadow-primary/10 hover:shadow-lg hover:shadow-primary/15 transition-all duration-300"
+						>
+							<div className="absolute -top-3 right-6 px-3 py-1 bg-gradient-to-r from-indigo-500 to-violet-600 rounded-full text-[10px] font-medium text-white shadow-lg shadow-indigo-500/25">
+								Pro
+							</div>
+							<div className="flex items-center gap-3 mb-6">
+								<div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center">
+									<Sparkles className="w-6 h-6 text-primary" />
+								</div>
+								<div>
+									<h3 className="text-xl font-bold text-zinc-900 dark:text-white">
+										UltraAgent Pro
+									</h3>
+									<span className="text-xs text-primary font-medium">
+										Pro Plan
+									</span>
+								</div>
+							</div>
+							<p className="text-sm text-zinc-600 dark:text-gray-400 mb-6 leading-relaxed">
+								Advanced AI with superior reasoning and deep thinking. Built for
+								complex coding, detailed analysis, and expert-level tasks.
+							</p>
+							<ul className="space-y-3">
+								{[
+									"🧠 Deep reasoning & thinking",
+									"💻 Expert-level coding",
+									"📊 Complex analysis & research",
+									"🔧 Full Artifacts system",
+									"♾️ Unlimited conversations",
+								].map((feat) => (
+									<li
+										key={feat}
+										className="flex items-center gap-2 text-sm text-zinc-700 dark:text-gray-300"
+									>
+										<Check className="w-4 h-4 text-primary shrink-0" />
+										{feat}
 									</li>
 								))}
 							</ul>
@@ -743,7 +965,8 @@ console.log(data.message); // "Hi! How can I help?"`}</code>
 							Start Free, Upgrade When Ready
 						</h2>
 						<p className="text-zinc-600 dark:text-gray-400 max-w-md mx-auto">
-							No hidden fees. Use for free as long as you want, upgrade anytime for full features.
+							No hidden fees. Use for free as long as you want, upgrade anytime
+							for full features.
 						</p>
 					</motion.div>
 
@@ -762,7 +985,7 @@ console.log(data.message); // "Hi! How can I help?"`}</code>
 										: "border-black/[0.06] dark:border-white/[0.06] bg-black/[0.02] dark:bg-white/[0.02] hover:border-primary/30"
 								}`}
 								custom={i}
-								key={i}
+								key={plan.name}
 								transition={{ duration: 0.25 }}
 								variants={fadeUp}
 								whileHover={{ y: -4 }}
@@ -774,7 +997,9 @@ console.log(data.message); // "Hi! How can I help?"`}</code>
 								)}
 
 								<div className="mb-7">
-									<p className="font-semibold text-zinc-900 dark:text-white mb-1">{plan.name}</p>
+									<p className="font-semibold text-zinc-900 dark:text-white mb-1">
+										{plan.name}
+									</p>
 									<div className="flex items-end gap-1.5 mb-2">
 										<span className="text-3xl font-extrabold text-zinc-900 dark:text-white">
 											{plan.price}
@@ -783,7 +1008,9 @@ console.log(data.message); // "Hi! How can I help?"`}</code>
 											/ {plan.period}
 										</span>
 									</div>
-									<p className="text-sm text-zinc-600 dark:text-gray-400">{plan.desc}</p>
+									<p className="text-sm text-zinc-600 dark:text-gray-400">
+										{plan.desc}
+									</p>
 								</div>
 
 								<ul className="space-y-3 mb-8">
@@ -861,7 +1088,66 @@ console.log(data.message); // "Hi! How can I help?"`}</code>
 						whileInView="visible"
 					>
 						{faqData.map((faq, i) => (
-							<FaqItem answer={faq.a} index={i} key={i} question={faq.q} />
+							<FaqItem answer={faq.a} index={i} key={faq.q} question={faq.q} />
+						))}
+					</motion.div>
+				</div>
+			</section>
+
+			{/* ═══════════════════════════════════════════
+          TECH STACK
+          ═══════════════════════════════════════════ */}
+			<section className="relative z-10 py-20 sm:py-28 bg-black/[0.02] dark:bg-white/[0.02]">
+				<div className="max-w-5xl mx-auto px-5">
+					<motion.div
+						initial={{ opacity: 0, y: 16 }}
+						whileInView={{ opacity: 1, y: 0 }}
+						viewport={{ once: true }}
+						transition={{ duration: 0.5 }}
+						className="text-center mb-14"
+					>
+						<span className="inline-block text-primary text-xs font-semibold tracking-widest uppercase mb-4">
+							Technology
+						</span>
+						<h2 className="text-3xl sm:text-4xl font-bold mb-3 text-zinc-900 dark:text-white">
+							Built With Modern Tech
+						</h2>
+						<p className="text-zinc-600 dark:text-gray-400 max-w-md mx-auto">
+							Powered by the latest technologies for performance, security, and
+							reliability.
+						</p>
+					</motion.div>
+
+					<motion.div
+						className="flex flex-wrap items-center justify-center gap-4"
+						initial="hidden"
+						variants={staggerContainer}
+						viewport={{ once: true }}
+						whileInView="visible"
+					>
+						{[
+							{ name: "Next.js", desc: "React Framework" },
+							{ name: "TypeScript", desc: "Type Safety" },
+							{ name: "Tailwind CSS", desc: "Styling" },
+							{ name: "PostgreSQL", desc: "Database" },
+							{ name: "Drizzle ORM", desc: "Data Layer" },
+							{ name: "NextAuth.js", desc: "Authentication" },
+							{ name: "Vercel", desc: "Deployment" },
+							{ name: "AI SDK", desc: "AI Integration" },
+						].map((tech, i) => (
+							<motion.div
+								key={tech.name}
+								custom={i}
+								variants={fadeUp}
+								className="flex flex-col items-center gap-2 px-6 py-5 rounded-xl border border-black/[0.06] dark:border-white/[0.06] bg-white/50 dark:bg-white/[0.02] hover:border-primary/30 hover:shadow-md hover:shadow-primary/5 transition-all duration-300 min-w-[120px]"
+							>
+								<span className="font-semibold text-sm text-zinc-900 dark:text-white">
+									{tech.name}
+								</span>
+								<span className="text-[10px] text-zinc-500 dark:text-gray-500">
+									{tech.desc}
+								</span>
+							</motion.div>
 						))}
 					</motion.div>
 				</div>
@@ -882,8 +1168,8 @@ console.log(data.message); // "Hi! How can I help?"`}</code>
 						Ready to Build with AI?
 					</h2>
 					<p className="text-zinc-600 dark:text-gray-400 mb-8">
-						Sign up for free and start using Ultramaxo in under a minute.
-						No credit card required.
+						Sign up for free and start using Ultramaxo in under a minute. No
+						credit card required.
 					</p>
 					<div className="flex flex-col sm:flex-row items-center justify-center gap-3">
 						<motion.button
@@ -912,9 +1198,21 @@ console.log(data.message); // "Hi! How can I help?"`}</code>
 					{/* Pricing hint */}
 					<div className="mt-12 grid grid-cols-1 sm:grid-cols-3 gap-4">
 						{[
-							{ title: "Free Tier", desc: "Unlimited basic usage", highlight: false },
-							{ title: "Pro", desc: "Full access to all features", highlight: true },
-							{ title: "1 Year", desc: "Best value — save 50%", highlight: false },
+							{
+								title: "Free Tier",
+								desc: "Unlimited basic usage",
+								highlight: false,
+							},
+							{
+								title: "Pro",
+								desc: "Full access to all features",
+								highlight: true,
+							},
+							{
+								title: "1 Year",
+								desc: "Best value — save 50%",
+								highlight: false,
+							},
 						].map((plan) => (
 							<div
 								key={plan.title}
@@ -924,10 +1222,14 @@ console.log(data.message); // "Hi! How can I help?"`}</code>
 										: "border-black/[0.06] dark:border-white/[0.06] bg-black/[0.02] dark:bg-white/[0.02]"
 								}`}
 							>
-								<div className={`font-semibold text-sm mb-1 ${plan.highlight ? "text-primary" : "text-zinc-900 dark:text-white"}`}>
+								<div
+									className={`font-semibold text-sm mb-1 ${plan.highlight ? "text-primary" : "text-zinc-900 dark:text-white"}`}
+								>
 									{plan.title}
 								</div>
-								<div className="text-xs text-zinc-600 dark:text-gray-400">{plan.desc}</div>
+								<div className="text-xs text-zinc-600 dark:text-gray-400">
+									{plan.desc}
+								</div>
 							</div>
 						))}
 					</div>
@@ -946,11 +1248,13 @@ console.log(data.message); // "Hi! How can I help?"`}</code>
 								<div className="rounded-lg overflow-hidden">
 									<UltramaxoLogo size={32} />
 								</div>
-								<span className="font-bold text-base text-zinc-900 dark:text-white">Ultramaxo AI</span>
+								<span className="font-bold text-base text-zinc-900 dark:text-white">
+									Ultramaxo AI
+								</span>
 							</div>
 							<p className="text-sm text-zinc-600 dark:text-gray-400 leading-relaxed">
-								AI workspace for conversations, code development, and
-								document creation.
+								AI workspace for conversations, code development, and document
+								creation.
 							</p>
 						</div>
 
@@ -964,6 +1268,7 @@ console.log(data.message); // "Hi! How can I help?"`}</code>
 									<button
 										className="hover:text-zinc-900 dark:text-white transition-colors"
 										onClick={() => scrollToSection("#home")}
+										type="button"
 									>
 										Home
 									</button>
@@ -972,6 +1277,7 @@ console.log(data.message); // "Hi! How can I help?"`}</code>
 									<button
 										className="hover:text-zinc-900 dark:text-white transition-colors"
 										onClick={() => scrollToSection("#features")}
+										type="button"
 									>
 										Features
 									</button>
@@ -980,6 +1286,7 @@ console.log(data.message); // "Hi! How can I help?"`}</code>
 									<button
 										className="hover:text-zinc-900 dark:text-white transition-colors"
 										onClick={() => scrollToSection("#pricing")}
+										type="button"
 									>
 										Pricing
 									</button>
@@ -1077,8 +1384,11 @@ function FaqItem({
 			<button
 				className="flex items-center justify-between w-full p-5 text-left cursor-pointer"
 				onClick={() => setOpen(!open)}
+				type="button"
 			>
-				<h4 className="font-medium text-sm text-zinc-900 dark:text-white pr-4">{question}</h4>
+				<h4 className="font-medium text-sm text-zinc-900 dark:text-white pr-4">
+					{question}
+				</h4>
 				<motion.div
 					animate={{ rotate: open ? 180 : 0 }}
 					transition={{ duration: 0.25 }}
