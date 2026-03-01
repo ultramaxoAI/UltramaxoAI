@@ -36,7 +36,7 @@ export function ChatExportButton({
 			);
 
 			if (!response.ok) {
-				throw new Error("Gagal export chat");
+				throw new Error("Failed to export chat");
 			}
 
 			const blob = await response.blob();
@@ -55,12 +55,12 @@ export function ChatExportButton({
 
 			toast({
 				type: "success",
-				description: `Chat berhasil di-export sebagai ${format.toUpperCase()}!`,
+				description: `Chat successfully exported as ${format.toUpperCase()}!`,
 			});
 		} catch (error: any) {
 			toast({
 				type: "error",
-				description: error.message || "Gagal export chat",
+				description: error.message || "Failed to export chat",
 			});
 		} finally {
 			setExporting(false);

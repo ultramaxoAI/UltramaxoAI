@@ -16,7 +16,7 @@ export async function POST(request: Request) {
 		const sent = await sendVerificationEmail(email, code);
 		if (!sent) {
 			return NextResponse.json(
-				{ error: "Gagal mengirim email verifikasi" },
+				{ error: "Failed to send verification email" },
 				{ status: 500 },
 			);
 		}

@@ -180,7 +180,7 @@ export function SidebarUserNav({
 								onSelect={() => router.push("/settings")}
 							>
 								<Settings className="h-4 w-4" />
-								Pengaturan
+								Settings
 							</DropdownMenuItem>
 
 							<DropdownMenuItem
@@ -198,7 +198,7 @@ export function SidebarUserNav({
 								onSelect={() => window.open("https://t.me/anjiingg", "_blank")}
 							>
 								<MessageCircle className="h-4 w-4" />
-								Hubungi Kami
+								Contact Us
 							</DropdownMenuItem>
 
 							<DropdownMenuSeparator className="bg-zinc-200 dark:bg-zinc-800" />
@@ -233,7 +233,7 @@ export function SidebarUserNav({
 									{isGuest ? (
 										<>
 											<UserIcon size={14} />
-											Login ke Akun
+											Log in to Account
 										</>
 									) : (
 										<>

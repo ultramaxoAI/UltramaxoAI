@@ -187,7 +187,7 @@ export default function SettingsPage() {
 		{ id: "custom-ai", label: "Custom AI", icon: <KeyIcon size={16} /> },
 		{
 			id: "personalization",
-			label: "Personalisasi",
+			label: "Personalization",
 			icon: <SparklesIcon size={16} />,
 		},
 	];
@@ -311,7 +311,7 @@ function ProfileTab() {
 	const handlePasswordChange = async (e: React.FormEvent) => {
 		e.preventDefault();
 		if (passwordData.newPassword !== passwordData.confirmPassword) {
-			toast.error("Password konfirmasi tidak cocok");
+			toast.error("Password confirmation does not match");
 			return;
 		}
 		setUpdateLoading(true);
@@ -326,17 +326,17 @@ function ProfileTab() {
 			});
 			const data = await res.json();
 			if (data.success) {
-				toast.success("Password berhasil diubah");
+				toast.success("Password successfully changed");
 				setPasswordData({
 					currentPassword: "",
 					newPassword: "",
 					confirmPassword: "",
 				});
 			} else {
-				toast.error(data.error || "Gagal mengubah password");
+				toast.error(data.error || "Failed to change password");
 			}
 		} catch {
-			toast.error("Terjadi kesalahan");
+			toast.error("An error occurred");
 		} finally {
 			setUpdateLoading(false);
 		}
@@ -357,7 +357,7 @@ function ProfileTab() {
 					Profile
 				</h1>
 				<p className="text-sm text-zinc-500 dark:text-zinc-400 mt-2">
-					Kelola detail profil kamu dan pantau sisa kuota chat.
+					Manage your profile details and monitor remaining chat quota.
 				</p>
 			</header>
 
@@ -416,12 +416,12 @@ function ProfileTab() {
 					Security
 				</h2>
 				<p className="text-sm text-zinc-500 dark:text-zinc-400 mb-6">
-					Perbarui password akun kamu untuk menjaga keamanan.
+					Update your account password to maintain security.
 				</p>
 				<form className="space-y-4 max-w-md" onSubmit={handlePasswordChange}>
 					<div className="space-y-2">
 						<Label className="text-xs font-medium text-zinc-600 dark:text-zinc-400">
-							Password Saat Ini
+							Current Password
 						</Label>
 						<Input
 							className="bg-white dark:bg-zinc-900/60 border-zinc-200 dark:border-white/10 rounded-lg h-11 text-sm shadow-sm"
@@ -439,7 +439,7 @@ function ProfileTab() {
 					</div>
 					<div className="space-y-2">
 						<Label className="text-xs font-medium text-zinc-600 dark:text-zinc-400">
-							Password Baru
+							New Password
 						</Label>
 						<Input
 							className="bg-white dark:bg-zinc-900/60 border-zinc-200 dark:border-white/10 rounded-lg h-11 text-sm shadow-sm"
@@ -457,7 +457,7 @@ function ProfileTab() {
 					</div>
 					<div className="space-y-2">
 						<Label className="text-xs font-medium text-zinc-600 dark:text-zinc-400">
-							Konfirmasi Password Baru
+							Confirm New Password
 						</Label>
 						<Input
 							className="bg-white dark:bg-zinc-900/60 border-zinc-200 dark:border-white/10 rounded-lg h-11 text-sm shadow-sm"
@@ -481,7 +481,7 @@ function ProfileTab() {
 						{updateLoading ? (
 							<Loader2Icon className="animate-spin" size={18} />
 						) : (
-							"Perbarui Password"
+							"Update Password"
 						)}
 					</Button>
 				</form>
@@ -682,8 +682,8 @@ function CustomAITab() {
 					Bring Your Own Key (BYOK)
 				</h1>
 				<p className="text-sm text-zinc-500 dark:text-zinc-400">
-					Gunakan API keys lu sendiri buat model AI favorit lu. Data ini cuma
-					disimpen aman di database dan langsung dipake buat manggil model.
+					Use your own API keys for your favorite AI models. This data is
+					securely stored in the database and used directly to make API calls.
 				</p>
 			</header>
 
@@ -955,7 +955,7 @@ function PersonalizationTab() {
 						}
 					/>
 					<p className="text-[10px] text-zinc-500">
-						Nama yang akan ditampilkan di chat dan profil kamu.
+						The name that will be displayed in your chats and profile.
 					</p>
 				</div>
 
@@ -965,7 +965,7 @@ function PersonalizationTab() {
 					</Label>
 					<textarea
 						className="w-full h-32 px-4 py-3 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900 text-sm text-zinc-900 dark:text-white placeholder:text-zinc-400 resize-none focus:ring-1 focus:ring-primary/50 focus:border-primary/50 outline-none"
-						placeholder="e.g. Selalu jawab dalam Bahasa Indonesia. Saya seorang developer Next.js..."
+						placeholder="e.g. Always answer in English. I am a Next.js developer..."
 						value={settings.customInstructions || ""}
 						onChange={(e) =>
 							setSettings({
@@ -975,7 +975,8 @@ function PersonalizationTab() {
 						}
 					/>
 					<p className="text-[10px] text-zinc-500">
-						Instruksi spesifik yang akan diberikan ke AI di setiap percakapan.
+						Specific instructions that will be given to the AI in every
+						conversation.
 					</p>
 				</div>
 
@@ -1005,7 +1006,7 @@ function PersonalizationTab() {
 				{saving ? (
 					<Loader2Icon className="animate-spin mr-2" size={16} />
 				) : null}
-				Simpan Pengaturan
+				Save Settings
 			</Button>
 		</div>
 	);

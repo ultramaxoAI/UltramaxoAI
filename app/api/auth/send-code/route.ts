@@ -21,7 +21,7 @@ export async function POST(request: Request) {
 
 		if (!sent) {
 			return NextResponse.json(
-				{ error: "Gagal mengirim email verifikasi" },
+				{ error: "Failed to send verification email" },
 				{ status: 500 },
 			);
 		}

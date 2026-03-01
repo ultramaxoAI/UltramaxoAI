@@ -47,7 +47,7 @@ export function SettingsDialog({
 				setUser(data.user);
 			}
 		} catch (_e) {
-			toast.error("Gagal mengambil data user");
+			toast.error("Failed to fetch user data");
 		} finally {
 			setLoading(false);
 		}
@@ -63,7 +63,7 @@ export function SettingsDialog({
 	const handlePasswordChange = async (e: React.FormEvent) => {
 		e.preventDefault();
 		if (passwordData.newPassword !== passwordData.confirmPassword) {
-			toast.error("Password konfirmasi tidak cocok");
+			toast.error("Passwords do not match");
 			return;
 		}
 
@@ -79,17 +79,17 @@ export function SettingsDialog({
 			});
 			const data = await res.json();
 			if (data.success) {
-				toast.success("Password berhasil diubah");
+				toast.success("Password successfully updated");
 				setPasswordData({
 					currentPassword: "",
 					newPassword: "",
 					confirmPassword: "",
 				});
 			} else {
-				toast.error(data.error || "Gagal mengubah password");
+				toast.error(data.error || "Failed to update password");
 			}
 		} catch (_e) {
-			toast.error("Terjadi kesalahan");
+			toast.error("An error occurred");
 		} finally {
 			setUpdateLoading(false);
 		}
@@ -107,7 +107,7 @@ export function SettingsDialog({
 							type="button"
 						>
 							<UserIcon size={16} />
-							Profil
+							Profile
 						</button>
 						<button
 							className={`flex items-center gap-3 px-3 py-2 rounded-xl text-sm transition-all ${activeTab === "security" ? "bg-zinc-900 text-white dark:bg-white dark:text-black font-bold shadow-lg" : "text-zinc-500 hover:text-zinc-900 dark:hover:text-white hover:bg-zinc-200/50 dark:hover:bg-zinc-800/50"}`}
@@ -115,7 +115,7 @@ export function SettingsDialog({
 							type="button"
 						>
 							<LockIcon size={16} />
-							Keamanan
+							Security
 						</button>
 					</aside>
 
@@ -123,19 +123,21 @@ export function SettingsDialog({
 					<main className="flex-1 p-8 flex flex-col gap-6 overflow-y-auto">
 						<header className="flex flex-col gap-1">
 							<DialogTitle className="text-xl font-bold text-zinc-900 dark:text-white leading-none">
-								{activeTab === "profile" ? "Informasi Akun" : "Ganti Password"}
+								{activeTab === "profile"
+									? "Account Information"
+									: "Change Password"}
 							</DialogTitle>
 							<p className="text-zinc-500 text-xs">
 								{activeTab === "profile"
-									? "Liat detail profil dan sisa kuota chat kamu."
-									: "Perbarui password akun kamu secara berkala."}
+									? "View profile details and your remaining chat quota."
+									: "Update your account password periodically."}
 							</p>
 						</header>
 
 						{loading ? (
 							<div className="flex-1 flex flex-col items-center justify-center gap-4 text-zinc-500">
 								<Loader2Icon className="animate-spin" size={32} />
-								<span className="text-sm">Memuat data...</span>
+								<span className="text-sm">Loading data...</span>
 							</div>
 						) : activeTab === "profile" ? (
 							<div className="flex flex-col gap-6">
@@ -194,11 +196,11 @@ export function SettingsDialog({
 									</div>
 									<div className="flex flex-col gap-1">
 										<span className="text-xs font-bold text-zinc-900 dark:text-white">
-											Akun kamu aman
+											Your account is secure
 										</span>
 										<p className="text-[10px] text-zinc-600 dark:text-zinc-500 leading-relaxed">
-											Gunakan fitur ini untuk memantau sisa kuota chat kamu
-											secara real-time.
+											Use this feature to monitor your remaining chat quota in
+											real-time.
 										</p>
 									</div>
 								</div>
@@ -211,7 +213,7 @@ export function SettingsDialog({
 								<div className="space-y-4">
 									<div className="space-y-2">
 										<Label className="text-xs font-medium text-zinc-600 dark:text-zinc-400 ml-1">
-											Password Saat Ini
+											Current Password
 										</Label>
 										<Input
 											className="bg-white dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800 rounded-xl h-11 text-sm focus:ring-zinc-300 dark:focus:ring-zinc-700"
@@ -229,7 +231,7 @@ export function SettingsDialog({
 									</div>
 									<div className="space-y-2">
 										<Label className="text-xs font-medium text-zinc-600 dark:text-zinc-400 ml-1">
-											Password Baru
+											New Password
 										</Label>
 										<Input
 											className="bg-white dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800 rounded-xl h-11 text-sm focus:ring-zinc-300 dark:focus:ring-zinc-700"
@@ -247,7 +249,7 @@ export function SettingsDialog({
 									</div>
 									<div className="space-y-2">
 										<Label className="text-xs font-medium text-zinc-600 dark:text-zinc-400 ml-1">
-											Konfirmasi Password Baru
+											Confirm New Password
 										</Label>
 										<Input
 											className="bg-white dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800 rounded-xl h-11 text-sm focus:ring-zinc-300 dark:focus:ring-zinc-700"
@@ -273,7 +275,7 @@ export function SettingsDialog({
 									{updateLoading ? (
 										<Loader2Icon className="animate-spin" size={18} />
 									) : (
-										"Perbarui Password"
+										"Update Password"
 									)}
 								</Button>
 							</form>

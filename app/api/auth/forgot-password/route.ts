@@ -14,10 +14,7 @@ export async function POST(request: Request) {
 		if (email && !token && !newPassword) {
 			const normalizedEmail = String(email).trim().toLowerCase();
 			if (!normalizedEmail.includes("@")) {
-				return NextResponse.json(
-					{ error: "Email tidak valid" },
-					{ status: 400 },
-				);
+				return NextResponse.json({ error: "Invalid email" }, { status: 400 });
 			}
 
 			const result = await createPasswordResetTokenForEmail(normalizedEmail);
@@ -34,21 +31,21 @@ export async function POST(request: Request) {
 			const sent = await sendPasswordResetEmail(result.email, resetUrl);
 			if (!sent) {
 				return NextResponse.json(
-					{ error: "Gagal mengirim email reset password" },
+					{ error: "Failed to send password reset email" },
 					{ status: 500 },
 				);
 			}
 
 			return NextResponse.json({
 				success: true,
-				message: "Link reset dikirim",
+				message: "Reset link sent",
 			});
 		}
 
 		if (token && newPassword) {
 			if (String(newPassword).length < 6) {
 				return NextResponse.json(
-					{ error: "Password minimal 6 karakter" },
+					{ error: "Password must be at least 6 characters" },
 					{ status: 400 },
 				);
 			}
@@ -56,7 +53,7 @@ export async function POST(request: Request) {
 			const consumed = await consumePasswordResetToken(String(token));
 			if (!consumed) {
 				return NextResponse.json(
-					{ error: "Token reset tidak valid atau sudah kedaluwarsa" },
+					{ error: "Invalid or expired reset token" },
 					{ status: 400 },
 				);
 			}
@@ -64,7 +61,7 @@ export async function POST(request: Request) {
 			await updateUserPassword(consumed.userId, String(newPassword));
 			return NextResponse.json({
 				success: true,
-				message: "Password berhasil direset",
+				message: "Password successfully reset",
 			});
 		}
 
@@ -72,7 +69,7 @@ export async function POST(request: Request) {
 	} catch (error) {
 		console.error("API Error (forgot-password):", error);
 		return NextResponse.json(
-			{ error: "Terjadi kesalahan internal" },
+			{ error: "Internal error occurred" },
 			{ status: 500 },
 		);
 	}

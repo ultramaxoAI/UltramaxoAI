@@ -24,51 +24,51 @@ const pricingPlans = [
 	{
 		name: "Free",
 		price: "Rp 0",
-		period: "selamanya",
-		desc: "Coba semua fitur dasar tanpa biaya",
+		period: "forever",
+		desc: "Try all basic features at no cost",
 		features: [
 			"AI Chat (UltraAgent)",
 			"Basic code editor",
-			"Riwayat chat terbatas",
+			"Limited chat history",
 			"Syntax highlighting",
-			"Upload file standar",
+			"Standard file upload",
 		],
 		popular: false,
-		ctaText: "Paket Saat Ini",
+		ctaText: "Current Plan",
 		ctaDisabled: true,
 	},
 	{
 		name: "Pro",
 		price: "Rp 20.000",
-		period: "per bulan",
-		desc: "Untuk yang butuh lebih — tanpa batas",
+		period: "per month",
+		desc: "For those who need more — completely unlimited",
 		features: [
 			"AI Chat (UltraAgent Pro)",
-			"Semua fitur Free",
-			"Chat tanpa limit",
-			"Riwayat chat permanen",
-			"Code workspace lengkap",
+			"All Free features",
+			"Unlimited chat",
+			"Permanent chat history",
+			"Complete code workspace",
 			"Full artifacts system",
 			"Priority support",
 		],
 		popular: true,
-		ctaText: "Upgrade Sekarang",
+		ctaText: "Upgrade Now",
 		ctaDisabled: false,
 	},
 	{
-		name: "1 Tahun",
+		name: "1 Year",
 		price: "Rp 120.000",
-		period: "per tahun",
-		desc: "Hemat lebih banyak dengan paket tahunan",
+		period: "per year",
+		desc: "Save more with annual plan",
 		features: [
-			"Semua fitur Pro",
+			"All Pro features",
 			"Dedicated support",
 			"Custom deployment",
 			"SLA guarantee",
 			"Advanced analytics",
 		],
 		popular: false,
-		ctaText: "Upgrade Sekarang",
+		ctaText: "Upgrade Now",
 		ctaDisabled: false,
 	},
 ];
@@ -98,7 +98,7 @@ export function PricingModal({ open, onOpenChange, user }: PricingModalProps) {
 					// Refresh session
 					await fetch("/api/auth/session/refresh", { method: "POST" });
 
-					toast.success("🎉 Upgrade berhasil! Selamat datang di PRO!");
+					toast.success("🎉 Upgrade successful! Welcome to PRO!");
 
 					// Close modal and reload
 					onOpenChange(false);
@@ -118,7 +118,7 @@ export function PricingModal({ open, onOpenChange, user }: PricingModalProps) {
 		setSelectedPlan(planName);
 
 		if (!user) {
-			toast.error("Silakan login terlebih dahulu");
+			toast.error("Please log in first");
 			router.push("/login");
 			return;
 		}
@@ -129,7 +129,7 @@ export function PricingModal({ open, onOpenChange, user }: PricingModalProps) {
 		setLoading(true);
 
 		try {
-			const text = `Halo Admin, saya ingin upgrade ke paket *${planName}* seharga ${plan.price} untuk akun saya dengan email *${user.email}*. Mohon panduannya.`;
+			const text = `Hello Admin, I would like to upgrade to the *${planName}* plan for ${plan.price} for my account with the email *${user.email}*. Please guide me.`;
 			const waUrl = `https://wa.me/6285191689131?text=${encodeURIComponent(text)}`;
 
 			// Optionally log the request to the database
@@ -142,11 +142,11 @@ export function PricingModal({ open, onOpenChange, user }: PricingModalProps) {
 				}),
 			}).catch(() => {});
 
-			toast.success("Mengarahkan ke WhatsApp Admin...");
+			toast.success("Redirecting to Admin WhatsApp...");
 			window.open(waUrl, "_blank");
 		} catch (error) {
 			console.error("Failed to process upgrade:", error);
-			toast.error("Gagal memproses upgrade. Coba lagi nanti.");
+			toast.error("Failed to process upgrade. Try again later.");
 		} finally {
 			setLoading(false);
 			setTimeout(() => {
@@ -172,11 +172,10 @@ export function PricingModal({ open, onOpenChange, user }: PricingModalProps) {
 					<div className="relative bg-gradient-to-b from-zinc-900 to-[#0a0a0a] pt-12 pb-8 px-8 border-b border-white/5">
 						<DialogHeader className="text-center space-y-2">
 							<DialogTitle className="text-3xl font-bold bg-gradient-to-r from-white to-gray-400 bg-clip-text text-transparent">
-								Pilih Paket Anda
+								Choose Your Plan
 							</DialogTitle>
 							<DialogDescription className="text-gray-400 text-base">
-								Tidak ada biaya tersembunyi. Upgrade kapan saja, downgrade kapan
-								saja.
+								No hidden fees. Upgrade anytime, downgrade anytime.
 							</DialogDescription>
 						</DialogHeader>
 					</div>
@@ -194,7 +193,7 @@ export function PricingModal({ open, onOpenChange, user }: PricingModalProps) {
 							>
 								{plan.popular && (
 									<div className="absolute -top-3 left-1/2 -translate-x-1/2 px-4 py-1 bg-gradient-to-r from-indigo-500 to-violet-600 rounded-full text-xs font-medium shadow-lg shadow-indigo-500/25">
-										Paling Populer
+										Most Popular
 									</div>
 								)}
 
@@ -256,14 +255,14 @@ export function PricingModal({ open, onOpenChange, user }: PricingModalProps) {
 					{/* Footer note */}
 					<div className="px-8 pb-8 text-center">
 						<p className="text-xs text-gray-500">
-							Dengan melanjutkan, Anda menyetujui{" "}
+							By continuing, you agree to our{" "}
 							<a
 								className="text-indigo-400 hover:text-indigo-300"
 								href="/terms"
 							>
-								Syarat & Ketentuan
-							</a>{" "}
-							kami.
+								Terms & Conditions
+							</a>
+							.
 						</p>
 					</div>
 				</div>

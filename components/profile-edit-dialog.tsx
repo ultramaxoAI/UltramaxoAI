@@ -42,7 +42,7 @@ export function ProfileEditDialog() {
 		if (!validation.valid) {
 			toast({
 				type: "error",
-				description: validation.error || "File tidak valid",
+				description: validation.error || "Invalid file",
 			});
 			return;
 		}
@@ -73,7 +73,7 @@ export function ProfileEditDialog() {
 
 			if (!response.ok) {
 				const data = await response.json();
-				throw new Error(data.error || "Gagal update profile");
+				throw new Error(data.error || "Failed to update profile");
 			}
 
 			const data = await response.json();
@@ -88,7 +88,7 @@ export function ProfileEditDialog() {
 				},
 			});
 
-			toast({ type: "success", description: "Profile berhasil diupdate!" });
+			toast({ type: "success", description: "Profile successfully updated!" });
 			setOpen(false);
 			router.refresh();
 		} catch (error: any) {
@@ -110,22 +110,22 @@ export function ProfileEditDialog() {
 				<DialogHeader>
 					<DialogTitle>Edit Profile</DialogTitle>
 					<DialogDescription>
-						Update nama dan foto profile Anda
+						Update your name and profile photo
 					</DialogDescription>
 				</DialogHeader>
 				<form className="space-y-4" onSubmit={handleSubmit}>
 					<div className="space-y-2">
-						<Label htmlFor="name">Nama</Label>
+						<Label htmlFor="name">Name</Label>
 						<Input
 							id="name"
 							onChange={(e) => setName(e.target.value)}
-							placeholder="Nama lengkap"
+							placeholder="Full name"
 							value={name}
 						/>
 					</div>
 
 					<div className="space-y-2">
-						<Label htmlFor="image">Foto Profile</Label>
+						<Label htmlFor="image">Profile Photo</Label>
 						<Input
 							accept="image/*"
 							id="image"
@@ -133,8 +133,7 @@ export function ProfileEditDialog() {
 							type="file"
 						/>
 						<p className="text-xs text-muted-foreground">
-							Maksimal {formatFileSize(MAX_IMAGE_SIZE)} - JPG, PNG, GIF, atau
-							WebP
+							Maximum {formatFileSize(MAX_IMAGE_SIZE)} - JPG, PNG, GIF, or WebP
 						</p>
 						{imagePreview && (
 							<div className="mt-2">
@@ -154,11 +153,11 @@ export function ProfileEditDialog() {
 							type="button"
 							variant="outline"
 						>
-							Batal
+							Cancel
 						</Button>
 						<Button disabled={loading} type="submit">
 							{loading && <LoaderIcon />}
-							Simpan
+							Save
 						</Button>
 					</div>
 				</form>

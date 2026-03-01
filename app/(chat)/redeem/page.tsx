@@ -26,14 +26,14 @@ export default function RedeemPage() {
 			if (data.error) {
 				setMessage(data.error);
 			} else {
-				setMessage("Voucher berhasil diredeem! Refreshing...");
+				setMessage("Voucher successfully redeemed! Refreshing...");
 				setTimeout(() => {
 					router.refresh();
 					setCode("");
 				}, 1000);
 			}
 		} catch (_e) {
-			setMessage("Terjadi kesalahan.");
+			setMessage("An error occurred.");
 		} finally {
 			setLoading(false);
 		}
@@ -45,7 +45,7 @@ export default function RedeemPage() {
 				<div className="rounded-3xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 p-6 shadow-sm">
 					<h2 className="text-2xl font-semibold">Redeem Voucher</h2>
 					<p className="text-sm text-slate-500 dark:text-slate-400 mt-2">
-						Masukan kode voucher yang kamu dapatkan.
+						Enter the voucher code you received.
 					</p>
 
 					<div className="mt-6 space-y-4">
@@ -61,7 +61,7 @@ export default function RedeemPage() {
 							onClick={handleRedeem}
 							type="button"
 						>
-							{loading ? "Processing..." : "Claim Sekarang"}
+							{loading ? "Processing..." : "Claim Now"}
 						</button>
 						{message && (
 							<p className="text-center text-sm font-medium">{message}</p>
