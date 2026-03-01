@@ -202,9 +202,23 @@ export default function SettingsPage() {
 	];
 
 	return (
-		<div className="flex h-screen bg-white dark:bg-[#09090b]">
-			{/* Sidebar */}
-			<aside className="w-56 border-r border-zinc-200 dark:border-zinc-800/50 bg-zinc-50 dark:bg-zinc-900/30 p-6 flex flex-col gap-2">
+		<div className="flex flex-col md:flex-row h-screen bg-white dark:bg-[#09090b]">
+			{/* Mobile Header */}
+			<header className="flex md:hidden items-center justify-between px-4 py-3 border-b border-zinc-200 dark:border-zinc-800/50 bg-zinc-50 dark:bg-zinc-900/30">
+				<Link
+					href="/chat"
+					className="flex items-center gap-2 text-sm text-zinc-500 hover:text-zinc-900 dark:hover:text-white transition-colors"
+				>
+					<ArrowLeft size={18} />
+				</Link>
+				<h1 className="text-sm font-black uppercase tracking-widest text-zinc-900 dark:text-white">
+					Settings
+				</h1>
+				<div className="w-[18px]" /> {/* Spacer for centering */}
+			</header>
+
+			{/* Desktop Sidebar — hidden on mobile */}
+			<aside className="hidden md:flex w-56 border-r border-zinc-200 dark:border-zinc-800/50 bg-zinc-50 dark:bg-zinc-900/30 p-6 flex-col gap-2">
 				<Link
 					href="/chat"
 					className="flex items-center gap-2 text-sm text-zinc-500 hover:text-zinc-900 dark:hover:text-white transition-colors mb-6"
@@ -235,13 +249,40 @@ export default function SettingsPage() {
 			</aside>
 
 			{/* Main Content */}
-			<main className="flex-1 overflow-y-auto p-8 lg:p-12">
-				<div className="max-w-3xl">
+			<main className="flex-1 overflow-y-auto px-4 py-6 md:p-8 lg:p-12 pb-24 md:pb-8">
+				<div className="max-w-3xl mx-auto md:mx-0">
 					{activeTab === "profile" && <ProfileTab />}
 					{activeTab === "custom-ai" && <CustomAITab />}
 					{activeTab === "personalization" && <PersonalizationTab />}
 				</div>
 			</main>
+
+			{/* Mobile Bottom Tab Bar — visible only on mobile */}
+			<nav className="fixed bottom-0 left-0 right-0 z-50 flex md:hidden items-center justify-around border-t border-zinc-200 dark:border-zinc-800 bg-white/95 dark:bg-zinc-950/95 backdrop-blur-lg py-2 safe-bottom">
+				{tabs.map((tab) => (
+					<button
+						key={tab.id}
+						className={`flex flex-col items-center gap-1 px-3 py-1.5 rounded-lg text-[10px] font-medium transition-all ${
+							activeTab === tab.id
+								? "text-zinc-900 dark:text-white"
+								: "text-zinc-400 dark:text-zinc-600"
+						}`}
+						onClick={() => setActiveTab(tab.id)}
+						type="button"
+					>
+						<span
+							className={`flex items-center justify-center size-8 rounded-full transition-all ${
+								activeTab === tab.id
+									? "bg-zinc-900 text-white dark:bg-white dark:text-black shadow-lg scale-110"
+									: ""
+							}`}
+						>
+							{tab.icon}
+						</span>
+						{tab.label}
+					</button>
+				))}
+			</nav>
 		</div>
 	);
 }
