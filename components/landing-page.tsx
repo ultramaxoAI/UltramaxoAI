@@ -197,9 +197,9 @@ export default function LandingPage() {
 		},
 		{
 			icon: Shield,
-			title: "Secure & Private",
-			desc: "Data is encrypted, authentication is secure, and never shared with third parties.",
-			link: "Learn more",
+			title: "Bring Your Own Key (BYOK)",
+			desc: "Use your own API keys for Gemini, Claude, OpenAI, and more. Total control over your models.",
+			link: "Setup Keys",
 		},
 	];
 
@@ -278,7 +278,8 @@ export default function LandingPage() {
 		"Code Editor",
 		"Artifacts",
 		"File Upload",
-		"Image Generation",
+		"Bring Your Own Key",
+		"Multiple Providers",
 	];
 
 	return (
@@ -584,10 +585,10 @@ export default function LandingPage() {
 						className="flex flex-wrap items-center justify-center gap-10 sm:gap-16 mt-20"
 					>
 						{[
-							{ value: "2", label: "AI Models" },
-							{ value: "1K+", label: "Users" },
-							{ value: "99.9%", label: "Uptime" },
-							{ value: "∞", label: "Conversations" },
+							{ value: "5+", label: "AI Providers" },
+							{ value: "Free", label: "Starting Plan" },
+							{ value: "BYOK", label: "Enabled" },
+							{ value: "∞", label: "Possibilities" },
 						].map((stat) => (
 							<div key={stat.label} className="text-center">
 								<div className="text-3xl sm:text-4xl font-bold text-zinc-900 dark:text-white">
@@ -774,19 +775,21 @@ export default function LandingPage() {
 									</span>
 								</div>
 								<pre className="p-4 text-sm leading-relaxed overflow-x-auto">
-									<code className="text-zinc-700 dark:text-gray-300">{`// Start a conversation with UltraAgent
+									<code className="text-zinc-700 dark:text-gray-300">{`// Start chatting with any model using your own API keys
 const response = await fetch("/api/chat", {
   method: "POST",
+  headers: {
+    "x-custom-api-key": "sk-your-api-key",
+    "x-provider": "anthropic" // gemini, openai, groq, etc.
+  },
   body: JSON.stringify({
-    messages: [
-      { role: "user", content: "Hello!" }
-    ],
-    model: "ultra-agent",
+    messages: [{ role: "user", content: "Hello!" }],
+    model: "claude-3-5-sonnet-20240620",
   }),
 });
 
 const data = await response.json();
-console.log(data.message); // "Hi! How can I help?"`}</code>
+console.log(data.message);`}</code>
 								</pre>
 							</div>
 						</motion.div>

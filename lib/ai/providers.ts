@@ -10,7 +10,8 @@ const maiaApiKey = (process.env.OPENROUTER_API_KEY_1 || "").trim();
 // ============================================================
 // Model IDs
 // ============================================================
-const DEFAULT_MODEL = "maia/gemini-2.5-flash";
+const DEFAULT_MODEL = "maia/gemini-2.5-flash-lite";
+const PRO_MODEL = "maia/gemini-2.5-flash";
 
 export interface CustomKeyConfig {
 	provider: string;
@@ -143,7 +144,7 @@ export const getLanguageModel = (
 		console.log("[AI Provider] -> UltraAgent:", modelId);
 		// Pass the exact model id or a fallback mapping
 		const targetModel = normalized.includes("ultra-agent-pro")
-			? "maia/gemini-2.5-pro"
+			? PRO_MODEL
 			: DEFAULT_MODEL;
 		return getMaiaRouterModel(targetModel);
 	}

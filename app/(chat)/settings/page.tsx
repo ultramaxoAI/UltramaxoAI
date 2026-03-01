@@ -62,35 +62,26 @@ const PROVIDERS: ProviderConfig[] = [
 		icon: (
 			<svg viewBox="0 0 24 24" className="w-7 h-7">
 				<title>Gemini Logo</title>
+				<path
+					d="M21.5 12C21.5 11.2 20.9 10.6 20.1 10.5C15.8 9.9 12.1 6.2 11.5 1.9C11.4 1.1 10.8 0.5 10.1 0.5C9.3 0.5 8.7 1.1 8.6 1.9C8 6.2 4.3 9.9 0 10.5C-0.8 10.6 -1.4 11.2 -1.4 12C-1.4 12.8 -0.8 13.4 0 13.5C4.3 14.1 8 17.8 8.6 22.1C8.7 22.9 9.3 23.5 10.1 23.5C10.9 23.5 11.5 22.9 11.6 22.1C12.2 17.8 15.9 14.1 20.2 13.5C20.9 13.4 21.5 12.8 21.5 12Z"
+					fill="url(#gemini-grad-1)"
+					transform="translate(1.25, 0)"
+				/>
 				<defs>
 					<linearGradient
 						id="gemini-grad-1"
-						x1="12"
-						y1="2"
-						x2="12"
-						y2="22"
+						x1="0"
+						y1="0"
+						x2="24"
+						y2="24"
 						gradientUnits="userSpaceOnUse"
 					>
 						<stop stopColor="#4184F3" />
-						<stop offset="0.5" stopColor="#EA4335" />
-						<stop offset="1" stopColor="#FBBC05" />
-					</linearGradient>
-					<linearGradient
-						id="gemini-grad-2"
-						x1="2"
-						y1="12"
-						x2="22"
-						y2="12"
-						gradientUnits="userSpaceOnUse"
-					>
-						<stop stopColor="#4184F3" />
+						<stop offset="0.25" stopColor="#EA4335" />
+						<stop offset="0.75" stopColor="#FBBC05" />
 						<stop offset="1" stopColor="#34A853" />
 					</linearGradient>
 				</defs>
-				<path
-					fill="url(#gemini-grad-1)"
-					d="M12.98 2.05a1.1 1.1 0 0 0-1.96 0l-1.9 4.1a5.62 5.62 0 0 1-2.97 2.97l-4.1 1.9a1.1 1.1 0 0 0 0 1.96l4.1 1.9a5.62 5.62 0 0 1 2.97 2.97l1.9 4.1a1.1 1.1 0 0 0 1.96 0l1.9-4.1a5.62 5.62 0 0 1 2.97-2.97l4.1-1.9a1.1 1.1 0 0 0 0-1.96l-4.1-1.9a5.62 5.62 0 0 1-2.97-2.97l-1.9-4.1Z"
-				/>
 			</svg>
 		),
 	},
@@ -177,7 +168,7 @@ const PROVIDERS: ProviderConfig[] = [
 		icon: (
 			<svg viewBox="0 0 24 24" fill="currentColor" className="w-6 h-6">
 				<title>Anthropic Logo</title>
-				<path d="M12.9 22h3.5L8.5 2h-4zm3.9-9.5-1.4-2.8 5-1V12z" />
+				<path d="M17.485 5.518h2.003L8.628 17.61h-2L17.485 5.518zM14.015 11l-3.324 5.2H7L14.015 11z" />
 			</svg>
 		),
 	},
@@ -204,40 +195,40 @@ export default function SettingsPage() {
 	return (
 		<div className="flex flex-col md:flex-row h-screen bg-white dark:bg-[#09090b]">
 			{/* Mobile Header */}
-			<header className="flex md:hidden items-center justify-between px-4 py-3 border-b border-zinc-200 dark:border-zinc-800/50 bg-zinc-50 dark:bg-zinc-900/30">
+			<header className="flex md:hidden items-center justify-between px-5 py-4 border-b border-zinc-200 dark:border-white/5 bg-white dark:bg-[#0a0a0a]">
 				<Link
 					href="/chat"
 					className="flex items-center gap-2 text-sm text-zinc-500 hover:text-zinc-900 dark:hover:text-white transition-colors"
 				>
 					<ArrowLeft size={18} />
 				</Link>
-				<h1 className="text-sm font-black uppercase tracking-widest text-zinc-900 dark:text-white">
+				<h1 className="text-[13px] font-semibold tracking-wide text-zinc-900 dark:text-white font-[family-name:var(--font-geist-sans)]">
 					Settings
 				</h1>
-				<div className="w-[18px]" /> {/* Spacer for centering */}
+				<div className="w-[18px]" />
 			</header>
 
-			{/* Desktop Sidebar — hidden on mobile */}
-			<aside className="hidden md:flex w-56 border-r border-zinc-200 dark:border-zinc-800/50 bg-zinc-50 dark:bg-zinc-900/30 p-6 flex-col gap-1.5">
+			{/* Desktop Sidebar */}
+			<aside className="hidden md:flex w-64 border-r border-zinc-200 dark:border-white/5 bg-zinc-50/50 dark:bg-[#0a0a0a] p-6 flex-col gap-2">
 				<Link
 					href="/chat"
-					className="flex items-center gap-2 text-sm text-zinc-500 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors mb-6"
+					className="flex items-center gap-2 text-sm text-zinc-500 hover:text-zinc-900 dark:hover:text-white transition-colors mb-8 font-medium"
 				>
 					<ArrowLeft size={16} />
 					Back to Chat
 				</Link>
 
-				<h2 className="text-xs font-black uppercase tracking-widest text-zinc-400 dark:text-zinc-600 mb-3">
-					Settings
+				<h2 className="text-[11px] font-semibold tracking-wider text-zinc-400 dark:text-zinc-500 mb-2 px-2 mt-2 uppercase">
+					SETTINGS
 				</h2>
 
 				{tabs.map((tab) => (
 					<button
 						key={tab.id}
-						className={`flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm transition-all duration-200 ${
+						className={`flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm transition-all duration-200 font-[family-name:var(--font-geist-sans)] ${
 							activeTab === tab.id
-								? "bg-indigo-50 text-indigo-700 dark:bg-indigo-500/15 dark:text-indigo-300 font-semibold ring-1 ring-indigo-200 dark:ring-indigo-500/30"
-								: "text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800/60"
+								? "bg-zinc-200/60 dark:bg-white/10 text-zinc-900 dark:text-white font-medium"
+								: "text-zinc-500 hover:text-zinc-900 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-white/5"
 						}`}
 						onClick={() => setActiveTab(tab.id)}
 						type="button"
@@ -257,15 +248,15 @@ export default function SettingsPage() {
 				</div>
 			</main>
 
-			{/* Mobile Bottom Tab Bar — visible only on mobile */}
-			<nav className="fixed bottom-0 left-0 right-0 z-50 flex md:hidden items-center justify-around border-t border-zinc-200 dark:border-zinc-800 bg-white/95 dark:bg-zinc-950/95 backdrop-blur-lg py-2 safe-bottom">
+			{/* Mobile Bottom Tab Bar */}
+			<nav className="fixed bottom-0 left-0 right-0 z-50 flex md:hidden items-center justify-around border-t border-zinc-200 dark:border-white/5 bg-white/95 dark:bg-[#0a0a0a]/95 backdrop-blur-lg py-2 safe-bottom">
 				{tabs.map((tab) => (
 					<button
 						key={tab.id}
-						className={`flex flex-col items-center gap-1 px-3 py-1.5 rounded-lg text-[10px] font-medium transition-all duration-200 ${
+						className={`flex flex-col items-center gap-1 overflow-hidden px-3 py-1.5 rounded-lg text-[10px] font-medium transition-all duration-200 ${
 							activeTab === tab.id
-								? "text-indigo-600 dark:text-indigo-400"
-								: "text-zinc-400 dark:text-zinc-600"
+								? "text-zinc-900 dark:text-white"
+								: "text-zinc-400 dark:text-zinc-500"
 						}`}
 						onClick={() => setActiveTab(tab.id)}
 						type="button"
@@ -273,8 +264,8 @@ export default function SettingsPage() {
 						<span
 							className={`flex items-center justify-center size-8 rounded-full transition-all duration-200 ${
 								activeTab === tab.id
-									? "bg-indigo-100 text-indigo-600 dark:bg-indigo-500/20 dark:text-indigo-400 scale-110"
-									: "hover:bg-zinc-100 dark:hover:bg-zinc-800"
+									? "bg-zinc-100 dark:bg-white/10 text-zinc-900 dark:text-white scale-110"
+									: "hover:bg-zinc-100 dark:hover:bg-white/5"
 							}`}
 						>
 							{tab.icon}
@@ -360,91 +351,80 @@ function ProfileTab() {
 	}
 
 	return (
-		<div className="space-y-8">
+		<div className="space-y-10 max-w-2xl">
 			<header>
-				<h1 className="text-2xl font-bold text-zinc-900 dark:text-white">
+				<h1 className="text-2xl font-semibold tracking-tight text-zinc-900 dark:text-white">
 					Profile
 				</h1>
-				<p className="text-sm text-zinc-500 mt-1">
-					Liat detail profil dan sisa kuota chat kamu.
+				<p className="text-sm text-zinc-500 dark:text-zinc-400 mt-2">
+					Kelola detail profil kamu dan pantau sisa kuota chat.
 				</p>
 			</header>
 
-			<div className="space-y-4">
-				<div className="p-5 rounded-2xl bg-zinc-50 dark:bg-zinc-900/50 border border-zinc-200 dark:border-zinc-800/50">
-					<Label className="text-[10px] font-black uppercase tracking-widest text-zinc-500">
-						Email Address
+			<div className="space-y-5">
+				<div className="p-6 rounded-xl bg-zinc-50/50 dark:bg-[#0f0f0f] border border-zinc-200 dark:border-white/5">
+					<Label className="text-[11px] font-medium tracking-wide text-zinc-500">
+						EMAIL ADDRESS
 					</Label>
-					<div className="text-sm text-zinc-900 dark:text-white font-medium mt-1">
+					<div className="text-base text-zinc-900 dark:text-zinc-100 font-medium mt-1.5">
 						{user?.email || "N/A"}
 					</div>
 				</div>
 
-				<div className="grid grid-cols-2 gap-4">
-					<div className="p-5 rounded-2xl bg-zinc-50 dark:bg-zinc-900/50 border border-zinc-200 dark:border-zinc-800/50">
-						<Label className="text-[10px] font-black uppercase tracking-widest text-zinc-500">
-							Tier Status
+				<div className="grid grid-cols-2 gap-5">
+					<div className="p-6 rounded-xl bg-zinc-50/50 dark:bg-[#0f0f0f] border border-zinc-200 dark:border-white/5">
+						<Label className="text-[11px] font-medium tracking-wide text-zinc-500">
+							TIER STATUS
 						</Label>
-						<div className="mt-1">
+						<div className="mt-2.5">
 							{user?.isPro ? (
-								<span className="text-xs px-2 py-0.5 bg-yellow-400/10 text-yellow-600 dark:text-yellow-500 rounded-full font-bold border border-yellow-500/20">
-									PRO
+								<span className="text-xs px-2.5 py-1 bg-gradient-to-r from-amber-500/10 to-orange-500/10 text-amber-600 dark:text-amber-500 rounded-md font-semibold border border-amber-500/20">
+									PRO MEMBER
 								</span>
 							) : (
-								<span className="text-xs px-2 py-0.5 bg-zinc-200 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-400 rounded-full font-bold">
-									FREE
+								<span className="text-xs px-2.5 py-1 bg-zinc-200 dark:bg-white/10 text-zinc-700 dark:text-zinc-300 rounded-md font-medium">
+									FREE PLAN
 								</span>
 							)}
 						</div>
 					</div>
-					<div className="p-5 rounded-2xl bg-zinc-50 dark:bg-zinc-900/50 border border-zinc-200 dark:border-zinc-800/50">
-						<Label className="text-[10px] font-black uppercase tracking-widest text-zinc-500">
-							Chat Quota
-						</Label>
-						<div className="flex items-center gap-1.5 text-sm text-zinc-900 dark:text-white font-bold mt-1">
-							<ZapIcon className="text-blue-500 fill-blue-500" size={14} />
-							{user?.isPro
-								? "Unlimited"
-								: `${Math.max(0, 10 - (user?.messageCount || 0))} / 10`}
+					<div className="p-6 rounded-xl bg-zinc-50/50 dark:bg-[#0f0f0f] border border-zinc-200 dark:border-white/5 flex flex-col justify-between">
+						<div>
+							<Label className="text-[11px] font-medium tracking-wide text-zinc-500">
+								CHAT QUOTA
+							</Label>
+							<div className="flex items-center gap-2 text-base text-zinc-900 dark:text-zinc-100 font-semibold mt-1.5">
+								<ZapIcon
+									className="text-zinc-400 dark:text-zinc-500"
+									size={16}
+								/>
+								{user?.isPro
+									? "Unlimited"
+									: `${Math.max(0, 10 - (user?.messageCount || 0))} / 10`}
+							</div>
 						</div>
-						<span className="text-[9px] text-zinc-600 font-medium">
+						<span className="text-[10px] text-zinc-500 mt-2 block">
 							Resets every 24h
 						</span>
-					</div>
-				</div>
-
-				<div className="p-4 rounded-2xl bg-blue-500/10 dark:bg-blue-500/5 border border-blue-500/20 flex items-start gap-4">
-					<div className="p-2 rounded-xl bg-blue-500/10 text-blue-600 dark:text-blue-500">
-						<ShieldCheckIcon size={20} />
-					</div>
-					<div>
-						<span className="text-xs font-bold text-zinc-900 dark:text-white">
-							Akun kamu aman
-						</span>
-						<p className="text-[10px] text-zinc-600 dark:text-zinc-500 leading-relaxed">
-							Gunakan fitur ini untuk memantau sisa kuota chat kamu secara
-							real-time.
-						</p>
 					</div>
 				</div>
 			</div>
 
 			{/* Change Password */}
-			<div className="border-t border-zinc-200 dark:border-zinc-800/50 pt-8">
-				<h2 className="text-lg font-bold text-zinc-900 dark:text-white mb-1">
-					<LockIcon className="inline-block mr-2" size={18} />
-					Ganti Password
+			<div className="border-t border-zinc-200 dark:border-white/5 pt-10">
+				<h2 className="text-xl font-semibold tracking-tight text-zinc-900 dark:text-white mb-2">
+					Security
 				</h2>
-				<p className="text-xs text-zinc-500 mb-6">
-					Perbarui password akun kamu secara berkala.
+				<p className="text-sm text-zinc-500 dark:text-zinc-400 mb-6">
+					Perbarui password akun kamu untuk menjaga keamanan.
 				</p>
-				<form className="space-y-4 max-w-sm" onSubmit={handlePasswordChange}>
+				<form className="space-y-4 max-w-md" onSubmit={handlePasswordChange}>
 					<div className="space-y-2">
 						<Label className="text-xs font-medium text-zinc-600 dark:text-zinc-400">
 							Password Saat Ini
 						</Label>
 						<Input
-							className="bg-white dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800 rounded-xl h-11 text-sm"
+							className="bg-white dark:bg-zinc-900/60 border-zinc-200 dark:border-white/10 rounded-lg h-11 text-sm shadow-sm"
 							onChange={(e) =>
 								setPasswordData({
 									...passwordData,
@@ -462,7 +442,7 @@ function ProfileTab() {
 							Password Baru
 						</Label>
 						<Input
-							className="bg-white dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800 rounded-xl h-11 text-sm"
+							className="bg-white dark:bg-zinc-900/60 border-zinc-200 dark:border-white/10 rounded-lg h-11 text-sm shadow-sm"
 							onChange={(e) =>
 								setPasswordData({
 									...passwordData,
@@ -480,7 +460,7 @@ function ProfileTab() {
 							Konfirmasi Password Baru
 						</Label>
 						<Input
-							className="bg-white dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800 rounded-xl h-11 text-sm"
+							className="bg-white dark:bg-zinc-900/60 border-zinc-200 dark:border-white/10 rounded-lg h-11 text-sm shadow-sm"
 							onChange={(e) =>
 								setPasswordData({
 									...passwordData,
@@ -494,7 +474,7 @@ function ProfileTab() {
 						/>
 					</div>
 					<Button
-						className="w-full bg-zinc-900 text-white dark:bg-white dark:text-black font-bold h-11 rounded-xl hover:bg-zinc-800 dark:hover:bg-zinc-200 transition-all mt-2"
+						className="w-full bg-zinc-900 text-white dark:bg-white dark:text-black font-medium h-11 rounded-lg hover:bg-zinc-800 dark:hover:bg-zinc-200 shadow-sm transition-all mt-4"
 						disabled={updateLoading}
 						type="submit"
 					>
@@ -696,19 +676,23 @@ function CustomAITab() {
 	}
 
 	return (
-		<div className="space-y-8">
-			<header className="flex items-center justify-between">
-				<h1 className="text-xl font-bold text-zinc-900 dark:text-white">
-					Custom AI Configuration
+		<div className="space-y-10 max-w-3xl">
+			<header className="flex flex-col gap-2">
+				<h1 className="text-2xl font-semibold tracking-tight text-zinc-900 dark:text-white">
+					Bring Your Own Key (BYOK)
 				</h1>
+				<p className="text-sm text-zinc-500 dark:text-zinc-400">
+					Gunakan API keys lu sendiri buat model AI favorit lu. Data ini cuma
+					disimpen aman di database dan langsung dipake buat manggil model.
+				</p>
 			</header>
 
-			<div className="flex items-center justify-between pb-2 border-b border-zinc-800/50">
-				<h2 className="text-xs font-black uppercase tracking-widest text-white">
-					AI PROVIDER
+			<div className="flex justify-between items-end border-b border-zinc-200 dark:border-white/10 pb-3">
+				<h2 className="text-[11px] font-medium uppercase tracking-wider text-zinc-500">
+					PROVIDER
 				</h2>
-				<span className="text-[10px] font-black uppercase tracking-widest text-zinc-500 mr-2">
-					ROTATION MODEL
+				<span className="text-[11px] font-medium uppercase tracking-wider text-zinc-500 mr-2">
+					STATUS
 				</span>
 			</div>
 
@@ -722,24 +706,24 @@ function CustomAITab() {
 							key={provider.id}
 							className={`rounded-xl border p-6 transition-all ${
 								isEnabled
-									? "border-primary/20 bg-primary/5 dark:bg-primary/10 shadow-sm"
-									: "border-zinc-200 dark:border-zinc-800/30 bg-zinc-50 dark:bg-zinc-900/10"
+									? "border-zinc-300 dark:border-white/20 bg-white dark:bg-[#121212] shadow-sm"
+									: "border-zinc-200 dark:border-white/5 bg-zinc-50/50 dark:bg-[#0a0a0a]"
 							}`}
 						>
 							{/* Header */}
 							<div className="flex items-center justify-between mb-8">
 								<div className="flex items-center justify-between w-full">
-									<div className="flex items-center gap-4">
+									<div className="flex items-center gap-5">
 										<div
-											className={`w-12 h-12 rounded-full bg-white flex items-center justify-center shrink-0 shadow-sm ${provider.color}`}
+											className={`w-12 h-12 rounded-lg bg-zinc-100 dark:bg-white/5 flex items-center justify-center shrink-0 border border-zinc-200 dark:border-white/5 ${provider.color}`}
 										>
 											{provider.icon}
 										</div>
 										<div>
-											<h3 className="font-bold text-zinc-900 dark:text-white text-base">
-												{provider.name} Api Key
+											<h3 className="font-semibold text-zinc-900 dark:text-zinc-100 text-base">
+												{provider.name}
 											</h3>
-											<p className="text-[11px] text-zinc-500 font-medium">
+											<p className="text-xs text-zinc-500 dark:text-zinc-400 mt-0.5">
 												{provider.description}
 											</p>
 										</div>
@@ -748,14 +732,16 @@ function CustomAITab() {
 										type="button"
 										onClick={() => handleToggle(provider.id, !isEnabled)}
 										className={`relative w-11 h-6 rounded-full transition-colors shrink-0 ${
-											isEnabled ? "bg-white" : "bg-zinc-700"
+											isEnabled
+												? "bg-zinc-900 dark:bg-white"
+												: "bg-zinc-300 dark:bg-zinc-800"
 										}`}
 									>
 										<div
 											className={`absolute top-0.5 w-5 h-5 rounded-full shadow transition-transform ${
 												isEnabled
-													? "translate-x-5 bg-black"
-													: "translate-x-0.5 bg-white"
+													? "translate-x-5 bg-white dark:bg-black"
+													: "translate-x-0.5 bg-white dark:bg-zinc-400"
 											}`}
 										/>
 									</button>
@@ -763,14 +749,14 @@ function CustomAITab() {
 							</div>
 
 							{/* Models */}
-							<div className="mb-6">
+							<div className="mb-8">
 								<div className="flex items-center justify-between mb-3">
-									<span className="text-[10px] font-black uppercase tracking-widest text-zinc-500">
-										Model
+									<span className="text-[10px] font-medium uppercase tracking-wider text-zinc-500">
+										AVAILABLE MODELS
 									</span>
 									<div className="flex items-center gap-2">
 										<input
-											className="h-8 px-3 text-xs rounded-full border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900/50 text-zinc-900 dark:text-white w-48 focus:ring-1 focus:ring-primary/50 focus:border-primary/50 outline-none transition-all placeholder:text-zinc-400 dark:placeholder:text-zinc-600"
+											className="h-8 px-3 text-xs rounded-md border border-zinc-200 dark:border-white/10 bg-white dark:bg-zinc-900 text-zinc-900 dark:text-white w-56 focus:ring-1 focus:ring-zinc-400 dark:focus:ring-white/30 focus:border-zinc-400 dark:focus:border-white/30 outline-none transition-all placeholder:text-zinc-400 dark:placeholder:text-zinc-600 shadow-sm"
 											placeholder={provider.modelPlaceholder}
 											value={newModel[provider.id] || ""}
 											onChange={(e) =>
@@ -786,9 +772,9 @@ function CustomAITab() {
 										<button
 											type="button"
 											onClick={() => handleAddModel(provider.id)}
-											className="text-[11px] px-3 py-1.5 rounded-full border border-indigo-500/20 bg-indigo-500/10 text-indigo-400 font-semibold hover:bg-indigo-500/20 transition-colors"
+											className="text-[11px] px-3 py-1.5 rounded-md border border-zinc-200 dark:border-white/10 hover:bg-zinc-100 dark:hover:bg-white/5 text-zinc-700 dark:text-zinc-300 font-medium transition-colors"
 										>
-											+ Tambah Model
+											Add
 										</button>
 									</div>
 								</div>
@@ -814,16 +800,16 @@ function CustomAITab() {
 							</div>
 
 							{/* Keys */}
-							<div className="mb-4">
-								<span className="text-[10px] font-black uppercase tracking-widest text-indigo-500/80 mb-3 block">
-									Key1, Key2, Key3, Key4 dan dll
+							<div className="mb-6">
+								<span className="text-[10px] font-medium uppercase tracking-wider text-zinc-500 mb-2 block">
+									API KEYS
 								</span>
 								{data?.maskedKeys && data.maskedKeys.length > 0 && (
 									<div className="flex flex-wrap gap-2 mb-3">
 										{data.maskedKeys.map((mk, i) => (
 											<span
 												key={`${provider.id}-mask-${i}`}
-												className="px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-500 text-[10px] font-mono border border-emerald-500/20"
+												className="px-2 py-0.5 rounded bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 border border-zinc-200 dark:border-zinc-700 text-[11px] font-mono"
 											>
 												{mk}
 											</span>
@@ -831,7 +817,7 @@ function CustomAITab() {
 									</div>
 								)}
 								<textarea
-									className="w-full h-24 px-4 py-3 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900/40 text-sm text-zinc-900 dark:text-zinc-300 placeholder:text-zinc-400 dark:placeholder:text-zinc-600 resize-none focus:ring-1 focus:ring-primary/50 focus:border-primary/50 outline-none transition-all shadow-sm dark:shadow-none"
+									className="w-full h-24 px-4 py-3 rounded-lg border border-zinc-200 dark:border-white/10 bg-white dark:bg-zinc-900 text-[13px] text-zinc-900 dark:text-white placeholder:text-zinc-400 dark:placeholder:text-zinc-500 resize-none focus:ring-1 focus:ring-zinc-400 dark:focus:ring-white/30 focus:border-zinc-400 dark:focus:border-white/30 outline-none transition-all shadow-sm font-mono"
 									placeholder={`Enter ${provider.name} Keys...\n(one per line or comma-separated)`}
 									value={rawKeys[provider.id] || ""}
 									onChange={(e) =>
@@ -846,7 +832,7 @@ function CustomAITab() {
 							{/* Actions */}
 							<div className="flex items-center gap-3">
 								<Button
-									className="rounded-full text-xs h-9 border-zinc-200 dark:border-zinc-800 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800 hover:text-zinc-900 dark:hover:text-white"
+									className="rounded-md text-xs h-9 font-medium border-zinc-200 dark:border-white/10 bg-white dark:bg-transparent hover:bg-zinc-100 dark:hover:bg-white/5 text-zinc-700 dark:text-zinc-300"
 									variant="outline"
 									disabled={testing === provider.id}
 									onClick={() => handleTest(provider.id)}
@@ -858,20 +844,19 @@ function CustomAITab() {
 									Test Connection
 								</Button>
 								<Button
-									className="rounded-full text-xs h-9 bg-zinc-900 text-white dark:bg-zinc-800 dark:text-white hover:bg-zinc-800 dark:hover:bg-zinc-700 w-24"
+									className="rounded-md text-xs h-9 font-medium bg-zinc-900 text-white dark:bg-white dark:text-black hover:bg-zinc-800 dark:hover:bg-zinc-200"
 									disabled={saving === provider.id}
 									onClick={() => handleSave(provider.id)}
 									type="button"
 								>
 									{saving === provider.id ? (
-										<Loader2Icon className="animate-spin" size={14} />
-									) : (
-										"Save Keys"
-									)}
+										<Loader2Icon className="animate-spin mr-1" size={14} />
+									) : null}
+									Save Changes
 								</Button>
 								{data && (
 									<Button
-										className="rounded-full text-xs h-9 ml-auto text-zinc-400 hover:text-red-400 hover:bg-red-500/10"
+										className="rounded-md text-xs h-9 ml-auto text-zinc-400 hover:text-red-500 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-500/10 font-medium"
 										variant="ghost"
 										onClick={() => handleDelete(provider.id)}
 										type="button"

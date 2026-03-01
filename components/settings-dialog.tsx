@@ -156,13 +156,13 @@ export function SettingsDialog({
 											</Label>
 											<div className="flex items-center gap-2">
 												{user?.isPro ? (
-													<div className="text-xs px-2 py-0.5 bg-yellow-400/10 text-yellow-600 dark:text-yellow-500 rounded-full font-bold border border-yellow-500/20">
+													<span className="text-xs px-2 py-0.5 bg-yellow-400/10 text-yellow-600 dark:text-yellow-500 rounded-full font-bold border border-yellow-500/20">
 														PRO
-													</div>
+													</span>
 												) : (
-													<div className="text-xs px-2 py-0.5 bg-zinc-200 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-400 rounded-full font-bold">
+													<span className="text-xs px-2 py-0.5 bg-zinc-200 dark:bg-zinc-800 text-zinc-700 dark:text-zinc-400 rounded-full font-bold">
 														FREE
-													</div>
+													</span>
 												)}
 											</div>
 										</div>
