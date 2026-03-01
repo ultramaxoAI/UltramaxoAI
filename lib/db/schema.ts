@@ -301,3 +301,38 @@ export const passwordResetToken = pgTable("password_reset_token", {
 export type PasswordResetToken = InferSelectModel<typeof passwordResetToken>;
 
 export type RedeemCode = InferSelectModel<typeof redeemCode>;
+
+// ============================================================
+// User Settings (Personalization - 1:1 per user)
+// ============================================================
+export const userSettings = pgTable("user_settings", {
+	id: uuid("id").primaryKey().notNull().defaultRandom(),
+	userId: uuid("userId")
+		.notNull()
+		.references(() => user.id, { onDelete: "cascade" }),
+	displayName: text("displayName"),
+	customInstructions: text("customInstructions"),
+	language: varchar("language", { length: 10 }).default("en"),
+	createdAt: timestamp("createdAt").notNull().defaultNow(),
+	updatedAt: timestamp("updatedAt").notNull().defaultNow(),
+});
+
+export type UserSettings = InferSelectModel<typeof userSettings>;
+
+// ============================================================
+// User API Keys (Custom AI - 1 per provider per user)
+// ============================================================
+export const userApiKeys = pgTable("user_api_keys", {
+	id: uuid("id").primaryKey().notNull().defaultRandom(),
+	userId: uuid("userId")
+		.notNull()
+		.references(() => user.id, { onDelete: "cascade" }),
+	provider: varchar("provider", { length: 50 }).notNull(),
+	keysEncrypted: text("keysEncrypted"),
+	isEnabled: boolean("isEnabled").notNull().default(false),
+	customModels: json("customModels").$type<string[]>().default([]),
+	createdAt: timestamp("createdAt").notNull().defaultNow(),
+	updatedAt: timestamp("updatedAt").notNull().defaultNow(),
+});
+
+export type UserApiKey = InferSelectModel<typeof userApiKeys>;

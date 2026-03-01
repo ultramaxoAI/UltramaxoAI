@@ -1,88 +1,173 @@
+import { createAnthropic } from "@ai-sdk/anthropic";
+import { createGoogleGenerativeAI } from "@ai-sdk/google";
 import { createOpenAI } from "@ai-sdk/openai";
 
 // ============================================================
-// MAIA Router API Keys
+// Default API Keys Setup
 // ============================================================
 const maiaApiKey = (process.env.OPENROUTER_API_KEY_1 || "").trim();
 
-/**
- * Creates a model via @ai-sdk/openai pointing to MAIA Router.
- * Uses .chat() to ensure /chat/completions endpoint is used.
- */
-function getMaiaRouterModel(modelId: string) {
-	if (!maiaApiKey) {
-		throw new Error(
-			"No MAIA Router API key configured. Set OPENROUTER_API_KEY_1 in your environment.",
-		);
+// ============================================================
+// Model IDs
+// ============================================================
+const DEFAULT_MODEL = "maia/gemini-2.5-flash";
+
+export interface CustomKeyConfig {
+	provider: string;
+	apiKey: string;
+}
+
+// ============================================================
+// Provider Clients
+// ============================================================
+
+function getMaiaRouterModel(modelId: string, customKey?: string) {
+	const key = customKey || maiaApiKey;
+	if (!key) {
+		throw new Error("No MAIA Router API key configured.");
 	}
-
-	console.log(`[AI Provider] Creating MAIA Router model: ${modelId}`);
-
 	const client = createOpenAI({
-		baseURL: "https://api.maiarouter.ai/v1", // MAIA Router Endpoint
-		apiKey: maiaApiKey,
+		baseURL: "https://api.maiarouter.ai/v1",
+		apiKey: key,
 		headers: {
 			"HTTP-Referer": "https://ultramaxo.com",
 			"X-Title": "Ultramaxo AI",
 		},
 	});
-
-	// Use .chat() for Chat Completions endpoint
 	return client.chat(modelId);
 }
 
-// ============================================================
-// Model IDs on MAIA Router (xAI Grok & Gemini)
-// ============================================================
-// Primary Model: xAI Grok 4-1 Fast (Supports Vision, Tools, Reasoning)
-// Update: Preview model erroring (503), reverting to stable Flash
-const GROK_MODEL = "maia/gemini-2.5-flash";
+function getOpenRouterModel(modelId: string, customKey?: string) {
+	if (!customKey) throw new Error("No OpenRouter API key provided.");
+	const client = createOpenAI({
+		baseURL: "https://openrouter.ai/api/v1",
+		apiKey: customKey,
+		fetch: async (url, options) => {
+			const headers = new Headers(options?.headers);
+			headers.set("HTTP-Referer", "https://ultramaxo.com");
+			headers.set("X-Title", "Ultramaxo AI");
+
+			return fetch(url, {
+				...options,
+				headers,
+			});
+		},
+	});
+	return client.chat(modelId);
+}
+
+function getGroqModel(modelId: string, customKey?: string) {
+	if (!customKey) throw new Error("No Groq API key provided.");
+	const client = createOpenAI({
+		baseURL: "https://api.groq.com/openai/v1",
+		apiKey: customKey,
+	});
+	return client.chat(modelId);
+}
+
+function getOpenAIModel(modelId: string, customKey?: string) {
+	if (!customKey) throw new Error("No OpenAI API key provided.");
+	const client = createOpenAI({
+		baseURL: "https://api.openai.com/v1",
+		apiKey: customKey,
+	});
+	return client.chat(modelId);
+}
+
+function getAnthropicModel(modelId: string, customKey?: string) {
+	if (!customKey) throw new Error("No Anthropic API key provided.");
+	const client = createAnthropic({
+		apiKey: customKey,
+	});
+	return client(modelId);
+}
+
+function getGeminiModel(modelId: string, customKey?: string) {
+	if (!customKey) throw new Error("No Gemini API key provided.");
+	const client = createGoogleGenerativeAI({
+		apiKey: customKey,
+	});
+	return client(modelId);
+}
 
 // ============================================================
 // getLanguageModel - main routing function
 // ============================================================
-export const getLanguageModel = (modelId: string) => {
+export const getLanguageModel = (
+	modelId: string,
+	customConfig?: CustomKeyConfig | null,
+) => {
 	const normalized = modelId.toLowerCase();
 	console.log("-------------------------------------------");
-	console.log("[AI Provider] Model Requested:", modelId);
+	console.log(`[AI Provider] Model Requested: ${modelId}`);
 
-	// All "ultra-agent" variants map to Grok (now Gemini Flash Preview)
-	if (normalized.includes("ultra-agent") || normalized.includes("pro")) {
-		console.log("[AI Provider] -> UltraAgent (Grok/Gemini):", GROK_MODEL);
-		return getMaiaRouterModel(GROK_MODEL);
+	// If user provided a custom API key config for a specific provider
+	if (customConfig && !normalized.includes("ultramaxo/")) {
+		console.log(`[AI Provider] Using CUSTOM Key for: ${customConfig.provider}`);
+
+		// Extract actual model name if it has a provider prefix
+		const actualModelId = modelId.includes("/")
+			? modelId.split("/").slice(1).join("/")
+			: modelId;
+
+		try {
+			switch (customConfig.provider) {
+				case "gemini":
+					return getGeminiModel(actualModelId, customConfig.apiKey);
+				case "openrouter":
+					return getOpenRouterModel(actualModelId, customConfig.apiKey);
+				case "groq":
+					return getGroqModel(actualModelId, customConfig.apiKey);
+				case "openai":
+					return getOpenAIModel(actualModelId, customConfig.apiKey);
+				case "anthropic":
+					return getAnthropicModel(actualModelId, customConfig.apiKey);
+				case "maia":
+					return getMaiaRouterModel(actualModelId, customConfig.apiKey);
+				default:
+					console.log(
+						`[AI Provider] Unknown custom provider: ${customConfig.provider}, falling back to default`,
+					);
+			}
+		} catch (e) {
+			console.error("[AI Provider] Custom key failed, falling back.", e);
+		}
 	}
 
-	// Explicit maia/ or xai/ prefix
+	// Default fallback using environment variables
+	if (
+		normalized.includes("ultra-agent") ||
+		normalized.includes("pro") ||
+		normalized.includes("ultramaxo/")
+	) {
+		console.log("[AI Provider] -> UltraAgent:", modelId);
+		// Pass the exact model id or a fallback mapping
+		const targetModel = normalized.includes("ultra-agent-pro")
+			? "maia/gemini-2.5-pro"
+			: DEFAULT_MODEL;
+		return getMaiaRouterModel(targetModel);
+	}
+
 	if (normalized.startsWith("maia/") || normalized.startsWith("xai/")) {
-		console.log("[AI Provider] -> Passthrough:", modelId);
+		console.log("[AI Provider] -> Passthrough (Default Key):", modelId);
 		return getMaiaRouterModel(modelId);
 	}
 
-	// Default fallback
-	console.log("[AI Provider] -> Default:", GROK_MODEL);
-	return getMaiaRouterModel(GROK_MODEL);
+	console.log("[AI Provider] -> Default Fallback:", DEFAULT_MODEL);
+	return getMaiaRouterModel(DEFAULT_MODEL);
 };
 
 // ============================================================
-// Title generation
+// Internal Utility Models (using MAIA Default)
 // ============================================================
 export function getTitleModel() {
-	console.log("[AI Provider] Title model:", GROK_MODEL);
-	return getMaiaRouterModel(GROK_MODEL);
+	return getMaiaRouterModel(DEFAULT_MODEL);
 }
 
-// ============================================================
-// Artifact model
-// ============================================================
 export function getArtifactModel() {
-	console.log("[AI Provider] Artifact model:", GROK_MODEL);
-	return getMaiaRouterModel(GROK_MODEL);
+	return getMaiaRouterModel(DEFAULT_MODEL);
 }
 
-// ============================================================
-// Image/Vision model
-// ============================================================
 export function getImageModel() {
-	console.log("[AI Provider] Vision model:", GROK_MODEL);
-	return getMaiaRouterModel(GROK_MODEL);
+	return getMaiaRouterModel(DEFAULT_MODEL);
 }

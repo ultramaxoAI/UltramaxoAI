@@ -4,7 +4,11 @@ import { auth } from "@/app/(auth)/auth";
 import { Chat } from "@/components/chat";
 import { DataStreamHandler } from "@/components/data-stream-handler";
 import { DEFAULT_CHAT_MODEL } from "@/lib/ai/models";
-import { getTodayMessageCount, getUserById } from "@/lib/db/queries";
+import {
+	getTodayMessageCount,
+	getUserApiKeys,
+	getUserById,
+} from "@/lib/db/queries";
 import { generateUUID } from "@/lib/utils";
 
 export default function Page() {
@@ -21,6 +25,9 @@ async function NewChatPage() {
 	const id = generateUUID();
 
 	let isAtLimit = false;
+	const customModels: Array<{ id: string; name: string; provider: string }> =
+		[];
+
 	if (session?.user?.id) {
 		const todayCount = await getTodayMessageCount(session.user.id);
 		const [currentUser] = await getUserById(session.user.id);
@@ -31,6 +38,19 @@ async function NewChatPage() {
 			(currentUser?.limitCount || 0) <= 0
 		) {
 			isAtLimit = true;
+		}
+
+		const apiKeys = await getUserApiKeys(session.user.id);
+		for (const key of apiKeys) {
+			if (key.isEnabled && key.customModels) {
+				for (const modelId of key.customModels) {
+					customModels.push({
+						id: `${key.provider}/${modelId}`,
+						name: modelId,
+						provider: key.provider,
+					});
+				}
+			}
 		}
 	}
 
@@ -46,6 +66,7 @@ async function NewChatPage() {
 				isReadonly={!session}
 				key={id}
 				user={session?.user}
+				customModels={customModels}
 			/>
 			<DataStreamHandler />
 		</>

@@ -1,0 +1,13 @@
+⏳ Running migrations...
+❌ Migration failed
+Error: No file ./lib/db/migrations/0010_fast_famine.sql found in ./lib/db/migrations folder
+    at readMigrationFiles (C:\Users\HYPE R Series\OneDrive\Dokumen\UltramaxoV2\node_modules\src\migrator.ts:55:10)
+    at migrate (C:\Users\HYPE R Series\OneDrive\Dokumen\UltramaxoV2\node_modules\src\postgres-js\migrator.ts:9:21)
+    at runMigrate (C:\Users\HYPE R Series\OneDrive\Dokumen\UltramaxoV2\lib\db\migrate.ts:22:8)
+    at postgres (C:\Users\HYPE R Series\OneDrive\Dokumen\UltramaxoV2\lib\db\migrate.ts:29:1)
+    at Object.<anonymous> (C:\Users\HYPE R Series\OneDrive\Dokumen\UltramaxoV2\lib\db\migrate.ts:33:2)
+    at Module._compile (node:internal/modules/cjs/loader:1760:14)
+    at Object.transformer (C:\Users\HYPE R Series\OneDrive\Dokumen\UltramaxoV2\node_modules\tsx\dist\register-D46fvsV_.cjs:3:1104)
+    at Module.load (node:internal/modules/cjs/loader:1480:32)
+    at Module._load (node:internal/modules/cjs/loader:1299:12)
+    at TracingChannel.traceSync (node:diagnostics_channel:328:14)

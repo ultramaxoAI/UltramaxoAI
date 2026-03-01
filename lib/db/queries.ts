@@ -44,6 +44,8 @@ import {
 } from "./schema";
 import { generateHashedPassword } from "./utils";
 
+export { getUserApiKeys } from "./queries-settings";
+
 // Optionally, if not using email/pass login, you can
 // use the Drizzle adapter for Auth.js / NextAuth
 // https://authjs.dev/reference/adapter/drizzle

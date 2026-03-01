@@ -13,7 +13,6 @@ import { useRouter } from "next/navigation";
 import type { User } from "next-auth";
 import { signOut, useSession } from "next-auth/react";
 import { useTheme } from "next-themes";
-import { useState } from "react";
 import {
 	DropdownMenu,
 	DropdownMenuContent,
@@ -30,7 +29,6 @@ import {
 import { guestRegex } from "@/lib/constants";
 import { LoaderIcon } from "./icons";
 import { ProfileEditDialog } from "./profile-edit-dialog";
-import { SettingsDialog } from "./settings-dialog";
 import { toast } from "./toast";
 
 export function SidebarUserNav({
@@ -43,7 +41,6 @@ export function SidebarUserNav({
 	const router = useRouter();
 	const { data, status } = useSession();
 	const { setTheme, resolvedTheme } = useTheme();
-	const [isSettingsOpen, setIsSettingsOpen] = useState(false);
 
 	const isGuest = guestRegex.test(data?.user?.email ?? "");
 	const isAdmin = data?.user?.role === "admin";
@@ -180,7 +177,7 @@ export function SidebarUserNav({
 
 							<DropdownMenuItem
 								className="cursor-pointer gap-2 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-lg focus:bg-zinc-100 dark:focus:bg-zinc-800"
-								onSelect={() => setIsSettingsOpen(true)}
+								onSelect={() => router.push("/settings")}
 							>
 								<Settings className="h-4 w-4" />
 								Pengaturan
@@ -250,8 +247,6 @@ export function SidebarUserNav({
 					</DropdownMenu>
 				</SidebarMenuItem>
 			</SidebarMenu>
-
-			<SettingsDialog onOpenChange={setIsSettingsOpen} open={isSettingsOpen} />
 		</>
 	);
 }

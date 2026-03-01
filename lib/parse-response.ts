@@ -19,9 +19,22 @@ export function parseResponse(content: string): ParsedResponse {
 	const blocks: ParsedCodeBlock[] = [];
 	const explanationParts: string[] = [];
 
+	// Safety: skip parsing if content is absurdly large
+	if (content.length > 200_000) {
+		return { explanation: content, blocks: [] };
+	}
+
+	// IMPORTANT: Reset lastIndex to avoid stale state from previous calls
+	CODE_BLOCK_REGEX.lastIndex = 0;
+
 	let lastIndex = 0;
-	const match: RegExpExecArray | null = CODE_BLOCK_REGEX.exec(content);
-	while (match !== null) {
+	let match: RegExpExecArray | null;
+	let safety = 0;
+	const MAX_ITERATIONS = 500;
+
+	while ((match = CODE_BLOCK_REGEX.exec(content)) !== null) {
+		if (++safety > MAX_ITERATIONS) break; // Prevent infinite loops
+
 		const [fullMatch, langRaw, codeRaw] = match;
 
 		// teks sebelum blok kode dianggap bagian dari penjelasan

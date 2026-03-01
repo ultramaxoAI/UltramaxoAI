@@ -32,7 +32,12 @@ import {
 	updateChatTitleById,
 	updateMessage,
 } from "@/lib/db/queries";
+import {
+	getEnabledUserApiKey,
+	getUserSettings,
+} from "@/lib/db/queries-settings";
 import type { DBMessage } from "@/lib/db/schema";
+import { decryptData, maskKey } from "@/lib/encryption";
 import { ChatSDKError } from "@/lib/errors";
 import { checkRateLimit, getClientIp } from "@/lib/rateLimiter";
 import type { ChatMessage } from "@/lib/types";
@@ -58,27 +63,7 @@ export async function POST(request: Request) {
 	try {
 		let requestBody: PostRequestBody;
 
-		// Check if any OpenRouter key is configured
-		const hasOpenRouterApiKey = Boolean(
-			process.env.OPENROUTER_API_KEY_1 ||
-				process.env.OPENROUTER_API_KEY_2 ||
-				process.env.OPENROUTER_API_KEY_3,
-		);
-
-		if (!hasOpenRouterApiKey) {
-			console.error("=== CONFIGURATION ERROR ===");
-			console.error("No OpenRouter API key found in environment variables");
-			console.error("Please set OPENROUTER_API_KEY_1/2/3 in your deployment");
-			console.error("=== END CONFIGURATION ERROR ===");
-
-			return new Response(
-				JSON.stringify({
-					error: "AI service not configured. Please contact administrator.",
-					code: "missing_api_key",
-				}),
-				{ status: 500, headers: { "Content-Type": "application/json" } },
-			);
-		}
+		// Removed hardcoded env check. We now allow users to bring their own keys or fallback to env.
 
 		try {
 			const json = await request.json();
@@ -131,9 +116,43 @@ export async function POST(request: Request) {
 
 			await expireProIfNeeded(session.user.id);
 
-			// Daily Message Limit for Free Users
+			// Fetch Custom API Key & Personalization Settings
+			const enabledKeyConfig = await getEnabledUserApiKey(session.user.id);
+			let customConfig = null;
+			let userProvider = "default";
+
+			if (enabledKeyConfig?.keysEncrypted) {
+				try {
+					const decrypted = decryptData(enabledKeyConfig.keysEncrypted);
+					const keysArray = JSON.parse(decrypted) as string[];
+					// Pick a random key from the pool for simple load balancing
+					if (keysArray.length > 0) {
+						const randomKey =
+							keysArray[Math.floor(Math.random() * keysArray.length)];
+						customConfig = {
+							provider: enabledKeyConfig.provider,
+							apiKey: randomKey,
+						};
+						userProvider = enabledKeyConfig.provider;
+						console.log(
+							`[Chat API] Using custom API key for provider: ${userProvider}`,
+						);
+					}
+				} catch (e) {
+					console.error("[Chat API] Failed to parse custom API keys", e);
+				}
+			}
+
+			const userSettings = await getUserSettings(session.user.id);
+			const customInstructions = userSettings?.customInstructions || "";
+
+			// Daily Message Limit for Free Users (SKIP IF USING CUSTOM KEY)
 			const [currentUser] = await getUserById(session.user.id);
-			if (!currentUser?.isPro && currentUser?.role !== "admin") {
+			if (
+				!customConfig &&
+				!currentUser?.isPro &&
+				currentUser?.role !== "admin"
+			) {
 				const todayCount = await getTodayMessageCount(session.user.id);
 				// Free users get 10 messages per day
 				if (todayCount >= 10) {
@@ -141,7 +160,7 @@ export async function POST(request: Request) {
 					const deducted = await deductUserLimitCount(session.user.id);
 					if (!deducted) {
 						return new Response(
-							"Out of Limits! You have reached your 10 daily free messages. Please upgrade to PRO for unlimited chats or wait until tomorrow.",
+							"Out of Limits! You have reached your 10 daily free messages. Please upgrade to PRO, or add your own Custom API Key in Settings.",
 							{ status: 429 },
 						);
 					}
@@ -258,22 +277,31 @@ export async function POST(request: Request) {
 								);
 							}
 
+							// Dynamic system prompt base
+							let baseSystemPrompt = systemPrompt({
+								selectedChatModel,
+								requestHints,
+								wormgptEnabled,
+								deepThinkingEnabled,
+								webSearchEnabled,
+								fullstackModeEnabled,
+								mobileModeEnabled,
+							});
+
+							// Prepend Personalization Custom Instructions
+							if (customInstructions) {
+								baseSystemPrompt = `USER CUSTOM INSTRUCTIONS (MUST FOLLOW):\n${customInstructions}\n\n---\n\n${baseSystemPrompt}`;
+							}
+
 							const result = streamText({
 								// Use smarter model for Deep Thinking mode
 								model: getLanguageModel(
 									deepThinkingEnabled
 										? "maia/gemini-2.5-flash"
 										: selectedChatModel,
+									customConfig, // Pass custom key config
 								),
-								system: systemPrompt({
-									selectedChatModel,
-									requestHints,
-									wormgptEnabled,
-									deepThinkingEnabled,
-									webSearchEnabled,
-									fullstackModeEnabled,
-									mobileModeEnabled,
-								}),
+								system: baseSystemPrompt,
 								messages: modelMessages,
 								stopWhen: stepCountIs(5),
 								toolChoice: "auto",

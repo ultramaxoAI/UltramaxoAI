@@ -10,6 +10,7 @@ import {
 	getChatById,
 	getMessagesByChatId,
 	getTodayMessageCount,
+	getUserApiKeys,
 	getUserById,
 } from "@/lib/db/queries";
 import { convertToUIMessages } from "@/lib/utils";
@@ -49,6 +50,9 @@ async function ChatPage({ params }: { params: Promise<{ id: string }> }) {
 	const isReadonly = !session || session.user?.id !== chat.userId;
 
 	let isAtLimit = false;
+	const customModels: Array<{ id: string; name: string; provider: string }> =
+		[];
+
 	if (session?.user?.id) {
 		const todayCount = await getTodayMessageCount(session.user.id);
 		const [currentUser] = await getUserById(session.user.id);
@@ -59,6 +63,19 @@ async function ChatPage({ params }: { params: Promise<{ id: string }> }) {
 			(currentUser?.limitCount || 0) <= 0
 		) {
 			isAtLimit = true;
+		}
+
+		const apiKeys = await getUserApiKeys(session.user.id);
+		for (const key of apiKeys) {
+			if (key.isEnabled && key.customModels) {
+				for (const modelId of key.customModels) {
+					customModels.push({
+						id: `${key.provider}/${modelId}`,
+						name: modelId,
+						provider: key.provider,
+					});
+				}
+			}
 		}
 	}
 
@@ -83,6 +100,7 @@ async function ChatPage({ params }: { params: Promise<{ id: string }> }) {
 					isAtLimit={isAtLimit}
 					isReadonly={isReadonly}
 					user={session?.user}
+					customModels={customModels}
 				/>
 				<DataStreamHandler />
 			</>
@@ -100,6 +118,7 @@ async function ChatPage({ params }: { params: Promise<{ id: string }> }) {
 				isAtLimit={isAtLimit}
 				isReadonly={session?.user?.id !== chat.userId}
 				user={session?.user}
+				customModels={customModels}
 			/>
 			<DataStreamHandler />
 		</>

@@ -98,6 +98,7 @@ export interface MultimodalInputProps {
 	mobileModeEnabled: boolean;
 	setMobileModeEnabled: Dispatch<SetStateAction<boolean>>;
 	user?: { type?: string; isPro?: boolean };
+	customModels?: Array<{ id: string; name: string; provider: string }>;
 }
 
 function PureMultimodalInput({
@@ -124,6 +125,7 @@ function PureMultimodalInput({
 	mobileModeEnabled,
 	setMobileModeEnabled,
 	user,
+	customModels,
 }: MultimodalInputProps) {
 	const textareaRef = useRef<HTMLTextAreaElement>(null);
 	const { width } = useWindowSize();
@@ -752,6 +754,7 @@ function PureMultimodalInput({
 								onModelChange={onModelChange}
 								selectedModelId={selectedModelId}
 								user={user}
+								customModels={customModels}
 							/>
 						</div>
 
@@ -836,10 +839,12 @@ function PureModelSelectorCompact({
 	selectedModelId,
 	onModelChange,
 	user,
+	customModels,
 }: {
 	selectedModelId: string;
 	onModelChange?: (modelId: string) => void;
-	user?: { type?: string };
+	user?: { type?: string; isPro?: boolean };
+	customModels?: Array<{ id: string; name: string; provider: string }>;
 }) {
 	const [open, setOpen] = useState(false);
 	const isPro = user?.type === "pro";
@@ -855,10 +860,14 @@ function PureModelSelectorCompact({
 	);
 	console.log("===========================");
 
+	const fallbackModel =
+		chatModels.find((m) => m.id === DEFAULT_CHAT_MODEL) ?? chatModels[0];
+
 	const selectedModel =
 		chatModels.find((m) => m.id === selectedModelId) ??
-		chatModels.find((m) => m.id === DEFAULT_CHAT_MODEL) ??
-		chatModels[0];
+		customModels?.find((m) => m.id === selectedModelId) ??
+		fallbackModel;
+
 	const [provider] = selectedModel.id.split("/");
 
 	// Provider display names
@@ -885,6 +894,31 @@ function PureModelSelectorCompact({
 			<ModelSelectorContent>
 				<ModelSelectorInput placeholder="Search models..." />
 				<ModelSelectorList>
+					{customModels && customModels.length > 0 && (
+						<ModelSelectorGroup heading="My Custom Models">
+							{customModels.map((model) => {
+								return (
+									<ModelSelectorItem
+										key={model.id}
+										onSelect={() => {
+											onModelChange?.(model.id);
+											setCookie("chat-model", model.id);
+											setOpen(false);
+										}}
+										value={model.id}
+									>
+										<ModelSelectorLogo provider={model.provider} />
+										<ModelSelectorName className="text-primary font-medium">
+											{model.name}
+										</ModelSelectorName>
+										{model.id === selectedModelId && (
+											<CheckIcon className="ml-auto size-4" />
+										)}
+									</ModelSelectorItem>
+								);
+							})}
+						</ModelSelectorGroup>
+					)}
 					{Object.entries(modelsByProvider).map(
 						([providerKey, providerModels]) => (
 							<ModelSelectorGroup
@@ -927,7 +961,7 @@ function PureModelSelectorCompact({
 													🔒
 												</span>
 											)}
-											{model.id === selectedModel.id && !isLocked && (
+											{model.id === selectedModelId && !isLocked && (
 												<CheckIcon className="ml-auto size-4" />
 											)}
 										</ModelSelectorItem>

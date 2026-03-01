@@ -1,10 +1,26 @@
 import { Check, Code2, Copy, Download } from "lucide-react";
-import { useState } from "react";
-import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
-import { oneDark as vscDarkPlus } from "react-syntax-highlighter/dist/esm/styles/prism";
+import { lazy, memo, Suspense, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { useArtifact } from "@/hooks/use-artifact";
 import { generateUUID } from "@/lib/utils";
+
+// Lazy-load the heavy SyntaxHighlighter so it doesn't block initial render
+const SyntaxHighlighter = lazy(
+	() => import("react-syntax-highlighter/dist/esm/prism-light"),
+);
+
+// Pre-load style
+let cachedStyle: Record<string, React.CSSProperties> | null = null;
+import("react-syntax-highlighter/dist/esm/styles/prism/one-dark").then(
+	(mod) => {
+		cachedStyle = mod.default;
+	},
+);
+
+// Safety limits to prevent browser OOM crashes
+const MAX_HIGHLIGHT_CHARS = 5_000; // Skip highlighting above this
+const MAX_HIGHLIGHT_LINES = 150;
+const MAX_DISPLAY_CHARS = 50_000; // Truncate display above this
 
 interface CodeBlockProps {
 	children: string;
@@ -12,8 +28,9 @@ interface CodeBlockProps {
 	language?: string;
 }
 
-export function CodeBlock({ children, className, language }: CodeBlockProps) {
+function PureCodeBlock({ children, className, language }: CodeBlockProps) {
 	const [copied, setCopied] = useState(false);
+	const [showFull, setShowFull] = useState(false);
 	const { setArtifact } = useArtifact();
 
 	// Extract language if not provided, fallback to text
@@ -22,8 +39,20 @@ export function CodeBlock({ children, className, language }: CodeBlockProps) {
 		(className ? /language-(\w+)/.exec(className)?.[1] : "text") ||
 		"text";
 
+	// Determine rendering strategy
+	const lineCount = children.split("\n").length;
+	const isTooLargeForHighlight =
+		children.length > MAX_HIGHLIGHT_CHARS || lineCount > MAX_HIGHLIGHT_LINES;
+	const isTooLargeForDisplay = children.length > MAX_DISPLAY_CHARS;
+
+	// Truncate if necessary
+	const displayContent =
+		isTooLargeForDisplay && !showFull
+			? `${children.slice(0, MAX_DISPLAY_CHARS)}\n\n... (${(children.length / 1000).toFixed(0)}KB total, click "Show All" to expand)`
+			: children;
+
 	const handleCopy = async () => {
-		await navigator.clipboard.writeText(children);
+		await navigator.clipboard.writeText(children); // Always copy full content
 		setCopied(true);
 		setTimeout(() => setCopied(false), 2000);
 	};
@@ -58,56 +87,101 @@ export function CodeBlock({ children, className, language }: CodeBlockProps) {
 	};
 
 	return (
-		<div className="group/code relative my-4 overflow-hidden rounded-lg border bg-zinc-950 font-mono text-sm">
-			<div className="absolute right-2 top-2 z-10 flex gap-1 opacity-0 transition-opacity group-hover/code:opacity-100">
-				<Button
-					className="size-8 bg-zinc-800/80 text-zinc-400 hover:bg-zinc-800 hover:text-zinc-100"
-					onClick={handleOpenInEditor}
-					size="icon"
-					title="Open in Editor"
-					variant="ghost"
-				>
-					<Code2 className="size-4" />
-				</Button>
-				<Button
-					className="size-8 bg-zinc-800/80 text-zinc-400 hover:bg-zinc-800 hover:text-zinc-100"
-					onClick={handleCopy}
-					size="icon"
-					title={copied ? "Copied!" : "Copy code"}
-					variant="ghost"
-				>
-					{copied ? <Check className="size-4" /> : <Copy className="size-4" />}
-				</Button>
-				<Button
-					className="size-8 bg-zinc-800/80 text-zinc-400 hover:bg-zinc-800 hover:text-zinc-100"
-					onClick={handleDownload}
-					size="icon"
-					title="Download code"
-					variant="ghost"
-				>
-					<Download className="size-4" />
-				</Button>
+		<div className="group/code relative my-4 rounded-lg border bg-zinc-950 font-mono text-sm max-w-[calc(100vw-2rem)] md:max-w-full">
+			{/* Language label + action buttons header */}
+			<div className="flex items-center justify-between px-4 py-2 border-b border-zinc-800">
+				<span className="text-xs text-zinc-500 uppercase tracking-wider">
+					{lang}
+				</span>
+				<div className="flex gap-1">
+					<Button
+						className="size-7 text-zinc-400 hover:text-zinc-100"
+						onClick={handleOpenInEditor}
+						size="icon"
+						title="Open in Editor"
+						variant="ghost"
+					>
+						<Code2 className="size-3.5" />
+					</Button>
+					<Button
+						className="size-7 text-zinc-400 hover:text-zinc-100"
+						onClick={handleCopy}
+						size="icon"
+						title={copied ? "Copied!" : "Copy code"}
+						variant="ghost"
+					>
+						{copied ? (
+							<Check className="size-3.5" />
+						) : (
+							<Copy className="size-3.5" />
+						)}
+					</Button>
+					<Button
+						className="size-7 text-zinc-400 hover:text-zinc-100"
+						onClick={handleDownload}
+						size="icon"
+						title="Download code"
+						variant="ghost"
+					>
+						<Download className="size-3.5" />
+					</Button>
+				</div>
 			</div>
-			<SyntaxHighlighter
-				codeTagProps={{
-					style: {
-						fontSize: "0.875rem",
-						fontFamily: "var(--font-mono)",
-						lineHeight: "1.6",
-					},
-				}}
-				customStyle={{
-					margin: 0,
-					padding: "1.25rem",
-					background: "transparent",
-					fontSize: "0.875rem",
-				}}
-				language={lang}
-				PreTag="div"
-				style={vscDarkPlus}
-			>
-				{children}
-			</SyntaxHighlighter>
+			<div className="overflow-x-auto overflow-y-auto max-h-[500px]">
+				{isTooLargeForHighlight || !cachedStyle ? (
+					/* Plain text fallback for large code - no Prism = no OOM */
+					<pre
+						className="p-5 text-[0.8rem] leading-[1.6] text-zinc-300 whitespace-pre"
+						style={{ minWidth: "fit-content" }}
+					>
+						{displayContent}
+					</pre>
+				) : (
+					<Suspense
+						fallback={
+							<pre className="p-5 text-[0.8rem] leading-[1.6] text-zinc-300 whitespace-pre">
+								{displayContent}
+							</pre>
+						}
+					>
+						<SyntaxHighlighter
+							codeTagProps={{
+								style: {
+									fontSize: "0.8rem",
+									fontFamily: "var(--font-mono)",
+									lineHeight: "1.6",
+								},
+							}}
+							customStyle={{
+								margin: 0,
+								padding: "1.25rem",
+								background: "transparent",
+								fontSize: "0.8rem",
+								minWidth: "fit-content",
+							}}
+							language={lang}
+							PreTag="div"
+							style={cachedStyle}
+							wrapLongLines={false}
+						>
+							{displayContent}
+						</SyntaxHighlighter>
+					</Suspense>
+				)}
+			</div>
+			{isTooLargeForDisplay && !showFull && (
+				<div className="border-t border-zinc-800 px-4 py-2 text-center">
+					<button
+						className="text-xs text-blue-400 hover:text-blue-300 transition-colors"
+						onClick={() => setShowFull(true)}
+						type="button"
+					>
+						Show All ({(children.length / 1000).toFixed(0)}KB)
+					</button>
+				</div>
+			)}
 		</div>
 	);
 }
+
+export const CodeBlock = memo(PureCodeBlock);

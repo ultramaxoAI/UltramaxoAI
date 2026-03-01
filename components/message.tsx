@@ -2,7 +2,7 @@
 import type { UseChatHelpers } from "@ai-sdk/react";
 import { useState } from "react";
 import type { Vote } from "@/lib/db/schema";
-import type { ChatMessage, CustomUIDataTypes } from "@/lib/types";
+import type { ChatMessage } from "@/lib/types";
 import { cn, sanitizeText } from "@/lib/utils";
 import { useDataStream } from "./data-stream-provider";
 import { DocumentToolCall, DocumentToolResult } from "./document";
@@ -22,6 +22,65 @@ import { MessageReasoning } from "./message-reasoning";
 import { PreviewAttachment } from "./preview-attachment";
 import { ResponseViewer } from "./response-viewer";
 import { Weather, type WeatherAtLocation } from "./weather";
+
+// ============================================================
+// MessageTextPart — renders text with OOM-safe truncation
+// ============================================================
+function MessageTextPart({
+	rawText,
+	isHuge,
+	maxChars,
+	messageRole,
+	isLoading,
+	hasAnyArtifact,
+}: {
+	rawText: string;
+	isHuge: boolean;
+	maxChars: number;
+	messageRole: string;
+	isLoading: boolean;
+	hasAnyArtifact: boolean;
+}) {
+	const [expanded, setExpanded] = useState(false);
+
+	const displayText =
+		isHuge && !expanded ? rawText.slice(0, maxChars) : rawText;
+
+	return (
+		<div>
+			<MessageContent
+				className={cn({
+					"wrap-break-word w-fit text-right ml-auto": messageRole === "user",
+					"bg-transparent px-0 py-0 text-left w-full":
+						messageRole === "assistant",
+				})}
+				data-testid="message-content"
+			>
+				{messageRole === "assistant" ? (
+					<ResponseViewer
+						className={isLoading ? "streaming-cursor" : ""}
+						hideCodeBlocks={hasAnyArtifact}
+						text={displayText}
+					/>
+				) : (
+					<Response>{displayText}</Response>
+				)}
+			</MessageContent>
+			{isHuge && !expanded && (
+				<div className="mt-2 text-center">
+					<button
+						className="rounded-md bg-zinc-800 px-4 py-2 text-xs text-zinc-300 transition-colors hover:bg-zinc-700 hover:text-white"
+						onClick={() => setExpanded(true)}
+						type="button"
+					>
+						⚠️ Pesan ini sangat panjang ({(rawText.length / 1000).toFixed(0)}KB).
+						Klik untuk tampilkan semua
+					</button>
+				</div>
+			)}
+		</div>
+	);
+}
 
 const PurePreviewMessage = ({
 	addToolApprovalResponse,
@@ -129,28 +188,20 @@ const PurePreviewMessage = ({
 
 						if (type === "text") {
 							if (mode === "view") {
+								const rawText = sanitizeText(part.text);
+								const MAX_MSG_CHARS = 15_000;
+								const isHuge = rawText.length > MAX_MSG_CHARS;
+
 								return (
-									<div key={key}>
-										<MessageContent
-											className={cn({
-												"wrap-break-word w-fit text-right ml-auto":
-													message.role === "user",
-												"bg-transparent px-0 py-0 text-left w-full":
-													message.role === "assistant",
-											})}
-											data-testid="message-content"
-										>
-											{message.role === "assistant" ? (
-												<ResponseViewer
-													className={isLoading ? "streaming-cursor" : ""}
-													hideCodeBlocks={hasAnyArtifact}
-													text={sanitizeText(part.text)}
-												/>
-											) : (
-												<Response>{sanitizeText(part.text)}</Response>
-											)}
-										</MessageContent>
-									</div>
+									<MessageTextPart
+										key={key}
+										rawText={rawText}
+										isHuge={isHuge}
+										maxChars={MAX_MSG_CHARS}
+										messageRole={message.role}
+										isLoading={isLoading}
+										hasAnyArtifact={hasAnyArtifact}
+									/>
 								);
 							}
 

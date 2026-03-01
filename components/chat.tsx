@@ -34,6 +34,7 @@ export function Chat({
 	isAtLimit,
 	autoResume,
 	user,
+	customModels,
 }: {
 	id: string;
 	initialMessages: ChatMessage[];
@@ -43,6 +44,7 @@ export function Chat({
 	isAtLimit?: boolean;
 	autoResume: boolean;
 	user?: User;
+	customModels?: Array<{ id: string; name: string; provider: string }>;
 }) {
 	const router = useRouter();
 
@@ -370,6 +372,7 @@ export function Chat({
 									user={user}
 									webSearchEnabled={webSearchEnabled}
 									wormgptEnabled={wormgptEnabled}
+									customModels={customModels}
 								/>
 							)}
 						</div>
@@ -440,6 +443,7 @@ export function Chat({
 										user={user}
 										webSearchEnabled={webSearchEnabled}
 										wormgptEnabled={wormgptEnabled}
+										customModels={customModels}
 									/>
 									<p className="text-center text-[10px] text-zinc-500 max-w-xl mx-auto mt-1 absolute -bottom-6 left-0 right-0">
 										UltraAgent can make mistakes. Consider verifying important
