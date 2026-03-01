@@ -218,10 +218,10 @@ export default function SettingsPage() {
 			</header>
 
 			{/* Desktop Sidebar — hidden on mobile */}
-			<aside className="hidden md:flex w-56 border-r border-zinc-200 dark:border-zinc-800/50 bg-zinc-50 dark:bg-zinc-900/30 p-6 flex-col gap-2">
+			<aside className="hidden md:flex w-56 border-r border-zinc-200 dark:border-zinc-800/50 bg-zinc-50 dark:bg-zinc-900/30 p-6 flex-col gap-1.5">
 				<Link
 					href="/chat"
-					className="flex items-center gap-2 text-sm text-zinc-500 hover:text-zinc-900 dark:hover:text-white transition-colors mb-6"
+					className="flex items-center gap-2 text-sm text-zinc-500 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors mb-6"
 				>
 					<ArrowLeft size={16} />
 					Back to Chat
@@ -234,10 +234,10 @@ export default function SettingsPage() {
 				{tabs.map((tab) => (
 					<button
 						key={tab.id}
-						className={`flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm transition-all ${
+						className={`flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm transition-all duration-200 ${
 							activeTab === tab.id
-								? "bg-zinc-900 text-white dark:bg-white dark:text-black font-bold shadow-lg"
-								: "text-zinc-500 hover:text-zinc-900 dark:hover:text-white hover:bg-zinc-200/50 dark:hover:bg-zinc-800/50"
+								? "bg-indigo-50 text-indigo-700 dark:bg-indigo-500/15 dark:text-indigo-300 font-semibold ring-1 ring-indigo-200 dark:ring-indigo-500/30"
+								: "text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800/60"
 						}`}
 						onClick={() => setActiveTab(tab.id)}
 						type="button"
@@ -262,19 +262,19 @@ export default function SettingsPage() {
 				{tabs.map((tab) => (
 					<button
 						key={tab.id}
-						className={`flex flex-col items-center gap-1 px-3 py-1.5 rounded-lg text-[10px] font-medium transition-all ${
+						className={`flex flex-col items-center gap-1 px-3 py-1.5 rounded-lg text-[10px] font-medium transition-all duration-200 ${
 							activeTab === tab.id
-								? "text-zinc-900 dark:text-white"
+								? "text-indigo-600 dark:text-indigo-400"
 								: "text-zinc-400 dark:text-zinc-600"
 						}`}
 						onClick={() => setActiveTab(tab.id)}
 						type="button"
 					>
 						<span
-							className={`flex items-center justify-center size-8 rounded-full transition-all ${
+							className={`flex items-center justify-center size-8 rounded-full transition-all duration-200 ${
 								activeTab === tab.id
-									? "bg-zinc-900 text-white dark:bg-white dark:text-black shadow-lg scale-110"
-									: ""
+									? "bg-indigo-100 text-indigo-600 dark:bg-indigo-500/20 dark:text-indigo-400 scale-110"
+									: "hover:bg-zinc-100 dark:hover:bg-zinc-800"
 							}`}
 						>
 							{tab.icon}
@@ -698,7 +698,7 @@ function CustomAITab() {
 	return (
 		<div className="space-y-8">
 			<header className="flex items-center justify-between">
-				<h1 className="text-xl font-bold text-white">
+				<h1 className="text-xl font-bold text-zinc-900 dark:text-white">
 					Custom AI Configuration
 				</h1>
 			</header>
@@ -722,8 +722,8 @@ function CustomAITab() {
 							key={provider.id}
 							className={`rounded-xl border p-6 transition-all ${
 								isEnabled
-									? "border-primary/20 bg-zinc-900/50"
-									: "border-zinc-800/30 bg-zinc-900/10"
+									? "border-primary/20 bg-primary/5 dark:bg-primary/10 shadow-sm"
+									: "border-zinc-200 dark:border-zinc-800/30 bg-zinc-50 dark:bg-zinc-900/10"
 							}`}
 						>
 							{/* Header */}
@@ -736,7 +736,7 @@ function CustomAITab() {
 											{provider.icon}
 										</div>
 										<div>
-											<h3 className="font-bold text-white text-base">
+											<h3 className="font-bold text-zinc-900 dark:text-white text-base">
 												{provider.name} Api Key
 											</h3>
 											<p className="text-[11px] text-zinc-500 font-medium">
@@ -770,7 +770,7 @@ function CustomAITab() {
 									</span>
 									<div className="flex items-center gap-2">
 										<input
-											className="h-8 px-3 text-xs rounded-full border border-zinc-800 bg-zinc-900/50 text-white w-48 focus:ring-1 focus:ring-primary/50 focus:border-primary/50 outline-none transition-all placeholder:text-zinc-600"
+											className="h-8 px-3 text-xs rounded-full border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900/50 text-zinc-900 dark:text-white w-48 focus:ring-1 focus:ring-primary/50 focus:border-primary/50 outline-none transition-all placeholder:text-zinc-400 dark:placeholder:text-zinc-600"
 											placeholder={provider.modelPlaceholder}
 											value={newModel[provider.id] || ""}
 											onChange={(e) =>
@@ -797,7 +797,7 @@ function CustomAITab() {
 										{data?.customModels.map((model) => (
 											<span
 												key={model}
-												className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-zinc-800 border border-zinc-700 text-[11px] text-zinc-300"
+												className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-zinc-100 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 text-[11px] text-zinc-700 dark:text-zinc-300"
 											>
 												{model}
 												<button
@@ -831,7 +831,7 @@ function CustomAITab() {
 									</div>
 								)}
 								<textarea
-									className="w-full h-24 px-4 py-3 rounded-xl border border-zinc-800 bg-zinc-900/40 text-sm text-zinc-300 placeholder:text-zinc-600 resize-none focus:ring-1 focus:ring-primary/50 focus:border-primary/50 outline-none transition-all"
+									className="w-full h-24 px-4 py-3 rounded-xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900/40 text-sm text-zinc-900 dark:text-zinc-300 placeholder:text-zinc-400 dark:placeholder:text-zinc-600 resize-none focus:ring-1 focus:ring-primary/50 focus:border-primary/50 outline-none transition-all shadow-sm dark:shadow-none"
 									placeholder={`Enter ${provider.name} Keys...\n(one per line or comma-separated)`}
 									value={rawKeys[provider.id] || ""}
 									onChange={(e) =>
@@ -846,7 +846,7 @@ function CustomAITab() {
 							{/* Actions */}
 							<div className="flex items-center gap-3">
 								<Button
-									className="rounded-full text-xs h-9 border-zinc-800 text-zinc-300 hover:bg-zinc-800 hover:text-white"
+									className="rounded-full text-xs h-9 border-zinc-200 dark:border-zinc-800 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800 hover:text-zinc-900 dark:hover:text-white"
 									variant="outline"
 									disabled={testing === provider.id}
 									onClick={() => handleTest(provider.id)}
@@ -858,7 +858,7 @@ function CustomAITab() {
 									Test Connection
 								</Button>
 								<Button
-									className="rounded-full text-xs h-9 bg-zinc-800 text-white hover:bg-zinc-700 w-24"
+									className="rounded-full text-xs h-9 bg-zinc-900 text-white dark:bg-zinc-800 dark:text-white hover:bg-zinc-800 dark:hover:bg-zinc-700 w-24"
 									disabled={saving === provider.id}
 									onClick={() => handleSave(provider.id)}
 									type="button"

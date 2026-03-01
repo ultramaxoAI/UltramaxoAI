@@ -2,6 +2,7 @@
 
 import { formatDistanceToNow } from "date-fns";
 import {
+	ArrowLeft,
 	BarChartIcon,
 	CrownIcon,
 	KeyIcon,
@@ -13,6 +14,7 @@ import {
 	Trash2Icon,
 	UsersIcon,
 } from "lucide-react";
+import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
 import { EMAIL_TEMPLATES } from "@/lib/email-templates";
@@ -289,75 +291,92 @@ export default function AdminDashboardClient() {
 			u.id?.toLowerCase().includes(searchQuery.toLowerCase()),
 	);
 
+	const tabs = [
+		{ id: "vouchers", label: "Vouchers", icon: <TicketIcon size={18} /> },
+		{ id: "insights", label: "Insights", icon: <BarChartIcon size={18} /> },
+		{ id: "users", label: "Users", icon: <UsersIcon size={18} /> },
+		{
+			id: "upgrade-requests",
+			label: "Requests",
+			icon: <CrownIcon size={18} />,
+		},
+		{
+			id: "email-tools",
+			label: "Email",
+			icon: <MessageSquareIcon size={18} />,
+		},
+	] as const;
+
 	return (
-		<div className="flex min-h-screen bg-zinc-50 dark:bg-[#09090b] text-zinc-900 dark:text-zinc-100 font-sans">
-			{/* Sidebar */}
-			<aside className="w-56 border-r border-zinc-200 dark:border-zinc-800 flex flex-col p-4 gap-6 bg-white dark:bg-[#0c0c0e] shrink-0">
-				<div className="flex items-center gap-3 px-2">
-					<div className="size-8 rounded-lg bg-zinc-900 dark:bg-white flex items-center justify-center">
-						<Settings2Icon className="text-white dark:text-black size-5" />
+		<div className="flex flex-col md:flex-row h-screen bg-zinc-50 dark:bg-[#09090b] text-zinc-900 dark:text-zinc-100 font-sans">
+			{/* Mobile Header */}
+			<header className="flex md:hidden items-center justify-between px-4 py-3 border-b border-zinc-200 dark:border-zinc-800/50 bg-white dark:bg-zinc-900/30">
+				<Link
+					href="/chat"
+					className="flex items-center gap-2 text-sm text-zinc-500 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors"
+				>
+					<ArrowLeft size={18} />
+				</Link>
+				<h1 className="text-sm font-black uppercase tracking-widest text-zinc-900 dark:text-white">
+					Admin OS
+				</h1>
+				<div className="w-[18px]" />
+			</header>
+
+			{/* Desktop Sidebar */}
+			<aside className="hidden md:flex w-56 border-r border-zinc-200 dark:border-zinc-800/50 flex-col p-6 gap-6 bg-white dark:bg-zinc-900/30 shrink-0">
+				<div className="flex flex-col gap-6">
+					<Link
+						href="/chat"
+						className="flex items-center gap-2 text-sm text-zinc-500 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors"
+					>
+						<ArrowLeft size={16} />
+						Back to Chat
+					</Link>
+					<div className="flex items-center gap-3 px-2">
+						<div className="size-8 rounded-lg bg-zinc-900 dark:bg-white flex items-center justify-center">
+							<Settings2Icon className="text-white dark:text-black size-5" />
+						</div>
+						<span className="font-bold text-lg tracking-tight text-zinc-900 dark:text-white">
+							Admin OS
+						</span>
 					</div>
-					<span className="font-bold text-lg tracking-tight text-zinc-900 dark:text-white">
-						Admin OS
-					</span>
 				</div>
 
-				<nav className="flex flex-col gap-2">
-					<button
-						type="button"
-						className={`flex items-center gap-3 px-4 py-2.5 rounded-xl transition-all ${activeTab === "vouchers" ? "bg-zinc-800 text-white shadow-lg" : "text-zinc-500 hover:text-white hover:bg-zinc-800/50"}`}
-						onClick={() => setActiveTab("vouchers")}
-					>
-						<TicketIcon size={18} />
-						<span className="text-sm font-medium">Vouchers</span>
-					</button>
-					<button
-						type="button"
-						className={`flex items-center gap-3 px-4 py-2.5 rounded-xl transition-all ${activeTab === "insights" ? "bg-zinc-800 text-white shadow-lg" : "text-zinc-500 hover:text-white hover:bg-zinc-800/50"}`}
-						onClick={() => setActiveTab("insights")}
-					>
-						<BarChartIcon size={18} />
-						<span className="text-sm font-medium">Insights</span>
-					</button>
-					<button
-						type="button"
-						className={`flex items-center gap-3 px-4 py-2.5 rounded-xl transition-all ${activeTab === "users" ? "bg-zinc-800 text-white shadow-lg" : "text-zinc-500 hover:text-white hover:bg-zinc-800/50"}`}
-						onClick={() => setActiveTab("users")}
-					>
-						<UsersIcon size={18} />
-						<span className="text-sm font-medium">Users</span>
-					</button>
-					<button
-						type="button"
-						className={`flex items-center gap-3 px-4 py-2.5 rounded-xl transition-all ${activeTab === "upgrade-requests" ? "bg-zinc-800 text-white shadow-lg" : "text-zinc-500 hover:text-white hover:bg-zinc-800/50"}`}
-						onClick={() => setActiveTab("upgrade-requests")}
-					>
-						<CrownIcon size={18} />
-						<span className="text-sm font-medium">Upgrade Requests</span>
-					</button>
-					<button
-						type="button"
-						className={`flex items-center gap-3 px-4 py-2.5 rounded-xl transition-all ${activeTab === "email-tools" ? "bg-zinc-800 text-white shadow-lg" : "text-zinc-500 hover:text-white hover:bg-zinc-800/50"}`}
-						onClick={() => setActiveTab("email-tools")}
-					>
-						<MessageSquareIcon size={18} />
-						<span className="text-sm font-medium">Email Tools</span>
-					</button>
+				<nav className="flex flex-col gap-1.5">
+					<h2 className="text-xs font-black uppercase tracking-widest text-zinc-400 dark:text-zinc-600 mb-2 px-2">
+						Management
+					</h2>
+					{tabs.map((tab) => (
+						<button
+							key={tab.id}
+							type="button"
+							className={`flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm transition-all duration-200 ${
+								activeTab === tab.id
+									? "bg-indigo-50 text-indigo-700 dark:bg-indigo-500/15 dark:text-indigo-300 font-semibold ring-1 ring-indigo-200 dark:ring-indigo-500/30"
+									: "text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800/60"
+							}`}
+							onClick={() => setActiveTab(tab.id as any)}
+						>
+							{tab.icon}
+							{tab.label}
+						</button>
+					))}
 				</nav>
 
 				<div className="mt-auto">
 					<button
 						type="button"
-						className="flex items-center gap-3 px-4 py-2.5 rounded-xl text-zinc-500 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-400/10 transition-all w-full leading-none"
+						className="flex items-center gap-3 px-4 py-2.5 rounded-xl text-zinc-500 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-400/10 transition-all w-full text-sm font-medium leading-none"
 					>
 						<LogOutIcon size={18} />
-						<span className="text-sm font-medium">Exit Admin</span>
+						Exit Admin
 					</button>
 				</div>
 			</aside>
 
 			{/* Main Content */}
-			<main className="flex-1 flex flex-col p-6 gap-8 overflow-y-auto min-w-0">
+			<main className="flex-1 flex flex-col px-4 py-6 md:p-8 lg:p-12 pb-24 md:pb-8 gap-8 overflow-y-auto min-w-0">
 				<header className="flex flex-col gap-1">
 					<h1 className="text-4xl font-bold tracking-tight text-zinc-900 dark:text-white capitalize">
 						{activeTab.replace("-", " ")} Management
@@ -1251,6 +1270,35 @@ export default function AdminDashboardClient() {
 					</div>
 				) : null}
 			</main>
+
+			{/* Mobile Bottom Tab Bar */}
+			<nav className="fixed bottom-0 left-0 right-0 z-50 flex md:hidden items-center justify-around border-t border-zinc-200 dark:border-zinc-800 bg-white/95 dark:bg-zinc-950/95 backdrop-blur-lg py-2 safe-bottom">
+				{tabs.map((tab) => (
+					<button
+						key={tab.id}
+						type="button"
+						className={`flex flex-col items-center gap-1 px-2 py-1.5 rounded-lg text-[10px] font-medium transition-all duration-200 ${
+							activeTab === tab.id
+								? "text-indigo-600 dark:text-indigo-400"
+								: "text-zinc-400 dark:text-zinc-600"
+						}`}
+						onClick={() => setActiveTab(tab.id as any)}
+					>
+						<span
+							className={`flex items-center justify-center size-8 rounded-full transition-all duration-200 ${
+								activeTab === tab.id
+									? "bg-indigo-100 text-indigo-600 dark:bg-indigo-500/20 dark:text-indigo-400 scale-110"
+									: "hover:bg-zinc-100 dark:hover:bg-zinc-800"
+							}`}
+						>
+							{tab.icon}
+						</span>
+						<span className="truncate max-w-[60px] text-center">
+							{tab.label}
+						</span>
+					</button>
+				))}
+			</nav>
 		</div>
 	);
 }

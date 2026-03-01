@@ -10,8 +10,64 @@ import { VisitorTracker } from "@/components/visitor-tracker";
 
 export const metadata: Metadata = {
 	metadataBase: new URL("https://ultramaxo.tech"),
-	title: "UltramaxoAI UNCENSORED AI",
-	description: "UltramaxoAI – multimodal chatbot and code workspace.",
+	title: {
+		default: "UltramaxoAI - The Uncensored AI Workspace",
+		template: "%s | UltramaxoAI",
+	},
+	description:
+		"UltramaxoAI adalah AI workspace multimodal untuk chat, coding, dan dokumen yang bantu kamu kerja lebih cepat tanpa sensor. Semua di satu tempat.",
+	keywords: [
+		"AI Chatbot",
+		"Uncensored AI",
+		"AI Workspace",
+		"Coding AI",
+		"Ultramaxo",
+		"UltramaxoAI",
+		"AI Assistant",
+		"Multimodal AI",
+	],
+	authors: [{ name: "Ultramaxo" }],
+	creator: "Ultramaxo",
+	publisher: "Ultramaxo",
+	alternates: {
+		canonical: "/",
+	},
+	robots: {
+		index: true,
+		follow: true,
+		googleBot: {
+			index: true,
+			follow: true,
+			"max-video-preview": -1,
+			"max-image-preview": "large",
+			"max-snippet": -1,
+		},
+	},
+	openGraph: {
+		type: "website",
+		locale: "id_ID",
+		url: "https://ultramaxo.tech",
+		title: "UltramaxoAI - The Uncensored AI Workspace",
+		description:
+			"UltramaxoAI adalah AI workspace multimodal untuk chat, coding, dan dokumen yang bantu kamu kerja lebih cepat tanpa sensor.",
+		siteName: "UltramaxoAI",
+		images: [
+			{
+				url: "/og-image.png", // We should create this later or leave it to fallback
+				width: 1200,
+				height: 630,
+				alt: "UltramaxoAI Workspace",
+			},
+		],
+	},
+	twitter: {
+		card: "summary_large_image",
+		title: "UltramaxoAI - The Uncensored AI Workspace",
+		description:
+			"AI workspace multimodal untuk chat, coding, dan dokumen yang bantu kamu kerja lebih cepat tanpa sensor.",
+		images: ["/og-image.png"],
+		creator: "@ultramaxo",
+	},
 	icons: {
 		icon: "/favicon.svg",
 		shortcut: "/favicon.svg",
