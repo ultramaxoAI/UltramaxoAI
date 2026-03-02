@@ -224,7 +224,7 @@ export function SidebarUserNav({
 											router.push("/login");
 										} else {
 											signOut({
-												redirectTo: "/",
+												redirectTo: "/login",
 											});
 										}
 									}}
