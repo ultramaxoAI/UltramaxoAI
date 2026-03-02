@@ -81,7 +81,7 @@ export function SidebarUserNav({
 													alt={user.email ?? "User Avatar"}
 													className="rounded-full ring-2 ring-zinc-200 dark:ring-white/10"
 													height={40}
-													src={`https://avatar.vercel.sh/${user.email}`}
+													src={`https://ui-avatars.com/api/?name=${user.email}&background=random`}
 													width={40}
 												/>
 											</div>
@@ -113,7 +113,7 @@ export function SidebarUserNav({
 											alt={user.email ?? "User Avatar"}
 											className="rounded-full ring-2 ring-zinc-200 dark:ring-white/10"
 											height={40}
-											src={`https://avatar.vercel.sh/${user.email}`}
+											src={`https://ui-avatars.com/api/?name=${user.email}&background=random`}
 											width={40}
 										/>
 									</div>

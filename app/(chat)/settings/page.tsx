@@ -60,16 +60,15 @@ const PROVIDERS: ProviderConfig[] = [
 		placeholder: "AIzaSy...",
 		modelPlaceholder: "e.g. gemini-2.5-flash",
 		icon: (
-			<svg viewBox="0 0 24 24" className="w-7 h-7">
+			<svg
+				viewBox="0 0 24 24"
+				fill="url(#gemini-grad-new)"
+				className="w-7 h-7 drop-shadow-sm"
+			>
 				<title>Gemini Logo</title>
-				<path
-					d="M21.5 12C21.5 11.2 20.9 10.6 20.1 10.5C15.8 9.9 12.1 6.2 11.5 1.9C11.4 1.1 10.8 0.5 10.1 0.5C9.3 0.5 8.7 1.1 8.6 1.9C8 6.2 4.3 9.9 0 10.5C-0.8 10.6 -1.4 11.2 -1.4 12C-1.4 12.8 -0.8 13.4 0 13.5C4.3 14.1 8 17.8 8.6 22.1C8.7 22.9 9.3 23.5 10.1 23.5C10.9 23.5 11.5 22.9 11.6 22.1C12.2 17.8 15.9 14.1 20.2 13.5C20.9 13.4 21.5 12.8 21.5 12Z"
-					fill="url(#gemini-grad-1)"
-					transform="translate(1.25, 0)"
-				/>
 				<defs>
 					<linearGradient
-						id="gemini-grad-1"
+						id="gemini-grad-new"
 						x1="0"
 						y1="0"
 						x2="24"
@@ -77,11 +76,16 @@ const PROVIDERS: ProviderConfig[] = [
 						gradientUnits="userSpaceOnUse"
 					>
 						<stop stopColor="#4184F3" />
-						<stop offset="0.25" stopColor="#EA4335" />
-						<stop offset="0.75" stopColor="#FBBC05" />
+						<stop offset="0.3" stopColor="#EA4335" />
+						<stop offset="0.7" stopColor="#FBBC05" />
 						<stop offset="1" stopColor="#34A853" />
 					</linearGradient>
 				</defs>
+				<path d="M12.0001 0.5C12.0001 0.5 12.0001 7.42398 17.5756 12C12.0001 16.576 12.0001 23.5 12.0001 23.5C12.0001 23.5 12.0001 16.576 6.4246 12C12.0001 7.42398 12.0001 0.5 12.0001 0.5Z" />
+				<path
+					d="M22.0001 15.5C22.0001 15.5 22.0001 18.0652 24.0654 19.7594C22.0001 21.4536 22.0001 24.0188 22.0001 24.0188C22.0001 24.0188 22.0001 21.4536 19.9348 19.7594C22.0001 18.0652 22.0001 15.5 22.0001 15.5Z"
+					opacity="0.8"
+				/>
 			</svg>
 		),
 	},
@@ -166,10 +170,12 @@ const PROVIDERS: ProviderConfig[] = [
 		placeholder: "sk-ant-...",
 		modelPlaceholder: "e.g. claude-3-5-sonnet-20240620",
 		icon: (
-			<svg viewBox="0 0 24 24" fill="currentColor" className="w-6 h-6">
-				<title>Anthropic Logo</title>
-				<path d="M17.485 5.518h2.003L8.628 17.61h-2L17.485 5.518zM14.015 11l-3.324 5.2H7L14.015 11z" />
-			</svg>
+			<div className="w-7 h-7 rounded-sm bg-[#D5C2AD] flex items-center justify-center pt-0.5 px-0.5 shadow-sm">
+				<svg viewBox="0 0 24 24" fill="#000000" className="w-5 h-5">
+					<title>Anthropic Logo</title>
+					<path d="M17.485 5.518h2.003L8.628 17.61h-2L17.485 5.518zM14.015 11l-3.324 5.2H7L14.015 11z" />
+				</svg>
+			</div>
 		),
 	},
 ];
@@ -209,39 +215,49 @@ export default function SettingsPage() {
 			</header>
 
 			{/* Desktop Sidebar */}
-			<aside className="hidden md:flex w-64 border-r border-zinc-200 dark:border-white/5 bg-zinc-50/50 dark:bg-[#0a0a0a] p-6 flex-col gap-2">
+			<aside className="hidden md:flex w-72 border-r border-zinc-200/50 dark:border-white/5 bg-gradient-to-br from-zinc-50/50 to-white dark:from-[#050505] dark:to-[#0a0a0a] p-6 flex-col gap-2 relative shadow-[1px_0_15px_rgba(0,0,0,0.03)] dark:shadow-none z-10 transition-all">
 				<Link
 					href="/chat"
-					className="flex items-center gap-2 text-sm text-zinc-500 hover:text-zinc-900 dark:hover:text-white transition-colors mb-8 font-medium"
+					className="flex items-center gap-2 text-sm text-zinc-500 hover:text-indigo-600 dark:text-zinc-400 dark:hover:text-indigo-400 transition-colors mb-10 font-bold group"
 				>
-					<ArrowLeft size={16} />
-					Back to Chat
+					<span className="p-1 rounded bg-zinc-100 dark:bg-zinc-800/50 group-hover:bg-indigo-100 dark:group-hover:bg-indigo-900/40 transition-colors">
+						<ArrowLeft
+							size={16}
+							className="text-zinc-600 dark:text-zinc-300 group-hover:text-indigo-600 dark:group-hover:text-indigo-400"
+						/>
+					</span>
+					Back to Workspace
 				</Link>
 
-				<h2 className="text-[11px] font-semibold tracking-wider text-zinc-400 dark:text-zinc-500 mb-2 px-2 mt-2 uppercase">
-					SETTINGS
+				<h2 className="text-[10px] font-black tracking-widest text-zinc-400 dark:text-zinc-500 mb-3 px-3 uppercase opacity-80">
+					Configuration
 				</h2>
 
 				{tabs.map((tab) => (
 					<button
 						key={tab.id}
-						className={`flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm transition-all duration-200 font-[family-name:var(--font-geist-sans)] ${
+						className={`flex items-center gap-3 px-4 py-3 rounded-xl text-sm transition-all duration-300 font-medium whitespace-nowrap ${
 							activeTab === tab.id
-								? "bg-zinc-200/60 dark:bg-white/10 text-zinc-900 dark:text-white font-medium"
-								: "text-zinc-500 hover:text-zinc-900 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-white/5"
+								? "bg-indigo-50/80 dark:bg-indigo-500/10 text-indigo-700 dark:text-indigo-300 shadow-sm border border-indigo-100 dark:border-indigo-500/20 shadow-indigo-500/5"
+								: "text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-200 hover:bg-zinc-100/80 dark:hover:bg-zinc-800/50"
 						}`}
 						onClick={() => setActiveTab(tab.id)}
 						type="button"
 					>
-						{tab.icon}
+						<span
+							className={`${activeTab === tab.id ? "scale-110" : "scale-100 opacity-70"} transition-transform duration-300`}
+						>
+							{tab.icon}
+						</span>
 						{tab.label}
 					</button>
 				))}
 			</aside>
 
 			{/* Main Content */}
-			<main className="flex-1 overflow-y-auto px-4 py-6 md:p-8 lg:p-12 pb-24 md:pb-8">
-				<div className="max-w-3xl mx-auto md:mx-0">
+			<main className="flex-1 overflow-y-auto px-4 py-8 md:p-10 lg:p-16 pb-32 md:pb-12 bg-white dark:bg-[#070707] relative">
+				<div className="absolute top-0 right-0 w-96 h-96 bg-indigo-500/5 dark:bg-indigo-500/10 rounded-full blur-[100px] pointer-events-none -z-10" />
+				<div className="max-w-4xl mx-auto md:mx-0 min-h-full flex flex-col">
 					{activeTab === "profile" && <ProfileTab />}
 					{activeTab === "custom-ai" && <CustomAITab />}
 					{activeTab === "personalization" && <PersonalizationTab />}
@@ -704,10 +720,10 @@ function CustomAITab() {
 					return (
 						<div
 							key={provider.id}
-							className={`rounded-xl border p-6 transition-all ${
+							className={`rounded-2xl border p-7 transition-all duration-300 ${
 								isEnabled
-									? "border-zinc-300 dark:border-white/20 bg-white dark:bg-[#121212] shadow-sm"
-									: "border-zinc-200 dark:border-white/5 bg-zinc-50/50 dark:bg-[#0a0a0a]"
+									? "border-indigo-500/20 bg-white/60 dark:bg-[#121212]/80 shadow-[0_8px_30px_rgb(0,0,0,0.04)] dark:shadow-[0_8px_30px_rgba(0,0,0,0.2)] backdrop-blur-xl"
+									: "border-zinc-200 dark:border-white/5 bg-zinc-50/30 dark:bg-[#0a0a0a]/50"
 							}`}
 						>
 							{/* Header */}
@@ -817,7 +833,7 @@ function CustomAITab() {
 									</div>
 								)}
 								<textarea
-									className="w-full h-24 px-4 py-3 rounded-lg border border-zinc-200 dark:border-white/10 bg-white dark:bg-zinc-900 text-[13px] text-zinc-900 dark:text-white placeholder:text-zinc-400 dark:placeholder:text-zinc-500 resize-none focus:ring-1 focus:ring-zinc-400 dark:focus:ring-white/30 focus:border-zinc-400 dark:focus:border-white/30 outline-none transition-all shadow-sm font-mono"
+									className="w-full h-24 px-4 py-3 rounded-xl border border-zinc-200 dark:border-white/10 bg-white/80 dark:bg-[#0a0a0a]/80 text-[13px] text-zinc-900 dark:text-white placeholder:text-zinc-400 dark:placeholder:text-zinc-500 resize-none focus:ring-2 focus:ring-indigo-500/20 dark:focus:ring-indigo-500/40 focus:border-indigo-500/50 dark:focus:border-indigo-500/50 outline-none transition-all shadow-inner font-mono backdrop-blur-md"
 									placeholder={`Enter ${provider.name} Keys...\n(one per line or comma-separated)`}
 									value={rawKeys[provider.id] || ""}
 									onChange={(e) =>

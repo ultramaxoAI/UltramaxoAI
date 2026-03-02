@@ -1,2 +1,0 @@
-{"id":"8a0dceaa-6cb5-48a0-a99b-b0898e0dbd2a","selectedChatModel":"ultramaxo/ultra-agent-pro","wormgptEnabled":false,"deepThinkingEnabled":true,"webSearchEnabled":true}
-{"id":"8a0dceaa-6cb5-48a0-a99b-b0898e0dbd2a","selectedChatModel":"ultramaxo/ultra-agent-pro","wormgptEnabled":false,"deepThinkingEnabled":true,"webSearchEnabled":true}

@@ -379,7 +379,11 @@ export default function AdminDashboardClient() {
 			<main className="flex-1 flex flex-col px-4 py-6 md:p-8 lg:p-12 pb-24 md:pb-8 gap-8 overflow-y-auto min-w-0">
 				<header className="flex flex-col gap-1">
 					<h1 className="text-4xl font-bold tracking-tight text-zinc-900 dark:text-white capitalize">
-						{activeTab.replace("-", " ")} Management
+						{activeTab
+							.split("-")
+							.map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+							.join(" ")}{" "}
+						Management
 					</h1>
 					<p className="text-zinc-500 text-sm">
 						Manage your application's {activeTab.replace("-", " ")} activity and
@@ -1282,7 +1286,10 @@ export default function AdminDashboardClient() {
 								? "text-indigo-600 dark:text-indigo-400"
 								: "text-zinc-400 dark:text-zinc-600"
 						}`}
-						onClick={() => setActiveTab(tab.id as any)}
+						onClick={(e) => {
+							e.preventDefault();
+							setActiveTab(tab.id as any);
+						}}
 					>
 						<span
 							className={`flex items-center justify-center size-8 rounded-full transition-all duration-200 ${

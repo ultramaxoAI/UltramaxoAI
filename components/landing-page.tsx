@@ -22,8 +22,20 @@ import {
 	Zap,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { ThemeToggle } from "./theme-toggle";
+
+/* ────────────────────────────────────────────
+   PWA Install Hook Logic
+   ──────────────────────────────────────────── */
+interface BeforeInstallPromptEvent extends Event {
+	readonly platforms: string[];
+	readonly userChoice: Promise<{
+		outcome: "accepted" | "dismissed";
+		platform: string;
+	}>;
+	prompt(): Promise<void>;
+}
 
 /* ────────────────────────────────────────────
    Shared animation config
@@ -140,6 +152,36 @@ export default function LandingPage() {
 	const router = useRouter();
 	const [mobileNavOpen, setMobileNavOpen] = useState(false);
 	const heroRef = useRef<HTMLDivElement>(null);
+
+	// PWA Install State
+	const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
+	const [isInstallable, setIsInstallable] = useState(false);
+
+	useEffect(() => {
+		const handleBeforeInstallPrompt = (e: Event) => {
+			e.preventDefault();
+			setDeferredPrompt(e as BeforeInstallPromptEvent);
+			setIsInstallable(true);
+		};
+
+		window.addEventListener("beforeinstallprompt", handleBeforeInstallPrompt);
+
+		return () => {
+			window.removeEventListener("beforeinstallprompt", handleBeforeInstallPrompt);
+		};
+	}, []);
+
+	const handleInstallClick = async () => {
+		if (!deferredPrompt) return;
+
+		deferredPrompt.prompt();
+		const { outcome } = await deferredPrompt.userChoice;
+		
+		if (outcome === "accepted") {
+			setDeferredPrompt(null);
+			setIsInstallable(false);
+		}
+	};
 
 	const { scrollYProgress } = useScroll({
 		target: heroRef,
@@ -337,6 +379,19 @@ export default function LandingPage() {
 						>
 							Sign In
 						</button>
+						{isInstallable && (
+							<motion.button
+								className="relative hidden lg:inline-flex items-center justify-center gap-2 rounded-full px-5 py-2 text-xs font-semibold
+									bg-zinc-900 dark:bg-white text-white dark:text-black
+									hover:bg-zinc-800 dark:hover:bg-zinc-200
+									transition-colors duration-300 cursor-pointer"
+								onClick={handleInstallClick}
+								whileHover={{ scale: 1.04 }}
+								whileTap={{ scale: 0.97 }}
+							>
+								Download App
+							</motion.button>
+						)}
 						<motion.button
 							className="relative inline-flex items-center justify-center gap-2 rounded-full px-5 py-2 text-xs font-semibold
 								bg-gradient-to-r from-indigo-500 via-indigo-600 to-violet-600
@@ -424,13 +479,20 @@ export default function LandingPage() {
 							{/* Badge */}
 							<motion.div
 								animate="visible"
-								className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full border border-black/[0.06] dark:border-white/[0.06] bg-black/[0.04] dark:bg-white/[0.04] text-xs text-zinc-600 dark:text-gray-400 mb-6"
+								className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-indigo-500/30 bg-indigo-500/10 text-xs font-medium text-indigo-700 dark:text-indigo-300 mb-6 backdrop-blur-sm cursor-pointer shadow-[0_0_15px_rgba(99,102,241,0.2)]"
 								custom={0}
 								initial="hidden"
 								variants={fadeUp}
+								onClick={() => router.push("/settings")}
 							>
-								<Sparkles size={12} className="text-primary" />
-								One Platform. All Tools. Zero Hassle.
+								<Sparkles
+									size={14}
+									className="text-indigo-600 dark:text-indigo-400"
+								/>
+								<span>
+									<strong className="font-bold">New Feature:</strong> Bring Your
+									Own Key (BYOK) — Unlock Infinite Customization
+								</span>
 							</motion.div>
 
 							<motion.h1
@@ -485,6 +547,18 @@ export default function LandingPage() {
 								>
 									Explore Features
 								</motion.button>
+								{isInstallable && (
+									<motion.button
+										className="inline-flex items-center justify-center gap-2 rounded-full px-8 py-4 text-base font-semibold
+											bg-zinc-900 dark:bg-white text-white dark:text-black hover:bg-zinc-800 dark:hover:bg-gray-200
+											transition-colors duration-200 cursor-pointer w-full sm:w-auto mt-3 sm:mt-0"
+										onClick={handleInstallClick}
+										whileHover={{ scale: 1.04 }}
+										whileTap={{ scale: 0.97 }}
+									>
+										Download APP (APK)
+									</motion.button>
+								)}
 							</motion.div>
 
 							{/* Trusted bar */}

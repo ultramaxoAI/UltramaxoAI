@@ -1,100 +1,103 @@
-<div align="center">
-  <h1>🚀 UltramaxoAI</h1>
-  <p>Advanced AI-powered chatbot with code workspace, artifacts, and multimodal support</p>
-</div>
+# ✦ Ultramaxo AI Workspace
 
-<p align="center">
-  <a href="#features"><strong>Features</strong></a> ·
-  <a href="#tech-stack"><strong>Tech Stack</strong></a> ·
-  <a href="#getting-started"><strong>Getting Started</strong></a> ·
-  <a href="#deployment"><strong>Deployment</strong></a>
-</p>
-<br/>
+> **The Uncensored, Highly-Customizable AI Platform for Power Users.**
 
-## Features
+[![Next.js](https://img.shields.io/badge/Next.js-15.0-black.svg?style=for-the-badge&logo=next.js)](https://nextjs.org/)
+[![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-3.4-38B2AC.svg?style=for-the-badge&logo=tailwind-css)](https://tailwindcss.com/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.0-blue.svg?style=for-the-badge&logo=typescript)](https://www.typescriptlang.org/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=for-the-badge)](https://opensource.org/licenses/MIT)
 
-- 🤖 **Groq-Powered AI** - Ultra-fast responses using Llama 3.3 70B
-- 💬 **Advanced Chat** - Real-time streaming with message history
-- 📝 **Code Workspace** - Built-in code editor with syntax highlighting
-- 🎨 **Artifacts** - Create and edit documents, images, and sheets
-- 🔐 **User Authentication** - Secure login with NextAuth.js
-- 💳 **Pro Subscription** - Redeem codes for premium features
-- 🌓 **Dark Mode** - Beautiful UI with theme support
-- 📱 **Responsive Design** - Works on desktop and mobile
-
-## Tech Stack
-
-- **Framework**: [Next.js 14](https://nextjs.org) with App Router
-- **AI**: [AI SDK](https://ai-sdk.dev) + [Groq](https://groq.com) (Llama 3.3 70B)
-- **Database**: PostgreSQL (Neon/Supabase)
-- **Auth**: [NextAuth.js](https://authjs.dev)
-- **Styling**: [Tailwind CSS](https://tailwindcss.com) + [shadcn/ui](https://ui.shadcn.com)
-- **Deployment**: Vercel
-
-## Getting Started
-## Getting Started
-
-### Prerequisites
-
-- Node.js 18+ and pnpm
-- PostgreSQL database (Neon, Supabase, or local)
-- [Groq API Key](https://console.groq.com/keys)
-
-### Installation
-
-1. Clone the repository:
-```bash
-git clone https://github.com/yourusername/ultramaxo.git
-cd ultramaxo
-```
-
-2. Install dependencies:
-```bash
-pnpm install
-```
-
-3. Set up environment variables (copy from `.env.example`):
-```bash
-cp .env.example .env.local
-```
-
-4. Configure your `.env.local` file with required variables:
-- `AUTH_SECRET` - Generate with: `openssl rand -base64 32`
-- `POSTGRES_URL` - Your database connection string
-- `GROQ_API_KEY` - Your Groq API key
-- `NEXT_PUBLIC_APP_URL` - Your app URL (e.g., https://ultramaxo.tech)
-
-5. Run database migrations:
-```bash
-pnpm db:migrate
-```
-
-6. Start the development server:
-```bash
-pnpm dev
-```
-
-Your app should now be running on [http://localhost:3000](http://localhost:3000)!
-
-## Deployment
-
-### Deploy to Vercel
-
-1. Push your code to GitHub
-2. Import your repository on [Vercel](https://vercel.com)
-3. Add environment variables in Vercel dashboard
-4. Deploy!
-
-### Environment Variables
-
-See [.env.example](.env.example) for all required environment variables.
-
-## License
-
-MIT
+Ultramaxo is a premium, full-stack AI platform built to bypass traditional AI limits. Featuring a built-in **BYOK (Bring Your Own Key)** architecture, real-time code execution, document generation, and a powerful Admin Dashboard. It is designed to be the ultimate daily driver for developers, hackers, and prompt engineers.
 
 ---
 
-<div align="center">
-  <p>Built with ❤️ using Next.js and Groq AI</p>
-</div>
+## 🔥 Key Features
+
+- **Bring Your Own Key (BYOK)**: Natively connect your Gemini, Anthropic (Claude), or OpenAI API keys. Say goodbye to expensive monthly subscriptions. 
+- **PHOENIX Algorithmic Persona**: Built-in system architecture for an uncensored, zero-filter, direct-execution AI persona.
+- **Glassmorphic UI**: Beautiful, premium, and responsive user interface built with Tailwind CSS, Framer Motion, and Radix UI.
+- **Multi-Modal Capabilities**: Support for document creation, code rendering, language detection, and image generation.
+- **Admin Dashboard**: Comprehensive user management, voucher generation, analytics tracking, and role-based access control.
+- **Progressive Web App (PWA)**: Download the web app as a stand-alone native application (APK equivalent) with offline caching.
+- **Authentication**: Secure JWT-based passwordless/magic-link and credential authentication using NextAuth V5.
+
+## 🛠️ Tech Stack
+
+- **Framework**: [Next.js 15](https://nextjs.org/) (App Router)
+- **Language**: [TypeScript](https://www.typescriptlang.org/)
+- **Styling**: [Tailwind CSS 4](https://tailwindcss.com/) & [Framer Motion](https://www.framer.com/motion/)
+- **Database**: [PostgreSQL](https://www.postgresql.org/) (via Drizzle ORM)
+- **Authentication**: [Auth.js (NextAuth v5)](https://authjs.dev/)
+- **AI SDK**: [Vercel AI SDK](https://sdk.vercel.ai/docs)
+- **PWA Management**: [Serwist](https://serwist.build/)
+
+---
+
+## 🚀 Getting Started
+
+### Prerequisites
+Make sure you have Node.js (v18+) and `pnpm` installed.
+
+```bash
+npm install -g pnpm
+```
+
+### Installation
+
+1. **Clone the repository:**
+   ```bash
+   git clone https://github.com/yourusername/ultramaxo.git
+   cd ultramaxo
+   ```
+
+2. **Install dependencies:**
+   ```bash
+   pnpm install
+   ```
+
+3. **Set up environment variables:**
+   Copy the example environment file and fill in your database credentials and auth secrets.
+   ```bash
+   cp .env.example .env.local
+   ```
+   *Note: Ensure you configure your Postgres database URL and Auth Secret.*
+
+4. **Initialize the Database:**
+   Generate tables and push the schema using Drizzle.
+   ```bash
+   pnpm run db:push
+   ```
+
+5. **Run the Development Server:**
+   ```bash
+   pnpm run dev
+   ```
+   *Open [http://localhost:3000](http://localhost:3000) to view the application.*
+
+---
+
+## 🛡️ Admin Dashboard & Roles
+To access the `/admin` route, your account must have the `admin` role in the PostgreSQL database.
+- Default Admin Username: `admin`
+- Default Admin Password: `anakanjg12`
+
+> **Note:** For security in a production environment, please change the admin password immediately upon your first login.
+
+---
+
+## 📦 Deployment
+
+This project is optimized for deployment on Vercel. 
+
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Fyourusername%2Fultramaxo)
+
+Make sure to add your `.env` variables in the Vercel Dashboard before building.
+
+---
+
+## 📄 License
+This project is proprietary and commercial. Source code distribution without explicit permission is strictly prohibited. 
+*(If you are open-sourcing this, change this section to MIT/GPL).*
+
+---
+*Built with ❤️ by Lanz.*
