@@ -11,7 +11,6 @@ import type { DefaultJWT } from "next-auth/jwt";
 import Credentials from "next-auth/providers/credentials";
 import GitHub from "next-auth/providers/github";
 import Google from "next-auth/providers/google";
-import { DUMMY_PASSWORD } from "@/lib/constants";
 import {
 	createGuestUser,
 	db,
@@ -21,6 +20,7 @@ import {
 	verifyVerificationCode,
 } from "@/lib/db/queries";
 import { user as userTable } from "@/lib/db/schema";
+import { generateDummyPassword } from "@/lib/db/utils";
 import { authConfig } from "./auth.config";
 
 export type UserType = "guest" | "regular" | "pro";
@@ -151,7 +151,7 @@ export const {
 
 				if (users.length === 0) {
 					if (password) {
-						await compare(password as string, DUMMY_PASSWORD);
+						await compare(password as string, generateDummyPassword());
 					}
 					return null;
 				}
@@ -160,7 +160,7 @@ export const {
 
 				if (!user.password) {
 					if (password) {
-						await compare(password as string, DUMMY_PASSWORD);
+						await compare(password as string, generateDummyPassword());
 					}
 					return null;
 				}

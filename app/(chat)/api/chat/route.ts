@@ -56,8 +56,6 @@ function getStreamContext() {
 	}
 }
 
-export { getStreamContext };
-
 export async function POST(request: Request) {
 	console.log("[Chat API] POST request received");
 	try {
