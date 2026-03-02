@@ -100,4 +100,4 @@ This project is proprietary and commercial. Source code distribution without exp
 *(If you are open-sourcing this, change this section to MIT/GPL).*
 
 ---
-*Built with ❤️ by Lanz.*
+*Built with ❤️ by Putra.*
