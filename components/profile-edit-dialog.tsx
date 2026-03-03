@@ -101,10 +101,13 @@ export function ProfileEditDialog() {
 	return (
 		<Dialog onOpenChange={setOpen} open={open}>
 			<DialogTrigger asChild>
-				<Button size="sm" variant="ghost">
-					<PencilIcon />
+				<button
+					type="button"
+					className="relative flex w-full cursor-pointer select-none items-center rounded-lg px-2 py-1.5 text-sm outline-none transition-colors hover:bg-zinc-100 focus:bg-zinc-100 dark:hover:bg-zinc-800 dark:focus:bg-zinc-800 gap-2"
+				>
+					<PencilIcon className="h-4 w-4" />
 					Edit Profile
-				</Button>
+				</button>
 			</DialogTrigger>
 			<DialogContent className="sm:max-w-[425px]">
 				<DialogHeader>

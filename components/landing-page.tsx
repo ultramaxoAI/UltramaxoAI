@@ -154,7 +154,8 @@ export default function LandingPage() {
 	const heroRef = useRef<HTMLDivElement>(null);
 
 	// PWA Install State
-	const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
+	const [deferredPrompt, setDeferredPrompt] =
+		useState<BeforeInstallPromptEvent | null>(null);
 	const [isInstallable, setIsInstallable] = useState(false);
 
 	useEffect(() => {
@@ -167,7 +168,10 @@ export default function LandingPage() {
 		window.addEventListener("beforeinstallprompt", handleBeforeInstallPrompt);
 
 		return () => {
-			window.removeEventListener("beforeinstallprompt", handleBeforeInstallPrompt);
+			window.removeEventListener(
+				"beforeinstallprompt",
+				handleBeforeInstallPrompt,
+			);
 		};
 	}, []);
 
@@ -176,7 +180,7 @@ export default function LandingPage() {
 
 		deferredPrompt.prompt();
 		const { outcome } = await deferredPrompt.userChoice;
-		
+
 		if (outcome === "accepted") {
 			setDeferredPrompt(null);
 			setIsInstallable(false);
@@ -372,13 +376,6 @@ export default function LandingPage() {
 
 					<div className="hidden md:flex items-center gap-3">
 						<ThemeToggle />
-						<button
-							className="text-sm text-zinc-600 dark:text-gray-400 hover:text-zinc-900 dark:text-white transition-colors cursor-pointer"
-							onClick={() => router.push("/login")}
-							type="button"
-						>
-							Sign In
-						</button>
 						{isInstallable && (
 							<motion.button
 								className="relative hidden lg:inline-flex items-center justify-center gap-2 rounded-full px-5 py-2 text-xs font-semibold
@@ -392,6 +389,13 @@ export default function LandingPage() {
 								Download App
 							</motion.button>
 						)}
+						<button
+							className="text-sm text-zinc-600 dark:text-gray-400 hover:text-zinc-900 dark:text-white transition-colors cursor-pointer"
+							onClick={() => router.push("/login")}
+							type="button"
+						>
+							Sign In
+						</button>
 						<motion.button
 							className="relative inline-flex items-center justify-center gap-2 rounded-full px-5 py-2 text-xs font-semibold
 								bg-gradient-to-r from-indigo-500 via-indigo-600 to-violet-600

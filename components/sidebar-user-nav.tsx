@@ -4,8 +4,10 @@ import {
 	LayoutDashboard,
 	LogOut,
 	MessageCircle,
+	Moon,
 	MoreVertical,
 	Settings,
+	Sun,
 	User as UserIcon,
 } from "lucide-react";
 import Image from "next/image";
@@ -166,14 +168,7 @@ export function SidebarUserNav({
 								</>
 							)}
 
-							{!isGuest && (
-								<DropdownMenuItem
-									asChild
-									className="hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-lg focus:bg-zinc-100 dark:focus:bg-zinc-800"
-								>
-									<ProfileEditDialog />
-								</DropdownMenuItem>
-							)}
+							{!isGuest && <ProfileEditDialog />}
 
 							<DropdownMenuItem
 								className="cursor-pointer gap-2 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-lg focus:bg-zinc-100 dark:focus:bg-zinc-800"
@@ -190,6 +185,11 @@ export function SidebarUserNav({
 									setTheme(resolvedTheme === "dark" ? "light" : "dark")
 								}
 							>
+								{resolvedTheme === "light" ? (
+									<Moon className="h-4 w-4" />
+								) : (
+									<Sun className="h-4 w-4" />
+								)}
 								{resolvedTheme === "light" ? "Dark Mode" : "Light Mode"}
 							</DropdownMenuItem>
 
