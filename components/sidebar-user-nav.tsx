@@ -1,6 +1,7 @@
 "use client";
 
 import {
+	Download,
 	LayoutDashboard,
 	LogOut,
 	MessageCircle,
@@ -15,6 +16,7 @@ import { useRouter } from "next/navigation";
 import type { User } from "next-auth";
 import { signOut, useSession } from "next-auth/react";
 import { useTheme } from "next-themes";
+import { useEffect, useState } from "react";
 import {
 	DropdownMenu,
 	DropdownMenuContent,
@@ -44,13 +46,46 @@ export function SidebarUserNav({
 	const { data, status } = useSession();
 	const { setTheme, resolvedTheme } = useTheme();
 
+	// PWA Install Logic
+	const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
+	const [isInstallable, setIsInstallable] = useState(false);
+
+	useEffect(() => {
+		const handleBeforeInstallPrompt = (e: Event) => {
+			e.preventDefault();
+			setDeferredPrompt(e);
+			setIsInstallable(true);
+		};
+
+		window.addEventListener("beforeinstallprompt", handleBeforeInstallPrompt);
+
+		return () => {
+			window.removeEventListener(
+				"beforeinstallprompt",
+				handleBeforeInstallPrompt,
+			);
+		};
+	}, []);
+
+	const handleInstallClick = async () => {
+		if (!deferredPrompt) return;
+
+		deferredPrompt.prompt();
+		const { outcome } = await deferredPrompt.userChoice;
+
+		if (outcome === "accepted") {
+			setDeferredPrompt(null);
+			setIsInstallable(false);
+		}
+	};
+
 	const isGuest = guestRegex.test(data?.user?.email ?? "");
 	const isAdmin = data?.user?.role === "admin";
 
 	return (
 		<>
 			<SidebarMenu>
-				<SidebarMenuItem>
+				<SidebarMenuItem className="flex flex-row items-center border-t border-zinc-200 dark:border-white/10 w-full relative group">
 					<DropdownMenu>
 						<DropdownMenuTrigger asChild>
 							{status === "loading" ? (
@@ -106,7 +141,7 @@ export function SidebarUserNav({
 								</Tooltip>
 							) : (
 								<button
-									className="flex items-center gap-3 w-full p-4 border-t border-zinc-200 dark:border-white/10 hover:bg-zinc-200 dark:hover:bg-zinc-800/50 transition-colors cursor-pointer group"
+									className="flex-1 flex items-center gap-3 p-4 hover:bg-zinc-200 dark:hover:bg-zinc-800/50 transition-colors cursor-pointer group"
 									data-testid="user-nav-button"
 									type="button"
 								>
@@ -245,6 +280,24 @@ export function SidebarUserNav({
 							</DropdownMenuItem>
 						</DropdownMenuContent>
 					</DropdownMenu>
+
+					{/* Download App Button next to profile */}
+					{!isCollapsed && isInstallable && status !== "loading" && (
+						<Tooltip>
+							<TooltipTrigger asChild>
+								<button
+									type="button"
+									onClick={handleInstallClick}
+									className="absolute right-12 top-1/2 -translate-y-1/2 h-8 w-8 flex items-center justify-center rounded-lg hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-500 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-white transition-colors cursor-pointer"
+								>
+									<Download className="h-4 w-4" />
+								</button>
+							</TooltipTrigger>
+							<TooltipContent side="top">
+								<p className="text-xs">Dapatkan aplikasi dan ekstensi</p>
+							</TooltipContent>
+						</Tooltip>
+					)}
 				</SidebarMenuItem>
 			</SidebarMenu>
 		</>
