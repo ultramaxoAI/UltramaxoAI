@@ -159,6 +159,15 @@ export default function LandingPage() {
 	const [isInstallable, setIsInstallable] = useState(false);
 
 	useEffect(() => {
+		// In development or localhost, forcefully show the button for UI testing
+		if (
+			process.env.NODE_ENV === "development" ||
+			(typeof window !== "undefined" &&
+				window.location.hostname === "localhost")
+		) {
+			setIsInstallable(true);
+		}
+
 		const handleBeforeInstallPrompt = (e: Event) => {
 			e.preventDefault();
 			setDeferredPrompt(e as BeforeInstallPromptEvent);
@@ -176,7 +185,18 @@ export default function LandingPage() {
 	}, []);
 
 	const handleInstallClick = async () => {
-		if (!deferredPrompt) return;
+		if (!deferredPrompt) {
+			if (
+				process.env.NODE_ENV === "development" ||
+				(typeof window !== "undefined" &&
+					window.location.hostname === "localhost")
+			) {
+				alert(
+					"PWA Install simulated in Development Mode. In production, this will trigger the native prompt.",
+				);
+			}
+			return;
+		}
 
 		deferredPrompt.prompt();
 		const { outcome } = await deferredPrompt.userChoice;
