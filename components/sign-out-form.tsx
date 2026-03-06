@@ -2,6 +2,11 @@ import Form from "next/form";
 
 import { signOut } from "@/app/(auth)/auth";
 
+const logoutRedirect =
+	process.env.NODE_ENV === "production"
+		? "https://ultramaxo.tech/login?loggedOut=1"
+		: "/login?loggedOut=1";
+
 export const SignOutForm = () => {
 	return (
 		<Form
@@ -9,7 +14,7 @@ export const SignOutForm = () => {
 				"use server";
 
 				await signOut({
-					redirectTo: "/login",
+					redirectTo: logoutRedirect,
 				});
 			}}
 			className="w-full"

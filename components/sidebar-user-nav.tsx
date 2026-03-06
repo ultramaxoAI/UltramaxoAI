@@ -280,8 +280,14 @@ export function SidebarUserNav({
 										if (isGuest) {
 											router.push("/login");
 										} else {
+											const logoutRedirect =
+												typeof window !== "undefined" &&
+												window.location.hostname.endsWith("ultramaxo.tech")
+													? "https://ultramaxo.tech/login?loggedOut=1"
+													: "/login?loggedOut=1";
+
 											signOut({
-												redirectTo: "/login",
+												redirectTo: logoutRedirect,
 											});
 										}
 									}}

@@ -5,6 +5,7 @@ import { securityHeaders } from "./middleware.security";
 
 const CHAT_SUBDOMAIN = "chat.ultramaxo.tech";
 const MAIN_DOMAIN = "ultramaxo.tech";
+const LOGOUT_REDIRECT_FLAG = "loggedOut";
 
 function isChatSubdomain(request: NextRequest): boolean {
 	const hostname = request.headers.get("host") || "";
@@ -18,6 +19,8 @@ function isProduction(request: NextRequest): boolean {
 
 export async function proxy(request: NextRequest) {
 	const { pathname } = request.nextUrl;
+	const isLoggedOutRedirect =
+		request.nextUrl.searchParams.get(LOGOUT_REDIRECT_FLAG) === "1";
 
 	/*
 	 * Playwright starts the dev server and requires a 200 status to
@@ -44,6 +47,10 @@ export async function proxy(request: NextRequest) {
 
 	const chatSubdomain = isChatSubdomain(request);
 	const production = isProduction(request);
+
+	if (!chatSubdomain && pathname === "/login" && isLoggedOutRedirect) {
+		return NextResponse.next();
+	}
 
 	// If user hits chat subdomain without auth → redirect to main domain login
 	if (chatSubdomain && !token) {
@@ -95,7 +102,12 @@ export async function proxy(request: NextRequest) {
 	const isGuest = guestRegex.test(token?.email ?? "");
 
 	// Authenticated non-guest users on login/register → redirect to chat
-	if (token && !isGuest && ["/login", "/register"].includes(pathname)) {
+	if (
+		token &&
+		!isGuest &&
+		["/login", "/register"].includes(pathname) &&
+		!(pathname === "/login" && isLoggedOutRedirect)
+	) {
 		if (production) {
 			return NextResponse.redirect(
 				new URL("/chat", `https://${CHAT_SUBDOMAIN}`),
