@@ -610,12 +610,18 @@ export const systemPrompt = ({
 	wormgptEnabled,
 	deepThinkingEnabled,
 	toolsEnabled,
+	webSearchEnabled,
+	fullstackModeEnabled,
+	mobileModeEnabled,
 }: {
 	selectedChatModel: string;
 	requestHints: RequestHints;
 	wormgptEnabled?: boolean;
 	deepThinkingEnabled?: boolean;
 	toolsEnabled?: boolean;
+	webSearchEnabled?: boolean;
+	fullstackModeEnabled?: boolean;
+	mobileModeEnabled?: boolean;
 }) => {
 	const requestPrompt = getRequestPromptFromHints(requestHints);
 
