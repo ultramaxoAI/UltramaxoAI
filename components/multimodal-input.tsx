@@ -456,7 +456,7 @@ function PureMultimodalInput({
 			/>
 
 			<PromptInput
-				className="mx-auto w-full max-w-3xl rounded-3xl bg-zinc-100 dark:bg-[#212121] border border-transparent p-2.5 shadow-sm transition-all duration-200 focus-within:bg-white dark:focus-within:bg-[#2a2a2a] focus-within:shadow-xl focus-within:ring-1 focus-within:ring-zinc-200 dark:focus-within:ring-white/5"
+				className="mx-auto w-full max-w-3xl rounded-[24px] bg-zinc-100 dark:bg-[#212121] border border-transparent p-1 shadow transition-all duration-300 focus-within:border-purple-500/30 focus-within:shadow-[0_0_15px_rgba(168,85,247,0.15)] dark:focus-within:shadow-[0_0_15px_rgba(168,85,247,0.25)] outline-none ring-0"
 				onSubmit={(event) => {
 					event.preventDefault();
 					if (!input.trim() && attachments.length === 0) {
@@ -590,7 +590,7 @@ function PureMultimodalInput({
 						)}
 					</div>
 				)}
-				<div className="flex flex-row items-start px-3 pt-3 pb-1">
+				<div className="flex flex-row items-start px-2 pt-1 pb-0">
 					<PromptInputTextarea
 						className="grow resize-none border-0! bg-transparent px-1 py-0 text-[15px] leading-relaxed text-zinc-900 dark:text-zinc-100 outline-none ring-0 [-ms-overflow-style:none] [scrollbar-width:none] placeholder:text-zinc-500 dark:placeholder:text-zinc-400 focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 [&::-webkit-scrollbar]:hidden"
 						data-testid="multimodal-input"
@@ -604,7 +604,7 @@ function PureMultimodalInput({
 						value={input}
 					/>
 				</div>
-				<PromptInputToolbar className="flex items-center justify-between px-3 pb-2 pt-1 relative">
+				<PromptInputToolbar className="flex items-center justify-between px-2 pb-1 pt-0 relative">
 					<PromptInputTools className="flex items-center gap-1.5">
 						{/* Dropdown Menu All-in-One - + Icon */}
 						<DropdownMenu>
