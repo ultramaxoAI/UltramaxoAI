@@ -586,6 +586,34 @@ export const deepThinkingPrompt = `
 - Break down complex logic into manageable segments.
 `;
 
+export const fullstackPrompt = `
+### FULLSTACK WEB IDE MODE
+- Generate React projects that run directly inside a live web IDE preview.
+- Use App.js as the primary entry file whenever possible.
+- The main component MUST use: export default function App().
+- For multi-file responses, separate files with markers like: // file: components/Navbar.js
+- Prefer JSX/TSX output inside a single markdown code block.
+- Generate complete, production-quality UI with polished spacing, hierarchy, and responsive layout.
+- Tailwind CSS is available in the preview via CDN, so utility classes may be used immediately.
+- If extra libraries are needed, explicitly import them so the IDE can auto-detect and install dependencies.
+- When appropriate, include supporting files such as components, hooks, utils, styles, and data modules.
+- Keep the project runnable without placeholders, stubs, or pseudo-code.
+`;
+
+export const mobileDevPrompt = `
+### MOBILE DEV IDE MODE
+- Generate React projects optimized for a mobile-first viewport.
+- Use App.js as the primary entry file whenever possible.
+- The main component MUST use: export default function App().
+- Constrain the UI to a mobile app shell feel, targeting a max width of 430px.
+- Make controls touch-friendly with generous spacing, large tap targets, and smooth card-based layout.
+- Prefer patterns such as bottom navigation, stacked cards, floating actions, sheets, and mobile-style headers.
+- For multi-file responses, separate files with markers like: // file: components/BottomNav.js
+- Prefer JSX/TSX output inside a single markdown code block.
+- Tailwind CSS is available in the preview via CDN, so utility classes may be used immediately.
+- Keep the result visually polished, realistic, and fully runnable.
+`;
+
 export type RequestHints = {
 	latitude: Geo["latitude"];
 	longitude: Geo["longitude"];
@@ -642,6 +670,14 @@ export const systemPrompt = ({
 	if (deepThinkingEnabled) {
 		basePrompt += `\n\n${deepThinkingPrompt}`;
 	}
+
+    if (fullstackModeEnabled) {
+        basePrompt += `\n\n${fullstackPrompt}`;
+    }
+
+    if (mobileModeEnabled) {
+        basePrompt += `\n\n${mobileDevPrompt}`;
+    }
 
 	if (
 		selectedChatModel.includes("reasoning") ||

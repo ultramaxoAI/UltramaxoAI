@@ -1,5 +1,5 @@
 import { ChevronDown, ChevronRight } from "lucide-react";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { toast } from "sonner";
 import { CodeEditor, type SupportedLanguage } from "@/components/code-editor";
 import {
@@ -283,11 +283,75 @@ function getDefaultFileName(language: SupportedLanguage): string {
 	}
 }
 
+const BUILT_IN_SANDBOX_DEPENDENCIES = new Set([
+	"react",
+	"react-dom",
+	"next",
+	"fs",
+	"path",
+	"url",
+	"crypto",
+	"stream",
+	"events",
+]);
+
+function normalizePackageName(specifier: string): string | null {
+	if (!specifier || specifier.startsWith(".") || specifier.startsWith("/")) {
+		return null;
+	}
+
+	if (specifier.startsWith("@")) {
+		const [scope, pkg] = specifier.split("/");
+		if (!scope || !pkg) {
+			return null;
+		}
+
+		return `${scope}/${pkg}`;
+	}
+
+	return specifier.split("/")[0] ?? null;
+}
+
+function detectDependencies(
+	source:
+		| string
+		| Array<{ name: string; content: string; language: SupportedLanguage }>,
+): Record<string, string> {
+	const combinedSource = Array.isArray(source)
+		? source.map((file) => file.content).join("\n")
+		: source;
+
+	const dependencies: Record<string, string> = {};
+	const patterns = [
+		/import\s+[^'"\n]+\s+from\s+['"]([^./][^'"]*)['"]/g,
+		/import\s*\(\s*['"]([^./][^'"]*)['"]\s*\)/g,
+		/require\(\s*['"]([^./][^'"]*)['"]\s*\)/g,
+	];
+
+	for (const pattern of patterns) {
+		for (const match of combinedSource.matchAll(pattern)) {
+			const packageName = normalizePackageName(match[1] ?? "");
+
+			if (
+				!packageName ||
+				BUILT_IN_SANDBOX_DEPENDENCIES.has(packageName)
+			) {
+				continue;
+			}
+
+			dependencies[packageName] = "latest";
+		}
+	}
+
+	return dependencies;
+}
+
 type Metadata = {
 	outputs: ConsoleOutput[];
 	language?: SupportedLanguage;
 	files?: Array<{ name: string; content: string; language: SupportedLanguage }>;
 	activeFileIndex?: number;
+	userDependencies?: Record<string, string>;
 };
 
 async function executeJavaScript(
@@ -348,6 +412,7 @@ export const codeArtifact = new Artifact<"code", Metadata>({
 			language: undefined,
 			files: [],
 			activeFileIndex: 0,
+			userDependencies: {},
 		});
 	},
 	onStreamPart: ({ streamPart, setArtifact, setMetadata }) => {
@@ -378,6 +443,18 @@ export const codeArtifact = new Artifact<"code", Metadata>({
 		const files = metadata?.files || parseCodeFiles(content || "");
 		const activeFileIndex = metadata?.activeFileIndex || 0;
 		const activeFile = files[activeFileIndex] || files[0];
+		const autoDetectedDependencies = useMemo(
+			() => detectDependencies(files.length > 0 ? files : content || ""),
+			[files, content],
+		);
+		const userDependencies = metadata?.userDependencies ?? {};
+		const mergedDependencies = useMemo(
+			() => ({
+				...autoDetectedDependencies,
+				...userDependencies,
+			}),
+			[autoDetectedDependencies, userDependencies],
+		);
 		const detectedLanguage =
 			activeFile?.language ||
 			metadata?.language ||
@@ -466,7 +543,7 @@ export const codeArtifact = new Artifact<"code", Metadata>({
 
 				{/* Expandable Content */}
 				{isExpanded && (
-					<div className="flex h-[500px] w-full">
+					<div className="flex w-full" style={{ height: 500 }}>
 						{/* If it's a React project, we display SandpackViewer which handles its own layout */}
 						{files.some(
 							(f) =>
@@ -479,9 +556,17 @@ export const codeArtifact = new Artifact<"code", Metadata>({
 						) ? (
 							<div className="flex-1 w-full h-full">
 								<SandpackViewer
+									dependencies={mergedDependencies}
 									files={files}
 									activeFileIndex={activeFileIndex}
-									status={status}
+									onDependenciesChange={(nextDependencies) =>
+										setMetadata((currentMetadata) => ({
+											...currentMetadata,
+											userDependencies: nextDependencies,
+										}))
+									}
+									status={props.status}
+									userDependencies={userDependencies}
 								/>
 							</div>
 						) : (

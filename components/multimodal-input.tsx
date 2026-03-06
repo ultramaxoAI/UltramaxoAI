@@ -590,7 +590,7 @@ function PureMultimodalInput({
 						)}
 					</div>
 				)}
-				<div className="flex flex-row items-start px-2 pt-1 pb-0">
+				<div className="flex flex-row items-start px-2 pt-2.5 pb-0">
 					<PromptInputTextarea
 						className="grow resize-none border-0! bg-transparent px-1 py-0 text-[15px] leading-relaxed text-zinc-900 dark:text-zinc-100 outline-none ring-0 [-ms-overflow-style:none] [scrollbar-width:none] placeholder:text-zinc-500 dark:placeholder:text-zinc-400 focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 [&::-webkit-scrollbar]:hidden"
 						data-testid="multimodal-input"
@@ -680,24 +680,24 @@ function PureMultimodalInput({
 									)}
 								</DropdownMenuItem>
 								<DropdownMenuItem
-									className="cursor-not-allowed opacity-50 rounded-lg"
-									disabled
+									className="cursor-pointer hover:bg-zinc-100 dark:hover:bg-white/10 rounded-lg focus:bg-zinc-100 dark:focus:bg-white/10"
+									onClick={() => setFullstackModeEnabled(!fullstackModeEnabled)}
 								>
 									<FileTextIcon className="mr-2 h-4 w-4" />
 									<span>Fullstack Web</span>
-									<span className="ml-auto text-[10px] font-medium text-orange-400 bg-orange-400/10 px-1.5 py-0.5 rounded-full">
-										Maintenance
-									</span>
+									{fullstackModeEnabled && (
+										<CheckIcon className="ml-auto h-4 w-4 text-orange-500" />
+									)}
 								</DropdownMenuItem>
 								<DropdownMenuItem
-									className="cursor-not-allowed opacity-50 rounded-lg"
-									disabled
+									className="cursor-pointer hover:bg-zinc-100 dark:hover:bg-white/10 rounded-lg focus:bg-zinc-100 dark:focus:bg-white/10"
+									onClick={() => setMobileModeEnabled(!mobileModeEnabled)}
 								>
 									<CheckIcon className="mr-2 h-4 w-4" />
 									<span>Mobile Dev</span>
-									<span className="ml-auto text-[10px] font-medium text-orange-400 bg-orange-400/10 px-1.5 py-0.5 rounded-full">
-										Maintenance
-									</span>
+									{mobileModeEnabled && (
+										<CheckIcon className="ml-auto h-4 w-4 text-pink-500" />
+									)}
 								</DropdownMenuItem>
 								<DropdownMenuItem
 									className={cn(
