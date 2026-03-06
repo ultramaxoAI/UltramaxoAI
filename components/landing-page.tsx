@@ -394,23 +394,10 @@ export default function LandingPage() {
 						))}
 					</div>
 
-					<div className="hidden md:flex items-center gap-3">
+					<div className="hidden md:flex items-center gap-4 lg:gap-6">
 						<ThemeToggle />
-						{isInstallable && (
-							<motion.button
-								className="relative hidden lg:inline-flex items-center justify-center gap-2 rounded-full px-5 py-2 text-xs font-semibold
-									bg-zinc-900 dark:bg-white text-white dark:text-black
-									hover:bg-zinc-800 dark:hover:bg-zinc-200
-									transition-colors duration-300 cursor-pointer"
-								onClick={handleInstallClick}
-								whileHover={{ scale: 1.04 }}
-								whileTap={{ scale: 0.97 }}
-							>
-								Download App
-							</motion.button>
-						)}
 						<button
-							className="text-sm text-zinc-600 dark:text-gray-400 hover:text-zinc-900 dark:text-white transition-colors cursor-pointer"
+							className="text-sm font-semibold text-zinc-600 dark:text-gray-400 hover:text-zinc-900 dark:text-white transition-colors cursor-pointer"
 							onClick={() => router.push("/login")}
 							type="button"
 						>
@@ -545,7 +532,7 @@ export default function LandingPage() {
 
 							<motion.div
 								animate="visible"
-								className="flex flex-col sm:flex-row items-start gap-3 mb-8"
+								className="flex flex-col sm:flex-row items-center sm:items-start gap-3 mb-8 flex-wrap"
 								custom={3}
 								initial="hidden"
 								variants={fadeUp}
@@ -562,9 +549,9 @@ export default function LandingPage() {
 									Start Free <ArrowRight className="w-4 h-4" />
 								</motion.button>
 								<motion.button
-									className="inline-flex items-center gap-2 rounded-full px-6 py-3.5 text-sm font-medium
+									className="inline-flex items-center justify-center gap-2 rounded-full px-6 py-3.5 text-sm font-medium
 										border border-black/10 dark:border-white/10 bg-[#f8fafc] dark:bg-[#09090b] hover:bg-black/[0.07] dark:hover:bg-white/[0.07] hover:text-zinc-900 dark:hover:text-white backdrop-blur-sm
-										transition-colors duration-200 cursor-pointer w-full sm:w-auto justify-center"
+										transition-colors duration-200 cursor-pointer w-full sm:w-auto mt-3 sm:mt-0"
 									onClick={() => scrollToSection("#features")}
 									whileHover={{ scale: 1.04 }}
 									whileTap={{ scale: 0.97 }}
@@ -580,7 +567,7 @@ export default function LandingPage() {
 										whileHover={{ scale: 1.04 }}
 										whileTap={{ scale: 0.97 }}
 									>
-										Download APP (APK)
+										Download App
 									</motion.button>
 								)}
 							</motion.div>

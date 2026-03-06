@@ -105,7 +105,9 @@ export function ProfileEditDialog() {
 					type="button"
 					className="relative flex w-full cursor-pointer select-none items-center rounded-lg px-2 py-1.5 text-sm outline-none transition-colors hover:bg-zinc-100 focus:bg-zinc-100 dark:hover:bg-zinc-800 dark:focus:bg-zinc-800 gap-2"
 				>
-					<PencilIcon className="h-4 w-4" />
+					<span className="h-4 w-4 flex items-center justify-center">
+						<PencilIcon />
+					</span>
 					Edit Profile
 				</button>
 			</DialogTrigger>
