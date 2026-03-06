@@ -43,6 +43,10 @@ export async function PATCH(request: Request) {
 			);
 		}
 
+		if (typeof updates.proExpiresAt === "string") {
+			updates.proExpiresAt = new Date(updates.proExpiresAt);
+		}
+
 		await updateUserAdmin(id, updates);
 		return NextResponse.json({ success: true });
 	} catch (error) {
