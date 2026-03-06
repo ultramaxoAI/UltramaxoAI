@@ -1,4 +1,14 @@
 "use client";
+import {
+	CheckCircle2Icon,
+	Clock3Icon,
+	MonitorSmartphoneIcon,
+	PackageIcon,
+	PlayIcon,
+	SmartphoneIcon,
+	SparklesIcon as LucideSparklesIcon,
+	WandSparklesIcon,
+} from "lucide-react";
 import type { UseChatHelpers } from "@ai-sdk/react";
 import { useState } from "react";
 import type { Vote } from "@/lib/db/schema";
@@ -112,9 +122,24 @@ const PurePreviewMessage = ({
 		(part) => part.type === "file",
 	);
 
-	// Check if there's ANY artifact being created/updated (disabled for now)
-	// If so, hide code blocks in chat to avoid duplication
-	const hasAnyArtifact = false;
+	const hasAnyArtifact =
+		message.parts?.some(
+			(part) =>
+				part.type === "tool-createDocument" ||
+				part.type === "tool-updateDocument",
+		) ||
+		message.annotations?.some((annotation) => {
+			const parsed =
+				typeof annotation === "object" && annotation !== null
+					? (annotation as Record<string, unknown>)
+					: null;
+
+			return (
+				parsed?.type === "create-document" ||
+				parsed?.type === "update-document"
+			);
+		}) ||
+		false;
 
 	useDataStream();
 
@@ -359,6 +384,276 @@ const PurePreviewMessage = ({
 												isReadonly={isReadonly}
 											/>
 										)}
+									</ToolContent>
+								</Tool>
+							);
+						}
+
+						if (type === "tool-startAgentTask") {
+							const { toolCallId, state } = part;
+							const payload =
+								state === "output-available" ? part.output : part.input;
+							const agentTask = payload as {
+								mode: "fullstack" | "mobile";
+								goal: string;
+								plan: string[];
+								deliverable: string;
+							};
+
+							return (
+								<Tool defaultOpen={true} key={toolCallId}>
+									<ToolHeader state={state} type="tool-startAgentTask" />
+									<ToolContent>
+										<div className="space-y-4 px-4 py-4">
+											<div className="flex items-center gap-2 text-sm font-medium text-foreground">
+												{agentTask.mode === "mobile" ? (
+													<SmartphoneIcon className="size-4 text-pink-500" />
+												) : (
+													<MonitorSmartphoneIcon className="size-4 text-orange-500" />
+												)}
+												<span>
+													{agentTask.mode === "mobile"
+														? "Mobile Dev Agent"
+														: "Fullstack Agent"}
+												</span>
+											</div>
+
+											<div className="rounded-xl border bg-muted/40 p-3">
+												<div className="mb-1 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
+													Goal
+												</div>
+												<p className="text-sm leading-relaxed text-foreground">
+													{agentTask.goal}
+												</p>
+											</div>
+
+											<div className="rounded-xl border bg-background p-3">
+												<div className="mb-2 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
+													Execution Plan
+												</div>
+												<ul className="space-y-2">
+													{agentTask.plan.map((planItem, planIndex) => (
+														<li
+															className="flex items-start gap-2 text-sm text-foreground"
+															key={`${toolCallId}-plan-${planIndex}`}
+														>
+															<WandSparklesIcon className="mt-0.5 size-3.5 shrink-0 text-violet-500" />
+															<span>{planItem}</span>
+														</li>
+													))}
+												</ul>
+											</div>
+
+											<div className="rounded-xl border bg-muted/40 p-3 text-sm text-foreground">
+												<div className="mb-1 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
+													Deliverable
+												</div>
+												{agentTask.deliverable}
+											</div>
+										</div>
+									</ToolContent>
+								</Tool>
+							);
+						}
+
+						if (type === "tool-reportAgentStep") {
+							const { toolCallId, state } = part;
+							const payload =
+								state === "output-available" ? part.output : part.input;
+							const step = payload as {
+								title: string;
+								status: "in_progress" | "completed";
+								detail: string;
+								files?: string[];
+								packages?: string[];
+								command?: string | null;
+							};
+
+							return (
+								<Tool defaultOpen={true} key={toolCallId}>
+									<ToolHeader state={state} type="tool-reportAgentStep" />
+									<ToolContent>
+										<div className="space-y-3 px-4 py-4">
+											<div className="flex items-start justify-between gap-3 rounded-xl border bg-background p-3">
+												<div className="flex items-start gap-2">
+													{step.status === "completed" ? (
+														<CheckCircle2Icon className="mt-0.5 size-4 shrink-0 text-emerald-500" />
+													) : (
+														<Clock3Icon className="mt-0.5 size-4 shrink-0 animate-pulse text-amber-500" />
+													)}
+													<div>
+														<div className="text-sm font-medium text-foreground">
+															{step.title}
+														</div>
+														<p className="mt-1 text-sm leading-relaxed text-muted-foreground">
+															{step.detail}
+														</p>
+													</div>
+												</div>
+												<div className="inline-flex rounded-full border px-2.5 py-1 text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+													{step.status === "completed" ? "Done" : "Running"}
+												</div>
+											</div>
+
+											{step.files && step.files.length > 0 && (
+												<div className="rounded-xl border bg-muted/40 p-3">
+													<div className="mb-2 flex items-center gap-2 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
+														<LucideSparklesIcon className="size-3.5" />
+														Files
+													</div>
+													<div className="flex flex-wrap gap-2">
+														{step.files.map((file) => (
+															<span
+																className="rounded-full border bg-background px-2.5 py-1 font-mono text-xs text-foreground"
+																key={`${toolCallId}-${file}`}
+															>
+																{file}
+															</span>
+														))}
+													</div>
+												</div>
+											)}
+
+											{step.packages && step.packages.length > 0 && (
+												<div className="rounded-xl border bg-muted/40 p-3">
+													<div className="mb-2 flex items-center gap-2 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
+														<PackageIcon className="size-3.5" />
+														Packages
+													</div>
+													<div className="flex flex-wrap gap-2">
+														{step.packages.map((pkg) => (
+															<span
+																className="rounded-full border bg-background px-2.5 py-1 text-xs text-foreground"
+																key={`${toolCallId}-${pkg}`}
+															>
+																{pkg}
+															</span>
+														))}
+													</div>
+												</div>
+											)}
+
+											{step.command && (
+												<div className="rounded-xl border bg-zinc-950 px-3 py-2 font-mono text-xs text-zinc-100 dark:bg-zinc-900">
+													<div className="mb-1 flex items-center gap-2 text-[11px] font-semibold uppercase tracking-wide text-zinc-400">
+														<PlayIcon className="size-3.5" />
+														Action
+													</div>
+													{step.command}
+												</div>
+											)}
+										</div>
+									</ToolContent>
+								</Tool>
+							);
+						}
+
+						if (
+							type === "tool-listCodeFiles" ||
+							type === "tool-createCodeFile" ||
+							type === "tool-updateCodeFile" ||
+							type === "tool-deleteCodeFile" ||
+							type === "tool-runWorkspaceCommand"
+						) {
+							const { toolCallId, state } = part;
+							const payload =
+								state === "output-available" ? part.output : part.input;
+
+							if (type === "tool-runWorkspaceCommand") {
+								const commandResult = payload as {
+									command: string;
+									purpose: string;
+									result: string;
+								};
+
+								return (
+									<Tool defaultOpen={true} key={toolCallId}>
+										<ToolHeader state={state} type={type} />
+										<ToolContent>
+											<div className="space-y-3 px-4 py-4">
+												<div className="rounded-xl border bg-zinc-950 px-3 py-3 font-mono text-xs text-zinc-100 dark:bg-zinc-900">
+													<div className="mb-2 flex items-center gap-2 text-[11px] font-semibold uppercase tracking-wide text-zinc-400">
+														<PlayIcon className="size-3.5" />
+														Virtual Command
+													</div>
+													{commandResult.command}
+												</div>
+												<div className="rounded-xl border bg-muted/40 p-3 text-sm text-foreground">
+													<div className="mb-1 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
+														Purpose
+													</div>
+													{commandResult.purpose}
+												</div>
+												<div className="rounded-xl border bg-background p-3 text-sm text-foreground">
+													<div className="mb-1 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
+														Result
+													</div>
+													{commandResult.result}
+												</div>
+											</div>
+										</ToolContent>
+									</Tool>
+								);
+							}
+
+							const workspacePayload = payload as {
+								documentId?: string;
+								path?: string;
+								action?: string;
+								files?: string[];
+								count?: number;
+							};
+
+							const titleMap: Record<string, string> = {
+								"tool-listCodeFiles": "Workspace Files",
+								"tool-createCodeFile": "Create File",
+								"tool-updateCodeFile": "Update File",
+								"tool-deleteCodeFile": "Delete File",
+							};
+
+							return (
+								<Tool defaultOpen={true} key={toolCallId}>
+									<ToolHeader state={state} type={type} />
+									<ToolContent>
+										<div className="space-y-3 px-4 py-4">
+											<div className="flex items-center gap-2 text-sm font-medium text-foreground">
+												<LucideSparklesIcon className="size-4 text-cyan-500" />
+												<span>{titleMap[type] ?? "Workspace Action"}</span>
+											</div>
+
+											{workspacePayload.path && (
+												<div className="rounded-xl border bg-background p-3 text-sm text-foreground">
+													<div className="mb-1 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
+														Path
+													</div>
+													<div className="font-mono text-xs">{workspacePayload.path}</div>
+												</div>
+											)}
+
+											{typeof workspacePayload.count === "number" && (
+												<div className="rounded-xl border bg-muted/40 p-3 text-sm text-foreground">
+													{workspacePayload.count} files available in the virtual workspace.
+												</div>
+											)}
+
+											{workspacePayload.files && workspacePayload.files.length > 0 && (
+												<div className="rounded-xl border bg-muted/40 p-3">
+													<div className="mb-2 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
+														Files
+													</div>
+													<div className="flex flex-wrap gap-2">
+														{workspacePayload.files.map((file) => (
+															<span
+																className="rounded-full border bg-background px-2.5 py-1 font-mono text-xs text-foreground"
+																key={`${toolCallId}-${file}`}
+															>
+																{file}
+															</span>
+														))}
+													</div>
+												</div>
+											)}
+										</div>
 									</ToolContent>
 								</Tool>
 							);

@@ -1,7 +1,7 @@
 "use client";
 
 import { useChat } from "@ai-sdk/react";
-import { DefaultChatTransport } from "ai";
+import { type DataUIPart, DefaultChatTransport } from "ai";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import type { User } from "next-auth";
@@ -14,7 +14,7 @@ import { useAutoResume } from "@/hooks/use-auto-resume";
 import { useChatVisibility } from "@/hooks/use-chat-visibility";
 import type { Vote } from "@/lib/db/schema";
 import { ChatSDKError } from "@/lib/errors";
-import type { Attachment, ChatMessage } from "@/lib/types";
+import type { Attachment, ChatMessage, CustomUIDataTypes } from "@/lib/types";
 import { cn, fetcher, fetchWithErrorHandlers, generateUUID } from "@/lib/utils";
 import { Artifact } from "./artifact";
 import { useDataStream } from "./data-stream-provider";
@@ -164,7 +164,10 @@ export function Chat({
 			},
 		}),
 		onData: (dataPart) => {
-			setDataStream((ds) => (ds ? [...ds, dataPart] : []));
+			setDataStream((ds) => [
+				...(ds ?? []),
+				dataPart as DataUIPart<CustomUIDataTypes>,
+			]);
 		},
 		onFinish: () => {
 			mutate(unstable_serialize(getChatHistoryPaginationKey));

@@ -1,9 +1,11 @@
 import type { JSONValue } from "ai";
 import type { Session } from "next-auth";
 import { z } from "zod";
+import { saveDocument } from "@/lib/db/queries";
 import { generateUUID } from "@/lib/utils";
 
 export const createDocument = ({
+	session,
 	dataStream,
 }: {
 	session: Session | null;
@@ -23,7 +25,7 @@ export const createDocument = ({
 					"The FULL initial content of the document (code, text, or csv). YOU MUST PUT THE FINAL, COMPLETE CODE OR TEXT HERE. DO NOT LEAVE THIS EMPTY.",
 				),
 		}),
-		execute: ({
+		execute: async ({
 			title,
 			kind,
 			content,
@@ -41,11 +43,21 @@ export const createDocument = ({
 				`[Tool: createDocument] Content length received: ${content?.length || 0} chars. Preview: ${content ? content.substring(0, 50).replace(/\n/g, "\\n") : "EMPTY"}`,
 			);
 
+			if (session?.user?.id) {
+				await saveDocument({
+					id,
+					title,
+					kind,
+					content,
+					userId: session.user.id,
+				});
+			}
+
 			// Send document metadata events in the correct format
 			dataStream.write({ type: "data-id", data: id } as JSONValue);
 			dataStream.write({ type: "data-title", data: title } as JSONValue);
 			dataStream.write({ type: "data-kind", data: kind } as JSONValue);
-			dataStream.write({ type: "data-clear", data: "" } as JSONValue);
+			dataStream.write({ type: "data-clear", data: null } as JSONValue);
 
 			// Send content in the appropriate format based on kind
 			if (kind === "text") {
@@ -61,7 +73,7 @@ export const createDocument = ({
 				} as JSONValue);
 			}
 
-			dataStream.write({ type: "data-finish", data: "" } as JSONValue);
+			dataStream.write({ type: "data-finish", data: null } as JSONValue);
 
 			return {
 				id,

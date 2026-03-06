@@ -1,6 +1,14 @@
 import type { InferUITool, UIMessage } from "ai";
 import { z } from "zod";
 import type { ArtifactKind } from "@/components/artifact";
+import type { reportAgentStep, startAgentTask } from "./ai/tools/agent-mode";
+import type {
+	createCodeFile,
+	deleteCodeFile,
+	listCodeFiles,
+	runWorkspaceCommand,
+	updateCodeFile,
+} from "./ai/tools/code-workspace";
 import type { createDocument } from "./ai/tools/create-document";
 import type { getWeather } from "./ai/tools/get-weather";
 import type { requestSuggestions } from "./ai/tools/request-suggestions";
@@ -23,6 +31,13 @@ type requestSuggestionsTool = InferUITool<
 type webSearchTool = InferUITool<typeof webSearch>;
 type createDocumentTool = InferUITool<ReturnType<typeof createDocument>>;
 type updateDocumentTool = InferUITool<ReturnType<typeof updateDocument>>;
+type startAgentTaskTool = InferUITool<ReturnType<typeof startAgentTask>>;
+type reportAgentStepTool = InferUITool<ReturnType<typeof reportAgentStep>>;
+type listCodeFilesTool = InferUITool<ReturnType<typeof listCodeFiles>>;
+type createCodeFileTool = InferUITool<ReturnType<typeof createCodeFile>>;
+type updateCodeFileTool = InferUITool<ReturnType<typeof updateCodeFile>>;
+type deleteCodeFileTool = InferUITool<ReturnType<typeof deleteCodeFile>>;
+type runWorkspaceCommandTool = InferUITool<ReturnType<typeof runWorkspaceCommand>>;
 
 export type ChatTools = {
 	getWeather: weatherTool;
@@ -30,6 +45,13 @@ export type ChatTools = {
 	webSearch: webSearchTool;
 	createDocument: createDocumentTool;
 	updateDocument: updateDocumentTool;
+	startAgentTask: startAgentTaskTool;
+	reportAgentStep: reportAgentStepTool;
+	listCodeFiles: listCodeFilesTool;
+	createCodeFile: createCodeFileTool;
+	updateCodeFile: updateCodeFileTool;
+	deleteCodeFile: deleteCodeFileTool;
+	runWorkspaceCommand: runWorkspaceCommandTool;
 };
 
 export type CustomUIDataTypes = {

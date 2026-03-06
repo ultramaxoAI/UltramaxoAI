@@ -42,6 +42,11 @@ export default function Page() {
 				type: "error",
 				description: "Email sudah terdaftar!",
 			});
+		} else if (state.status === "username_exists") {
+			toast({
+				type: "error",
+				description: "Username sudah dipakai!",
+			});
 		} else if (state.status === "password_mismatch") {
 			toast({
 				type: "error",

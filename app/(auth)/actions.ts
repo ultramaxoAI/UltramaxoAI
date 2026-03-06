@@ -1,7 +1,12 @@
 "use server";
 
 import { z } from "zod";
-import { createUser, getUser } from "@/lib/db/queries";
+import {
+	createUser,
+	getUser,
+	getUserByIdentifier,
+	getUserByUsername,
+} from "@/lib/db/queries";
 import { signIn } from "./auth";
 
 const authFormSchema = z.object({
@@ -13,7 +18,13 @@ const authFormSchema = z.object({
 });
 
 export type LoginActionState = {
-	status: "idle" | "in_progress" | "success" | "failed" | "invalid_data";
+	status:
+		| "idle"
+		| "in_progress"
+		| "success"
+		| "failed"
+		| "invalid_data"
+		| "unverified";
 };
 
 export const login = async (
@@ -25,9 +36,25 @@ export const login = async (
 			username: formData.get("username"),
 			password: formData.get("password"),
 		});
+		const identifier = validatedData.username?.trim();
+
+		if (!identifier) {
+			return { status: "invalid_data" };
+		}
+
+		const emailVerificationEnabled =
+			process.env.ENABLE_EMAIL_VERIFICATION === "true";
+
+		if (emailVerificationEnabled) {
+			const [candidateUser] = await getUserByIdentifier(identifier);
+
+			if (candidateUser && !candidateUser.emailVerified) {
+				return { status: "unverified" };
+			}
+		}
 
 		const result = await signIn("credentials", {
-			username: validatedData.username,
+			username: identifier,
 			password: validatedData.password,
 			redirect: false,
 		});
@@ -55,6 +82,7 @@ export type RegisterActionState = {
 		| "success"
 		| "failed"
 		| "user_exists"
+		| "username_exists"
 		| "password_mismatch"
 		| "invalid_data"
 		| "invalid_code"
@@ -72,11 +100,22 @@ export const register = async (
 			username: formData.get("username"),
 			confirmPassword: formData.get("confirmPassword"),
 		});
+		const normalizedEmail = validatedData.email?.trim().toLowerCase();
+		const normalizedUsername = validatedData.username?.trim();
+
+		if (!normalizedEmail || !normalizedUsername) {
+			return { status: "invalid_data" };
+		}
 
 		// Check if user exists
-		const [user] = await getUser(validatedData.email as string);
+		const [user] = await getUser(normalizedEmail);
 		if (user) {
 			return { status: "user_exists" } as RegisterActionState;
+		}
+
+		const [existingUsername] = await getUserByUsername(normalizedUsername);
+		if (existingUsername) {
+			return { status: "username_exists" };
 		}
 
 		if (validatedData.password !== validatedData.confirmPassword) {
@@ -88,9 +127,9 @@ export const register = async (
 
 		// 1. Create the user in the database (unverified)
 		await createUser(
-			validatedData.email as string,
+			normalizedEmail,
 			validatedData.password,
-			validatedData.username,
+			normalizedUsername,
 		);
 
 		// 2. If email verification is enabled, do NOT sign in. Generate magic link.
@@ -99,18 +138,18 @@ export const register = async (
 			const token = crypto.randomUUID();
 
 			const { upsertVerificationCode } = require("@/lib/db/queries");
-			await upsertVerificationCode(validatedData.email as string, token);
+			await upsertVerificationCode(normalizedEmail, token);
 
 			const { sendVerificationEmail } = require("@/lib/email");
-			await sendVerificationEmail(validatedData.email as string, token);
+			await sendVerificationEmail(normalizedEmail, token);
 
 			return { status: "verification_sent" };
 		}
 
 		// 3. Otherwise (verification disabled), sign in immediately
 		await signIn("credentials", {
-			email: validatedData.email,
-			username: validatedData.username,
+			email: normalizedEmail,
+			username: normalizedUsername,
 			password: validatedData.password,
 			redirect: false,
 		});

@@ -3,6 +3,7 @@
 import { useEffect } from "react";
 import { useSWRConfig } from "swr";
 import { unstable_serialize } from "swr/infinite";
+import type { ArtifactKind } from "@/components/artifact";
 import { initialArtifactData, useArtifact } from "@/hooks/use-artifact";
 import { artifactDefinitions } from "./artifact";
 import { useDataStream } from "./data-stream-provider";
@@ -32,7 +33,7 @@ export function DataStreamHandler() {
 			}
 
 			if (delta.type === "data-kind") {
-				currentKind = delta.data as any;
+				currentKind = delta.data as ArtifactKind;
 			}
 
 			const artifactDefinition = artifactDefinitions.find(
@@ -58,6 +59,7 @@ export function DataStreamHandler() {
 						return {
 							...draftArtifact,
 							documentId: delta.data,
+							isVisible: true,
 							status: "streaming",
 						};
 
@@ -65,6 +67,7 @@ export function DataStreamHandler() {
 						return {
 							...draftArtifact,
 							title: delta.data,
+							isVisible: true,
 							status: "streaming",
 						};
 
@@ -72,6 +75,7 @@ export function DataStreamHandler() {
 						return {
 							...draftArtifact,
 							kind: delta.data,
+							isVisible: true,
 							status: "streaming",
 						};
 
@@ -79,6 +83,7 @@ export function DataStreamHandler() {
 						return {
 							...draftArtifact,
 							content: "",
+							isVisible: true,
 							status: "streaming",
 						};
 

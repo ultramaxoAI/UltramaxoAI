@@ -2,11 +2,7 @@ import type { Adapter } from "@auth/core/adapters";
 import { DrizzleAdapter } from "@auth/drizzle-adapter";
 import { compare } from "bcrypt-ts";
 import { eq } from "drizzle-orm";
-import NextAuth, {
-	type DefaultSession,
-	type Profile,
-	type User,
-} from "next-auth";
+import NextAuth, { type DefaultSession } from "next-auth";
 import type { DefaultJWT } from "next-auth/jwt";
 import Credentials from "next-auth/providers/credentials";
 import GitHub from "next-auth/providers/github";
@@ -15,7 +11,7 @@ import {
 	createGuestUser,
 	db,
 	getUser,
-	getUserByUsername,
+	getUserByIdentifier,
 	setEmailVerified,
 	verifyVerificationCode,
 } from "@/lib/db/queries";
@@ -123,15 +119,21 @@ export const {
 				email,
 				code,
 			}: Partial<Record<"username" | "password" | "email" | "code", unknown>>) {
+				const normalizedUsername = String(username ?? "").trim();
+				const normalizedPassword = String(password ?? "");
+				const normalizedEmail = String(email ?? "")
+					.trim()
+					.toLowerCase();
+
 				// SCENARIO 1: Login with Email & Verification Code (Auto-Login after Verify)
-				if (email && code) {
+				if (normalizedEmail && code) {
 					const isValid = await verifyVerificationCode(
-						email as string,
+						normalizedEmail,
 						code as string,
 					);
 					if (isValid) {
-						await setEmailVerified(email as string);
-						const [user] = await getUser(email as string);
+						await setEmailVerified(normalizedEmail);
+						const [user] = await getUser(normalizedEmail);
 						if (user) {
 							return {
 								id: user.id,
@@ -147,11 +149,11 @@ export const {
 				}
 
 				// SCENARIO 2: Normal Login with Username & Password
-				const users = await getUserByUsername(username as string);
+				const users = await getUserByIdentifier(normalizedUsername);
 
 				if (users.length === 0) {
-					if (password) {
-						await compare(password as string, generateDummyPassword());
+					if (normalizedPassword) {
+						await compare(normalizedPassword, generateDummyPassword());
 					}
 					return null;
 				}
@@ -159,13 +161,13 @@ export const {
 				const [user] = users;
 
 				if (!user.password) {
-					if (password) {
-						await compare(password as string, generateDummyPassword());
+					if (normalizedPassword) {
+						await compare(normalizedPassword, generateDummyPassword());
 					}
 					return null;
 				}
 
-				const passwordsMatch = await compare(password as string, user.password);
+				const passwordsMatch = await compare(normalizedPassword, user.password);
 
 				if (!passwordsMatch) {
 					return null;
@@ -176,8 +178,7 @@ export const {
 					process.env.ADMIN_EMAIL &&
 					user.email.toLowerCase() === process.env.ADMIN_EMAIL.toLowerCase();
 
-				const isAdminUsername =
-					((username as string) || "").toLowerCase() === "admin";
+				const isAdminUsername = normalizedUsername.toLowerCase() === "admin";
 				const isAdmin = isEnvAdminEmail || isAdminUsername;
 
 				const emailVerificationEnabled =
@@ -281,11 +282,16 @@ export const {
 	events: {
 		async linkAccount({ user, profile }) {
 			// Sync name from Google/GitHub if available
-			if ((profile as any)?.name || (profile as any)?.login) {
+			const oauthProfile = profile as
+				| { name?: string; login?: string }
+				| undefined;
+			const displayName = oauthProfile?.name || oauthProfile?.login;
+
+			if (displayName) {
 				await db
 					.update(userTable)
 					.set({
-						name: ((profile as any).name || (profile as any).login) as string,
+						name: displayName,
 					})
 					.where(eq(userTable.id, user.id as string));
 			}

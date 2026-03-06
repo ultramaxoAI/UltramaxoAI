@@ -13,6 +13,17 @@ import { auth } from "@/app/(auth)/auth";
 import { type RequestHints, systemPrompt } from "@/lib/ai/prompts";
 
 import { getLanguageModel } from "@/lib/ai/providers";
+import {
+	reportAgentStep,
+	startAgentTask,
+} from "@/lib/ai/tools/agent-mode";
+import {
+	createCodeFile,
+	deleteCodeFile,
+	listCodeFiles,
+	runWorkspaceCommand,
+	updateCodeFile,
+} from "@/lib/ai/tools/code-workspace";
 import { createDocument } from "@/lib/ai/tools/create-document";
 import { requestSuggestions } from "@/lib/ai/tools/request-suggestions";
 import { updateDocument } from "@/lib/ai/tools/update-document";
@@ -221,6 +232,8 @@ export async function POST(request: Request) {
 				selectedChatModel.includes("thinking") ||
 				selectedChatModel.includes("deepseek-r1") ||
 				deepThinkingEnabled;
+			const isIdeAgentMode =
+				Boolean(fullstackModeEnabled) || Boolean(mobileModeEnabled);
 
 			console.log("[Chat API] Model configuration:", {
 				selectedChatModel,
@@ -267,7 +280,9 @@ export async function POST(request: Request) {
 						try {
 							// Disable tools on retry, or for reasoning models — EXCEPT when web search is explicitly enabled
 							const useTools =
-								(retryCount === 0 && !isReasoningModel) || webSearchEnabled;
+								isIdeAgentMode ||
+								webSearchEnabled ||
+								(retryCount === 0 && !isReasoningModel);
 
 							if (retryCount > 0) {
 								console.log(
@@ -301,8 +316,8 @@ export async function POST(request: Request) {
 								),
 								system: baseSystemPrompt,
 								messages: modelMessages,
-								stopWhen: stepCountIs(5),
-								toolChoice: "auto",
+								stopWhen: stepCountIs(isIdeAgentMode ? 8 : 5),
+								toolChoice: isIdeAgentMode ? "required" : "auto",
 								providerOptions: isReasoningModel
 									? {
 											anthropic: {
@@ -314,6 +329,26 @@ export async function POST(request: Request) {
 									? {
 											getWeather,
 											...(webSearchEnabled ? { webSearch } : {}),
+											...(isIdeAgentMode
+												? {
+														startAgentTask: startAgentTask(),
+														reportAgentStep: reportAgentStep(),
+														listCodeFiles: listCodeFiles({ session }),
+														createCodeFile: createCodeFile({
+															session,
+															dataStream,
+														}),
+														updateCodeFile: updateCodeFile({
+															session,
+															dataStream,
+														}),
+														deleteCodeFile: deleteCodeFile({
+															session,
+															dataStream,
+														}),
+														runWorkspaceCommand: runWorkspaceCommand(),
+													}
+												: {}),
 											createDocument: createDocument({
 												session,
 												dataStream,

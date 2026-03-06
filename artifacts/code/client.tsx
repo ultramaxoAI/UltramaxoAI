@@ -283,6 +283,23 @@ function getDefaultFileName(language: SupportedLanguage): string {
 	}
 }
 
+function isPreviewableWebProject(
+	files: Array<{ name: string; content: string; language: SupportedLanguage }>,
+) {
+	return files.some(
+		(file) =>
+			file.name.endsWith(".jsx") ||
+			file.name.endsWith(".tsx") ||
+			file.name.endsWith(".html") ||
+			file.name === "App.js" ||
+			file.name === "App.tsx" ||
+			file.name === "index.html" ||
+			file.content.includes("export default function App") ||
+			file.content.includes("import React") ||
+			/<html|<!DOCTYPE/i.test(file.content),
+	);
+}
+
 const BUILT_IN_SANDBOX_DEPENDENCIES = new Set([
 	"react",
 	"react-dom",
@@ -544,16 +561,8 @@ export const codeArtifact = new Artifact<"code", Metadata>({
 				{/* Expandable Content */}
 				{isExpanded && (
 					<div className="flex w-full" style={{ height: 500 }}>
-						{/* If it's a React project, we display SandpackViewer which handles its own layout */}
-						{files.some(
-							(f) =>
-								f.name.endsWith(".jsx") ||
-								f.name.endsWith(".tsx") ||
-								f.content.includes("export default function App") ||
-								f.content.includes("import React") ||
-								f.name === "App.js" ||
-								f.name === "App.tsx",
-						) ? (
+						{/* If it's a previewable web project, display the full IDE viewer */}
+						{isPreviewableWebProject(files) ? (
 							<div className="flex-1 w-full h-full">
 								<SandpackViewer
 									dependencies={mergedDependencies}

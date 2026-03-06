@@ -11,6 +11,7 @@ import {
 	gte,
 	inArray,
 	lt,
+	or,
 	type SQL,
 	sql,
 } from "drizzle-orm";
@@ -71,12 +72,34 @@ export async function getUser(email: string): Promise<User[]> {
 
 export async function getUserByUsername(name: string): Promise<User[]> {
 	try {
-		return await db.select().from(user).where(eq(user.name, name));
+		return await db.select().from(user).where(eq(user.name, name.trim()));
 	} catch (error) {
 		console.error("Database Error (getUserByUsername):", error);
 		throw new ChatSDKError(
 			"bad_request:database",
 			"Failed to get user by username",
+		);
+	}
+}
+
+export async function getUserByIdentifier(identifier: string): Promise<User[]> {
+	const normalizedIdentifier = identifier.trim();
+
+	try {
+		return await db
+			.select()
+			.from(user)
+			.where(
+				or(
+					eq(user.email, normalizedIdentifier.toLowerCase()),
+					eq(user.name, normalizedIdentifier),
+				),
+			);
+	} catch (error) {
+		console.error("Database Error (getUserByIdentifier):", error);
+		throw new ChatSDKError(
+			"bad_request:database",
+			"Failed to get user by login identifier",
 		);
 	}
 }
@@ -87,11 +110,15 @@ export async function createUser(
 	name?: string,
 ) {
 	const hashedPassword = generateHashedPassword(password);
+	const normalizedEmail = email.trim().toLowerCase();
+	const normalizedName = name?.trim();
 
 	try {
-		return await db
-			.insert(user)
-			.values({ email, password: hashedPassword, name });
+		return await db.insert(user).values({
+			email: normalizedEmail,
+			password: hashedPassword,
+			name: normalizedName,
+		});
 	} catch (_error) {
 		throw new ChatSDKError("bad_request:database", "Failed to create user");
 	}
@@ -212,7 +239,7 @@ export async function getChatsByUserId({
 	try {
 		const extendedLimit = limit + 1;
 
-		const query = (whereCondition?: SQL<any>) =>
+		const query = (whereCondition?: SQL<unknown>) =>
 			db
 				.select()
 				.from(chat)

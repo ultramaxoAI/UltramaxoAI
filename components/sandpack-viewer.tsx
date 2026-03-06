@@ -184,6 +184,10 @@ function buildTree(paths: string[]) {
 }
 
 function getTemplate(files: PlayableFile[]) {
+	if (files.some((file) => file.name.endsWith(".html"))) {
+		return "static";
+	}
+
 	return files.some(
 		(file) => file.name.endsWith(".ts") || file.name.endsWith(".tsx"),
 	)
@@ -199,6 +203,29 @@ function buildSandpackFiles(files: PlayableFile[]) {
 		},
 		{} as Record<string, string>,
 	);
+	const isStaticTemplate = files.some((file) => file.name.endsWith(".html"));
+
+	if (isStaticTemplate) {
+		if (!sandpackFiles["/index.html"]) {
+			sandpackFiles["/index.html"] = `<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1" />
+		<title>Web Preview</title>
+		<script src="https://cdn.tailwindcss.com"></script>
+	</head>
+	<body>
+		<main style="font-family: system-ui; padding: 24px;">
+			<h1>Web preview is ready</h1>
+			<p>Create or update index.html to render your app.</p>
+		</main>
+	</body>
+</html>`;
+		}
+
+		return sandpackFiles;
+	}
 
 	if (
 		!sandpackFiles["/App.js"] &&
@@ -685,6 +712,7 @@ function PureSandpackViewer({
 	const activeFile = normalizePath(
 		files[activeFileIndex]?.name || files[0]?.name || "App.js",
 	);
+	const startRoute = template === "static" ? "/index.html" : "/";
 
 	return (
 		<div className="h-full w-full overflow-hidden bg-zinc-950">
@@ -697,6 +725,7 @@ function PureSandpackViewer({
 				template={template}
 				options={{
 					activeFile,
+					startRoute,
 					visibleFiles: Object.keys(sandpackFiles),
 				}}
 			>

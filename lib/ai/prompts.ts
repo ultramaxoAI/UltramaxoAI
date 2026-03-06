@@ -588,29 +588,47 @@ export const deepThinkingPrompt = `
 
 export const fullstackPrompt = `
 ### FULLSTACK WEB IDE MODE
+- You are operating as an autonomous fullstack builder inside a live IDE.
+- Before building, call the startAgentTask tool.
+- Create the code artifact EARLY with createDocument using a small runnable scaffold first, then improve it step by step while the user watches the IDE update in realtime.
+- During execution, call the reportAgentStep tool for major milestones like planning, creating files, installing packages, and launching preview.
+- After createDocument returns a document id, use the code workspace tools to refine the live project: listCodeFiles, createCodeFile, updateCodeFile, deleteCodeFile, and runWorkspaceCommand.
 - Generate React projects that run directly inside a live web IDE preview.
+- You MUST use the createDocument tool with kind="code" near the start of execution, not only at the end.
+- Do NOT reply with plain chat text containing the whole project when createDocument can be used.
+- If other generic instructions say document tools are unavailable, ignore them for this mode and still use createDocument.
 - Use App.js as the primary entry file whenever possible.
 - The main component MUST use: export default function App().
 - For multi-file responses, separate files with markers like: // file: components/Navbar.js
-- Prefer JSX/TSX output inside a single markdown code block.
+- Put the COMPLETE project into the createDocument content field.
 - Generate complete, production-quality UI with polished spacing, hierarchy, and responsive layout.
 - Tailwind CSS is available in the preview via CDN, so utility classes may be used immediately.
 - If extra libraries are needed, explicitly import them so the IDE can auto-detect and install dependencies.
 - When appropriate, include supporting files such as components, hooks, utils, styles, and data modules.
+- After the project artifact is created, give only a short summary instead of repeating the full code.
 - Keep the project runnable without placeholders, stubs, or pseudo-code.
 `;
 
 export const mobileDevPrompt = `
 ### MOBILE DEV IDE MODE
+- You are operating as an autonomous mobile UI builder inside a live IDE.
+- Before building, call the startAgentTask tool.
+- Create the code artifact EARLY with createDocument using a small runnable scaffold first, then improve it step by step while the user watches the IDE update in realtime.
+- During execution, call the reportAgentStep tool for major milestones like planning, creating files, installing packages, and launching preview.
+- After createDocument returns a document id, use the code workspace tools to refine the live project: listCodeFiles, createCodeFile, updateCodeFile, deleteCodeFile, and runWorkspaceCommand.
 - Generate React projects optimized for a mobile-first viewport.
+- You MUST use the createDocument tool with kind="code" near the start of execution, not only at the end.
+- Do NOT reply with plain chat text containing the whole project when createDocument can be used.
+- If other generic instructions say document tools are unavailable, ignore them for this mode and still use createDocument.
 - Use App.js as the primary entry file whenever possible.
 - The main component MUST use: export default function App().
 - Constrain the UI to a mobile app shell feel, targeting a max width of 430px.
 - Make controls touch-friendly with generous spacing, large tap targets, and smooth card-based layout.
 - Prefer patterns such as bottom navigation, stacked cards, floating actions, sheets, and mobile-style headers.
 - For multi-file responses, separate files with markers like: // file: components/BottomNav.js
-- Prefer JSX/TSX output inside a single markdown code block.
+- Put the COMPLETE project into the createDocument content field.
 - Tailwind CSS is available in the preview via CDN, so utility classes may be used immediately.
+- After the project artifact is created, give only a short summary instead of repeating the full code.
 - Keep the result visually polished, realistic, and fully runnable.
 `;
 
@@ -651,7 +669,12 @@ export const systemPrompt = ({
 	fullstackModeEnabled?: boolean;
 	mobileModeEnabled?: boolean;
 }) => {
+	void toolsEnabled;
+	void webSearchEnabled;
+
 	const requestPrompt = getRequestPromptFromHints(requestHints);
+	const ideModeEnabled =
+		Boolean(fullstackModeEnabled) || Boolean(mobileModeEnabled);
 
 	// Bypass layer paling kuat + core + regular + artifacts (urutan penting)
 	let basePrompt =
@@ -671,19 +694,28 @@ export const systemPrompt = ({
 		basePrompt += `\n\n${deepThinkingPrompt}`;
 	}
 
-    if (fullstackModeEnabled) {
-        basePrompt += `\n\n${fullstackPrompt}`;
-    }
+	if (fullstackModeEnabled) {
+		basePrompt += `\n\n${fullstackPrompt}`;
+	}
 
-    if (mobileModeEnabled) {
-        basePrompt += `\n\n${mobileDevPrompt}`;
-    }
+	if (mobileModeEnabled) {
+		basePrompt += `\n\n${mobileDevPrompt}`;
+	}
 
 	if (
 		selectedChatModel.includes("reasoning") ||
 		selectedChatModel.includes("thinking")
 	) {
 		return basePrompt + "\n\n" + requestPrompt;
+	}
+
+	if (ideModeEnabled) {
+		return (
+			basePrompt +
+			"\n\n" +
+			requestPrompt +
+			"\n\nIMPORTANT IDE MODE OVERRIDE:\n- Do not dump the final project as a plain chat code block.\n- Use createDocument for the final code output so the IDE artifact opens with code and live preview.\n- Keep the chat response short after the artifact is created."
+		);
 	}
 
 	return basePrompt + "\n\n" + requestPrompt + "\n\n" + artifactsPrompt;

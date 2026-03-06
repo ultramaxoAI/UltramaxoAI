@@ -349,6 +349,9 @@ importers:
       '@types/react-syntax-highlighter':
         specifier: ^15.5.13
         version: 15.5.13
+      baseline-browser-mapping:
+        specifier: ^2.10.0
+        version: 2.10.0
       drizzle-kit:
         specifier: ^0.25.0
         version: 0.25.0

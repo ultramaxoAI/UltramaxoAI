@@ -31,6 +31,11 @@ export default function Page() {
 				type: "error",
 				description: "Invalid username or password!",
 			});
+		} else if (state.status === "unverified") {
+			toast({
+				type: "error",
+				description: "Akun belum diverifikasi. Cek email Anda dulu.",
+			});
 		} else if (state.status === "invalid_data") {
 			toast({
 				type: "error",

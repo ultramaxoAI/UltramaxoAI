@@ -16,7 +16,7 @@ function isProduction(request: NextRequest): boolean {
 	return hostname.endsWith("ultramaxo.tech");
 }
 
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
 	const { pathname } = request.nextUrl;
 
 	/*

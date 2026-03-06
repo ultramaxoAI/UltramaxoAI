@@ -456,7 +456,7 @@ function PureMultimodalInput({
 			/>
 
 			<PromptInput
-				className="mx-auto w-full max-w-3xl rounded-[24px] bg-zinc-100 dark:bg-[#212121] border border-transparent p-1 shadow transition-all duration-300 focus-within:border-purple-500/30 focus-within:shadow-[0_0_15px_rgba(168,85,247,0.15)] dark:focus-within:shadow-[0_0_15px_rgba(168,85,247,0.25)] outline-none ring-0"
+				className="mx-auto w-full max-w-3xl rounded-3xl border border-transparent bg-zinc-100 p-1 shadow outline-none ring-0 transition-all duration-300 focus-within:border-purple-500/30 focus-within:shadow-[0_0_15px_rgba(168,85,247,0.15)] dark:bg-[#212121] dark:focus-within:shadow-[0_0_15px_rgba(168,85,247,0.25)]"
 				onSubmit={(event) => {
 					event.preventDefault();
 					if (!input.trim() && attachments.length === 0) {
@@ -849,17 +849,6 @@ function PureModelSelectorCompact({
 	const [open, setOpen] = useState(false);
 	const isPro = user?.type === "pro";
 
-	// Debug logging - COMPREHENSIVE
-	console.log("=== MODEL SELECTOR DEBUG ===");
-	console.log("Full User Object:", JSON.stringify(user, null, 2));
-	console.log("User Type:", user?.type);
-	console.log("Is Pro?:", isPro);
-	console.log(
-		"All Available Models:",
-		chatModels.map((m) => m.name),
-	);
-	console.log("===========================");
-
 	const fallbackModel =
 		chatModels.find((m) => m.id === DEFAULT_CHAT_MODEL) ?? chatModels[0];
 
@@ -884,7 +873,7 @@ function PureModelSelectorCompact({
 		<ModelSelector onOpenChange={setOpen} open={open}>
 			<ModelSelectorTrigger asChild>
 				<Button
-					className="h-8 w-[200px] justify-between px-2 hover:bg-zinc-200 dark:hover:bg-zinc-800 transition-colors"
+					className="h-8 w-50 justify-between px-2 transition-colors hover:bg-zinc-200 dark:hover:bg-zinc-800"
 					variant="ghost"
 				>
 					{provider && <ModelSelectorLogo provider={provider} />}
