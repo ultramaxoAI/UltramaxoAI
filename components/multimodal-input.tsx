@@ -456,7 +456,7 @@ function PureMultimodalInput({
 			/>
 
 			<PromptInput
-				className="mx-auto w-full max-w-[768px] rounded-[32px] bg-white dark:bg-[#1a1a1a] border border-zinc-200 dark:border-white/5 p-2 shadow-2xl transition-all duration-200 focus-within:ring-1 focus-within:ring-zinc-300 dark:focus-within:ring-white/10"
+				className="mx-auto w-full max-w-3xl rounded-3xl bg-zinc-100 dark:bg-[#212121] border border-transparent p-2.5 shadow-sm transition-all duration-200 focus-within:bg-white dark:focus-within:bg-[#2a2a2a] focus-within:shadow-xl focus-within:ring-1 focus-within:ring-zinc-200 dark:focus-within:ring-white/5"
 				onSubmit={(event) => {
 					event.preventDefault();
 					if (!input.trim() && attachments.length === 0) {
@@ -590,9 +590,9 @@ function PureMultimodalInput({
 						)}
 					</div>
 				)}
-				<div className="flex flex-row items-start px-3 pt-2 pb-0">
+				<div className="flex flex-row items-start px-3 pt-3 pb-1">
 					<PromptInputTextarea
-						className="grow resize-none border-0! bg-transparent px-1 py-0 text-base leading-relaxed text-zinc-900 dark:text-zinc-100 outline-none ring-0 [-ms-overflow-style:none] [scrollbar-width:none] placeholder:text-zinc-500 focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 [&::-webkit-scrollbar]:hidden"
+						className="grow resize-none border-0! bg-transparent px-1 py-0 text-[15px] leading-relaxed text-zinc-900 dark:text-zinc-100 outline-none ring-0 [-ms-overflow-style:none] [scrollbar-width:none] placeholder:text-zinc-500 dark:placeholder:text-zinc-400 focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 [&::-webkit-scrollbar]:hidden"
 						data-testid="multimodal-input"
 						disableAutoResize={true}
 						maxHeight={200}
@@ -767,12 +767,12 @@ function PureMultimodalInput({
 						) : (
 							<PromptInputSubmit
 								className={cn(
-									"size-9 rounded-full transition-all duration-200 flex items-center justify-center",
+									"size-10 rounded-full transition-all duration-200 flex items-center justify-center",
 									!input.trim() &&
 										uploadQueue.length === 0 &&
 										attachments.length === 0
-										? "bg-zinc-100 dark:bg-[#2a2a2a] text-zinc-400 dark:text-zinc-500"
-										: "bg-zinc-900 text-white dark:bg-white dark:text-black hover:bg-zinc-800 dark:hover:bg-zinc-200",
+										? "bg-zinc-200 dark:bg-[#333333] text-zinc-400 dark:text-zinc-500"
+										: "bg-black text-white dark:bg-white dark:text-black hover:bg-zinc-800 dark:hover:bg-zinc-200",
 								)}
 								data-testid="send-button"
 								disabled={
@@ -782,7 +782,7 @@ function PureMultimodalInput({
 								}
 								status={status}
 							>
-								<ArrowUpIcon size={18} />
+								<ArrowUpIcon size={20} />
 							</PromptInputSubmit>
 						)}
 					</div>

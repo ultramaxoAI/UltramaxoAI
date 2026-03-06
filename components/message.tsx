@@ -49,9 +49,10 @@ function MessageTextPart({
 	return (
 		<div>
 			<MessageContent
-				className={cn({
-					"wrap-break-word w-fit text-right ml-auto": messageRole === "user",
-					"bg-transparent px-0 py-0 text-left w-full":
+				className={cn("w-full", {
+					"bg-zinc-100 dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 wrap-break-word w-fit text-left ml-auto px-5 py-3.5 rounded-3xl rounded-tr-sm":
+						messageRole === "user",
+					"bg-transparent px-0 py-0 text-left w-full prose-zinc dark:prose-invert prose-p:leading-relaxed":
 						messageRole === "assistant",
 				})}
 				data-testid="message-content"
@@ -63,7 +64,9 @@ function MessageTextPart({
 						text={displayText}
 					/>
 				) : (
-					<Response>{displayText}</Response>
+					<Response className="text-[15px] leading-relaxed">
+						{displayText}
+					</Response>
 				)}
 			</MessageContent>
 			{isHuge && !expanded && (
@@ -128,7 +131,7 @@ const PurePreviewMessage = ({
 				})}
 			>
 				{message.role === "assistant" && (
-					<div className="-mt-1 flex size-8 shrink-0 items-center justify-center rounded-full bg-background ring-1 ring-border">
+					<div className="mt-1 flex size-8 shrink-0 items-center justify-center rounded-full bg-gradient-to-tr from-indigo-500 to-violet-500 text-white shadow-sm ring-1 ring-border/50">
 						<SparklesIcon size={14} />
 					</div>
 				)}
@@ -145,7 +148,7 @@ const PurePreviewMessage = ({
 								) ||
 									message.parts?.some((p) => p.type.startsWith("tool-")))) ||
 							mode === "edit",
-						"max-w-[calc(100%-2.5rem)] sm:max-w-[min(fit-content,80%)]":
+						"max-w-[calc(100%-2.5rem)] sm:max-w-[min(fit-content,85%)]":
 							message.role === "user" && mode !== "edit",
 					})}
 				>
