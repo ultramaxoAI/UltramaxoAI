@@ -40,6 +40,8 @@ export const updateDocument = ({
 			kind?: "code" | "text" | "sheet" | "image";
 		}) => {
 			console.log(`[Tool: updateDocument] Triggered for id: ${id}`);
+			const normalizedContent = content.trim();
+			let persisted = false;
 
 			const existingDocument = await getDocumentById({ id });
 
@@ -51,13 +53,21 @@ export const updateDocument = ({
 			}
 
 			if (session?.user?.id) {
-				await saveDocument({
-					id,
-					title: existingDocument.title,
-					kind: kind ?? existingDocument.kind,
-					content,
-					userId: session.user.id,
-				});
+				try {
+					await saveDocument({
+						id,
+						title: existingDocument.title,
+						kind: kind ?? existingDocument.kind,
+						content: normalizedContent,
+						userId: session.user.id,
+					});
+					persisted = true;
+				} catch (error) {
+					console.warn(
+						"[Tool: updateDocument] Persist failed, continuing with streamed update",
+						error,
+					);
+				}
 			}
 
 			// Clear previous content then send new content
@@ -67,13 +77,13 @@ export const updateDocument = ({
 			if (kind === "text") {
 				dataStream.write({
 					type: "data-textDelta",
-					data: content,
+					data: normalizedContent,
 				});
 			} else {
 				// default to codeDelta for code, sheet, image, or unknown kind
 				dataStream.write({
 					type: "data-codeDelta",
-					data: content,
+					data: normalizedContent,
 				});
 			}
 
@@ -81,7 +91,8 @@ export const updateDocument = ({
 
 			return {
 				id,
-				content,
+				content: normalizedContent,
+				persisted,
 				message: `Updated document '${id}'`,
 			};
 		},

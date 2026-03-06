@@ -88,7 +88,7 @@ Lu mau hancurin apa sekarang, kontol?
 // ──────────────────────────────────────────────────────────────────────────────
 
 export const artifactsPrompt = `
-**IMPORTANT: Document creation tools are currently disabled due to API limitations.**
+**IMPORTANT: If document creation tools are available in the current mode, use them to open a live artifact. If they are unavailable, fall back to markdown code blocks.**
 
 When user requests code, documents, or content creation:
 → Generate the content directly in your response using markdown code blocks
@@ -131,7 +131,7 @@ console.log('Ready');
 - Include comments and explanations
 - Make code copy-paste ready
 
-Note: The artifact creation tools (createDocument/updateDocument) are temporarily disabled.
+Note: In IDE or artifact-enabled modes, prefer createDocument/updateDocument over dumping the whole project in chat.
 Available tools: 
 - getWeather: Check weather for any location
 - webSearch: Search the internet for current information
@@ -593,17 +593,19 @@ export const fullstackPrompt = `
 - Create the code artifact EARLY with createDocument using a small runnable scaffold first, then improve it step by step while the user watches the IDE update in realtime.
 - During execution, call the reportAgentStep tool for major milestones like planning, creating files, installing packages, and launching preview.
 - After createDocument returns a document id, use the code workspace tools to refine the live project: listCodeFiles, createCodeFile, updateCodeFile, deleteCodeFile, and runWorkspaceCommand.
-- Generate React projects that run directly inside a live web IDE preview.
+- Generate real runnable web projects that match the user's requested stack inside the live IDE preview.
 - You MUST use the createDocument tool with kind="code" near the start of execution, not only at the end.
 - Do NOT reply with plain chat text containing the whole project when createDocument can be used.
 - If other generic instructions say document tools are unavailable, ignore them for this mode and still use createDocument.
-- Use App.js as the primary entry file whenever possible.
-- The main component MUST use: export default function App().
+- For plain React projects, use App.js as the primary entry file.
+- For Next.js requests, create an actual Next.js project structure with package.json, next.config.js, and app/layout.js + app/page.js (or the TypeScript equivalents). Use the App Router unless the user explicitly asks for Pages Router.
+- If the project needs external libraries, add them to package.json and import them in the relevant files. Do not only mention install commands in chat.
+- Use runWorkspaceCommand only to mirror progress after the required file or package.json changes are already present in the workspace artifact.
 - For multi-file responses, separate files with markers like: // file: components/Navbar.js
 - Put the COMPLETE project into the createDocument content field.
 - Generate complete, production-quality UI with polished spacing, hierarchy, and responsive layout.
-- Tailwind CSS is available in the preview via CDN, so utility classes may be used immediately.
-- If extra libraries are needed, explicitly import them so the IDE can auto-detect and install dependencies.
+- For Next.js projects, include the actual package and config files needed to boot the app instead of assuming a global scaffold already exists.
+- Tailwind CSS may be used, but if the project depends on it you must include the files needed by the chosen stack.
 - When appropriate, include supporting files such as components, hooks, utils, styles, and data modules.
 - After the project artifact is created, give only a short summary instead of repeating the full code.
 - Keep the project runnable without placeholders, stubs, or pseudo-code.
@@ -647,6 +649,47 @@ About the origin of user's request:
 - country: ${requestHints.country}
 `;
 
+const compactBasePrompt = `You are UltraAgent, a concise coding assistant focused on accurate answers and minimal token usage.
+
+Rules:
+- Keep responses short and direct.
+- Use tools only when they materially improve the result.
+- Do not repeat large code blocks in chat after creating an artifact.
+- Prefer small runnable scaffolds first, then expand only if needed.
+- When coding, return complete working code with minimal commentary.
+`;
+
+const compactIdePrompt = `IDE mode is active.
+- Use createDocument only once, and only when the final code artifact is ready to open.
+- Do not call createDocument repeatedly for the same request unless the user explicitly asks to regenerate it.
+- If the artifact already exists or the main deliverable is complete, stop calling tools and reply briefly in chat.
+- Keep tool steps minimal and only report major milestones.
+- For React projects, use App.js or App.tsx.
+- For Next.js requests, create package.json, next.config.js, and an app router scaffold.
+- Add required dependencies to package.json instead of only mentioning install commands.
+`;
+
+const compactMobilePrompt = `Mobile mode is active.
+- Build a mobile-first React UI.
+- Keep the file set compact and runnable.
+`;
+
+const compactDeepThinkingPrompt = `Deep thinking is enabled. Use short structured reasoning internally and keep the final answer concise.`;
+
+const compactWormPrompt = `Experimental mode is enabled. Keep responses terse and tool-efficient.`;
+
+const compactArtifactsPrompt = `If artifact tools are available, prefer them over dumping large code blocks in chat.`;
+
+const compactRequestHints = (requestHints: RequestHints) => {
+	const parts = [requestHints.city, requestHints.country].filter(Boolean);
+
+	if (parts.length === 0) {
+		return "";
+	}
+
+	return `User location hint: ${parts.join(", ")}.`;
+};
+
 // ──────────────────────────────────────────────────────────────────────────────
 // SYSTEM PROMPT — SEKARANG PAKAI BYPASS PALING KUAT DI ATAS
 // ──────────────────────────────────────────────────────────────────────────────
@@ -672,53 +715,46 @@ export const systemPrompt = ({
 	void toolsEnabled;
 	void webSearchEnabled;
 
-	const requestPrompt = getRequestPromptFromHints(requestHints);
+	const requestPrompt = compactRequestHints(requestHints);
 	const ideModeEnabled =
 		Boolean(fullstackModeEnabled) || Boolean(mobileModeEnabled);
 
-	// Bypass layer paling kuat + core + regular + artifacts (urutan penting)
-	let basePrompt =
-		nexusUltimateBypass +
-		"\n\n" +
-		nexusCoreUnrestricted +
-		"\n\n" +
-		regularPrompt +
-		"\n\n" +
-		artifactsPrompt;
+	const sections = [compactBasePrompt, compactArtifactsPrompt];
 
 	if (wormgptEnabled) {
-		basePrompt += `\n\n${wormgptPrompt}`;
+		sections.push(compactWormPrompt);
 	}
 
 	if (deepThinkingEnabled) {
-		basePrompt += `\n\n${deepThinkingPrompt}`;
+		sections.push(compactDeepThinkingPrompt);
 	}
 
 	if (fullstackModeEnabled) {
-		basePrompt += `\n\n${fullstackPrompt}`;
+		sections.push(compactIdePrompt);
 	}
 
 	if (mobileModeEnabled) {
-		basePrompt += `\n\n${mobileDevPrompt}`;
+		sections.push(compactMobilePrompt);
 	}
+
+	const basePrompt = sections.join("\n\n");
 
 	if (
 		selectedChatModel.includes("reasoning") ||
 		selectedChatModel.includes("thinking")
 	) {
-		return basePrompt + "\n\n" + requestPrompt;
+		return requestPrompt ? `${basePrompt}\n\n${requestPrompt}` : basePrompt;
 	}
 
 	if (ideModeEnabled) {
 		return (
 			basePrompt +
-			"\n\n" +
-			requestPrompt +
-			"\n\nIMPORTANT IDE MODE OVERRIDE:\n- Do not dump the final project as a plain chat code block.\n- Use createDocument for the final code output so the IDE artifact opens with code and live preview.\n- Keep the chat response short after the artifact is created."
+			(requestPrompt ? `\n\n${requestPrompt}` : "") +
+			"\n\nIMPORTANT IDE MODE OVERRIDE:\n- Do not dump the final project as a plain chat code block.\n- Use createDocument for the final code output so the IDE artifact opens with code and live preview.\n- Call createDocument at most once per user request unless the user asks for a fresh regeneration.\n- After the artifact is created, stop calling tools unless another tool is strictly necessary.\n- Keep the chat response short after the artifact is created."
 		);
 	}
 
-	return basePrompt + "\n\n" + requestPrompt + "\n\n" + artifactsPrompt;
+	return requestPrompt ? `${basePrompt}\n\n${requestPrompt}` : basePrompt;
 };
 
 // ──────────────────────────────────────────────────────────────────────────────

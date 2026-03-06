@@ -289,6 +289,11 @@ function isPreviewableWebProject(
 ) {
 	return files.some(
 		(file) =>
+			file.name === "package.json" ||
+			file.name === "next.config.js" ||
+			file.name === "next.config.mjs" ||
+			file.name.startsWith("app/") ||
+			file.name.startsWith("pages/") ||
 			file.name.endsWith(".jsx") ||
 			file.name.endsWith(".tsx") ||
 			file.name.endsWith(".html") ||
@@ -335,11 +340,35 @@ function detectDependencies(
 		| string
 		| Array<{ name: string; content: string; language: SupportedLanguage }>,
 ): Record<string, string> {
+	const packageJsonFiles = Array.isArray(source)
+		? source.filter((file) => file.name === "package.json")
+		: [];
 	const combinedSource = Array.isArray(source)
 		? source.map((file) => file.content).join("\n")
 		: source;
 
 	const dependencies: Record<string, string> = {};
+
+	for (const packageJsonFile of packageJsonFiles) {
+		try {
+			const parsedPackage = JSON.parse(packageJsonFile.content) as {
+				dependencies?: Record<string, string>;
+				devDependencies?: Record<string, string>;
+			};
+
+			for (const [dependencyName, version] of Object.entries({
+				...(parsedPackage.dependencies ?? {}),
+				...(parsedPackage.devDependencies ?? {}),
+			})) {
+				if (!BUILT_IN_SANDBOX_DEPENDENCIES.has(dependencyName)) {
+					dependencies[dependencyName] = version || "latest";
+				}
+			}
+		} catch {
+			// Ignore malformed package.json here and fall back to import-based detection.
+		}
+	}
+
 	const patterns = [
 		/import\s+[^'"\n]+\s+from\s+['"]([^./][^'"]*)['"]/g,
 		/import\s*\(\s*['"]([^./][^'"]*)['"]\s*\)/g,
@@ -564,7 +593,7 @@ export const codeArtifact = new Artifact<"code", Metadata>({
 
 				{/* Expandable Content */}
 				{isExpanded && (
-					<div className="flex w-full" style={{ height: 500 }}>
+					<div className="flex w-full min-h-[72vh]" style={{ height: 760 }}>
 						{/* If it's a previewable web project, display the full IDE viewer */}
 						{isPreviewableWebProject(files) ? (
 							<div className="flex-1 w-full h-full">

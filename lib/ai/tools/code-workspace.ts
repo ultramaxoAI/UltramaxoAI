@@ -216,7 +216,7 @@ export const deleteCodeFile = ({ session, dataStream }: ToolContext) => ({
 
 export const runWorkspaceCommand = () => ({
 	description:
-		"Report a virtual workspace command for the IDE, such as npm install package-name, npm run dev, or pnpm add axios. Use this to mirror an agent command log.",
+		"Report a virtual workspace command for the IDE, such as npm install package-name, npm run dev, or pnpm add axios. This only mirrors the command log and does not mutate files or install packages by itself, so required package.json and code changes must already exist before calling it.",
 	inputSchema: z.object({
 		command: z.string().min(1).describe("Command label to display"),
 		purpose: z.string().min(1).describe("Why the command is being executed"),

@@ -3,23 +3,20 @@
 import {
 	SandpackCodeEditor,
 	SandpackConsole,
+	type SandpackPredefinedTemplate,
 	SandpackPreview,
 	SandpackProvider,
 	useSandpack,
 } from "@codesandbox/sandpack-react";
 import { dracula } from "@codesandbox/sandpack-themes";
 import {
-	CheckIcon,
 	ChevronDownIcon,
 	ChevronRightIcon,
 	CodeIcon,
-	EyeIcon,
 	FileIcon,
 	FolderIcon,
-	PackageIcon,
 	PencilIcon,
 	PlusIcon,
-	TerminalIcon,
 	Trash2Icon,
 } from "lucide-react";
 import { memo, type ReactNode, useMemo, useState } from "react";
@@ -65,6 +62,54 @@ const DEFAULT_APP_FILE = `export default function App() {
       </div>
     </main>
   );
+}
+`;
+
+const DEFAULT_NEXT_LAYOUT_FILE = `export default function RootLayout({ children }) {
+	return (
+		<html lang="en">
+			<body>{children}</body>
+		</html>
+	);
+}
+`;
+
+const DEFAULT_NEXT_PAGE_FILE = `export default function HomePage() {
+	return (
+		<main style={{ minHeight: "100vh", display: "grid", placeItems: "center", fontFamily: "sans-serif" }}>
+			<div style={{ textAlign: "center", padding: 24 }}>
+				<p style={{ letterSpacing: "0.3em", textTransform: "uppercase", color: "#0f766e", fontSize: 12 }}>
+					Next.js Preview
+				</p>
+				<h1 style={{ fontSize: 40, margin: "12px 0" }}>Your app is ready.</h1>
+				<p style={{ color: "#475569" }}>
+					Ask the AI to create pages, components, routes, and project dependencies.
+				</p>
+			</div>
+		</main>
+	);
+}
+`;
+
+const DEFAULT_NEXT_CONFIG_FILE = `/** @type {import('next').NextConfig} */
+const nextConfig = {
+	reactStrictMode: true,
+};
+
+module.exports = nextConfig;
+`;
+
+const DEFAULT_NEXT_PACKAGE_JSON = `{
+	"name": "nextjs-live-preview",
+	"private": true,
+	"scripts": {
+		"dev": "next dev"
+	},
+	"dependencies": {
+		"next": "latest",
+		"react": "latest",
+		"react-dom": "latest"
+	}
 }
 `;
 
@@ -183,7 +228,27 @@ function buildTree(paths: string[]) {
 	return sortNodes(root);
 }
 
-function getTemplate(files: PlayableFile[]) {
+function isNextJsProject(files: PlayableFile[]) {
+	return files.some((file) => {
+		if (
+			file.name === "package.json" ||
+			file.name === "next.config.js" ||
+			file.name === "next.config.mjs" ||
+			file.name.startsWith("app/") ||
+			file.name.startsWith("pages/")
+		) {
+			return true;
+		}
+
+		return /from\s+["']next\//.test(file.content);
+	});
+}
+
+function getTemplate(files: PlayableFile[]): SandpackPredefinedTemplate {
+	if (isNextJsProject(files)) {
+		return "nextjs";
+	}
+
 	if (files.some((file) => file.name.endsWith(".html"))) {
 		return "static";
 	}
@@ -195,7 +260,10 @@ function getTemplate(files: PlayableFile[]) {
 		: "react";
 }
 
-function buildSandpackFiles(files: PlayableFile[]) {
+function buildSandpackFiles(
+	files: PlayableFile[],
+	template: SandpackPredefinedTemplate,
+) {
 	const sandpackFiles = files.reduce(
 		(accumulator, file) => {
 			accumulator[normalizePath(file.name)] = file.content;
@@ -203,6 +271,44 @@ function buildSandpackFiles(files: PlayableFile[]) {
 		},
 		{} as Record<string, string>,
 	);
+
+	if (template === "nextjs") {
+		if (!sandpackFiles["/package.json"]) {
+			sandpackFiles["/package.json"] = DEFAULT_NEXT_PACKAGE_JSON;
+		}
+
+		if (
+			!sandpackFiles["/next.config.js"] &&
+			!sandpackFiles["/next.config.mjs"]
+		) {
+			sandpackFiles["/next.config.js"] = DEFAULT_NEXT_CONFIG_FILE;
+		}
+
+		const hasAppRoute =
+			Boolean(sandpackFiles["/app/page.js"]) ||
+			Boolean(sandpackFiles["/app/page.jsx"]) ||
+			Boolean(sandpackFiles["/app/page.tsx"]);
+		const hasPagesRoute =
+			Boolean(sandpackFiles["/pages/index.js"]) ||
+			Boolean(sandpackFiles["/pages/index.jsx"]) ||
+			Boolean(sandpackFiles["/pages/index.tsx"]);
+
+		if (!hasAppRoute && !hasPagesRoute) {
+			sandpackFiles["/app/page.js"] = DEFAULT_NEXT_PAGE_FILE;
+		}
+
+		const hasAppLayout =
+			Boolean(sandpackFiles["/app/layout.js"]) ||
+			Boolean(sandpackFiles["/app/layout.jsx"]) ||
+			Boolean(sandpackFiles["/app/layout.tsx"]);
+
+		if (!hasPagesRoute && !hasAppLayout) {
+			sandpackFiles["/app/layout.js"] = DEFAULT_NEXT_LAYOUT_FILE;
+		}
+
+		return sandpackFiles;
+	}
+
 	const isStaticTemplate = files.some((file) => file.name.endsWith(".html"));
 
 	if (isStaticTemplate) {
@@ -290,12 +396,9 @@ function SandpackIDE({
 	"dependencies" | "status" | "userDependencies" | "onDependenciesChange"
 >) {
 	const { sandpack } = useSandpack();
-	const [activeTab, setActiveTab] = useState<"code" | "preview" | "console">(
-		"preview",
-	);
-	const [expandedFolders, setExpandedFolders] = useState<Record<string, boolean>>(
-		{},
-	);
+	const [expandedFolders, setExpandedFolders] = useState<
+		Record<string, boolean>
+	>({});
 	const [isAddingFile, setIsAddingFile] = useState(false);
 	const [newFileName, setNewFileName] = useState("");
 	const [renamingPath, setRenamingPath] = useState<string | null>(null);
@@ -304,9 +407,11 @@ function SandpackIDE({
 
 	const fileEntries = useMemo(
 		() =>
-			(Object.entries(sandpack.files) as Array<
-				[string, { code: string; hidden?: boolean }]
-			>)
+			(
+				Object.entries(sandpack.files) as Array<
+					[string, { code: string; hidden?: boolean }]
+				>
+			)
 				.filter(([, file]) => !file.hidden)
 				.sort(([leftPath], [rightPath]) => leftPath.localeCompare(rightPath)),
 		[sandpack.files],
@@ -318,11 +423,6 @@ function SandpackIDE({
 	);
 
 	const fileTree = useMemo(() => buildTree(filePaths), [filePaths]);
-
-	const allDependencies = useMemo(
-		() => Object.entries(dependencies),
-		[dependencies],
-	);
 
 	const toggleFolder = (path: string) => {
 		setExpandedFolders((current) => ({
@@ -349,7 +449,6 @@ function SandpackIDE({
 		sandpack.addFile(nextPath, createStarterContent(nextPath), true);
 		sandpack.openFile(nextPath);
 		sandpack.setActiveFile(nextPath);
-		setActiveTab("code");
 		setIsAddingFile(false);
 		setNewFileName("");
 	};
@@ -362,7 +461,9 @@ function SandpackIDE({
 
 		const currentIndex = filePaths.indexOf(path);
 		const nextActiveFile =
-			filePaths[currentIndex + 1] ?? filePaths[currentIndex - 1] ?? filePaths[0];
+			filePaths[currentIndex + 1] ??
+			filePaths[currentIndex - 1] ??
+			filePaths[0];
 
 		sandpack.deleteFile(path, true);
 
@@ -463,7 +564,6 @@ function SandpackIDE({
 						onClick={() => {
 							sandpack.openFile(node.path);
 							sandpack.setActiveFile(node.path);
-							setActiveTab("code");
 						}}
 						type="button"
 					>
@@ -523,46 +623,22 @@ function SandpackIDE({
 	return (
 		<div className="flex h-full min-h-0 flex-col bg-zinc-950">
 			<div className="flex items-center justify-between border-b border-zinc-800 px-3 py-2">
-				<div className="flex items-center gap-2">
-					{[
-						{ key: "code", label: "Code", icon: CodeIcon },
-						{ key: "preview", label: "Preview", icon: EyeIcon },
-						{ key: "console", label: "Console", icon: TerminalIcon },
-					].map((tab) => {
-						const Icon = tab.icon;
-
-						return (
-							<button
-								className={cn(
-									"flex items-center gap-2 rounded-lg px-3 py-1.5 text-sm transition-colors",
-									activeTab === tab.key
-										? "bg-zinc-800 text-white"
-										: "text-zinc-400 hover:bg-zinc-900 hover:text-zinc-200",
-								)}
-								key={tab.key}
-								onClick={() =>
-									setActiveTab(tab.key as "code" | "preview" | "console")
-								}
-								type="button"
-							>
-								<Icon className="size-4" />
-								<span>{tab.label}</span>
-							</button>
-						);
-					})}
+				<div className="flex items-center gap-2 text-sm font-medium text-zinc-200">
+					<CodeIcon className="size-4 text-cyan-400" />
+					<span>Workspace</span>
 				</div>
 
 				<div className="flex items-center gap-2 text-xs text-zinc-400">
 					<span className="rounded-full border border-zinc-700 px-2 py-1 uppercase tracking-wide">
 						{status}
 					</span>
-					<span className="rounded-full border border-zinc-700 px-2 py-1 uppercase tracking-wide">
-						{sandpack.status}
+					<span className="rounded-full border border-zinc-700 px-2 py-1 uppercase tracking-wide text-zinc-300">
+						{filePaths.length} files
 					</span>
 				</div>
 			</div>
 
-			<div className="grid min-h-0 flex-1 grid-cols-[260px_minmax(0,1fr)]">
+			<div className="grid min-h-0 flex-1 grid-cols-[300px_minmax(0,1fr)] xl:grid-cols-[340px_minmax(0,1fr)]">
 				<div className="flex min-h-0 flex-col border-r border-zinc-800 bg-zinc-950/80">
 					<div className="flex items-center justify-between border-b border-zinc-800 px-3 py-2">
 						<div className="flex items-center gap-2 text-sm font-medium text-zinc-200">
@@ -610,89 +686,14 @@ function SandpackIDE({
 				</div>
 
 				<div className="min-h-0 bg-zinc-950">
-					{activeTab === "code" && (
-						<div className="h-full min-h-0 [&_.sp-wrapper]:h-full [&_.sp-editor]:h-full [&_.sp-stack]:h-full">
-							<SandpackCodeEditor
-								showLineNumbers={true}
-								showTabs={false}
-								style={{ height: "100%" }}
-								wrapContent={false}
-							/>
-						</div>
-					)}
-
-					{activeTab === "preview" && (
-						<div className="h-full min-h-0 [&_.sp-preview]:h-full [&_.sp-stack]:h-full [&_.sp-preview-container]:h-full [&_.sp-preview-iframe]:h-full">
-							<SandpackPreview
-								showNavigator={true}
-								showOpenInCodeSandbox={false}
-								showRefreshButton={true}
-								style={{ height: "100%" }}
-							/>
-						</div>
-					)}
-
-					{activeTab === "console" && (
-						<div className="h-full min-h-0 overflow-y-auto border-l border-zinc-800 bg-zinc-950 p-3">
-							<SandpackConsole
-								className="h-full rounded-xl border border-zinc-800 bg-zinc-950"
-								maxMessageCount={200}
-								resetOnPreviewRestart={true}
-								showHeader={false}
-								showResetConsoleButton={true}
-								showRestartButton={true}
-								showSetupProgress={true}
-								showSyntaxError={true}
-								standalone={true}
-							/>
-						</div>
-					)}
-				</div>
-			</div>
-
-			<div className="border-t border-zinc-800 bg-zinc-950/90 px-3 py-3">
-				<div className="mb-2 flex items-center gap-2 text-sm font-medium text-zinc-200">
-					<PackageIcon className="size-4" />
-					<span>Dependencies</span>
-				</div>
-
-				<div className="flex flex-wrap gap-2">
-					{allDependencies.map(([dependency, version]) => (
-						<div
-							className="inline-flex items-center gap-2 rounded-full border border-zinc-700 bg-zinc-900 px-3 py-1 text-xs text-zinc-300"
-							key={dependency}
-						>
-							<span>{dependency}</span>
-							<span className="text-zinc-500">{version}</span>
-							{userDependencies[dependency] && (
-								<CheckIcon className="size-3.5 text-emerald-400" />
-							)}
-						</div>
-					))}
-				</div>
-
-				<div className="mt-3 flex flex-wrap items-center gap-2">
-					<Input
-						className="h-9 max-w-xs border-zinc-700 bg-zinc-900 text-sm"
-						onChange={(event) => setPackageInput(event.target.value)}
-						onKeyDown={(event) => {
-							if (event.key === "Enter") {
-								event.preventDefault();
-								handleAddDependency();
-							}
-						}}
-						placeholder="axios or framer-motion@latest"
-						value={packageInput}
-					/>
-					<Button
-						className="h-9"
-						onClick={handleAddDependency}
-						type="button"
-						variant="secondary"
-					>
-						<PlusIcon className="mr-2 size-4" />
-						Add Package
-					</Button>
+					<div className="h-full min-h-0 [&_.sp-wrapper]:h-full [&_.sp-editor]:h-full [&_.sp-stack]:h-full">
+						<SandpackCodeEditor
+							showLineNumbers={true}
+							showTabs={false}
+							style={{ height: "100%" }}
+							wrapContent={false}
+						/>
+					</div>
 				</div>
 			</div>
 		</div>
@@ -707,8 +708,11 @@ function PureSandpackViewer({
 	onDependenciesChange,
 	status,
 }: SandpackViewerProps) {
-	const sandpackFiles = useMemo(() => buildSandpackFiles(files), [files]);
 	const template = useMemo(() => getTemplate(files), [files]);
+	const sandpackFiles = useMemo(
+		() => buildSandpackFiles(files, template),
+		[files, template],
+	);
 	const activeFile = normalizePath(
 		files[activeFileIndex]?.name || files[0]?.name || "App.js",
 	);

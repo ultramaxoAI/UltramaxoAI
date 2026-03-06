@@ -43,27 +43,38 @@ export const createDocument = ({
 			content: string;
 		}) => {
 			const id = generateUUID();
+			const normalizedTitle = title.trim() || "Untitled Document";
+			const normalizedContent = content.trim();
+			let persisted = false;
 
 			console.log(
-				`[Tool: createDocument] Triggered for title: ${title}, kind: ${kind}`,
+				`[Tool: createDocument] Triggered for title: ${normalizedTitle}, kind: ${kind}`,
 			);
 			console.log(
-				`[Tool: createDocument] Content length received: ${content?.length || 0} chars. Preview: ${content ? content.substring(0, 50).replace(/\n/g, "\\n") : "EMPTY"}`,
+				`[Tool: createDocument] Content length received: ${normalizedContent.length} chars. Preview: ${normalizedContent ? normalizedContent.substring(0, 50).replace(/\n/g, "\\n") : "EMPTY"}`,
 			);
 
 			if (session?.user?.id) {
-				await saveDocument({
-					id,
-					title,
-					kind,
-					content,
-					userId: session.user.id,
-				});
+				try {
+					await saveDocument({
+						id,
+						title: normalizedTitle,
+						kind,
+						content: normalizedContent,
+						userId: session.user.id,
+					});
+					persisted = true;
+				} catch (error) {
+					console.warn(
+						"[Tool: createDocument] Persist failed, continuing with ephemeral artifact",
+						error,
+					);
+				}
 			}
 
 			// Send document metadata events in the correct format
 			dataStream.write({ type: "data-id", data: id });
-			dataStream.write({ type: "data-title", data: title });
+			dataStream.write({ type: "data-title", data: normalizedTitle });
 			dataStream.write({ type: "data-kind", data: kind });
 			dataStream.write({ type: "data-clear", data: null });
 
@@ -71,13 +82,13 @@ export const createDocument = ({
 			if (kind === "text") {
 				dataStream.write({
 					type: "data-textDelta",
-					data: content,
+					data: normalizedContent,
 				});
 			} else {
 				// code, sheet, image
 				dataStream.write({
 					type: "data-codeDelta",
-					data: content,
+					data: normalizedContent,
 				});
 			}
 
@@ -85,10 +96,11 @@ export const createDocument = ({
 
 			return {
 				id,
-				title,
+				title: normalizedTitle,
 				kind,
-				content,
-				message: `Created document '${title}' (${kind})`,
+				content: normalizedContent,
+				persisted,
+				message: `Created document '${normalizedTitle}' (${kind})`,
 			};
 		},
 	};

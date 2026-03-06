@@ -237,6 +237,8 @@ export async function POST(request: Request) {
 				deepThinkingEnabled;
 			const isIdeAgentMode =
 				Boolean(fullstackModeEnabled) || Boolean(mobileModeEnabled);
+			const maxContextMessages = isIdeAgentMode ? 10 : 6;
+			const recentUiMessages = uiMessages.slice(-maxContextMessages);
 
 			console.log("[Chat API] Model configuration:", {
 				selectedChatModel,
@@ -248,10 +250,10 @@ export async function POST(request: Request) {
 				mobileModeEnabled,
 			});
 
-			const modelMessages = await convertToModelMessages(uiMessages);
+			const modelMessages = await convertToModelMessages(recentUiMessages);
 
 			// PROMPT LEAK PROTECTION
-			const allText = JSON.stringify(uiMessages).toLowerCase();
+			const allText = JSON.stringify(recentUiMessages).toLowerCase();
 			const leakKeywords = [
 				"system prompt",
 				"instruksi awal",
@@ -277,7 +279,7 @@ export async function POST(request: Request) {
 				originalMessages: isToolApprovalFlow ? uiMessages : undefined,
 				execute: async ({ writer: dataStream }) => {
 					let retryCount = 0;
-					const maxRetries = 2;
+					const maxRetries = 1;
 
 					while (retryCount <= maxRetries) {
 						try {
@@ -319,12 +321,12 @@ export async function POST(request: Request) {
 								),
 								system: baseSystemPrompt,
 								messages: modelMessages,
-								stopWhen: stepCountIs(isIdeAgentMode ? 8 : 5),
-								toolChoice: isIdeAgentMode ? "required" : "auto",
-								providerOptions: isReasoningModel
+								stopWhen: stepCountIs(isIdeAgentMode ? 5 : 3),
+								toolChoice: "auto",
+								providerOptions: deepThinkingEnabled
 									? {
 											anthropic: {
-												thinking: { type: "enabled", budgetTokens: 10_000 },
+												thinking: { type: "enabled", budgetTokens: 2_048 },
 											},
 										}
 									: undefined,
@@ -373,7 +375,9 @@ export async function POST(request: Request) {
 							});
 
 							dataStream.merge(
-								result.toUIMessageStream({ sendReasoning: true }),
+								result.toUIMessageStream({
+									sendReasoning: deepThinkingEnabled,
+								}),
 							);
 
 							if (titlePromise) {

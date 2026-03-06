@@ -46,6 +46,22 @@ type DocumentToolResultData = {
 	error?: unknown;
 };
 
+function isRecord(value: unknown): value is Record<string, unknown> {
+	return typeof value === "object" && value !== null;
+}
+
+function getStringValue(value: unknown, fallback = "") {
+	return typeof value === "string" ? value : fallback;
+}
+
+function getStringArray(value: unknown) {
+	if (!Array.isArray(value)) {
+		return [];
+	}
+
+	return value.filter((item): item is string => typeof item === "string");
+}
+
 // ============================================================
 // MessageTextPart — renders text with OOM-safe truncation
 // ============================================================
@@ -405,12 +421,10 @@ const PurePreviewMessage = ({
 							const { toolCallId, state } = part;
 							const payload =
 								state === "output-available" ? part.output : part.input;
-							const agentTask = payload as {
-								mode: "fullstack" | "mobile";
-								goal: string;
-								plan: string[];
-								deliverable: string;
-							};
+							const agentTask = isRecord(payload) ? payload : {};
+							const agentMode =
+								agentTask.mode === "mobile" ? "mobile" : "fullstack";
+							const agentPlan = getStringArray(agentTask.plan);
 
 							return (
 								<Tool defaultOpen={true} key={toolCallId}>
@@ -418,13 +432,13 @@ const PurePreviewMessage = ({
 									<ToolContent>
 										<div className="space-y-4 px-4 py-4">
 											<div className="flex items-center gap-2 text-sm font-medium text-foreground">
-												{agentTask.mode === "mobile" ? (
+												{agentMode === "mobile" ? (
 													<SmartphoneIcon className="size-4 text-pink-500" />
 												) : (
 													<MonitorSmartphoneIcon className="size-4 text-orange-500" />
 												)}
 												<span>
-													{agentTask.mode === "mobile"
+													{agentMode === "mobile"
 														? "Mobile Dev Agent"
 														: "Fullstack Agent"}
 												</span>
@@ -435,7 +449,10 @@ const PurePreviewMessage = ({
 													Goal
 												</div>
 												<p className="text-sm leading-relaxed text-foreground">
-													{agentTask.goal}
+													{getStringValue(
+														agentTask.goal,
+														"Agent task started.",
+													)}
 												</p>
 											</div>
 
@@ -444,7 +461,7 @@ const PurePreviewMessage = ({
 													Execution Plan
 												</div>
 												<ul className="space-y-2">
-													{agentTask.plan.map((planItem) => (
+													{agentPlan.map((planItem) => (
 														<li
 															className="flex items-start gap-2 text-sm text-foreground"
 															key={`${toolCallId}-plan-${planItem}`}
@@ -460,7 +477,10 @@ const PurePreviewMessage = ({
 												<div className="mb-1 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
 													Deliverable
 												</div>
-												{agentTask.deliverable}
+												{getStringValue(
+													agentTask.deliverable,
+													"Preparing workspace changes.",
+												)}
 											</div>
 										</div>
 									</ToolContent>
@@ -472,14 +492,13 @@ const PurePreviewMessage = ({
 							const { toolCallId, state } = part;
 							const payload =
 								state === "output-available" ? part.output : part.input;
-							const step = payload as {
-								title: string;
-								status: "in_progress" | "completed";
-								detail: string;
-								files?: string[];
-								packages?: string[];
-								command?: string | null;
-							};
+							const step = isRecord(payload) ? payload : {};
+							const stepStatus =
+								step.status === "completed" ? "completed" : "in_progress";
+							const stepFiles = getStringArray(step.files);
+							const stepPackages = getStringArray(step.packages);
+							const stepCommand =
+								typeof step.command === "string" ? step.command : "";
 
 							return (
 								<Tool defaultOpen={true} key={toolCallId}>
@@ -488,33 +507,36 @@ const PurePreviewMessage = ({
 										<div className="space-y-3 px-4 py-4">
 											<div className="flex items-start justify-between gap-3 rounded-xl border bg-background p-3">
 												<div className="flex items-start gap-2">
-													{step.status === "completed" ? (
+													{stepStatus === "completed" ? (
 														<CheckCircle2Icon className="mt-0.5 size-4 shrink-0 text-emerald-500" />
 													) : (
 														<Clock3Icon className="mt-0.5 size-4 shrink-0 animate-pulse text-amber-500" />
 													)}
 													<div>
 														<div className="text-sm font-medium text-foreground">
-															{step.title}
+															{getStringValue(step.title, "Agent step")}
 														</div>
 														<p className="mt-1 text-sm leading-relaxed text-muted-foreground">
-															{step.detail}
+															{getStringValue(
+																step.detail,
+																"Processing workspace changes.",
+															)}
 														</p>
 													</div>
 												</div>
 												<div className="inline-flex rounded-full border px-2.5 py-1 text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
-													{step.status === "completed" ? "Done" : "Running"}
+													{stepStatus === "completed" ? "Done" : "Running"}
 												</div>
 											</div>
 
-											{step.files && step.files.length > 0 && (
+											{stepFiles.length > 0 && (
 												<div className="rounded-xl border bg-muted/40 p-3">
 													<div className="mb-2 flex items-center gap-2 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
 														<LucideSparklesIcon className="size-3.5" />
 														Files
 													</div>
 													<div className="flex flex-wrap gap-2">
-														{step.files.map((file) => (
+														{stepFiles.map((file) => (
 															<span
 																className="rounded-full border bg-background px-2.5 py-1 font-mono text-xs text-foreground"
 																key={`${toolCallId}-${file}`}
@@ -526,14 +548,14 @@ const PurePreviewMessage = ({
 												</div>
 											)}
 
-											{step.packages && step.packages.length > 0 && (
+											{stepPackages.length > 0 && (
 												<div className="rounded-xl border bg-muted/40 p-3">
 													<div className="mb-2 flex items-center gap-2 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
 														<PackageIcon className="size-3.5" />
 														Packages
 													</div>
 													<div className="flex flex-wrap gap-2">
-														{step.packages.map((pkg) => (
+														{stepPackages.map((pkg) => (
 															<span
 																className="rounded-full border bg-background px-2.5 py-1 text-xs text-foreground"
 																key={`${toolCallId}-${pkg}`}
@@ -545,13 +567,13 @@ const PurePreviewMessage = ({
 												</div>
 											)}
 
-											{step.command && (
+											{stepCommand && (
 												<div className="rounded-xl border bg-zinc-950 px-3 py-2 font-mono text-xs text-zinc-100 dark:bg-zinc-900">
 													<div className="mb-1 flex items-center gap-2 text-[11px] font-semibold uppercase tracking-wide text-zinc-400">
 														<PlayIcon className="size-3.5" />
 														Action
 													</div>
-													{step.command}
+													{stepCommand}
 												</div>
 											)}
 										</div>
@@ -572,11 +594,9 @@ const PurePreviewMessage = ({
 								state === "output-available" ? part.output : part.input;
 
 							if (type === "tool-runWorkspaceCommand") {
-								const commandResult = payload as {
-									command: string;
-									purpose: string;
-									result: string;
-								};
+								const commandResult: Record<string, unknown> = isRecord(payload)
+									? payload
+									: {};
 
 								return (
 									<Tool defaultOpen={true} key={toolCallId}>
@@ -588,19 +608,28 @@ const PurePreviewMessage = ({
 														<PlayIcon className="size-3.5" />
 														Virtual Command
 													</div>
-													{commandResult.command}
+													{getStringValue(
+														commandResult.command,
+														"Unavailable command",
+													)}
 												</div>
 												<div className="rounded-xl border bg-muted/40 p-3 text-sm text-foreground">
 													<div className="mb-1 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
 														Purpose
 													</div>
-													{commandResult.purpose}
+													{getStringValue(
+														commandResult.purpose,
+														"Virtual workspace command",
+													)}
 												</div>
 												<div className="rounded-xl border bg-background p-3 text-sm text-foreground">
 													<div className="mb-1 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
 														Result
 													</div>
-													{commandResult.result}
+													{getStringValue(
+														commandResult.result,
+														"No result available",
+													)}
 												</div>
 											</div>
 										</ToolContent>
@@ -608,13 +637,12 @@ const PurePreviewMessage = ({
 								);
 							}
 
-							const workspacePayload = payload as {
-								documentId?: string;
-								path?: string;
-								action?: string;
-								files?: string[];
-								count?: number;
-							};
+							const workspacePayload: Record<string, unknown> = isRecord(
+								payload,
+							)
+								? payload
+								: {};
+							const workspaceFiles = getStringArray(workspacePayload.files);
 
 							const titleMap: Record<string, string> = {
 								"tool-listCodeFiles": "Workspace Files",
@@ -633,7 +661,7 @@ const PurePreviewMessage = ({
 												<span>{titleMap[type] ?? "Workspace Action"}</span>
 											</div>
 
-											{workspacePayload.path && (
+											{typeof workspacePayload.path === "string" && (
 												<div className="rounded-xl border bg-background p-3 text-sm text-foreground">
 													<div className="mb-1 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
 														Path
@@ -651,24 +679,23 @@ const PurePreviewMessage = ({
 												</div>
 											)}
 
-											{workspacePayload.files &&
-												workspacePayload.files.length > 0 && (
-													<div className="rounded-xl border bg-muted/40 p-3">
-														<div className="mb-2 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
-															Files
-														</div>
-														<div className="flex flex-wrap gap-2">
-															{workspacePayload.files.map((file) => (
-																<span
-																	className="rounded-full border bg-background px-2.5 py-1 font-mono text-xs text-foreground"
-																	key={`${toolCallId}-${file}`}
-																>
-																	{file}
-																</span>
-															))}
-														</div>
+											{workspaceFiles.length > 0 && (
+												<div className="rounded-xl border bg-muted/40 p-3">
+													<div className="mb-2 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
+														Files
 													</div>
-												)}
+													<div className="flex flex-wrap gap-2">
+														{workspaceFiles.map((file) => (
+															<span
+																className="rounded-full border bg-background px-2.5 py-1 font-mono text-xs text-foreground"
+																key={`${toolCallId}-${file}`}
+															>
+																{file}
+															</span>
+														))}
+													</div>
+												</div>
+											)}
 										</div>
 									</ToolContent>
 								</Tool>

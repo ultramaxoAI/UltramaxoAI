@@ -302,10 +302,10 @@ function PureArtifact({
 									}
 								: {
 										opacity: 1,
-										x: windowWidth ? windowWidth * 0.55 : 0,
+										x: windowWidth ? windowWidth * 0.32 : 0,
 										y: 0,
 										height: windowHeight ? windowHeight : "100dvh",
-										width: windowWidth ? windowWidth * 0.45 : "45dvw",
+										width: windowWidth ? windowWidth * 0.68 : "68dvw",
 										borderRadius: 0,
 										transition: {
 											delay: 0,

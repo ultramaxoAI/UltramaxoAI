@@ -103,11 +103,84 @@ export function sanitizeText(text: string) {
 	return text.replace("<has_function_call>", "");
 }
 
+function isRecord(value: unknown): value is Record<string, unknown> {
+	return typeof value === "object" && value !== null;
+}
+
+function toDisplayText(value: unknown) {
+	if (typeof value === "string") {
+		return value;
+	}
+
+	if (value == null) {
+		return "";
+	}
+
+	try {
+		return JSON.stringify(value);
+	} catch {
+		return String(value);
+	}
+}
+
+function sanitizeMessagePart(part: unknown) {
+	if (!isRecord(part) || typeof part.type !== "string") {
+		return null;
+	}
+
+	if (part.type === "text") {
+		return {
+			...part,
+			type: "text",
+			text: toDisplayText(part.text),
+		} as UIMessagePart<CustomUIDataTypes, ChatTools>;
+	}
+
+	if (part.type === "reasoning") {
+		return {
+			...part,
+			type: "reasoning",
+			text: toDisplayText(part.text),
+		} as UIMessagePart<CustomUIDataTypes, ChatTools>;
+	}
+
+	if (part.type === "file") {
+		if (typeof part.url !== "string" || typeof part.mediaType !== "string") {
+			return null;
+		}
+
+		return {
+			...part,
+			type: "file",
+			url: part.url,
+			mediaType: part.mediaType,
+			filename: typeof part.filename === "string" ? part.filename : undefined,
+		} as UIMessagePart<CustomUIDataTypes, ChatTools>;
+	}
+
+	if (
+		part.type.startsWith("tool-") &&
+		typeof part.toolCallId === "string" &&
+		typeof part.state === "string"
+	) {
+		return part as UIMessagePart<CustomUIDataTypes, ChatTools>;
+	}
+
+	return null;
+}
+
 export function convertToUIMessages(messages: DBMessage[]): ChatMessage[] {
 	return messages.map((message) => ({
 		id: message.id,
 		role: message.role as "user" | "assistant" | "system",
-		parts: message.parts as UIMessagePart<CustomUIDataTypes, ChatTools>[],
+		parts: Array.isArray(message.parts)
+			? message.parts
+					.map(sanitizeMessagePart)
+					.filter(
+						(part): part is UIMessagePart<CustomUIDataTypes, ChatTools> =>
+							part !== null,
+					)
+			: [],
 		metadata: {
 			createdAt: formatISO(message.createdAt),
 		},
