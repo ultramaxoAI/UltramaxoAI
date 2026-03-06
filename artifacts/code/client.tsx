@@ -174,10 +174,11 @@ function parseCodeFiles(
 
 	for (let i = 0; i < matches.length; i++) {
 		const match = matches[i];
-		const fileName = match[1];
-		const startIndex = match.index! + match[0].length;
+		const fileName = match[1] ?? "code.txt";
+		const startIndex = (match.index ?? 0) + match[0].length;
+		const nextMatchIndex = matches[i + 1]?.index;
 		const endIndex =
-			i < matches.length - 1 ? matches[i + 1].index! : code.length;
+			typeof nextMatchIndex === "number" ? nextMatchIndex : code.length;
 		const content = code.substring(startIndex, endIndex).trim();
 
 		const language = detectCodeLanguage(content);
@@ -349,10 +350,7 @@ function detectDependencies(
 		for (const match of combinedSource.matchAll(pattern)) {
 			const packageName = normalizePackageName(match[1] ?? "");
 
-			if (
-				!packageName ||
-				BUILT_IN_SANDBOX_DEPENDENCIES.has(packageName)
-			) {
+			if (!packageName || BUILT_IN_SANDBOX_DEPENDENCIES.has(packageName)) {
 				continue;
 			}
 
@@ -371,44 +369,49 @@ type Metadata = {
 	userDependencies?: Record<string, string>;
 };
 
+function getErrorMessage(error: unknown) {
+	return error instanceof Error ? error.message : String(error);
+}
+
 async function executeJavaScript(
 	code: string,
 	outputCallback: (content: ConsoleOutputContent) => void,
 ): Promise<void> {
+	type ConsoleMethod = (...data: unknown[]) => void;
 	const originalLog = console.log;
 	const originalError = console.error;
 	const originalWarn = console.warn;
 
 	try {
 		// Override console methods
-		console.log = (...args: any[]) => {
+		console.log = ((...args: unknown[]) => {
 			outputCallback({
 				type: "text",
 				value: args.map((arg) => String(arg)).join(" "),
 			});
-		};
+		}) as ConsoleMethod;
 
-		console.error = (...args: any[]) => {
+		console.error = ((...args: unknown[]) => {
 			outputCallback({
 				type: "text",
 				value: `Error: ${args.map((arg) => String(arg)).join(" ")}`,
 			});
-		};
+		}) as ConsoleMethod;
 
-		console.warn = (...args: any[]) => {
+		console.warn = ((...args: unknown[]) => {
 			outputCallback({
 				type: "text",
 				value: `Warning: ${args.map((arg) => String(arg)).join(" ")}`,
 			});
-		};
+		}) as ConsoleMethod;
 
 		// Execute code
-		// eslint-disable-next-line no-eval
+		// biome-ignore lint/security/noGlobalEval: this artifact runner intentionally executes user-authored sandbox code in-browser.
 		await eval(`(async () => { ${code} })()`);
-	} catch (error: any) {
+	} catch (error: unknown) {
 		outputCallback({
 			type: "text",
-			value: `Error: ${error.message}`,
+			value: `Error: ${getErrorMessage(error)}`,
 		});
 		throw error;
 	} finally {
@@ -529,6 +532,7 @@ export const codeArtifact = new Artifact<"code", Metadata>({
 			<div className="flex flex-col w-full border border-zinc-800 rounded-xl overflow-hidden bg-zinc-900">
 				{/* Collapsible Header - Like Reagent */}
 				<button
+					type="button"
 					className="flex items-center gap-3 px-4 py-3 hover:bg-zinc-800/50 transition-colors border-b border-zinc-800"
 					onClick={() => setIsExpanded(!isExpanded)}
 				>
@@ -774,14 +778,14 @@ export const codeArtifact = new Artifact<"code", Metadata>({
 					throw new Error(
 						`Execution not supported for ${language}. Currently supports: Python, JavaScript, TypeScript, HTML.`,
 					);
-				} catch (error: any) {
+				} catch (error: unknown) {
 					setMetadata((metadata) => ({
 						...metadata,
 						outputs: [
 							...metadata.outputs.filter((output) => output.id !== runId),
 							{
 								id: runId,
-								contents: [{ type: "text", value: error.message }],
+								contents: [{ type: "text", value: getErrorMessage(error) }],
 								status: "failed",
 							},
 						],

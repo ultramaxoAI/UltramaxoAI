@@ -1,15 +1,23 @@
-import type { JSONValue } from "ai";
 import type { Session } from "next-auth";
 import { z } from "zod";
 import { saveDocument } from "@/lib/db/queries";
 import { generateUUID } from "@/lib/utils";
+
+type CreateDocumentStreamChunk =
+	| { type: "data-id"; data: string }
+	| { type: "data-title"; data: string }
+	| { type: "data-kind"; data: "code" | "text" | "sheet" | "image" }
+	| { type: "data-clear"; data: null }
+	| { type: "data-textDelta"; data: string }
+	| { type: "data-codeDelta"; data: string }
+	| { type: "data-finish"; data: null };
 
 export const createDocument = ({
 	session,
 	dataStream,
 }: {
 	session: Session | null;
-	dataStream: { write: (chunk: JSONValue) => void };
+	dataStream: { write: (chunk: CreateDocumentStreamChunk) => void };
 }) => {
 	return {
 		description:
@@ -54,26 +62,26 @@ export const createDocument = ({
 			}
 
 			// Send document metadata events in the correct format
-			dataStream.write({ type: "data-id", data: id } as JSONValue);
-			dataStream.write({ type: "data-title", data: title } as JSONValue);
-			dataStream.write({ type: "data-kind", data: kind } as JSONValue);
-			dataStream.write({ type: "data-clear", data: null } as JSONValue);
+			dataStream.write({ type: "data-id", data: id });
+			dataStream.write({ type: "data-title", data: title });
+			dataStream.write({ type: "data-kind", data: kind });
+			dataStream.write({ type: "data-clear", data: null });
 
 			// Send content in the appropriate format based on kind
 			if (kind === "text") {
 				dataStream.write({
 					type: "data-textDelta",
 					data: content,
-				} as JSONValue);
+				});
 			} else {
 				// code, sheet, image
 				dataStream.write({
 					type: "data-codeDelta",
 					data: content,
-				} as JSONValue);
+				});
 			}
 
-			dataStream.write({ type: "data-finish", data: null } as JSONValue);
+			dataStream.write({ type: "data-finish", data: null });
 
 			return {
 				id,

@@ -13,10 +13,7 @@ import { auth } from "@/app/(auth)/auth";
 import { type RequestHints, systemPrompt } from "@/lib/ai/prompts";
 
 import { getLanguageModel } from "@/lib/ai/providers";
-import {
-	reportAgentStep,
-	startAgentTask,
-} from "@/lib/ai/tools/agent-mode";
+import { reportAgentStep, startAgentTask } from "@/lib/ai/tools/agent-mode";
 import {
 	createCodeFile,
 	deleteCodeFile,
@@ -58,6 +55,12 @@ import { generateTitleFromUserMessage } from "../../actions";
 import { type PostRequestBody, postRequestBodySchema } from "./schema";
 
 export const maxDuration = 60;
+
+type StreamErrorDetails = Error & {
+	type?: string;
+	statusCode?: number;
+	cause?: unknown;
+};
 
 function getStreamContext() {
 	try {
@@ -352,11 +355,11 @@ export async function POST(request: Request) {
 											createDocument: createDocument({
 												session,
 												dataStream,
-											} as { session: any; dataStream: any }),
+											}),
 											updateDocument: updateDocument({
 												session,
 												dataStream,
-											} as { session: any; dataStream: any }),
+											}),
 											requestSuggestions: requestSuggestions({
 												session,
 												dataStream,
@@ -391,16 +394,18 @@ export async function POST(request: Request) {
 							// Success - break retry loop
 							break;
 						} catch (error: unknown) {
+							const streamError =
+								error instanceof Error ? (error as StreamErrorDetails) : null;
 							console.error(
 								`[Chat API] Error during streaming (attempt ${retryCount + 1}/${maxRetries + 1}):`,
 								error,
 							);
 							console.error("[Chat API] Error details:", {
-								message: (error as any)?.message,
-								type: (error as any)?.type,
-								statusCode: (error as any)?.statusCode,
-								cause: (error as any)?.cause,
-								stack: (error as any)?.stack?.split("\n").slice(0, 3),
+								message: streamError?.message ?? String(error),
+								type: streamError?.type,
+								statusCode: streamError?.statusCode,
+								cause: streamError?.cause,
+								stack: streamError?.stack?.split("\n").slice(0, 3),
 							});
 
 							const isFunctionError =

@@ -1,15 +1,15 @@
 "use client";
+import type { UseChatHelpers } from "@ai-sdk/react";
 import {
 	CheckCircle2Icon,
 	Clock3Icon,
+	SparklesIcon as LucideSparklesIcon,
 	MonitorSmartphoneIcon,
 	PackageIcon,
 	PlayIcon,
 	SmartphoneIcon,
-	SparklesIcon as LucideSparklesIcon,
 	WandSparklesIcon,
 } from "lucide-react";
-import type { UseChatHelpers } from "@ai-sdk/react";
 import { useState } from "react";
 import type { Vote } from "@/lib/db/schema";
 import type { ChatMessage } from "@/lib/types";
@@ -32,6 +32,19 @@ import { MessageReasoning } from "./message-reasoning";
 import { PreviewAttachment } from "./preview-attachment";
 import { ResponseViewer } from "./response-viewer";
 import { Weather, type WeatherAtLocation } from "./weather";
+
+type DocumentToolCallArgs =
+	| { title: string; kind: "image" | "text" | "code" | "sheet" }
+	| { id: string; description: string }
+	| { documentId: string };
+
+type DocumentToolResultData = {
+	id: string;
+	title: string;
+	kind: "image" | "text" | "code" | "sheet";
+	content?: string;
+	error?: unknown;
+};
 
 // ============================================================
 // MessageTextPart — renders text with OOM-safe truncation
@@ -135,8 +148,7 @@ const PurePreviewMessage = ({
 					: null;
 
 			return (
-				parsed?.type === "create-document" ||
-				parsed?.type === "update-document"
+				parsed?.type === "create-document" || parsed?.type === "update-document"
 			);
 		}) ||
 		false;
@@ -366,7 +378,7 @@ const PurePreviewMessage = ({
 											state === "input-available") && (
 											<DocumentToolCall
 												type={toolType}
-												args={part.input as any}
+												args={part.input as DocumentToolCallArgs}
 												isReadonly={isReadonly}
 											/>
 										)}
@@ -432,10 +444,10 @@ const PurePreviewMessage = ({
 													Execution Plan
 												</div>
 												<ul className="space-y-2">
-													{agentTask.plan.map((planItem, planIndex) => (
+													{agentTask.plan.map((planItem) => (
 														<li
 															className="flex items-start gap-2 text-sm text-foreground"
-															key={`${toolCallId}-plan-${planIndex}`}
+															key={`${toolCallId}-plan-${planItem}`}
 														>
 															<WandSparklesIcon className="mt-0.5 size-3.5 shrink-0 text-violet-500" />
 															<span>{planItem}</span>
@@ -626,33 +638,37 @@ const PurePreviewMessage = ({
 													<div className="mb-1 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
 														Path
 													</div>
-													<div className="font-mono text-xs">{workspacePayload.path}</div>
+													<div className="font-mono text-xs">
+														{workspacePayload.path}
+													</div>
 												</div>
 											)}
 
 											{typeof workspacePayload.count === "number" && (
 												<div className="rounded-xl border bg-muted/40 p-3 text-sm text-foreground">
-													{workspacePayload.count} files available in the virtual workspace.
+													{workspacePayload.count} files available in the
+													virtual workspace.
 												</div>
 											)}
 
-											{workspacePayload.files && workspacePayload.files.length > 0 && (
-												<div className="rounded-xl border bg-muted/40 p-3">
-													<div className="mb-2 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
-														Files
+											{workspacePayload.files &&
+												workspacePayload.files.length > 0 && (
+													<div className="rounded-xl border bg-muted/40 p-3">
+														<div className="mb-2 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
+															Files
+														</div>
+														<div className="flex flex-wrap gap-2">
+															{workspacePayload.files.map((file) => (
+																<span
+																	className="rounded-full border bg-background px-2.5 py-1 font-mono text-xs text-foreground"
+																	key={`${toolCallId}-${file}`}
+																>
+																	{file}
+																</span>
+															))}
+														</div>
 													</div>
-													<div className="flex flex-wrap gap-2">
-														{workspacePayload.files.map((file) => (
-															<span
-																className="rounded-full border bg-background px-2.5 py-1 font-mono text-xs text-foreground"
-																key={`${toolCallId}-${file}`}
-															>
-																{file}
-															</span>
-														))}
-													</div>
-												</div>
-											)}
+												)}
 										</div>
 									</ToolContent>
 								</Tool>
@@ -669,30 +685,30 @@ const PurePreviewMessage = ({
 										{state === "input-available" && (
 											<ToolInput input={part.input} />
 										)}
-										{state === "output-available" && (
-											<ToolOutput
-												errorText={undefined}
-												output={
-													(part.output as any)?.error ? (
-														<div className="rounded border p-2 text-red-500">
-															Error: {String((part.output as any).error)}
-														</div>
-													) : (
-														<DocumentToolResult
-															isReadonly={isReadonly}
-															result={
-																part.output as {
-																	id: string;
-																	title: string;
-																	kind: "image" | "text" | "code" | "sheet";
-																}
-															}
-															type="request-suggestions"
-														/>
-													)
-												}
-											/>
-										)}
+										{state === "output-available" &&
+											(() => {
+												const suggestionOutput =
+													part.output as DocumentToolResultData;
+
+												return (
+													<ToolOutput
+														errorText={undefined}
+														output={
+															suggestionOutput.error ? (
+																<div className="rounded border p-2 text-red-500">
+																	Error: {String(suggestionOutput.error)}
+																</div>
+															) : (
+																<DocumentToolResult
+																	isReadonly={isReadonly}
+																	result={suggestionOutput}
+																	type="request-suggestions"
+																/>
+															)
+														}
+													/>
+												);
+											})()}
 									</ToolContent>
 								</Tool>
 							);
@@ -706,7 +722,7 @@ const PurePreviewMessage = ({
 						const key = `message-${message.id}-annotation-${index}`;
 						const parsed =
 							typeof annotation === "object" && annotation !== null
-								? (annotation as Record<string, any>)
+								? (annotation as Record<string, unknown>)
 								: null;
 
 						if (!parsed || !("type" in parsed)) return null;
@@ -717,6 +733,15 @@ const PurePreviewMessage = ({
 						) {
 							const toolType =
 								parsed.type === "create-document" ? "create" : "update";
+							const parsedTitle =
+								typeof parsed.title === "string" ? parsed.title : "";
+							const parsedKind =
+								parsed.kind === "code" ||
+								parsed.kind === "text" ||
+								parsed.kind === "sheet" ||
+								parsed.kind === "image"
+									? parsed.kind
+									: "text";
 
 							// Since annotations are sent on execution block (call), we emulate tool properties
 							return (
@@ -729,15 +754,8 @@ const PurePreviewMessage = ({
 										<DocumentToolCall
 											type={toolType}
 											args={{
-												title: "title" in parsed ? parsed.title : "",
-												kind:
-													"kind" in parsed
-														? (parsed.kind as
-																| "code"
-																| "text"
-																| "sheet"
-																| "image")
-														: "text",
+												title: parsedTitle,
+												kind: parsedKind,
 											}}
 											isReadonly={isReadonly}
 										/>

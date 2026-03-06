@@ -94,10 +94,7 @@ function PureMessages({
 									),
 								) && <ThinkingMessage />}
 
-							<div
-								className="min-h-[24px] min-w-[24px] shrink-0"
-								ref={messagesEndRef}
-							/>
+							<div className="min-h-6 min-w-6 shrink-0" ref={messagesEndRef} />
 						</div>
 					</div>
 

@@ -97,7 +97,7 @@ export interface MultimodalInputProps {
 	setFullstackModeEnabled: Dispatch<SetStateAction<boolean>>;
 	mobileModeEnabled: boolean;
 	setMobileModeEnabled: Dispatch<SetStateAction<boolean>>;
-	user?: { type?: string; isPro?: boolean };
+	user?: { type?: string; isPro?: boolean; role?: string };
 	customModels?: Array<{ id: string; name: string; provider: string }>;
 }
 
@@ -134,9 +134,7 @@ function PureMultimodalInput({
 
 	// Grant image gen access to PRO users and admins
 	const isPro =
-		(user as any)?.type === "pro" ||
-		(user as any)?.isPro === true ||
-		(user as any)?.role === "admin";
+		user?.type === "pro" || user?.isPro === true || user?.role === "admin";
 
 	const adjustHeight = useCallback(() => {
 		if (textareaRef.current) {
