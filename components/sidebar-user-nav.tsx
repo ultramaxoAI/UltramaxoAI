@@ -84,7 +84,7 @@ export function SidebarUserNav({
 					window.location.hostname === "localhost")
 			) {
 				toast({
-					type: "info",
+					type: "success",
 					description:
 						"PWA Install simulated in Development Mode. In production, this will trigger the native prompt.",
 				});
