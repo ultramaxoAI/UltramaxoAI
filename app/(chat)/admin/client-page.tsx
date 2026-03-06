@@ -45,6 +45,11 @@ export default function AdminDashboardClient() {
 	>([]);
 	const [loading, setLoading] = useState(false);
 	const [searchQuery, setSearchQuery] = useState("");
+	const [upgradeModalOpen, setUpgradeModalOpen] = useState(false);
+	const [userToUpgrade, setUserToUpgrade] = useState<any>(null);
+	const [upgradeDurationRaw, setUpgradeDurationRaw] = useState<
+		number | "lifetime"
+	>(1);
 
 	const [voucherData, setVoucherData] = useState({
 		code: "",
@@ -183,6 +188,34 @@ export default function AdminDashboardClient() {
 			}
 		} catch {
 			toast.error("Update failed");
+		}
+	};
+
+	const submitProUpgrade = async () => {
+		if (!userToUpgrade) return;
+		try {
+			const updates: any = {
+				isPro: true,
+				limitCount: 99_999,
+			};
+			if (upgradeDurationRaw === "lifetime") {
+				updates.proExpiresAt = null;
+			} else {
+				const now = new Date();
+				const currentExpiry = userToUpgrade.proExpiresAt
+					? new Date(userToUpgrade.proExpiresAt)
+					: now;
+				const start =
+					currentExpiry.getTime() > now.getTime() ? currentExpiry : now;
+				const nextExpiry = new Date(start);
+				nextExpiry.setMonth(nextExpiry.getMonth() + upgradeDurationRaw);
+				updates.proExpiresAt = nextExpiry.toISOString();
+			}
+			await handleUpdateUser(userToUpgrade.id, updates);
+			setUpgradeModalOpen(false);
+			setUserToUpgrade(null);
+		} catch (error) {
+			toast.error("Failed to upgrade user");
 		}
 	};
 
@@ -826,12 +859,19 @@ export default function AdminDashboardClient() {
 															<button
 																type="button"
 																className="p-2.5 rounded-xl bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-900 dark:text-white transition-all shadow-lg border border-zinc-200 dark:border-zinc-700/50"
-																onClick={() =>
-																	handleUpdateUser(user.id, {
-																		isPro: !user.isPro,
-																		limitCount: user.isPro ? 0 : 99_999,
-																	})
-																}
+																onClick={() => {
+																	if (user.isPro) {
+																		handleUpdateUser(user.id, {
+																			isPro: false,
+																			limitCount: 0,
+																			proExpiresAt: null,
+																		});
+																	} else {
+																		setUserToUpgrade(user);
+																		setUpgradeDurationRaw(1);
+																		setUpgradeModalOpen(true);
+																	}
+																}}
 																title={user.isPro ? "Revoke Pro" : "Grant Pro"}
 															>
 																{user.isPro ? (
@@ -1274,6 +1314,72 @@ export default function AdminDashboardClient() {
 					</div>
 				) : null}
 			</main>
+
+			{/* Duration Selection Modal */}
+			{upgradeModalOpen && userToUpgrade && (
+				<div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-in fade-in duration-200">
+					<div className="w-full max-w-md bg-white dark:bg-zinc-900 rounded-3xl p-6 shadow-2xl border border-zinc-200 dark:border-zinc-800 animate-in zoom-in-95 duration-200">
+						<h3 className="text-xl font-bold text-zinc-900 dark:text-white mb-2">
+							Upgrade to PRO
+						</h3>
+						<p className="text-sm text-zinc-500 mb-6">
+							Select the PRO duration for{" "}
+							<strong className="text-zinc-900 dark:text-white">
+								{userToUpgrade.name || userToUpgrade.email}
+							</strong>
+							.
+						</p>
+
+						<div className="space-y-3 mb-6">
+							{[
+								{ label: "1 Month", value: 1 },
+								{ label: "3 Months", value: 3 },
+								{ label: "6 Months", value: 6 },
+								{ label: "1 Year", value: 12 },
+								{ label: "Lifetime", value: "lifetime" as const },
+							].map((durationOption) => (
+								<button
+									key={durationOption.label}
+									type="button"
+									className={`w-full flex items-center justify-between p-4 rounded-xl border-2 transition-all ${
+										upgradeDurationRaw === durationOption.value
+											? "border-indigo-500 bg-indigo-50 dark:bg-indigo-500/10 text-indigo-700 dark:text-indigo-400"
+											: "border-zinc-200 dark:border-zinc-800 hover:border-zinc-300 dark:hover:border-zinc-700 text-zinc-700 dark:text-zinc-300"
+									}`}
+									onClick={() => setUpgradeDurationRaw(durationOption.value)}
+								>
+									<span className="font-bold">{durationOption.label}</span>
+									{upgradeDurationRaw === durationOption.value && (
+										<div className="size-4 rounded-full bg-indigo-500 flex items-center justify-center">
+											<div className="size-1.5 rounded-full bg-white" />
+										</div>
+									)}
+								</button>
+							))}
+						</div>
+
+						<div className="flex items-center justify-end gap-3 mt-8">
+							<button
+								type="button"
+								className="px-4 py-2 rounded-xl text-sm font-bold text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300 transition-colors"
+								onClick={() => {
+									setUpgradeModalOpen(false);
+									setUserToUpgrade(null);
+								}}
+							>
+								Cancel
+							</button>
+							<button
+								type="button"
+								className="px-6 py-2 rounded-xl text-sm font-bold bg-zinc-900 text-white dark:bg-white dark:text-zinc-900 hover:bg-zinc-800 dark:hover:bg-zinc-200 transition-colors"
+								onClick={submitProUpgrade}
+							>
+								Confirm Upgrade
+							</button>
+						</div>
+					</div>
+				</div>
+			)}
 
 			{/* Mobile Bottom Tab Bar */}
 			<nav className="fixed bottom-0 left-0 right-0 z-50 flex md:hidden items-center justify-around border-t border-zinc-200 dark:border-zinc-800 bg-white/95 dark:bg-zinc-950/95 backdrop-blur-lg py-2 safe-bottom">
