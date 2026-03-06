@@ -234,12 +234,19 @@ export function Chat({
 					});
 				}
 			} else {
-				// Show generic error for non-ChatSDKError
-				toast({
-					type: "error",
-					description:
-						"Terjadi kesalahan saat berkomunikasi dengan AI. Silakan coba lagi.",
-				});
+				// Show generic error for non-ChatSDKError but catch the IDE Limit specifically
+				if (error instanceof Error && error.message.includes("IDE Mode Limit!")) {
+					toast({
+						type: "error",
+						description: error.message,
+					});
+				} else {
+					toast({
+						type: "error",
+						description:
+							"Terjadi kesalahan saat berkomunikasi dengan AI. Silakan coba lagi.",
+					});
+				}
 			}
 		},
 	});

@@ -40,6 +40,7 @@ import {
 	updateChatTitleById,
 	updateMessage,
 	getRecentCrossChatMemory,
+	updateUserIdeModeUsage,
 } from "@/lib/db/queries";
 import {
 	getEnabledUserApiKey,
@@ -177,6 +178,28 @@ export async function POST(request: Request) {
 							{ status: 429 },
 						);
 					}
+				}
+			}
+
+			// Daily IDE Mode Limit Check for Free Users (1x per day)
+			const isIdeAgentModeRequested = Boolean(fullstackModeEnabled) || Boolean(mobileModeEnabled);
+			if (isIdeAgentModeRequested && !customConfig && !currentUser?.isPro && currentUser?.role !== "admin") {
+				const lastIdeUsageDate = currentUser?.freeIdeModeUsedAt;
+				const today = new Date();
+				const isUsedToday =
+					lastIdeUsageDate &&
+					lastIdeUsageDate.getFullYear() === today.getFullYear() &&
+					lastIdeUsageDate.getMonth() === today.getMonth() &&
+					lastIdeUsageDate.getDate() === today.getDate();
+
+				if (isUsedToday) {
+					return new Response(
+						"IDE Mode Limit! You can only use Fullstack/Mobile Dev mode 1 time per day on a Free account. Please upgrade to PRO for unlimited usage.",
+						{ status: 429 }
+					);
+				} else {
+					// Record their 1 daily usage
+					await updateUserIdeModeUsage(session.user.id);
 				}
 			}
 

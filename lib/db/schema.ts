@@ -22,6 +22,7 @@ export const user = pgTable("user", {
 	role: text("role").default("user").notNull(),
 	isPro: boolean("isPro").default(false).notNull(),
 	limitCount: integer("limitCount").default(0).notNull(),
+	freeIdeModeUsedAt: timestamp("freeIdeModeUsedAt", { mode: "date" }),
 	proExpiresAt: timestamp("proExpiresAt", { mode: "date" }),
 	createdAt: timestamp("createdAt").defaultNow().notNull(),
 	updatedAt: timestamp("updatedAt").defaultNow().notNull(),

@@ -1401,3 +1401,16 @@ export async function getRecentCrossChatMemory({
 		return []; // Fail gracefully, return empty context
 	}
 }
+
+export async function updateUserIdeModeUsage(userId: string) {
+	try {
+		await db
+			.update(user)
+			.set({ freeIdeModeUsedAt: new Date() })
+			.where(eq(user.id, userId));
+		return true;
+	} catch (error) {
+		console.error("Database Error (updateUserIdeModeUsage):", error);
+		return false;
+	}
+}
