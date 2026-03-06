@@ -108,12 +108,11 @@ function PureChatContextHeader({
 	};
 
 	return (
-		<div className="flex items-center justify-between gap-3 px-4 py-3 border-b border-border bg-background sticky top-0 z-10">
-			{/* Left: Hamburger menu untuk mobile & Upgrade Button */}
+		<div className="flex items-center justify-between gap-3 border-b border-black/6 bg-transparent px-1 py-2 dark:border-white/8">
 			<div className="flex items-center gap-2">
 				{isMobile && (
 					<Button
-						className="h-8 w-8 p-0 rounded-lg hover:bg-accent text-muted-foreground hover:text-foreground"
+						className="h-9 w-9 rounded-full bg-transparent p-0 text-[#5f6258] hover:bg-black/4 hover:text-[#171717] dark:text-[#a6aca6] dark:hover:bg-white/6 dark:hover:text-[#f3f4f1]"
 						onClick={handleToggleSidebar}
 						size="sm"
 						variant="ghost"
@@ -126,7 +125,7 @@ function PureChatContextHeader({
 				{user && user.type !== "pro" && (
 					<Link href="/plan">
 						<Button
-							className="h-8 px-3 rounded-full bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white text-xs font-medium shadow-lg shadow-indigo-500/20 transition-all"
+							className="h-9 rounded-full bg-[#111315] px-4 text-xs font-semibold text-[#f3f4f1] hover:bg-[#1c1f22] dark:bg-[#f3f4f1] dark:text-[#111315] dark:hover:bg-[#e7e9e5]"
 							size="sm"
 						>
 							<Sparkles className="mr-1.5 h-3.5 w-3.5" />
@@ -136,19 +135,17 @@ function PureChatContextHeader({
 				)}
 			</div>
 
-			{/* Center: Chat Title */}
-			<div className="flex-1 min-w-0 text-center">
-				<h2 className="text-sm font-medium text-muted-foreground truncate">
+			<div className="min-w-0 flex-1 text-center">
+				<h2 className="truncate text-sm font-medium tracking-[-0.01em] text-[#5f6258] dark:text-[#b4bbb5]">
 					{chatTitle}
 				</h2>
 			</div>
 
-			{/* Right: Menu Button */}
 			{!isReadonly && (
 				<DropdownMenu onOpenChange={setIsMenuOpen} open={isMenuOpen}>
 					<DropdownMenuTrigger asChild>
 						<Button
-							className="h-8 w-8 p-0 rounded-lg hover:bg-accent text-muted-foreground hover:text-foreground"
+							className="h-9 w-9 rounded-full bg-transparent p-0 text-[#5f6258] hover:bg-black/4 hover:text-[#171717] dark:text-[#a6aca6] dark:hover:bg-white/6 dark:hover:text-[#f3f4f1]"
 							size="sm"
 							variant="ghost"
 						>
@@ -158,11 +155,10 @@ function PureChatContextHeader({
 					</DropdownMenuTrigger>
 					<DropdownMenuContent
 						align="end"
-						className="w-56 bg-white dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800 rounded-xl shadow-lg z-50"
+						className="z-50 w-56 rounded-2xl border-black/8 bg-white shadow-lg backdrop-blur dark:border-white/8 dark:bg-[#17181a]"
 					>
-						{/* Visibility Selector */}
 						<div className="px-2 py-1.5">
-							<div className="text-xs font-medium text-muted-foreground mb-2">
+							<div className="mb-2 text-xs font-medium text-muted-foreground">
 								Chat Visibility
 							</div>
 							<VisibilitySelector

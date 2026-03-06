@@ -31,7 +31,7 @@ const pricingPlans = [
 	},
 	{
 		name: "Pro",
-		price: "Rp 20.000",
+		price: "Rp 30.000",
 		period: "per bulan",
 		desc: "Untuk yang butuh lebih — tanpa batas",
 		features: [
@@ -49,7 +49,7 @@ const pricingPlans = [
 	},
 	{
 		name: "1 Tahun",
-		price: "Rp 120.000",
+		price: "Rp 150.000",
 		period: "per tahun",
 		desc: "Hemat lebih banyak dengan paket tahunan",
 		features: [

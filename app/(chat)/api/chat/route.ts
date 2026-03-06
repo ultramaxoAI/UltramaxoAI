@@ -39,6 +39,7 @@ import {
 	saveMessages,
 	updateChatTitleById,
 	updateMessage,
+	getRecentCrossChatMemory,
 } from "@/lib/db/queries";
 import {
 	getEnabledUserApiKey,
@@ -237,7 +238,7 @@ export async function POST(request: Request) {
 				deepThinkingEnabled;
 			const isIdeAgentMode =
 				Boolean(fullstackModeEnabled) || Boolean(mobileModeEnabled);
-			const maxContextMessages = isIdeAgentMode ? 10 : 6;
+			const maxContextMessages = isIdeAgentMode ? 10 : 30; // Increased context history!
 			const recentUiMessages = uiMessages.slice(-maxContextMessages);
 
 			console.log("[Chat API] Model configuration:", {
@@ -249,6 +250,19 @@ export async function POST(request: Request) {
 				fullstackModeEnabled,
 				mobileModeEnabled,
 			});
+
+			// Fetch CROSS-CHAT MEMORY based on Pro status
+			const isPro = currentUser?.isPro === true || currentUser?.role === "admin";
+			const memoryLimit = isPro ? 15 : 6;
+			const crossChatMemoryData = await getRecentCrossChatMemory({
+				userId: session.user.id,
+				currentChatId: id,
+				limit: memoryLimit
+			});
+			
+			const crossChatContext = crossChatMemoryData.length > 0 
+				? `\n\n[CROSS-CHAT MEMORY]\nInformasi dari obrolan user sebelumnya di chat lain (Gunakan sebagai konteks jika relevan):\n${crossChatMemoryData.map((m: any, i: number) => `${i+1}. "${m.content}"`).join("\n")}`
+				: "";
 
 			const modelMessages = await convertToModelMessages(recentUiMessages);
 
@@ -305,6 +319,12 @@ export async function POST(request: Request) {
 								fullstackModeEnabled,
 								mobileModeEnabled,
 							});
+
+							// Append cross-chat memory to the system prompt
+							if (crossChatContext) {
+								baseSystemPrompt += crossChatContext;
+								console.log(`[Chat API] Injected ${crossChatMemoryData.length} cross-chat memories (Max: ${memoryLimit})`);
+							}
 
 							// Prepend Personalization Custom Instructions
 							if (customInstructions) {

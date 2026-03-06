@@ -1349,3 +1349,55 @@ export async function getVisitorInsights() {
 		);
 	}
 }
+
+export async function getRecentCrossChatMemory({
+	userId,
+	currentChatId,
+	limit = 6,
+}: {
+	userId: string;
+	currentChatId: string;
+	limit?: number;
+}) {
+	try {
+		const recentMessagesRaw = await db
+			.select({
+				parts: message.parts,
+				createdAt: message.createdAt,
+				chatId: chat.id,
+				title: chat.title,
+			})
+			.from(message)
+			.innerJoin(chat, eq(message.chatId, chat.id))
+			.where(
+				and(
+					eq(chat.userId, userId),
+					eq(message.role, "user"),
+					sql`${chat.id} != ${currentChatId}`,
+				),
+			)
+			.orderBy(desc(message.createdAt))
+			.limit(limit);
+
+		// Extract text content from parts
+		return recentMessagesRaw.map((msg) => {
+			let textContent = "";
+			if (Array.isArray(msg.parts)) {
+				for (const part of msg.parts) {
+					if (part.type === "text" && typeof part.text === "string") {
+						textContent += part.text + " ";
+					}
+				}
+			}
+			return {
+				content: textContent.trim(),
+				createdAt: msg.createdAt,
+				chatId: msg.chatId,
+				title: msg.title,
+			};
+		}).filter(m => m.content.length > 0);
+	} catch (error) {
+		console.error("Database Error (getRecentCrossChatMemory):", error);
+		return []; // Fail gracefully, return empty context
+	}
+}

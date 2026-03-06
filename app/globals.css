@@ -223,6 +223,40 @@
 	}
 }
 
+@keyframes ultramaxo-float {
+	0%,
+	100% {
+		transform: translate3d(0, 0, 0);
+	}
+
+	50% {
+		transform: translate3d(0, -10px, 0);
+	}
+}
+
+@keyframes ultramaxo-pulse {
+	0%,
+	100% {
+		opacity: 0.45;
+		transform: scale(1);
+	}
+
+	50% {
+		opacity: 1;
+		transform: scale(1.08);
+	}
+}
+
+@keyframes ultramaxo-sheen {
+	0% {
+		transform: translateX(-160%) skewX(-18deg);
+	}
+
+	100% {
+		transform: translateX(220%) skewX(-18deg);
+	}
+}
+
 @utility text-balance {
   text-wrap: balance;
 }
@@ -252,6 +286,79 @@
 			--background-start-rgb: 0, 0, 0;
 			--background-end-rgb: 0, 0, 0;
 		}
+	}
+
+	.ambient-float {
+		animation: ultramaxo-float 8s ease-in-out infinite;
+	}
+
+	.status-pulse {
+		animation: ultramaxo-pulse 2.8s ease-in-out infinite;
+	}
+
+	.interactive-surface {
+		position: relative;
+		transition:
+			transform 240ms cubic-bezier(0.22, 1, 0.36, 1),
+			box-shadow 240ms cubic-bezier(0.22, 1, 0.36, 1),
+			border-color 240ms ease,
+			background-color 240ms ease;
+		will-change: transform;
+	}
+
+	.interactive-surface:hover {
+		transform: translateY(-4px);
+		box-shadow: 0 24px 60px rgb(23 23 23 / 10%);
+	}
+
+	.dark .interactive-surface:hover {
+		box-shadow: 0 24px 60px rgb(0 0 0 / 28%);
+	}
+
+	.interactive-button {
+		position: relative;
+		overflow: hidden;
+		transition:
+			transform 180ms cubic-bezier(0.22, 1, 0.36, 1),
+			box-shadow 220ms cubic-bezier(0.22, 1, 0.36, 1),
+			background-color 220ms ease,
+			color 220ms ease,
+			border-color 220ms ease;
+		will-change: transform;
+	}
+
+	.interactive-button:hover {
+		transform: translateY(-2px);
+	}
+
+	.interactive-button:active {
+		transform: translateY(0) scale(0.985);
+	}
+
+	.interactive-button::after {
+		content: "";
+		position: absolute;
+		inset: 0;
+		background: linear-gradient(110deg, transparent 25%, rgb(255 255 255 / 32%), transparent 75%);
+		opacity: 0;
+		pointer-events: none;
+	}
+
+	.interactive-button:hover::after {
+		opacity: 1;
+		animation: ultramaxo-sheen 900ms ease;
+	}
+
+	.interactive-chip {
+		transition:
+			transform 180ms cubic-bezier(0.22, 1, 0.36, 1),
+			background-color 180ms ease,
+			border-color 180ms ease,
+			color 180ms ease;
+	}
+
+	.interactive-chip:hover {
+		transform: translateY(-2px);
 	}
 }
 
@@ -341,21 +448,44 @@
 	@apply bg-blue-200 hover:bg-blue-300 dark:hover:bg-blue-400/50 dark:text-blue-50 dark:bg-blue-500/40;
 }
 
-/* Typewriter effect for streaming AI responses */
+/* Typewriter effect for streaming AI responses — DeepSeek/ChatGPT style */
 @keyframes typewriter-blink {
-	0%,
-	100% {
-		opacity: 1;
-	}
-	50% {
+	0%, 100% { opacity: 1; }
+	50% { opacity: 0; }
+}
+
+@keyframes token-fade-in {
+	from {
 		opacity: 0;
+		filter: blur(2px);
+		transform: translateY(2px);
+	}
+	to {
+		opacity: 1;
+		filter: blur(0);
+		transform: translateY(0);
 	}
 }
 
+/* Blinking caret cursor — appears at end of streaming text */
 .streaming-cursor::after {
 	content: "▋";
-	animation: typewriter-blink 1s infinite;
-	margin-left: 2px;
+	display: inline-block;
+	animation: typewriter-blink 530ms steps(2, start) infinite;
+	margin-left: 1px;
+	color: #a78bfa;
+	font-weight: 400;
+	vertical-align: baseline;
+	text-shadow: 0 0 8px rgba(167, 139, 250, 0.5);
+}
+
+/* Smooth fade-in for each new token/word during streaming */
+.streaming-cursor > div > *:last-child,
+.streaming-cursor > *:last-child,
+.streaming-cursor p:last-of-type,
+.streaming-cursor li:last-of-type,
+.streaming-cursor pre:last-of-type {
+	animation: token-fade-in 150ms ease-out;
 }
 
 /* minimal scrollbar styling */

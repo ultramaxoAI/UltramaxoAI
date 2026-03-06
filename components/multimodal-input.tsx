@@ -454,7 +454,7 @@ function PureMultimodalInput({
 			/>
 
 			<PromptInput
-				className="mx-auto w-full max-w-3xl rounded-3xl border border-transparent bg-zinc-100 p-1 shadow outline-none ring-0 transition-all duration-300 focus-within:border-purple-500/30 focus-within:shadow-[0_0_15px_rgba(168,85,247,0.15)] dark:bg-[#212121] dark:focus-within:shadow-[0_0_15px_rgba(168,85,247,0.25)]"
+				className="mx-auto w-full max-w-3xl rounded-[28px] border border-zinc-200 bg-white p-1 outline-none ring-0 transition-colors dark:border-white/10 dark:bg-[#212121]"
 				onSubmit={(event) => {
 					event.preventDefault();
 					if (!input.trim() && attachments.length === 0) {
@@ -588,21 +588,22 @@ function PureMultimodalInput({
 						)}
 					</div>
 				)}
-				<div className="flex flex-row items-start px-2 pt-2.5 pb-0">
+				<div className={cn("flex flex-row items-start px-2 pt-2.5 pb-0", status !== "ready" && "opacity-50 pointer-events-none")}>
 					<PromptInputTextarea
 						className="grow resize-none border-0! bg-transparent px-1 py-0 text-[15px] leading-relaxed text-zinc-900 dark:text-zinc-100 outline-none ring-0 [-ms-overflow-style:none] [scrollbar-width:none] placeholder:text-zinc-500 dark:placeholder:text-zinc-400 focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 [&::-webkit-scrollbar]:hidden"
 						data-testid="multimodal-input"
 						disableAutoResize={true}
+						disabled={status !== "ready"}
 						maxHeight={200}
 						minHeight={20}
 						onChange={handleInput}
-						placeholder="Send a message..."
+						placeholder={status !== "ready" ? "Wait for AI to finish..." : "Send a message..."}
 						ref={textareaRef}
 						rows={1}
 						value={input}
 					/>
 				</div>
-				<PromptInputToolbar className="flex items-center justify-between px-2 pb-1 pt-0 relative">
+				<PromptInputToolbar className="relative flex items-center justify-between px-2 pb-1 pt-0">
 					<PromptInputTools className="flex items-center gap-1.5">
 						{/* Dropdown Menu All-in-One - + Icon */}
 						<DropdownMenu>
@@ -747,16 +748,14 @@ function PureMultimodalInput({
 
 					{/* Right side: Model Selector + Submit */}
 					<div className="flex items-center gap-2">
-						<div className="bg-zinc-100 dark:bg-[#2a2a2a] rounded-full px-2 py-0.5 flex items-center h-9 text-sm text-zinc-700 dark:text-zinc-300">
-							<ModelSelectorCompact
-								onModelChange={onModelChange}
-								selectedModelId={selectedModelId}
-								user={user}
-								customModels={customModels}
-							/>
-						</div>
+						<ModelSelectorCompact
+							onModelChange={onModelChange}
+							selectedModelId={selectedModelId}
+							user={user}
+							customModels={customModels}
+						/>
 
-						{status === "submitted" ? (
+						{status === "submitted" || status === "streaming" ? (
 							<StopButton
 								className="size-9"
 								setMessages={setMessages}
@@ -871,11 +870,11 @@ function PureModelSelectorCompact({
 		<ModelSelector onOpenChange={setOpen} open={open}>
 			<ModelSelectorTrigger asChild>
 				<Button
-					className="h-8 w-50 justify-between px-2 transition-colors hover:bg-zinc-200 dark:hover:bg-zinc-800"
+						className="h-9 min-w-0 max-w-48 justify-between gap-2 rounded-xl px-2 text-zinc-700 transition-colors hover:bg-zinc-100 dark:text-zinc-300 dark:hover:bg-white/6"
 					variant="ghost"
 				>
 					{provider && <ModelSelectorLogo provider={provider} />}
-					<ModelSelectorName>{selectedModel.name}</ModelSelectorName>
+						<ModelSelectorName>{selectedModel.name}</ModelSelectorName>
 				</Button>
 			</ModelSelectorTrigger>
 			<ModelSelectorContent>

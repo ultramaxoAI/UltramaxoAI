@@ -25,6 +25,24 @@ import { toast } from "./toast";
 import { Button } from "./ui/button";
 import type { VisibilityType } from "./visibility-selector";
 
+const emptyStatePrompts = [
+	{
+		title: "Rancang landing page",
+		description: "Susun hero, CTA, dan alur section untuk produk AI workspace.",
+		prompt: "Bantu saya rancang landing page premium untuk produk AI workspace dengan tone modern dan jelas.",
+	},
+	{
+		title: "Analisis file kerja",
+		description: "Ringkas isi file, cari masalah utama, lalu urutkan perbaikannya.",
+		prompt: "Tolong analisis file yang saya upload, jelaskan masalah utamanya, lalu beri urutan perbaikannya.",
+	},
+	{
+		title: "Mulai mode fullstack",
+		description: "Rancang flow feature, API, state, dan komponen yang perlu dibuat.",
+		prompt: "Bantu saya rancang fitur fullstack dari UI, API, database, sampai deployment checklist.",
+	},
+];
+
 export function Chat({
 	id,
 	initialMessages,
@@ -251,6 +269,24 @@ export function Chat({
 	const [attachments, setAttachments] = useState<Attachment[]>([]);
 	const isArtifactVisible = useArtifactSelector((state) => state.isVisible);
 
+	const handleStarterPrompt = (prompt: string) => {
+		setInput(prompt);
+		requestAnimationFrame(() => {
+			const textarea = document.querySelector("textarea");
+			if (textarea instanceof HTMLTextAreaElement) {
+				textarea.focus();
+				textarea.setSelectionRange(textarea.value.length, textarea.value.length);
+			}
+		});
+	};
+
+	const activeModes = [
+		fullstackModeEnabled ? "fullstack" : null,
+		mobileModeEnabled ? "mobile" : null,
+		deepThinkingEnabled ? "deep think" : null,
+		webSearchEnabled ? "web" : null,
+	].filter(Boolean) as string[];
+
 	useAutoResume({
 		autoResume,
 		initialMessages,
@@ -262,141 +298,172 @@ export function Chat({
 		<>
 			<div
 				className={cn(
-					"flex h-dvh min-w-0 flex-col bg-background relative transition-all duration-300 ease-in-out",
+					"relative flex h-dvh min-w-0 flex-col overflow-hidden bg-[#f7f7f4] text-[#171717] transition-all duration-300 ease-in-out dark:bg-[#111213] dark:text-[#f3f4f1]",
 					isArtifactVisible ? "lg:w-[55%]" : "w-full",
 				)}
 			>
-				{/* Header dengan absolute positioning agar center */}
-				<div className="absolute top-0 left-0 right-0 z-20">
-					<ChatContextHeader
-						chatId={id}
-						isReadonly={isReadonly}
-						selectedVisibilityType={initialVisibilityType}
-						user={user}
-					/>
+				<div className="pointer-events-none absolute inset-x-0 top-0 h-32 bg-[linear-gradient(180deg,rgba(17,19,21,0.03),transparent)] dark:bg-[linear-gradient(180deg,rgba(255,255,255,0.02),transparent)]" />
+
+				<div className="pointer-events-none absolute left-0 right-0 top-0 z-20 px-3 pt-2 sm:px-4 sm:pt-2.5">
+					<div className="pointer-events-auto mx-auto max-w-4xl">
+						<ChatContextHeader
+							chatId={id}
+							isReadonly={isReadonly}
+							selectedVisibilityType={initialVisibilityType}
+							user={user}
+						/>
+					</div>
 				</div>
 
-				{/* Main content area with proper centering - offset untuk header */}
 				<div
-					className={`flex flex-1 flex-col min-w-0 overflow-hidden pt-13 ${
+					className={`relative z-10 flex min-w-0 flex-1 flex-col overflow-hidden pt-15 sm:pt-16 ${
 						messages.length === 0 ? "items-center justify-center" : ""
 					}`}
 				>
-					{/* Messages container with centered max-width */}
 					{messages.length > 0 && (
-						<div className="flex flex-1 flex-col overflow-hidden">
-							<Messages
-								addToolApprovalResponse={addToolApprovalResponse}
-								chatId={id}
-								isArtifactVisible={isArtifactVisible}
-								isReadonly={isReadonly}
-								messages={messages}
-								regenerate={regenerate}
-								selectedModelId={initialChatModel}
-								setMessages={setMessages}
-								status={status}
-								votes={votes}
-							/>
+						<div className="flex flex-1 flex-col overflow-hidden px-3 pb-3 sm:px-4 sm:pb-4">
+							<div className="mx-auto flex h-full w-full max-w-4xl flex-1 flex-col overflow-hidden">
+								<Messages
+									addToolApprovalResponse={addToolApprovalResponse}
+									chatId={id}
+									isArtifactVisible={isArtifactVisible}
+									isReadonly={isReadonly}
+									messages={messages}
+									regenerate={regenerate}
+									selectedModelId={initialChatModel}
+									setMessages={setMessages}
+									status={status}
+									votes={votes}
+								/>
+							</div>
 						</div>
 					)}
 
-					{/* Centered greeting + input container for empty state */}
 					{messages.length === 0 && (
-						<div className="w-full max-w-3xl px-4 space-y-8">
-							<Messages
-								addToolApprovalResponse={addToolApprovalResponse}
-								chatId={id}
-								isArtifactVisible={isArtifactVisible}
-								isReadonly={isReadonly}
-								messages={messages}
-								regenerate={regenerate}
-								selectedModelId={initialChatModel}
-								setMessages={setMessages}
-								status={status}
-								votes={votes}
-							/>
-
-							{isReadonly ? (
-								<div className="flex w-full items-center justify-center p-4">
-									<div className="flex flex-col items-center gap-2 rounded-xl border border-dashed border-zinc-200 bg-zinc-50/50 p-6 text-center dark:border-zinc-800 dark:bg-zinc-900/50 w-full">
-										<p className="text-sm text-zinc-500 dark:text-zinc-400">
-											Please sign in to start chatting with Ultramaxo AI.
+						<div className="flex w-full flex-1 items-center justify-center px-4 pb-4">
+							<div className="mx-auto w-full max-w-4xl space-y-4">
+								<div className="px-4 py-8 sm:px-8 sm:py-10">
+									<div className="mx-auto max-w-2xl text-center">
+										<div className="inline-flex rounded-full border border-black/8 bg-white/70 px-3 py-1 text-[11px] font-medium tracking-[0.14em] uppercase text-[#6b6b63] dark:border-white/10 dark:bg-white/5 dark:text-[#9ca39d]">
+											Ultramaxo Workspace
+										</div>
+										<h1 className="mt-5 text-balance text-3xl font-semibold tracking-[-0.04em] text-[#171717] sm:text-4xl dark:text-[#f3f4f1]">
+											Mau bantu apa hari ini?
+										</h1>
+										<p className="mt-4 text-sm leading-7 text-[#5f6258] dark:text-[#a6aca6] sm:text-base">
+											Mulai dengan prompt singkat. Kalau perlu, lanjutkan ke artifact, file analysis, atau flow fullstack tanpa pindah konteks.
 										</p>
-										<div className="flex gap-4 mt-2">
-											<Button asChild size="sm" variant="outline">
+										{activeModes.length > 0 && (
+											<div className="mt-5 flex flex-wrap justify-center gap-2">
+												{activeModes.map((mode) => (
+													<span
+														className="rounded-full border border-black/8 px-3 py-1 text-xs text-[#5f6258] dark:border-white/10 dark:text-[#a6aca6]"
+														key={mode}
+													>
+														{mode}
+													</span>
+												))}
+											</div>
+										)}
+									</div>
+
+									<div className="mt-8 grid gap-3 sm:grid-cols-3">
+										{emptyStatePrompts.map((item) => (
+											<button
+												className="rounded-3xl border border-black/6 bg-white/85 p-4 text-left transition-colors hover:bg-[#f3f2ed] dark:border-white/8 dark:bg-white/5 dark:hover:bg-white/8"
+												key={item.title}
+												onClick={() => handleStarterPrompt(item.prompt)}
+												type="button"
+											>
+												<div className="text-sm font-semibold text-[#171717] dark:text-[#f3f4f1]">
+													{item.title}
+												</div>
+												<p className="mt-2 text-sm leading-6 text-[#5f6258] dark:text-[#a6aca6]">
+													{item.description}
+												</p>
+											</button>
+										))}
+									</div>
+								</div>
+
+								{isReadonly ? (
+									<div className="rounded-3xl border border-dashed border-black/8 bg-white/85 px-6 py-5 text-center dark:border-white/10 dark:bg-white/5">
+										<p className="text-sm text-[#5f6258] dark:text-[#a6aca6]">
+											Masuk dulu untuk mulai ngobrol dan buka workspace penuh Ultramaxo AI.
+										</p>
+										<div className="mt-4 flex justify-center gap-3">
+											<Button asChild className="rounded-full" size="sm" variant="outline">
 												<Link href="/login">Sign In</Link>
 											</Button>
-											<Button asChild size="sm">
+											<Button asChild className="rounded-full" size="sm">
 												<Link href="/register">Create Account</Link>
 											</Button>
 										</div>
 									</div>
-								</div>
-							) : isAtLimit ? (
-								<div className="flex w-full items-center justify-center p-4">
-									<div className="flex flex-col items-center gap-3 rounded-xl border-dashed border-zinc-200 bg-zinc-50/50 p-6 text-center dark:border-zinc-800 dark:bg-zinc-900/50 w-full border">
-										<p className="text-sm font-medium text-zinc-900 dark:text-zinc-100">
+								) : isAtLimit ? (
+									<div className="rounded-3xl border border-dashed border-black/8 bg-white/85 px-6 py-5 text-center dark:border-white/10 dark:bg-white/5">
+										<p className="text-sm font-medium text-[#171717] dark:text-[#f3f4f1]">
 											You have reached your free daily limit of 10 messages.
 										</p>
-										<p className="text-xs text-zinc-500 dark:text-zinc-400 mb-2">
-											Upgrade to PRO for unlimited messages, or wait until
-											tomorrow.
+										<p className="mt-2 text-xs text-[#5f6258] dark:text-[#a6aca6]">
+											Upgrade to PRO for unlimited messages, or wait until tomorrow.
 										</p>
-										<div className="flex gap-4">
-											<Button asChild size="sm">
+										<div className="mt-4 flex justify-center">
+											<Button asChild className="rounded-full" size="sm">
 												<Link href="/plan">Upgrade to PRO</Link>
 											</Button>
 										</div>
 									</div>
-								</div>
-							) : (
-								<MultimodalInput
-									attachments={attachments}
-									chatId={id}
-									deepThinkingEnabled={deepThinkingEnabled}
-									input={input}
-									messages={messages}
-									onModelChange={setCurrentModelId}
-									selectedModelId={currentModelId}
-									selectedVisibilityType={visibilityType}
-									sendMessage={sendMessage}
-									setAttachments={setAttachments}
-									setDeepThinkingEnabled={setDeepThinkingEnabled}
-									setInput={setInput}
-									setMessages={setMessages}
-									setWebSearchEnabled={setWebSearchEnabled}
-									setWormgptEnabled={setWormgptEnabled}
-									fullstackModeEnabled={fullstackModeEnabled}
-									setFullstackModeEnabled={setFullstackModeEnabled}
-									mobileModeEnabled={mobileModeEnabled}
-									setMobileModeEnabled={setMobileModeEnabled}
-									status={status}
-									stop={stop}
-									user={user}
-									webSearchEnabled={webSearchEnabled}
-									wormgptEnabled={wormgptEnabled}
-									customModels={customModels}
-								/>
-							)}
+								) : (
+									<div className="mx-auto w-full max-w-3xl">
+										<MultimodalInput
+											attachments={attachments}
+											chatId={id}
+											deepThinkingEnabled={deepThinkingEnabled}
+											input={input}
+											messages={messages}
+											onModelChange={setCurrentModelId}
+											selectedModelId={currentModelId}
+											selectedVisibilityType={visibilityType}
+											sendMessage={sendMessage}
+											setAttachments={setAttachments}
+											setDeepThinkingEnabled={setDeepThinkingEnabled}
+											setInput={setInput}
+											setMessages={setMessages}
+											setWebSearchEnabled={setWebSearchEnabled}
+											setWormgptEnabled={setWormgptEnabled}
+											fullstackModeEnabled={fullstackModeEnabled}
+											setFullstackModeEnabled={setFullstackModeEnabled}
+											mobileModeEnabled={mobileModeEnabled}
+											setMobileModeEnabled={setMobileModeEnabled}
+											status={status}
+											stop={stop}
+											user={user}
+											webSearchEnabled={webSearchEnabled}
+											wormgptEnabled={wormgptEnabled}
+											customModels={customModels}
+										/>
+									</div>
+								)}
+							</div>
 						</div>
 					)}
 				</div>
 
-				{/* Bottom input for active chat state */}
 				{messages.length > 0 && (
-					<div className="w-full px-4 pb-4">
-						<div className="mx-auto w-full max-w-3xl">
+					<div className="relative z-10 w-full px-3 pb-3 sm:px-4 sm:pb-4">
+						<div className="mx-auto w-full max-w-4xl">
 							{isReadonly ? (
 								<div className="flex w-full items-center justify-center p-4">
-									<div className="flex flex-col items-center gap-2 rounded-xl border border-dashed border-zinc-200 bg-zinc-50/50 p-6 text-center dark:border-zinc-800 dark:bg-zinc-900/50 w-full">
-										<p className="text-sm text-zinc-500 dark:text-zinc-400">
+										<div className="w-full max-w-3xl rounded-3xl border border-dashed border-black/8 bg-white/90 p-6 text-center dark:border-white/10 dark:bg-[#17181a]">
+										<p className="text-sm text-[#5f6258] dark:text-[#a6aca6]">
 											Please sign in to start chatting with Ultramaxo AI.
 										</p>
-										<div className="flex gap-4 mt-2">
-											<Button asChild size="sm" variant="outline">
+										<div className="mt-2 flex gap-4">
+											<Button asChild className="rounded-full" size="sm" variant="outline">
 												<Link href="/login">Sign In</Link>
 											</Button>
-											<Button asChild size="sm">
+											<Button asChild className="rounded-full" size="sm">
 												<Link href="/register">Create Account</Link>
 											</Button>
 										</div>
@@ -404,24 +471,25 @@ export function Chat({
 								</div>
 							) : isAtLimit ? (
 								<div className="flex w-full items-center justify-center p-4">
-									<div className="flex flex-col items-center gap-3 rounded-xl border-dashed border-zinc-200 bg-zinc-50/50 p-6 text-center dark:border-zinc-800 dark:bg-zinc-900/50 w-full border">
-										<p className="text-sm font-medium text-zinc-900 dark:text-zinc-100">
+										<div className="w-full max-w-3xl rounded-3xl border border-dashed border-black/8 bg-white/90 p-6 text-center dark:border-white/10 dark:bg-[#17181a]">
+										<p className="text-sm font-medium text-[#171717] dark:text-[#f3f4f1]">
 											You have reached your free daily limit of 10 messages.
 										</p>
-										<p className="text-xs text-zinc-500 dark:text-zinc-400 mb-2">
+										<p className="mb-2 text-xs text-[#5f6258] dark:text-[#a6aca6]">
 											Upgrade to PRO for unlimited messages, or wait until
 											tomorrow.
 										</p>
 										<div className="flex gap-4">
-											<Button asChild size="sm">
+											<Button asChild className="rounded-full" size="sm">
 												<Link href="/plan">Upgrade to PRO</Link>
 											</Button>
 										</div>
 									</div>
 								</div>
 							) : (
-								<div className="flex flex-col gap-2 relative">
-									<MultimodalInput
+								<div className="relative flex flex-col gap-2">
+										<div className="mx-auto w-full max-w-3xl">
+										<MultimodalInput
 										attachments={attachments}
 										chatId={id}
 										deepThinkingEnabled={deepThinkingEnabled}
@@ -447,8 +515,9 @@ export function Chat({
 										webSearchEnabled={webSearchEnabled}
 										wormgptEnabled={wormgptEnabled}
 										customModels={customModels}
-									/>
-									<p className="text-center text-[10px] text-zinc-500 max-w-xl mx-auto mt-1 absolute -bottom-6 left-0 right-0">
+										/>
+									</div>
+									<p className="mx-auto max-w-xl text-center text-[10px] text-[#5f6258] dark:text-[#8e948e]">
 										UltraAgent can make mistakes. Consider verifying important
 										information.
 									</p>

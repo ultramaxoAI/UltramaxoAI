@@ -1,25 +1,14 @@
 import { Check, Code2, Copy, Download } from "lucide-react";
-import { lazy, memo, Suspense, useState } from "react";
+import { memo, useEffect, useState } from "react";
+import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
+import { oneDark } from "react-syntax-highlighter/dist/esm/styles/prism";
 import { Button } from "@/components/ui/button";
 import { useArtifact } from "@/hooks/use-artifact";
 import { generateUUID } from "@/lib/utils";
 
-// Lazy-load the heavy SyntaxHighlighter so it doesn't block initial render
-const SyntaxHighlighter = lazy(
-	() => import("react-syntax-highlighter/dist/esm/prism-light"),
-);
-
-// Pre-load style
-let cachedStyle: Record<string, React.CSSProperties> | null = null;
-import("react-syntax-highlighter/dist/esm/styles/prism/one-dark").then(
-	(mod) => {
-		cachedStyle = mod.default;
-	},
-);
-
 // Safety limits to prevent browser OOM crashes
-const MAX_HIGHLIGHT_CHARS = 5_000; // Skip highlighting above this
-const MAX_HIGHLIGHT_LINES = 150;
+const MAX_HIGHLIGHT_CHARS = 12_000; // Skip highlighting above this
+const MAX_HIGHLIGHT_LINES = 300;
 const MAX_DISPLAY_CHARS = 50_000; // Truncate display above this
 
 interface CodeBlockProps {
@@ -128,7 +117,7 @@ function PureCodeBlock({ children, className, language }: CodeBlockProps) {
 				</div>
 			</div>
 			<div className="overflow-x-auto overflow-y-auto max-h-[500px]">
-				{isTooLargeForHighlight || !cachedStyle ? (
+				{isTooLargeForHighlight ? (
 					/* Plain text fallback for large code - no Prism = no OOM */
 					<pre
 						className="p-5 text-[0.8rem] leading-[1.6] text-zinc-300 whitespace-pre"
@@ -137,36 +126,35 @@ function PureCodeBlock({ children, className, language }: CodeBlockProps) {
 						{displayContent}
 					</pre>
 				) : (
-					<Suspense
-						fallback={
-							<pre className="p-5 text-[0.8rem] leading-[1.6] text-zinc-300 whitespace-pre">
-								{displayContent}
-							</pre>
-						}
-					>
-						<SyntaxHighlighter
-							codeTagProps={{
-								style: {
-									fontSize: "0.8rem",
-									fontFamily: "var(--font-mono)",
-									lineHeight: "1.6",
-								},
-							}}
-							customStyle={{
-								margin: 0,
-								padding: "1.25rem",
-								background: "transparent",
+					<SyntaxHighlighter
+						codeTagProps={{
+							style: {
 								fontSize: "0.8rem",
-								minWidth: "fit-content",
-							}}
-							language={lang}
-							PreTag="div"
-							style={cachedStyle}
-							wrapLongLines={false}
-						>
-							{displayContent}
-						</SyntaxHighlighter>
-					</Suspense>
+								fontFamily: "var(--font-mono)",
+								lineHeight: "1.6",
+							},
+						}}
+						customStyle={{
+							margin: 0,
+							padding: "1.25rem",
+							background: "transparent",
+							fontSize: "0.8rem",
+							minWidth: "fit-content",
+						}}
+						language={lang}
+						PreTag="div"
+						style={oneDark}
+						wrapLongLines={false}
+						showLineNumbers={lineCount > 5}
+						lineNumberStyle={{
+							minWidth: "2.5em",
+							paddingRight: "1em",
+							color: "#4a4a5a",
+							userSelect: "none",
+						}}
+					>
+						{displayContent}
+					</SyntaxHighlighter>
 				)}
 			</div>
 			{isTooLargeForDisplay && !showFull && (

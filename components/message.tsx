@@ -89,7 +89,7 @@ function MessageTextPart({
 		<div>
 			<MessageContent
 				className={cn("w-full", {
-					"bg-zinc-100 dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 wrap-break-word w-fit text-left ml-auto px-5 py-3.5 rounded-3xl rounded-tr-sm":
+					"bg-zinc-100/90 dark:bg-zinc-800/90 text-zinc-900 dark:text-zinc-100 wrap-break-word ml-auto w-fit max-w-full rounded-[22px] px-4 py-3 text-left":
 						messageRole === "user",
 					"bg-transparent px-0 py-0 text-left w-full prose-zinc dark:prose-invert prose-p:leading-relaxed":
 						messageRole === "assistant",
