@@ -129,6 +129,13 @@ export async function proxy(request: NextRequest) {
 		return NextResponse.redirect(new URL("/chat", request.url));
 	}
 
+	// Authenticated non-guest users landing on main-domain root → send to chat
+	if (production && !chatSubdomain && token && !isGuest && pathname === "/") {
+		return NextResponse.redirect(
+			new URL("/chat", `https://${CHAT_SUBDOMAIN}`),
+		);
+	}
+
 	// Apply security headers to all responses
 	const response = NextResponse.next();
 	return securityHeaders(request, response);
