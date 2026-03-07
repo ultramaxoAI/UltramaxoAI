@@ -2,7 +2,6 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { signIn } from "next-auth/react";
 import { useSession } from "next-auth/react";
 import { useActionState, useEffect, useState } from "react";
 
@@ -66,22 +65,6 @@ export default function Page() {
 
 		const searchParams = new URLSearchParams(window.location.search);
 		const error = searchParams.get("error");
-		const oauthProvider = searchParams.get("oauth");
-		const popupMode = searchParams.get("popup") === "1";
-
-		if (
-			popupMode &&
-			(oauthProvider === "google" || oauthProvider === "github")
-		) {
-			const callbackUrl = window.location.hostname.endsWith("ultramaxo.tech")
-				? "https://chat.ultramaxo.tech/chat"
-				: "/chat";
-
-			void signIn(oauthProvider, {
-				callbackUrl,
-			});
-			return;
-		}
 
 		if (!error) {
 			return;

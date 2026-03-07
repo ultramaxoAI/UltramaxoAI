@@ -21,7 +21,10 @@ export function AuthForm({
 			return;
 		}
 
-		const oauthLauncherUrl = `/login?oauth=${provider}&popup=1`;
+		const callbackUrl = window.location.hostname.endsWith("ultramaxo.tech")
+			? "https://chat.ultramaxo.tech/chat"
+			: `${window.location.origin}/chat`;
+		const oauthLauncherUrl = `/oauth/${provider}?callbackUrl=${encodeURIComponent(callbackUrl)}`;
 		window.open(oauthLauncherUrl, "_blank", "noopener,noreferrer");
 	};
 
