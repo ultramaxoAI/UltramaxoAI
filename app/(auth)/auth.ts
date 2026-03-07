@@ -81,6 +81,18 @@ function resolveUserType(isPro: boolean): UserType {
 	return isPro ? "pro" : "regular";
 }
 
+function mapDbUserToAdapterUser(dbUser: typeof userTable.$inferSelect) {
+	return {
+		id: dbUser.id,
+		email: dbUser.email,
+		emailVerified: dbUser.emailVerified,
+		name: dbUser.name,
+		image: dbUser.image,
+		role: dbUser.role as "user" | "admin",
+		type: resolveUserType(dbUser.isPro),
+	};
+}
+
 function isAdminUser({
 	email,
 	identifier,
@@ -177,15 +189,80 @@ export const {
 				return null;
 			}
 
-			return {
-				id: dbUser.id,
-				email: dbUser.email,
-				emailVerified: dbUser.emailVerified,
-				name: dbUser.name,
-				image: dbUser.image,
-				role: dbUser.role as "user" | "admin",
-				type: resolveUserType(dbUser.isPro),
-			};
+			return mapDbUserToAdapterUser(dbUser);
+		},
+		async getUserByAccount({ provider, providerAccountId }) {
+			const [linkedAccount] = await db
+				.select({
+					userId: accountTable.userId,
+					linkedUser: userTable,
+				})
+				.from(accountTable)
+				.leftJoin(userTable, eq(accountTable.userId, userTable.id))
+				.where(
+					and(
+						eq(accountTable.provider, provider),
+						eq(accountTable.providerAccountId, providerAccountId),
+					),
+				)
+				.limit(1);
+
+			if (!linkedAccount) {
+				return null;
+			}
+
+			if (!linkedAccount.linkedUser) {
+				await db
+					.delete(accountTable)
+					.where(
+						and(
+							eq(accountTable.provider, provider),
+							eq(accountTable.providerAccountId, providerAccountId),
+						),
+					);
+				return null;
+			}
+
+			return mapDbUserToAdapterUser(linkedAccount.linkedUser);
+		},
+		async linkAccount(accountData) {
+			await db
+				.insert(accountTable)
+				.values({
+					userId: accountData.userId,
+					type: accountData.type,
+					provider: accountData.provider,
+					providerAccountId: accountData.providerAccountId,
+					refresh_token: accountData.refresh_token ?? null,
+					access_token: accountData.access_token ?? null,
+					expires_at: accountData.expires_at ?? null,
+					token_type: accountData.token_type ?? null,
+					scope: accountData.scope ?? null,
+					id_token: accountData.id_token ?? null,
+					session_state:
+						typeof accountData.session_state === "string"
+							? accountData.session_state
+							: null,
+				})
+				.onConflictDoUpdate({
+					target: [accountTable.provider, accountTable.providerAccountId],
+					set: {
+						userId: accountData.userId,
+						type: accountData.type,
+						refresh_token: accountData.refresh_token ?? null,
+						access_token: accountData.access_token ?? null,
+						expires_at: accountData.expires_at ?? null,
+						token_type: accountData.token_type ?? null,
+						scope: accountData.scope ?? null,
+						id_token: accountData.id_token ?? null,
+						session_state:
+							typeof accountData.session_state === "string"
+								? accountData.session_state
+								: null,
+					},
+				});
+
+			return accountData;
 		},
 	},
 	session: {
@@ -367,96 +444,10 @@ export const {
 
 			return session;
 		},
-		async signIn({ user, account }) {
+		async signIn({ account }) {
 			// Allow credentials sign in
 			if (account?.provider === "credentials") {
 				return true;
-			}
-
-			// For OAuth (Google, GitHub), proactively attach the provider account
-			// to an existing user with the same normalized email. This avoids
-			// OAuthAccountNotLinked when legacy credential accounts already exist.
-			if (account && user.email) {
-				try {
-					const normalizedEmail = normalizeEmail(user.email);
-					const [existingUser] = normalizedEmail
-						? await db
-								.select()
-								.from(userTable)
-								.where(sql`lower(${userTable.email}) = ${normalizedEmail}`)
-								.limit(1)
-						: [];
-
-					// Check if this OAuth account is already linked 
-					const [linkedAccount] = await db
-						.select({
-							userId: accountTable.userId,
-							accountUserId: accountTable.userId,
-							linkedUserId: userTable.id,
-						})
-						.from(accountTable)
-						.leftJoin(userTable, eq(accountTable.userId, userTable.id))
-						.where(
-							and(
-								eq(accountTable.provider, account.provider),
-								eq(accountTable.providerAccountId, account.providerAccountId),
-							),
-						)
-						.limit(1);
-
-					// Self-heal: delete orphaned OAuth rows where the user no longer exists.
-					// This prevents Auth.js from finding a stale account link pointing to a deleted user.
-					if (linkedAccount && !linkedAccount.linkedUserId) {
-						await db
-							.delete(accountTable)
-							.where(
-								and(
-									eq(accountTable.provider, account.provider),
-									eq(accountTable.providerAccountId, account.providerAccountId),
-								),
-							);
-					}
-
-					if (existingUser) {
-						const accountPayload = {
-							userId: existingUser.id,
-							type: account.type,
-							provider: account.provider,
-							providerAccountId: account.providerAccountId,
-							refresh_token: account.refresh_token ?? null,
-							access_token: account.access_token ?? null,
-							expires_at: account.expires_at ?? null,
-							token_type: account.token_type ?? null,
-							scope: account.scope ?? null,
-							id_token: account.id_token ?? null,
-							session_state:
-								typeof account.session_state === "string"
-									? account.session_state
-									: null,
-						};
-
-						if (!linkedAccount) {
-							await db.insert(accountTable).values(accountPayload);
-						} else if (linkedAccount.userId !== existingUser.id) {
-							await db
-								.update(accountTable)
-								.set(accountPayload)
-								.where(
-									and(
-										eq(accountTable.provider, account.provider),
-										eq(accountTable.providerAccountId, account.providerAccountId),
-									),
-								);
-						}
-
-						user.id = existingUser.id;
-						user.email = existingUser.email;
-						user.role = existingUser.role as "user" | "admin";
-						user.type = resolveUserType(existingUser.isPro);
-					}
-				} catch {
-					// Continue with normal flow
-				}
 			}
 			return true;
 		},
