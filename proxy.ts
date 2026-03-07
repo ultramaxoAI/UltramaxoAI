@@ -39,10 +39,6 @@ export async function proxy(request: NextRequest) {
 		req: request,
 		secret: process.env.AUTH_SECRET,
 		secureCookie: !isDevelopmentEnvironment,
-		// Use the same cookie name as configured in auth.ts for production
-		...(isProduction(request) && {
-			cookieName: "__Secure-authjs.session-token",
-		}),
 	});
 
 	const chatSubdomain = isChatSubdomain(request);
