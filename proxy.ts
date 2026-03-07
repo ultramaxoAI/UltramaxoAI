@@ -98,12 +98,22 @@ export async function proxy(request: NextRequest) {
 	const isGuest = guestRegex.test(token?.email ?? "");
 
 	// Authenticated non-guest users on login/register → redirect to chat
+	// Skip cross-origin redirect for RSC prefetch requests (they cause CORS errors)
+	const isRSCRequest =
+		request.nextUrl.searchParams.has("_rsc") ||
+		request.headers.get("RSC") === "1" ||
+		request.headers.get("Next-Router-Prefetch") === "1";
+
 	if (
 		token &&
 		!isGuest &&
 		["/login", "/register"].includes(pathname) &&
 		!(pathname === "/login" && isLoggedOutRedirect)
 	) {
+		if (isRSCRequest) {
+			// Don't redirect RSC/prefetch requests cross-origin — just pass through
+			return NextResponse.next();
+		}
 		if (production) {
 			return NextResponse.redirect(
 				new URL("/chat", `https://${CHAT_SUBDOMAIN}`),
