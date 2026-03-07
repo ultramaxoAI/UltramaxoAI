@@ -10,19 +10,14 @@ declare global {
 
 declare const self: WorkerGlobalScope;
 
-const workerOrigin = new URL(self.registration.scope).origin;
-
 const authRouteMatcher = ({ url }: { url: URL }) => {
 	return (
-		url.origin === workerOrigin &&
-		(
-			url.pathname === "/login" ||
-			url.pathname === "/register" ||
-			url.pathname === "/forgot-password" ||
-			url.pathname === "/reset-password" ||
-			url.pathname.startsWith("/oauth/") ||
-			url.pathname.startsWith("/api/auth/")
-		)
+		url.pathname === "/login" ||
+		url.pathname === "/register" ||
+		url.pathname === "/forgot-password" ||
+		url.pathname === "/reset-password" ||
+		url.pathname.startsWith("/oauth/") ||
+		url.pathname.startsWith("/api/auth/")
 	);
 };
 
