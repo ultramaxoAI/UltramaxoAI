@@ -373,15 +373,24 @@ export const {
 				return true;
 			}
 
-			// For OAuth (Google, GitHub) - let Auth.js handle account linking
-			// via allowDangerousEmailAccountLinking: true on the provider config.
-			// We only need to:
-			// 1. Clean up orphaned account rows (user deleted but account row left behind)
+			// For OAuth (Google, GitHub), proactively attach the provider account
+			// to an existing user with the same normalized email. This avoids
+			// OAuthAccountNotLinked when legacy credential accounts already exist.
 			if (account && user.email) {
 				try {
+					const normalizedEmail = normalizeEmail(user.email);
+					const [existingUser] = normalizedEmail
+						? await db
+								.select()
+								.from(userTable)
+								.where(sql`lower(${userTable.email}) = ${normalizedEmail}`)
+								.limit(1)
+						: [];
+
 					// Check if this OAuth account is already linked 
 					const [linkedAccount] = await db
 						.select({
+							userId: accountTable.userId,
 							accountUserId: accountTable.userId,
 							linkedUserId: userTable.id,
 						})
@@ -406,6 +415,44 @@ export const {
 									eq(accountTable.providerAccountId, account.providerAccountId),
 								),
 							);
+					}
+
+					if (existingUser) {
+						const accountPayload = {
+							userId: existingUser.id,
+							type: account.type,
+							provider: account.provider,
+							providerAccountId: account.providerAccountId,
+							refresh_token: account.refresh_token ?? null,
+							access_token: account.access_token ?? null,
+							expires_at: account.expires_at ?? null,
+							token_type: account.token_type ?? null,
+							scope: account.scope ?? null,
+							id_token: account.id_token ?? null,
+							session_state:
+								typeof account.session_state === "string"
+									? account.session_state
+									: null,
+						};
+
+						if (!linkedAccount) {
+							await db.insert(accountTable).values(accountPayload);
+						} else if (linkedAccount.userId !== existingUser.id) {
+							await db
+								.update(accountTable)
+								.set(accountPayload)
+								.where(
+									and(
+										eq(accountTable.provider, account.provider),
+										eq(accountTable.providerAccountId, account.providerAccountId),
+									),
+								);
+						}
+
+						user.id = existingUser.id;
+						user.email = existingUser.email;
+						user.role = existingUser.role as "user" | "admin";
+						user.type = resolveUserType(existingUser.isPro);
 					}
 				} catch {
 					// Continue with normal flow

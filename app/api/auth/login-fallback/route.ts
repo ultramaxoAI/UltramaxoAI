@@ -21,6 +21,10 @@ function isNextRedirectError(error: unknown): error is Error & { digest: string 
 	);
 }
 
+function toAbsoluteRedirectUrl(request: Request, redirectTo: string) {
+	return new URL(redirectTo, request.url);
+}
+
 async function handleCredentialsSignIn({
 	request,
 	username,
@@ -35,15 +39,27 @@ async function handleCredentialsSignIn({
 	}
 
 	try {
-		return await signIn("credentials", {
+		const result = await signIn("credentials", {
 			username,
 			password,
-			redirect: true,
+			redirect: false,
 			redirectTo: resolveRedirectTo(request),
 		});
+
+		if (result?.error) {
+			const loginUrl = new URL("/login", request.url);
+			loginUrl.searchParams.set("error", result.error);
+			return NextResponse.redirect(loginUrl);
+		}
+
+		return NextResponse.redirect(
+			toAbsoluteRedirectUrl(request, result?.url ?? resolveRedirectTo(request)),
+		);
 	} catch (error) {
 		if (isNextRedirectError(error)) {
-			throw error;
+			return NextResponse.redirect(
+				toAbsoluteRedirectUrl(request, resolveRedirectTo(request)),
+			);
 		}
 
 		const loginUrl = new URL("/login", request.url);

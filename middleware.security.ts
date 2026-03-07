@@ -25,7 +25,7 @@ export function securityHeaders(request: NextRequest, response: NextResponse) {
 		"connect-src 'self' https://ultramaxo.tech https://chat.ultramaxo.tech https://api.groq.com https://*.vercel.com wss://*.vercel.com",
 		"frame-ancestors 'none'",
 		"base-uri 'self'",
-		"form-action 'self' https://accounts.google.com https://github.com",
+		"form-action 'self' https://ultramaxo.tech https://www.ultramaxo.tech https://chat.ultramaxo.tech https://accounts.google.com https://github.com",
 	].join("; ");
 
 	headers.set("Content-Security-Policy", csp);
