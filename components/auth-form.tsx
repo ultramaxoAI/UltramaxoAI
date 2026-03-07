@@ -138,20 +138,20 @@ export function AuthForm({
 				</div>
 
 				<div className="flex flex-col gap-3 relative z-10">
-					<Link
+					<a
 						className="flex w-full items-center justify-center gap-3 rounded-xl border border-zinc-800 bg-transparent py-2.5 text-sm font-semibold text-white hover:bg-zinc-800 transition-all active:scale-[0.98]"
 						href="/oauth/google"
 					>
 						<LogoGoogle size={18} />
 						<span>Continue with Google</span>
-					</Link>
-					<Link
+					</a>
+					<a
 						className="flex w-full items-center justify-center gap-3 rounded-xl border border-zinc-800 bg-transparent py-2.5 text-sm font-semibold text-white hover:bg-zinc-800 transition-all active:scale-[0.98]"
 						href="/oauth/github"
 					>
 						<GitIcon size={18} />
 						<span>Continue with GitHub</span>
-					</Link>
+					</a>
 				</div>
 			</div>
 		</div>

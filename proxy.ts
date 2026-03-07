@@ -35,7 +35,7 @@ export async function proxy(request: NextRequest) {
 
 	if (request.method === "POST" && pathname === "/oauth/complete") {
 		const completionUrl = new URL(request.url);
-		return NextResponse.redirect(completionUrl);
+		return NextResponse.redirect(completionUrl, { status: 303 });
 	}
 
 	// Do not force apex/non-www here.
