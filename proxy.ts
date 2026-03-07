@@ -27,12 +27,6 @@ export async function proxy(request: NextRequest) {
 	const isLoggedOutRedirect =
 		request.nextUrl.searchParams.get(LOGOUT_REDIRECT_FLAG) === "1";
 
-	if (request.method === "POST" && pathname === "/login") {
-		const loginFallbackUrl = new URL("/api/auth/login-fallback", request.url);
-		loginFallbackUrl.search = request.nextUrl.search;
-		return NextResponse.rewrite(loginFallbackUrl);
-	}
-
 	if (request.method === "POST" && pathname === "/oauth/complete") {
 		const completionUrl = new URL(request.url);
 		return NextResponse.redirect(completionUrl, { status: 303 });
