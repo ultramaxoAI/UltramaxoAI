@@ -3,6 +3,16 @@ import { signIn } from "@/app/(auth)/auth";
 
 const SUPPORTED_PROVIDERS = new Set(["google", "github"]);
 
+function buildOAuthCompletionUrl(requestUrl: URL, callbackUrl: string) {
+	const authOrigin =
+		process.env.NODE_ENV === "production"
+			? "https://ultramaxo.tech"
+			: requestUrl.origin;
+	const completionUrl = new URL("/oauth/complete", authOrigin);
+	completionUrl.searchParams.set("target", callbackUrl);
+	return completionUrl.toString();
+}
+
 export async function GET(
 	request: Request,
 	{ params }: { params: Promise<{ provider: string }> },
@@ -22,6 +32,6 @@ export async function GET(
 
 	return signIn(provider, {
 		redirect: true,
-		redirectTo: callbackUrl,
+		redirectTo: buildOAuthCompletionUrl(url, callbackUrl),
 	});
 }
