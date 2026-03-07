@@ -22,18 +22,17 @@ const authRouteMatcher = ({ url }: { url: URL }) => {
 };
 
 const runtimeCaching = defaultCache.map((entry) => {
-	if (
-		entry.method === "GET" &&
-		typeof entry.matcher === "function"
-	) {
+	const matcher = entry.matcher;
+
+	if (entry.method === "GET" && typeof matcher === "function") {
 		return {
 			...entry,
-			matcher: (args: Parameters<typeof entry.matcher>[0]) => {
+			matcher: (args: Parameters<typeof matcher>[0]) => {
 				if (authRouteMatcher(args)) {
 					return false;
 				}
 
-				return entry.matcher(args);
+				return matcher(args);
 			},
 		};
 	}
