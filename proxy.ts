@@ -82,6 +82,9 @@ export async function proxy(request: NextRequest) {
 			"/forgot-password",
 			"/reset-password",
 			"/api/auth/guest",
+			"/manifest.webmanifest",
+			"/site.webmanifest",
+			"/sw.js",
 			"/privacy",
 			"/terms",
 		].includes(pathname)
@@ -145,6 +148,6 @@ export const config = {
 		 * - _next/image (image optimization files)
 		 * - favicon.ico, sitemap.xml, robots.txt (metadata files)
 		 */
-		"/((?!_next/static|_next/image|favicon.ico|sitemap.xml|robots.txt).*)",
+		"/((?!_next/static|_next/image|favicon.ico|sitemap.xml|robots.txt|manifest.webmanifest|site.webmanifest|sw.js).*)",
 	],
 };

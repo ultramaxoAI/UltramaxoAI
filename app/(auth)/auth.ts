@@ -61,6 +61,9 @@ declare module "@auth/core/adapters" {
 
 const isProduction = process.env.NODE_ENV === "production";
 const cookieDomain = isProduction ? ".ultramaxo.tech" : undefined;
+const redirectProxyUrl =
+	process.env.AUTH_REDIRECT_PROXY_URL ||
+	(isProduction ? "https://ultramaxo.tech/api/auth" : undefined);
 
 export const {
 	handlers: { GET, POST },
@@ -69,6 +72,7 @@ export const {
 	signOut,
 } = NextAuth({
 	...authConfig,
+	redirectProxyUrl,
 	adapter: DrizzleAdapter(db, {
 		usersTable: userTable,
 		accountsTable: accountTable,
