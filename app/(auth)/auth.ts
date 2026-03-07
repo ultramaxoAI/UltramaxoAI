@@ -285,16 +285,13 @@ export const {
 			// via allowDangerousEmailAccountLinking: true on the provider config.
 			// We only need to:
 			// 1. Clean up orphaned account rows (user deleted but account row left behind)
-			// 2. Patch user.id so Auth.js uses the existing user instead of creating a new one
-			// 3. Sync display name from OAuth profile
 			if (account && user.email) {
 				try {
-					// Check if this OAuth account is already linked (and if the linked user still exists)
+					// Check if this OAuth account is already linked 
 					const [linkedAccount] = await db
 						.select({
 							accountUserId: accountTable.userId,
 							linkedUserId: userTable.id,
-							linkedUserEmail: userTable.email,
 						})
 						.from(accountTable)
 						.leftJoin(userTable, eq(accountTable.userId, userTable.id))
@@ -318,35 +315,8 @@ export const {
 								),
 							);
 					}
-
-					// Block sign-in if this OAuth account is already linked to a DIFFERENT user
-					if (
-						linkedAccount?.linkedUserEmail &&
-						linkedAccount.linkedUserId
-					) {
-						const [existingUser] = await getUser(user.email);
-						if (existingUser && linkedAccount.linkedUserEmail !== existingUser.email) {
-							return false;
-						}
-					}
-
-					// Check if a user with this email already exists (e.g. registered via credentials)
-					const [existingUser] = await getUser(user.email);
-					if (existingUser) {
-						// Sync display name from OAuth profile if the user doesn't have one
-						if (!existingUser.name && user.name) {
-							await db
-								.update(userTable)
-								.set({ name: user.name })
-								.where(eq(userTable.id, existingUser.id));
-						}
-
-						// Patch user.id so Auth.js uses the existing user
-						// instead of trying to create a duplicate
-						user.id = existingUser.id;
-					}
 				} catch {
-					// If lookup fails, continue with normal flow
+					// Continue with normal flow
 				}
 			}
 			return true;
