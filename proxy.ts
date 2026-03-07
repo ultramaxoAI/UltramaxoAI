@@ -72,6 +72,11 @@ export async function proxy(request: NextRequest) {
 		);
 	}
 
+	// Allow OAuth launcher routes for unauthenticated users
+	if (!token && pathname.startsWith("/oauth/")) {
+		return NextResponse.next();
+	}
+
 	// Allow access to home and public pages without a token
 	if (
 		!token &&
