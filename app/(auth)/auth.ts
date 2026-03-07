@@ -1,7 +1,7 @@
 import type { Adapter } from "@auth/core/adapters";
 import { DrizzleAdapter } from "@auth/drizzle-adapter";
 import { compare } from "bcrypt-ts";
-import { and, eq } from "drizzle-orm";
+import { and, eq, sql } from "drizzle-orm";
 import NextAuth, { type DefaultSession } from "next-auth";
 import type { DefaultJWT } from "next-auth/jwt";
 import Credentials from "next-auth/providers/credentials";
@@ -65,6 +65,42 @@ const redirectProxyUrl =
 	process.env.AUTH_REDIRECT_PROXY_URL ||
 	(isProduction ? "https://ultramaxo.tech/api/auth" : undefined);
 const cookiePrefix = isProduction ? "__Secure-" : "";
+const baseAdapter = DrizzleAdapter(db, {
+	usersTable: userTable,
+	accountsTable: accountTable,
+	sessionsTable: sessionTable,
+	verificationTokensTable: verificationTokenTable,
+	authenticatorsTable: authenticatorTable,
+}) as Adapter;
+
+function normalizeEmail(email?: string | null) {
+	return email?.trim().toLowerCase() ?? undefined;
+}
+
+function resolveUserType(isPro: boolean): UserType {
+	return isPro ? "pro" : "regular";
+}
+
+function isAdminUser({
+	email,
+	identifier,
+	role,
+}: {
+	email?: string | null;
+	identifier?: string | null;
+	role?: string | null;
+}) {
+	const normalizedEmail = normalizeEmail(email);
+	const normalizedIdentifier = identifier?.trim().toLowerCase();
+	const adminEmail = normalizeEmail(process.env.ADMIN_EMAIL);
+
+	return (
+		role === "admin" ||
+		normalizedIdentifier === "admin" ||
+		Boolean(adminEmail && normalizedEmail === adminEmail)
+	);
+}
+
 const sharedCookieOptions = {
 	httpOnly: true,
 	sameSite: "lax" as const,
@@ -107,13 +143,51 @@ export const {
 			options: sharedCookieOptions,
 		},
 	},
-	adapter: DrizzleAdapter(db, {
-		usersTable: userTable,
-		accountsTable: accountTable,
-		sessionsTable: sessionTable,
-		verificationTokensTable: verificationTokenTable,
-		authenticatorsTable: authenticatorTable,
-	}) as Adapter,
+	adapter: {
+		...baseAdapter,
+		async createUser(data) {
+			if (!baseAdapter.createUser) {
+				throw new Error("Auth adapter is missing createUser");
+			}
+
+			return baseAdapter.createUser({
+				...data,
+				email: normalizeEmail(data.email) ?? data.email,
+			});
+		},
+		async getUserByEmail(email) {
+			const normalizedEmail = normalizeEmail(email);
+
+			if (!normalizedEmail) {
+				return null;
+			}
+
+			const adapterUser = await baseAdapter.getUserByEmail?.(normalizedEmail);
+			if (adapterUser) {
+				return adapterUser;
+			}
+
+			const [dbUser] = await db
+				.select()
+				.from(userTable)
+				.where(sql`lower(${userTable.email}) = ${normalizedEmail}`)
+				.limit(1);
+
+			if (!dbUser) {
+				return null;
+			}
+
+			return {
+				id: dbUser.id,
+				email: dbUser.email,
+				emailVerified: dbUser.emailVerified,
+				name: dbUser.name,
+				image: dbUser.image,
+				role: dbUser.role as "user" | "admin",
+				type: resolveUserType(dbUser.isPro),
+			};
+		},
+	},
 	session: {
 		strategy: "jwt",
 		maxAge: 24 * 60 * 60, // 1 Day (24 Hours)
@@ -123,11 +197,31 @@ export const {
 			clientId: process.env.AUTH_GOOGLE_ID,
 			clientSecret: process.env.AUTH_GOOGLE_SECRET,
 			allowDangerousEmailAccountLinking: true,
+			profile(profile) {
+				return {
+					id: profile.sub,
+					name: profile.name,
+					email: normalizeEmail(profile.email) ?? profile.email,
+					image: profile.picture,
+					type: "regular" as UserType,
+					role: "user" as const,
+				};
+			},
 		}),
 		GitHub({
 			clientId: process.env.AUTH_GITHUB_ID,
 			clientSecret: process.env.AUTH_GITHUB_SECRET,
 			allowDangerousEmailAccountLinking: true,
+			profile(profile) {
+				return {
+					id: String(profile.id),
+					name: profile.name ?? profile.login,
+					email: normalizeEmail(profile.email) ?? profile.email,
+					image: profile.avatar_url,
+					type: "regular" as UserType,
+					role: "user" as const,
+				};
+			},
 		}),
 		Credentials({
 			credentials: {
@@ -194,13 +288,11 @@ export const {
 					return null;
 				}
 
-				const isEnvAdminEmail =
-					user.email &&
-					process.env.ADMIN_EMAIL &&
-					user.email.toLowerCase() === process.env.ADMIN_EMAIL.toLowerCase();
-
-				const isAdminUsername = normalizedUsername.toLowerCase() === "admin";
-				const isAdmin = isEnvAdminEmail || isAdminUsername;
+				const isAdmin = isAdminUser({
+					email: user.email,
+					identifier: normalizedUsername,
+					role: user.role,
+				});
 
 				const emailVerificationEnabled =
 					process.env.ENABLE_EMAIL_VERIFICATION === "true";
@@ -212,7 +304,7 @@ export const {
 
 				return {
 					...user,
-					type: user.isPro ? "pro" : "regular",
+					type: resolveUserType(user.isPro),
 					role: isAdmin ? "admin" : "user",
 				};
 			},

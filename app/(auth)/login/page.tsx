@@ -1,58 +1,96 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { useSession } from "next-auth/react";
-import { useActionState, useEffect, useState } from "react";
+import { useEffect, useState, useTransition } from "react";
 
 import { AuthForm } from "@/components/auth-form";
 import { SubmitButton } from "@/components/submit-button";
 import { toast } from "@/components/toast";
 import { type LoginActionState, login } from "../actions";
 
-export default function Page() {
-	const router = useRouter();
+const SESSION_POLL_ATTEMPTS = 12;
+const SESSION_POLL_DELAY_MS = 250;
 
-	const [isSuccessful, setIsSuccessful] = useState(false);
+async function waitForSession() {
+	for (let attempt = 0; attempt < SESSION_POLL_ATTEMPTS; attempt++) {
+		try {
+			const response = await fetch("/api/auth/session", {
+				cache: "no-store",
+				credentials: "same-origin",
+				headers: {
+					"cache-control": "no-store",
+				},
+			});
 
-	const [state, formAction] = useActionState<LoginActionState, FormData>(
-		login,
-		{
-			status: "idle",
-		},
-	);
-
-	const { update: updateSession } = useSession();
-
-	// biome-ignore lint/correctness/useExhaustiveDependencies: router and updateSession are stable refs
-	useEffect(() => {
-		if (state.status === "failed") {
-			toast({
-				type: "error",
-				description: "Invalid username or password!",
-			});
-		} else if (state.status === "unverified") {
-			toast({
-				type: "error",
-				description: "Akun belum diverifikasi. Cek email Anda dulu.",
-			});
-		} else if (state.status === "invalid_data") {
-			toast({
-				type: "error",
-				description: "Failed to validate your data!",
-			});
-		} else if (state.status === "success") {
-			setIsSuccessful(true);
-			
-			// Wait for Auth.js to sync the session cookie before navigating.
-			// Instead of a hard window.location.href to a different domain, we navigate to the local /chat routes
-			// and let the proxy.ts middleware cleanly handle the 307 redirect to chat.ultramaxo.tech 
-			// This preserves the session boundaries properly.
-			updateSession().then(() => {
-				window.location.href = "/chat";
-			});
+			if (response.ok) {
+				const session = await response.json();
+				if (session?.user?.id) {
+					return true;
+				}
+			}
+		} catch {
+			// Ignore transient session fetch failures while the cookie is propagating.
 		}
-	}, [state.status]);
+
+		await new Promise((resolve) => {
+			window.setTimeout(resolve, SESSION_POLL_DELAY_MS);
+		});
+	}
+
+	return false;
+}
+
+export default function Page() {
+	const [isSuccessful, setIsSuccessful] = useState(false);
+	const [isPending, startTransition] = useTransition();
+
+	const handleSubmit: React.FormEventHandler<HTMLFormElement> = (event) => {
+		event.preventDefault();
+
+		const form = event.currentTarget;
+		const formData = new FormData(form);
+
+		startTransition(async () => {
+			const result: LoginActionState = await login({ status: "idle" }, formData);
+
+			if (result.status === "failed") {
+				toast({
+					type: "error",
+					description: "Invalid username or password!",
+				});
+				return;
+			}
+
+			if (result.status === "unverified") {
+				toast({
+					type: "error",
+					description: "Akun belum diverifikasi. Cek email Anda dulu.",
+				});
+				return;
+			}
+
+			if (result.status === "invalid_data") {
+				toast({
+					type: "error",
+					description: "Failed to validate your data!",
+				});
+				return;
+			}
+
+			if (result.status !== "success") {
+				toast({
+					type: "error",
+					description: "Login gagal. Coba lagi.",
+				});
+				return;
+			}
+
+			setIsSuccessful(true);
+
+			await waitForSession();
+			window.location.replace("/chat");
+		});
+	};
 
 	useEffect(() => {
 		if (typeof window === "undefined") {
@@ -83,9 +121,11 @@ export default function Page() {
 
 	return (
 		<div className="flex min-h-screen w-full items-center justify-center bg-black relative overflow-hidden py-8">
-			<div className="flex w-full max-w-[440px] flex-col gap-10 relative z-10 animate-in fade-in slide-in-from-bottom-4 duration-1000 px-6">
-				<AuthForm action={formAction} defaultEmail="" type="login">
-					<SubmitButton isSuccessful={isSuccessful}>Sign In</SubmitButton>
+			<div className="flex w-full max-w-110 flex-col gap-10 relative z-10 animate-in fade-in slide-in-from-bottom-4 duration-1000 px-6">
+				<AuthForm defaultEmail="" onSubmit={handleSubmit} type="login">
+					<SubmitButton isSuccessful={isSuccessful} pendingOverride={isPending}>
+						Sign In
+					</SubmitButton>
 					<p className="mt-6 text-center text-zinc-500 text-sm">
 						Don't have an account?{" "}
 						<Link

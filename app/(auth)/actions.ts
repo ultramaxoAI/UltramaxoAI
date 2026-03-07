@@ -27,6 +27,26 @@ export type LoginActionState = {
 		| "unverified";
 };
 
+function isAdminCandidate({
+	identifier,
+	email,
+	role,
+}: {
+	identifier?: string | null;
+	email?: string | null;
+	role?: string | null;
+}) {
+	const normalizedIdentifier = identifier?.trim().toLowerCase();
+	const normalizedEmail = email?.trim().toLowerCase();
+	const adminEmail = process.env.ADMIN_EMAIL?.trim().toLowerCase();
+
+	return (
+		role === "admin" ||
+		normalizedIdentifier === "admin" ||
+		Boolean(adminEmail && normalizedEmail === adminEmail)
+	);
+}
+
 export const login = async (
 	_: LoginActionState,
 	formData: FormData,
@@ -47,11 +67,16 @@ export const login = async (
 
 		if (emailVerificationEnabled) {
 			const [candidateUser] = await getUserByIdentifier(identifier);
+			const candidateIsAdmin = isAdminCandidate({
+				identifier,
+				email: candidateUser?.email,
+				role: candidateUser?.role,
+			});
 
 			if (
 				candidateUser &&
 				!candidateUser.emailVerified &&
-				candidateUser.role !== "admin"
+				!candidateIsAdmin
 			) {
 				return { status: "unverified" };
 			}

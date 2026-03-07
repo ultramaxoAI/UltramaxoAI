@@ -36,7 +36,7 @@ export const authConfig = {
 			}
 
 			if (CHAT_URL.startsWith("http")) {
-				allowedOrigins.add(CHAT_URL);
+				allowedOrigins.add(new URL(CHAT_URL).origin);
 			}
 
 			const resolvedChatUrl = CHAT_URL.startsWith("http")

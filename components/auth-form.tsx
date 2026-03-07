@@ -1,3 +1,5 @@
+"use client";
+
 import Link from "next/link";
 import { GitIcon, LogoGoogle } from "./icons";
 import { Input } from "./ui/input";
@@ -5,13 +7,15 @@ import { Label } from "./ui/label";
 
 export function AuthForm({
 	action,
+	onSubmit,
 	children,
 	type,
 	defaultEmail = "",
 }: {
-	action: NonNullable<
+	action?: NonNullable<
 		string | ((formData: FormData) => void | Promise<void>) | undefined
 	>;
+	onSubmit?: React.FormEventHandler<HTMLFormElement>;
 	children: React.ReactNode;
 	type: "login" | "register";
 	defaultEmail?: string;
@@ -42,7 +46,7 @@ export function AuthForm({
 					</p>
 				</div>
 
-				<form action={action} className="flex flex-col gap-6 w-full">
+				<form action={action} className="flex flex-col gap-6 w-full" onSubmit={onSubmit}>
 					{type === "register" && (
 						<div className="flex flex-col gap-2">
 							<Label
