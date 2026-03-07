@@ -141,7 +141,7 @@ export function AuthForm({
 							const chatUrl =
 								typeof window !== "undefined" &&
 								window.location.hostname.endsWith("ultramaxo.tech")
-									? "https://chat.ultramaxo.tech"
+									? "https://chat.ultramaxo.tech/chat"
 									: "/chat";
 							signIn("google", { callbackUrl: chatUrl });
 						}}
@@ -156,7 +156,7 @@ export function AuthForm({
 							const chatUrl =
 								typeof window !== "undefined" &&
 								window.location.hostname.endsWith("ultramaxo.tech")
-									? "https://chat.ultramaxo.tech"
+									? "https://chat.ultramaxo.tech/chat"
 									: "/chat";
 							signIn("github", { callbackUrl: chatUrl });
 						}}

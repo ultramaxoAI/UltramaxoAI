@@ -4,7 +4,7 @@ const MAIN_URL =
 	process.env.NODE_ENV === "production" ? "https://ultramaxo.tech" : undefined;
 const CHAT_URL =
 	process.env.NODE_ENV === "production"
-		? "https://chat.ultramaxo.tech"
+		? "https://chat.ultramaxo.tech/chat"
 		: "/chat";
 
 export const authConfig = {
