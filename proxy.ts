@@ -7,6 +7,10 @@ const CHAT_SUBDOMAIN = "chat.ultramaxo.tech";
 const MAIN_DOMAIN = "ultramaxo.tech";
 const LOGOUT_REDIRECT_FLAG = "loggedOut";
 
+function nextWithSecurity(request: NextRequest) {
+	return securityHeaders(request, NextResponse.next());
+}
+
 function isChatSubdomain(request: NextRequest): boolean {
 	const hostname = request.headers.get("host") || "";
 	return hostname.startsWith("chat.");
@@ -37,7 +41,7 @@ export async function proxy(request: NextRequest) {
 
 	// ALLOW /api/auth/* AND /api/debug-db explicitly
 	if (pathname.startsWith("/api/auth") || pathname.includes("/api/debug-db")) {
-		return NextResponse.next();
+		return nextWithSecurity(request);
 	}
 
 	const token = await getToken({
@@ -49,7 +53,7 @@ export async function proxy(request: NextRequest) {
 	const production = isProduction(request);
 
 	if (!chatSubdomain && pathname === "/login" && isLoggedOutRedirect) {
-		return NextResponse.next();
+		return nextWithSecurity(request);
 	}
 
 	// If user hits chat subdomain without auth → redirect to main domain login
@@ -74,7 +78,7 @@ export async function proxy(request: NextRequest) {
 
 	// Allow OAuth launcher routes for unauthenticated users
 	if (!token && pathname.startsWith("/oauth/")) {
-		return NextResponse.next();
+		return nextWithSecurity(request);
 	}
 
 	// Allow access to home and public pages without a token
@@ -94,13 +98,13 @@ export async function proxy(request: NextRequest) {
 			"/terms",
 		].includes(pathname)
 	) {
-		return NextResponse.next();
+		return nextWithSecurity(request);
 	}
 
 	// If it's a chat ID page, we check visibility within the page component,
 	// but we can allow the middleware to pass for now.
 	if (!token && pathname.startsWith("/chat/")) {
-		return NextResponse.next();
+		return nextWithSecurity(request);
 	}
 
 	if (!token) {
@@ -124,7 +128,7 @@ export async function proxy(request: NextRequest) {
 	) {
 		if (isRSCRequest) {
 			// Don't redirect RSC/prefetch requests cross-origin — just pass through
-			return NextResponse.next();
+			return nextWithSecurity(request);
 		}
 		if (production) {
 			return NextResponse.redirect(
@@ -142,8 +146,7 @@ export async function proxy(request: NextRequest) {
 	}
 
 	// Apply security headers to all responses
-	const response = NextResponse.next();
-	return securityHeaders(request, response);
+	return nextWithSecurity(request);
 }
 
 export const config = {

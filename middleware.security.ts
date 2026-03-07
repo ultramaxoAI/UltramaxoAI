@@ -6,6 +6,14 @@ import { type NextRequest, NextResponse } from "next/server";
  */
 export function securityHeaders(request: NextRequest, response: NextResponse) {
 	const headers = new Headers(response.headers);
+	const pathname = request.nextUrl.pathname;
+	const isAuthRoute =
+		pathname === "/login" ||
+		pathname === "/register" ||
+		pathname === "/forgot-password" ||
+		pathname === "/reset-password" ||
+		pathname.startsWith("/oauth/") ||
+		pathname.startsWith("/api/auth/");
 
 	// Content Security Policy
 	const csp = [
@@ -46,8 +54,19 @@ export function securityHeaders(request: NextRequest, response: NextResponse) {
 		"camera=(), microphone=(), geolocation=(), interest-cohort=()",
 	);
 
-	return NextResponse.next({
-		request,
-		headers,
+	if (isAuthRoute) {
+		headers.set(
+			"Cache-Control",
+			"no-store, no-cache, must-revalidate, proxy-revalidate, max-age=0",
+		);
+		headers.set("Pragma", "no-cache");
+		headers.set("Expires", "0");
+		headers.set("Surrogate-Control", "no-store");
+	}
+
+	headers.forEach((value, key) => {
+		response.headers.set(key, value);
 	});
+
+	return response;
 }
