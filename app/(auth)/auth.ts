@@ -64,6 +64,14 @@ const cookieDomain = isProduction ? ".ultramaxo.tech" : undefined;
 const redirectProxyUrl =
 	process.env.AUTH_REDIRECT_PROXY_URL ||
 	(isProduction ? "https://ultramaxo.tech/api/auth" : undefined);
+const cookiePrefix = isProduction ? "__Secure-" : "";
+const sharedCookieOptions = {
+	httpOnly: true,
+	sameSite: "lax" as const,
+	path: "/",
+	secure: isProduction,
+	...(cookieDomain ? { domain: cookieDomain } : {}),
+};
 
 export const {
 	handlers: { GET, POST },
@@ -73,6 +81,32 @@ export const {
 } = NextAuth({
 	...authConfig,
 	redirectProxyUrl,
+	cookies: {
+		sessionToken: {
+			name: `${cookiePrefix}authjs.session-token`,
+			options: sharedCookieOptions,
+		},
+		callbackUrl: {
+			name: `${cookiePrefix}authjs.callback-url`,
+			options: sharedCookieOptions,
+		},
+		csrfToken: {
+			name: `${cookiePrefix}authjs.csrf-token`,
+			options: sharedCookieOptions,
+		},
+		pkceCodeVerifier: {
+			name: `${cookiePrefix}authjs.pkce.code_verifier`,
+			options: sharedCookieOptions,
+		},
+		state: {
+			name: `${cookiePrefix}authjs.state`,
+			options: sharedCookieOptions,
+		},
+		nonce: {
+			name: `${cookiePrefix}authjs.nonce`,
+			options: sharedCookieOptions,
+		},
+	},
 	adapter: DrizzleAdapter(db, {
 		usersTable: userTable,
 		accountsTable: accountTable,
