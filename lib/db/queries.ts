@@ -23,6 +23,7 @@ import { ChatSDKError } from "../errors";
 import { generateUUID } from "../utils";
 import {
 	authenticator,
+	account,
 	type Chat,
 	chat,
 	type DBMessage,
@@ -33,12 +34,14 @@ import {
 	passwordResetToken,
 	purchaseRequest,
 	redeemCode,
-	type Suggestion,
 	session,
 	stream,
 	suggestion,
+	type Suggestion,
 	type User,
 	user,
+	userApiKeys,
+	userSettings,
 	verificationToken,
 	vote,
 	voteDeprecated,
@@ -1234,6 +1237,16 @@ export async function expireProIfNeeded(userId: string) {
 export async function deleteUserById(id: string) {
 	try {
 		return await db.transaction(async (tx) => {
+			// Load user once so we can also clean up by email if needed
+			const [targetUser] = await tx
+				.select()
+				.from(user)
+				.where(eq(user.id, id));
+
+			if (!targetUser) {
+				return;
+			}
+
 			// 1. Unlink redeem codes (leave them used but with null user,
 			//    since they are already consumed and we want to keep code uniqueness history)
 			await tx
@@ -1241,13 +1254,23 @@ export async function deleteUserById(id: string) {
 				.set({ usedBy: null })
 				.where(eq(redeemCode.usedBy, id));
 
+			// 1b. Remove verification tokens tied to this email (if any)
+			if (targetUser.email) {
+				await tx
+					.delete(verificationToken)
+					.where(eq(verificationToken.identifier, targetUser.email));
+			}
+
 			// 2. Delete auth/session dependencies
+			await tx.delete(account).where(eq(account.userId, id));
 			await tx.delete(session).where(eq(session.userId, id));
 			await tx.delete(authenticator).where(eq(authenticator.userId, id));
 			await tx
 				.delete(passwordResetToken)
 				.where(eq(passwordResetToken.userId, id));
 			await tx.delete(purchaseRequest).where(eq(purchaseRequest.userId, id));
+			await tx.delete(userSettings).where(eq(userSettings.userId, id));
+			await tx.delete(userApiKeys).where(eq(userApiKeys.userId, id));
 
 			// 3. Delete suggestions & documents
 			await tx.delete(suggestion).where(eq(suggestion.userId, id));
