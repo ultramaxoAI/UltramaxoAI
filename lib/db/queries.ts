@@ -75,7 +75,14 @@ export async function getUser(email: string): Promise<User[]> {
 
 export async function getUserByUsername(name: string): Promise<User[]> {
 	try {
-		return await db.select().from(user).where(eq(user.name, name.trim()));
+		const normalizedName = name.trim();
+
+		return await db
+			.select()
+			.from(user)
+			.where(
+				or(eq(user.username, normalizedName), eq(user.name, normalizedName)),
+			);
 	} catch (error) {
 		console.error("Database Error (getUserByUsername):", error);
 		throw new ChatSDKError(
@@ -95,6 +102,7 @@ export async function getUserByIdentifier(identifier: string): Promise<User[]> {
 			.where(
 				or(
 					eq(user.email, normalizedIdentifier.toLowerCase()),
+					eq(user.username, normalizedIdentifier),
 					eq(user.name, normalizedIdentifier),
 				),
 			);
@@ -121,6 +129,7 @@ export async function createUser(
 			email: normalizedEmail,
 			password: hashedPassword,
 			name: normalizedName,
+			username: normalizedName,
 		});
 	} catch (_error) {
 		throw new ChatSDKError("bad_request:database", "Failed to create user");

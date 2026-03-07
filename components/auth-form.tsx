@@ -17,6 +17,39 @@ export function AuthForm({
 	type: "login" | "register";
 	defaultEmail?: string;
 }) {
+	const openOAuthTab = async (provider: "google" | "github") => {
+		const chatUrl =
+			typeof window !== "undefined" &&
+			window.location.hostname.endsWith("ultramaxo.tech")
+				? "https://chat.ultramaxo.tech/chat"
+				: "/chat";
+
+		const popup =
+			typeof window !== "undefined"
+				? window.open("", "_blank", "noopener,noreferrer")
+				: null;
+
+		const result = await signIn(provider, {
+			callbackUrl: chatUrl,
+			redirect: false,
+		});
+
+		if (result?.url) {
+			if (popup) {
+				popup.location.href = result.url;
+				popup.focus();
+				return;
+			}
+
+			window.location.href = result.url;
+			return;
+		}
+
+		if (popup) {
+			popup.close();
+		}
+	};
+
 	return (
 		<div className="relative w-full mx-auto">
 			<div className="flex flex-col gap-8 w-full p-10 rounded-4xl border border-white/5 bg-[#18181b] shadow-2xl relative z-10 mx-auto">
@@ -137,14 +170,7 @@ export function AuthForm({
 				<div className="flex flex-col gap-3 relative z-10">
 					<button
 						className="flex w-full items-center justify-center gap-3 rounded-xl border border-zinc-800 bg-transparent py-2.5 text-sm font-semibold text-white hover:bg-zinc-800 transition-all active:scale-[0.98]"
-						onClick={() => {
-							const chatUrl =
-								typeof window !== "undefined" &&
-								window.location.hostname.endsWith("ultramaxo.tech")
-									? "https://chat.ultramaxo.tech/chat"
-									: "/chat";
-							signIn("google", { callbackUrl: chatUrl });
-						}}
+						onClick={() => void openOAuthTab("google")}
 						type="button"
 					>
 						<LogoGoogle size={18} />
@@ -152,14 +178,7 @@ export function AuthForm({
 					</button>
 					<button
 						className="flex w-full items-center justify-center gap-3 rounded-xl border border-zinc-800 bg-transparent py-2.5 text-sm font-semibold text-white hover:bg-zinc-800 transition-all active:scale-[0.98]"
-						onClick={() => {
-							const chatUrl =
-								typeof window !== "undefined" &&
-								window.location.hostname.endsWith("ultramaxo.tech")
-									? "https://chat.ultramaxo.tech/chat"
-									: "/chat";
-							signIn("github", { callbackUrl: chatUrl });
-						}}
+						onClick={() => void openOAuthTab("github")}
 						type="button"
 					>
 						<GitIcon size={18} />

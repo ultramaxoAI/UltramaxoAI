@@ -15,6 +15,7 @@ import {
 export const user = pgTable("user", {
 	id: uuid("id").primaryKey().defaultRandom(),
 	name: text("name"),
+	username: text("username"),
 	email: text("email").notNull().unique(),
 	emailVerified: timestamp("emailVerified", { mode: "date" }),
 	image: text("image"),
