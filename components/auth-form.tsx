@@ -20,19 +20,6 @@ export function AuthForm({
 	type: "login" | "register";
 	defaultEmail?: string;
 }) {
-	const openOAuthTab = (provider: "google" | "github") => {
-		if (typeof window === "undefined") {
-			return;
-		}
-
-		const authOrigin = window.location.origin;
-		const callbackUrl = window.location.hostname.endsWith("ultramaxo.tech")
-			? "https://chat.ultramaxo.tech/chat"
-			: `${window.location.origin}/chat`;
-		const oauthLauncherUrl = `${authOrigin}/oauth/${provider}?callbackUrl=${encodeURIComponent(callbackUrl)}`;
-		window.location.href = oauthLauncherUrl;
-	};
-
 	return (
 		<div className="relative w-full mx-auto">
 			<div className="flex flex-col gap-8 w-full p-10 rounded-4xl border border-white/5 bg-[#18181b] shadow-2xl relative z-10 mx-auto">
@@ -151,22 +138,20 @@ export function AuthForm({
 				</div>
 
 				<div className="flex flex-col gap-3 relative z-10">
-					<button
+					<Link
 						className="flex w-full items-center justify-center gap-3 rounded-xl border border-zinc-800 bg-transparent py-2.5 text-sm font-semibold text-white hover:bg-zinc-800 transition-all active:scale-[0.98]"
-						onClick={() => void openOAuthTab("google")}
-						type="button"
+						href="/oauth/google"
 					>
 						<LogoGoogle size={18} />
 						<span>Continue with Google</span>
-					</button>
-					<button
+					</Link>
+					<Link
 						className="flex w-full items-center justify-center gap-3 rounded-xl border border-zinc-800 bg-transparent py-2.5 text-sm font-semibold text-white hover:bg-zinc-800 transition-all active:scale-[0.98]"
-						onClick={() => void openOAuthTab("github")}
-						type="button"
+						href="/oauth/github"
 					>
 						<GitIcon size={18} />
 						<span>Continue with GitHub</span>
-					</button>
+					</Link>
 				</div>
 			</div>
 		</div>

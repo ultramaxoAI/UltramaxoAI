@@ -33,6 +33,11 @@ export async function proxy(request: NextRequest) {
 		return NextResponse.rewrite(loginFallbackUrl);
 	}
 
+	if (request.method === "POST" && pathname === "/oauth/complete") {
+		const completionUrl = new URL(request.url);
+		return NextResponse.redirect(completionUrl);
+	}
+
 	// Do not force apex/non-www here.
 	// Platform-level domain redirects (Vercel) should be the single source of truth
 	// to prevent redirect loops between app middleware and edge/domain settings.
