@@ -27,6 +27,12 @@ export async function proxy(request: NextRequest) {
 	const isLoggedOutRedirect =
 		request.nextUrl.searchParams.get(LOGOUT_REDIRECT_FLAG) === "1";
 
+	if (request.method === "POST" && pathname === "/login") {
+		const loginFallbackUrl = new URL("/api/auth/login-fallback", request.url);
+		loginFallbackUrl.search = request.nextUrl.search;
+		return NextResponse.rewrite(loginFallbackUrl);
+	}
+
 	// Do not force apex/non-www here.
 	// Platform-level domain redirects (Vercel) should be the single source of truth
 	// to prevent redirect loops between app middleware and edge/domain settings.
