@@ -3,10 +3,15 @@ import { signIn } from "@/app/(auth)/auth";
 
 const SUPPORTED_PROVIDERS = new Set(["google", "github"]);
 
-function buildOAuthCompletionUrl(requestUrl: URL, callbackUrl: string) {
-	const completionUrl = new URL("/oauth/complete", requestUrl.origin);
-	completionUrl.searchParams.set("target", callbackUrl);
-	return completionUrl.toString();
+function resolveRedirectTo(request: Request) {
+	const url = new URL(request.url);
+	const callbackUrl = url.searchParams.get("callbackUrl");
+
+	if (callbackUrl?.startsWith("/")) {
+		return callbackUrl;
+	}
+
+	return "/chat";
 }
 
 export async function GET(
@@ -19,15 +24,8 @@ export async function GET(
 		return NextResponse.json({ error: "Unsupported provider" }, { status: 400 });
 	}
 
-	const url = new URL(request.url);
-	const callbackUrl =
-		url.searchParams.get("callbackUrl") ||
-		(process.env.NODE_ENV === "production"
-			? "https://chat.ultramaxo.tech/chat"
-			: "/chat");
-
 	return signIn(provider, {
 		redirect: true,
-		redirectTo: buildOAuthCompletionUrl(url, callbackUrl),
+		redirectTo: resolveRedirectTo(request),
 	});
 }

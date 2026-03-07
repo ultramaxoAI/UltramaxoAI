@@ -5,6 +5,9 @@ import { GitIcon, LogoGoogle } from "./icons";
 import { Input } from "./ui/input";
 import { Label } from "./ui/label";
 
+const GOOGLE_OAUTH_HREF = "/oauth/google?callbackUrl=%2Fchat";
+const GITHUB_OAUTH_HREF = "/oauth/github?callbackUrl=%2Fchat";
+
 export function AuthForm({
 	action,
 	onSubmit,
@@ -140,14 +143,14 @@ export function AuthForm({
 				<div className="flex flex-col gap-3 relative z-10">
 					<a
 						className="flex w-full items-center justify-center gap-3 rounded-xl border border-zinc-800 bg-transparent py-2.5 text-sm font-semibold text-white hover:bg-zinc-800 transition-all active:scale-[0.98]"
-						href="/oauth/google"
+						href={GOOGLE_OAUTH_HREF}
 					>
 						<LogoGoogle size={18} />
 						<span>Continue with Google</span>
 					</a>
 					<a
 						className="flex w-full items-center justify-center gap-3 rounded-xl border border-zinc-800 bg-transparent py-2.5 text-sm font-semibold text-white hover:bg-zinc-800 transition-all active:scale-[0.98]"
-						href="/oauth/github"
+						href={GITHUB_OAUTH_HREF}
 					>
 						<GitIcon size={18} />
 						<span>Continue with GitHub</span>

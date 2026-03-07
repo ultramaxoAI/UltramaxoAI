@@ -7,15 +7,7 @@ import { AuthForm } from "@/components/auth-form";
 import { SubmitButton } from "@/components/submit-button";
 import { toast } from "@/components/toast";
 
-function getCredentialsActionUrl() {
-	const targetUrl =
-		typeof window !== "undefined" &&
-		window.location.hostname.endsWith("ultramaxo.tech")
-			? "https://chat.ultramaxo.tech/chat"
-			: "/chat";
-	const redirectTo = `/oauth/complete?target=${encodeURIComponent(targetUrl)}`;
-	return `/api/auth/login-fallback?redirectTo=${encodeURIComponent(redirectTo)}`;
-}
+const CREDENTIALS_ACTION_URL = "/api/auth/login-fallback?redirectTo=%2Fchat";
 
 export default function Page() {
 	useEffect(() => {
@@ -56,7 +48,7 @@ export default function Page() {
 	return (
 		<div className="flex min-h-screen w-full items-center justify-center bg-black relative overflow-hidden py-8">
 			<div className="flex w-full max-w-110 flex-col gap-10 relative z-10 animate-in fade-in slide-in-from-bottom-4 duration-1000 px-6">
-				<AuthForm action={getCredentialsActionUrl()} defaultEmail="" type="login">
+				<AuthForm action={CREDENTIALS_ACTION_URL} defaultEmail="" type="login">
 					<SubmitButton isSuccessful={false}>
 						Sign In
 					</SubmitButton>
