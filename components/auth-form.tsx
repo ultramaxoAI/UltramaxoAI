@@ -1,5 +1,4 @@
 import Link from "next/link";
-import { signIn } from "next-auth/react";
 import { GitIcon, LogoGoogle } from "./icons";
 import { Input } from "./ui/input";
 import { Label } from "./ui/label";
@@ -17,37 +16,13 @@ export function AuthForm({
 	type: "login" | "register";
 	defaultEmail?: string;
 }) {
-	const openOAuthTab = async (provider: "google" | "github") => {
-		const chatUrl =
-			typeof window !== "undefined" &&
-			window.location.hostname.endsWith("ultramaxo.tech")
-				? "https://chat.ultramaxo.tech/chat"
-				: "/chat";
-
-		const popup =
-			typeof window !== "undefined"
-				? window.open("", "_blank", "noopener,noreferrer")
-				: null;
-
-		const result = await signIn(provider, {
-			callbackUrl: chatUrl,
-			redirect: false,
-		});
-
-		if (result?.url) {
-			if (popup) {
-				popup.location.href = result.url;
-				popup.focus();
-				return;
-			}
-
-			window.location.href = result.url;
+	const openOAuthTab = (provider: "google" | "github") => {
+		if (typeof window === "undefined") {
 			return;
 		}
 
-		if (popup) {
-			popup.close();
-		}
+		const oauthLauncherUrl = `/login?oauth=${provider}&popup=1`;
+		window.open(oauthLauncherUrl, "_blank", "noopener,noreferrer");
 	};
 
 	return (
