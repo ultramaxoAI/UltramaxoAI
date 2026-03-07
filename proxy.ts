@@ -23,12 +23,9 @@ export async function proxy(request: NextRequest) {
 	const isLoggedOutRedirect =
 		request.nextUrl.searchParams.get(LOGOUT_REDIRECT_FLAG) === "1";
 
-	// Redirect www → non-www to avoid cookie domain mismatches
-	if (hostname.startsWith("www.")) {
-		const url = request.nextUrl.clone();
-		url.host = hostname.replace("www.", "");
-		return NextResponse.redirect(url, 301);
-	}
+	// Do not force apex/non-www here.
+	// Platform-level domain redirects (Vercel) should be the single source of truth
+	// to prevent redirect loops between app middleware and edge/domain settings.
 
 	/*
 	 * Playwright starts the dev server and requires a 200 status to
