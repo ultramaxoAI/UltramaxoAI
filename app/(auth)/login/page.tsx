@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { useActionState, useEffect, useState } from "react";
 
@@ -12,6 +12,7 @@ import { type LoginActionState, login } from "../actions";
 
 export default function Page() {
 	const router = useRouter();
+	const searchParams = useSearchParams();
 
 	const [isSuccessful, setIsSuccessful] = useState(false);
 
@@ -44,9 +45,41 @@ export default function Page() {
 		} else if (state.status === "success") {
 			setIsSuccessful(true);
 			updateSession();
-			router.refresh();
+
+			const isProductionHost =
+				typeof window !== "undefined" &&
+				window.location.hostname.endsWith("ultramaxo.tech");
+
+			if (isProductionHost) {
+				window.location.href = "https://chat.ultramaxo.tech/chat";
+				return;
+			}
+
+			router.push("/chat");
 		}
 	}, [state.status]);
+
+	useEffect(() => {
+		const error = searchParams.get("error");
+
+		if (!error) {
+			return;
+		}
+
+		if (error === "OAuthAccountNotLinked") {
+			toast({
+				type: "error",
+				description:
+					"Email ini sudah terdaftar. Coba login dengan metode yang sama seperti sebelumnya atau hapus akun lama dulu.",
+			});
+			return;
+		}
+
+		toast({
+			type: "error",
+			description: `Login gagal: ${error}`,
+		});
+	}, [searchParams]);
 
 	return (
 		<div className="flex min-h-screen w-full items-center justify-center bg-black relative overflow-hidden py-8">

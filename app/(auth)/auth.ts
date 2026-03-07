@@ -1,7 +1,7 @@
 import type { Adapter } from "@auth/core/adapters";
 import { DrizzleAdapter } from "@auth/drizzle-adapter";
 import { compare } from "bcrypt-ts";
-import { eq } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 import NextAuth, { type DefaultSession } from "next-auth";
 import type { DefaultJWT } from "next-auth/jwt";
 import Credentials from "next-auth/providers/credentials";
@@ -252,7 +252,42 @@ export const {
 			if (account && user.email) {
 				try {
 					const [existingUser] = await getUser(user.email);
+					const [linkedAccount] = await db
+						.select({
+							accountUserId: accountTable.userId,
+							linkedUserId: userTable.id,
+							linkedUserEmail: userTable.email,
+						})
+						.from(accountTable)
+						.leftJoin(userTable, eq(accountTable.userId, userTable.id))
+						.where(
+							and(
+								eq(accountTable.provider, account.provider),
+								eq(accountTable.providerAccountId, account.providerAccountId),
+							),
+						)
+						.limit(1);
+
+					// Self-heal old/orphaned OAuth rows left behind by legacy deletes.
+					if (linkedAccount && !linkedAccount.linkedUserId) {
+						await db
+							.delete(accountTable)
+							.where(
+								and(
+									eq(accountTable.provider, account.provider),
+									eq(accountTable.providerAccountId, account.providerAccountId),
+								),
+							);
+					}
+
 					if (existingUser) {
+						if (
+							linkedAccount?.linkedUserEmail &&
+							linkedAccount.linkedUserEmail !== existingUser.email
+						) {
+							return false;
+						}
+
 						// User exists — update their name if not set
 						if (!existingUser.name && user.name) {
 							await db
@@ -260,6 +295,45 @@ export const {
 								.set({ name: user.name })
 								.where(eq(userTable.id, existingUser.id));
 						}
+
+						await db
+							.insert(accountTable)
+							.values({
+								userId: existingUser.id,
+								type: account.type,
+								provider: account.provider,
+								providerAccountId: account.providerAccountId,
+								refresh_token: account.refresh_token,
+								access_token: account.access_token,
+								expires_at: account.expires_at,
+								token_type: account.token_type,
+								scope: account.scope,
+								id_token: account.id_token,
+								session_state:
+									typeof account.session_state === "string"
+										? account.session_state
+										: null,
+							})
+							.onConflictDoUpdate({
+								target: [
+									accountTable.provider,
+									accountTable.providerAccountId,
+								],
+								set: {
+									userId: existingUser.id,
+									refresh_token: account.refresh_token,
+									access_token: account.access_token,
+									expires_at: account.expires_at,
+									token_type: account.token_type,
+									scope: account.scope,
+									id_token: account.id_token,
+									session_state:
+										typeof account.session_state === "string"
+											? account.session_state
+											: null,
+								},
+							});
+
 						// Patch user.id so NextAuth uses the existing user
 						user.id = existingUser.id;
 					}
