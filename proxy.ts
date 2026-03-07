@@ -1,6 +1,6 @@
 import { type NextRequest, NextResponse } from "next/server";
 import { getToken } from "next-auth/jwt";
-import { guestRegex, isDevelopmentEnvironment } from "./lib/constants";
+import { guestRegex } from "./lib/constants";
 import { securityHeaders } from "./middleware.security";
 
 const CHAT_SUBDOMAIN = "chat.ultramaxo.tech";
@@ -19,8 +19,16 @@ function isProduction(request: NextRequest): boolean {
 
 export async function proxy(request: NextRequest) {
 	const { pathname } = request.nextUrl;
+	const hostname = request.headers.get("host") || "";
 	const isLoggedOutRedirect =
 		request.nextUrl.searchParams.get(LOGOUT_REDIRECT_FLAG) === "1";
+
+	// Redirect www → non-www to avoid cookie domain mismatches
+	if (hostname.startsWith("www.")) {
+		const url = request.nextUrl.clone();
+		url.host = hostname.replace("www.", "");
+		return NextResponse.redirect(url, 301);
+	}
 
 	/*
 	 * Playwright starts the dev server and requires a 200 status to
@@ -38,7 +46,6 @@ export async function proxy(request: NextRequest) {
 	const token = await getToken({
 		req: request,
 		secret: process.env.AUTH_SECRET,
-		secureCookie: !isDevelopmentEnvironment,
 	});
 
 	const chatSubdomain = isChatSubdomain(request);
