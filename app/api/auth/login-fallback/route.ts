@@ -1,6 +1,11 @@
 import { NextResponse } from "next/server";
 import { signIn } from "@/app/(auth)/auth";
 
+const CHAT_SUCCESS_URL =
+	process.env.NODE_ENV === "production"
+		? "https://chat.ultramaxo.tech/chat"
+		: "/chat";
+
 function resolveRedirectTo(request: Request) {
 	const url = new URL(request.url);
 	const redirectTo = url.searchParams.get("redirectTo");
@@ -9,7 +14,11 @@ function resolveRedirectTo(request: Request) {
 		return redirectTo;
 	}
 
-	return "/chat";
+	if (redirectTo === CHAT_SUCCESS_URL) {
+		return redirectTo;
+	}
+
+	return CHAT_SUCCESS_URL;
 }
 
 function isNextRedirectError(error: unknown): error is Error & { digest: string } {

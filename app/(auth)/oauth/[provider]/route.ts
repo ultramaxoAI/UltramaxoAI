@@ -2,6 +2,10 @@ import { NextResponse } from "next/server";
 import { signIn } from "@/app/(auth)/auth";
 
 const SUPPORTED_PROVIDERS = new Set(["google", "github"]);
+const CHAT_SUCCESS_URL =
+	process.env.NODE_ENV === "production"
+		? "https://chat.ultramaxo.tech/chat"
+		: "/chat";
 
 function resolveRedirectTo(request: Request) {
 	const url = new URL(request.url);
@@ -11,7 +15,11 @@ function resolveRedirectTo(request: Request) {
 		return callbackUrl;
 	}
 
-	return "/chat";
+	if (callbackUrl === CHAT_SUCCESS_URL) {
+		return callbackUrl;
+	}
+
+	return CHAT_SUCCESS_URL;
 }
 
 export async function GET(

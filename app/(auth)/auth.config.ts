@@ -14,7 +14,7 @@ const CHAT_URL =
 export const authConfig = {
 	pages: {
 		signIn: "/login",
-		newUser: "/chat",
+		newUser: CHAT_URL,
 	},
 	providers: [
 		// added later in auth.ts since it requires bcrypt which is only compatible with Node.js
@@ -49,10 +49,20 @@ export const authConfig = {
 			}
 			// Allow relative callbacks within the app
 			if (url.startsWith("/")) {
+				if (url === "/chat" || url.startsWith("/chat?")) {
+					return resolvedChatUrl;
+				}
 				return `${baseUrl}${url}`;
 			}
 
 			const parsedUrl = new URL(url);
+
+			if (
+				rootOrigins.has(parsedUrl.origin) &&
+				(parsedUrl.pathname === "/chat" || parsedUrl.pathname.startsWith("/chat/"))
+			) {
+				return resolvedChatUrl;
+			}
 
 			// Never leave authenticated users on the marketing root in production.
 			if (rootOrigins.has(parsedUrl.origin) && parsedUrl.pathname === "/") {

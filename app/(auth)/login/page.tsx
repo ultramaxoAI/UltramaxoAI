@@ -10,6 +10,10 @@ import { type LoginActionState, login } from "../actions";
 
 const SESSION_POLL_ATTEMPTS = 12;
 const SESSION_POLL_DELAY_MS = 250;
+const CHAT_SUCCESS_URL =
+	process.env.NODE_ENV === "production"
+		? "https://chat.ultramaxo.tech/chat"
+		: "/chat";
 
 async function waitForSession() {
 	for (let attempt = 0; attempt < SESSION_POLL_ATTEMPTS; attempt++) {
@@ -88,7 +92,7 @@ export default function Page() {
 			setIsSuccessful(true);
 
 			await waitForSession();
-			window.location.replace("/chat");
+			window.location.replace(CHAT_SUCCESS_URL);
 		});
 	};
 
