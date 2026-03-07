@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { useActionState, useEffect, useState } from "react";
 
@@ -12,7 +12,6 @@ import { type LoginActionState, login } from "../actions";
 
 export default function Page() {
 	const router = useRouter();
-	const searchParams = useSearchParams();
 
 	const [isSuccessful, setIsSuccessful] = useState(false);
 
@@ -60,7 +59,11 @@ export default function Page() {
 	}, [state.status]);
 
 	useEffect(() => {
-		const error = searchParams.get("error");
+		if (typeof window === "undefined") {
+			return;
+		}
+
+		const error = new URLSearchParams(window.location.search).get("error");
 
 		if (!error) {
 			return;
@@ -79,7 +82,7 @@ export default function Page() {
 			type: "error",
 			description: `Login gagal: ${error}`,
 		});
-	}, [searchParams]);
+	}, []);
 
 	return (
 		<div className="flex min-h-screen w-full items-center justify-center bg-black relative overflow-hidden py-8">
