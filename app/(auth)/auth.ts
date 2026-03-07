@@ -80,38 +80,6 @@ export const {
 		strategy: "jwt",
 		maxAge: 24 * 60 * 60, // 1 Day (24 Hours)
 	},
-	...(isProduction && {
-		cookies: {
-			sessionToken: {
-				name: "__Secure-authjs.session-token",
-				options: {
-					httpOnly: true,
-					sameSite: "lax",
-					path: "/",
-					secure: true,
-					domain: cookieDomain,
-				},
-			},
-			callbackUrl: {
-				name: "__Secure-authjs.callback-url",
-				options: {
-					sameSite: "lax",
-					path: "/",
-					secure: true,
-					domain: cookieDomain,
-				},
-			},
-			csrfToken: {
-				name: "__Host-authjs.csrf-token",
-				options: {
-					httpOnly: true,
-					sameSite: "lax",
-					path: "/",
-					secure: true,
-				},
-			},
-		},
-	}),
 	providers: [
 		Google({
 			clientId: process.env.AUTH_GOOGLE_ID,
