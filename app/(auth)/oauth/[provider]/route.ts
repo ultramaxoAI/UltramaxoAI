@@ -4,11 +4,7 @@ import { signIn } from "@/app/(auth)/auth";
 const SUPPORTED_PROVIDERS = new Set(["google", "github"]);
 
 function buildOAuthCompletionUrl(requestUrl: URL, callbackUrl: string) {
-	const authOrigin =
-		process.env.NODE_ENV === "production"
-			? "https://ultramaxo.tech"
-			: requestUrl.origin;
-	const completionUrl = new URL("/oauth/complete", authOrigin);
+	const completionUrl = new URL("/oauth/complete", requestUrl.origin);
 	completionUrl.searchParams.set("target", callbackUrl);
 	return completionUrl.toString();
 }

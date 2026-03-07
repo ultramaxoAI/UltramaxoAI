@@ -6,6 +6,26 @@ const SESSION_POLL_ATTEMPTS = 20;
 const SESSION_POLL_DELAY_MS = 300;
 const FALLBACK_LOGIN_URL = "/login?error=OAuthCallback";
 
+async function clearAuthClientCaches() {
+	if (typeof window === "undefined") {
+		return;
+	}
+
+	try {
+		if ("serviceWorker" in navigator) {
+			const registrations = await navigator.serviceWorker.getRegistrations();
+			await Promise.all(registrations.map((registration) => registration.unregister()));
+		}
+
+		if ("caches" in window) {
+			const cacheKeys = await caches.keys();
+			await Promise.all(cacheKeys.map((cacheKey) => caches.delete(cacheKey)));
+		}
+	} catch {
+		// Ignore cache cleanup issues and continue the auth flow.
+	}
+}
+
 function resolveTargetUrl(rawTarget: string | null) {
 	if (!rawTarget || typeof window === "undefined") {
 		return window.location.hostname.endsWith("ultramaxo.tech")
@@ -68,6 +88,7 @@ export default function OAuthCompletePage() {
 		const targetUrl = resolveTargetUrl(searchParams.get("target"));
 
 		void (async () => {
+			await clearAuthClientCaches();
 			const hasSession = await waitForSession();
 
 			if (hasSession) {

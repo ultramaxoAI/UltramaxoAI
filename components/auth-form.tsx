@@ -25,9 +25,7 @@ export function AuthForm({
 			return;
 		}
 
-		const authOrigin = window.location.hostname.endsWith("ultramaxo.tech")
-			? "https://ultramaxo.tech"
-			: window.location.origin;
+		const authOrigin = window.location.origin;
 		const callbackUrl = window.location.hostname.endsWith("ultramaxo.tech")
 			? "https://chat.ultramaxo.tech/chat"
 			: `${window.location.origin}/chat`;
