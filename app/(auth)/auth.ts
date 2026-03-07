@@ -15,7 +15,13 @@ import {
 	setEmailVerified,
 	verifyVerificationCode,
 } from "@/lib/db/queries";
-import { user as userTable } from "@/lib/db/schema";
+import {
+	account as accountTable,
+	authenticator as authenticatorTable,
+	session as sessionTable,
+	user as userTable,
+	verificationToken as verificationTokenTable,
+} from "@/lib/db/schema";
 import { generateDummyPassword } from "@/lib/db/utils";
 import { authConfig } from "./auth.config";
 
@@ -63,8 +69,17 @@ export const {
 	signOut,
 } = NextAuth({
 	...authConfig,
-	adapter: DrizzleAdapter(db) as Adapter,
-	session: { strategy: "jwt" },
+	adapter: DrizzleAdapter(db, {
+		usersTable: userTable,
+		accountsTable: accountTable,
+		sessionsTable: sessionTable,
+		verificationTokensTable: verificationTokenTable,
+		authenticatorsTable: authenticatorTable,
+	}) as Adapter,
+	session: {
+		strategy: "jwt",
+		maxAge: 24 * 60 * 60, // 1 Day (24 Hours)
+	},
 	...(isProduction && {
 		cookies: {
 			sessionToken: {
@@ -230,17 +245,21 @@ export const {
 						token.role = dbUser.role as "user" | "admin";
 						token.email = dbUser.email;
 						token.name = dbUser.name;
+					} else {
+						// SECURITY FIX: User was deleted from the database.
+						// Returning null instantly invalidates the JWT and destroying the session.
+						return null;
 					}
 				} catch (error) {
 					console.error("Error refreshing user data in JWT:", error);
-					// If error, keep existing token data
+					// If a generic database or network error occurs, keep the existing token data.
 				}
 			}
 
 			return token;
 		},
 		session({ session, token }) {
-			if (session.user) {
+			if (token && session.user) {
 				session.user.id = token.id;
 				session.user.type = token.type;
 				session.user.role = token.role;

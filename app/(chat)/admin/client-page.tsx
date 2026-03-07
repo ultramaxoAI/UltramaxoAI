@@ -82,7 +82,10 @@ export default function AdminDashboardClient() {
 	const fetchInsights = useCallback(async () => {
 		setLoading(true);
 		try {
-			const res = await fetch("/api/admin/insights");
+			const res = await fetch("/api/admin/insights", {
+				cache: "no-store",
+				headers: { "Cache-Control": "no-cache" },
+			});
 			const data = await res.json();
 			if (data.success) {
 				setInsights({
@@ -100,7 +103,10 @@ export default function AdminDashboardClient() {
 	const fetchUsers = useCallback(async () => {
 		setLoading(true);
 		try {
-			const res = await fetch("/api/admin/users");
+			const res = await fetch("/api/admin/users", {
+				cache: "no-store",
+				headers: { "Cache-Control": "no-cache" },
+			});
 			const data = await res.json();
 			if (data.users) {
 				setUsers(data.users);
@@ -115,7 +121,10 @@ export default function AdminDashboardClient() {
 	const fetchUpgradeRequests = useCallback(async () => {
 		setLoading(true);
 		try {
-			const res = await fetch("/api/admin/upgrade-requests");
+			const res = await fetch("/api/admin/upgrade-requests", {
+				cache: "no-store",
+				headers: { "Cache-Control": "no-cache" },
+			});
 			const data = await res.json();
 			if (data.requests) {
 				setUpgradeRequests(data.requests);
@@ -129,7 +138,10 @@ export default function AdminDashboardClient() {
 
 	const fetchStats = useCallback(async () => {
 		try {
-			const res = await fetch("/api/admin/stats");
+			const res = await fetch("/api/admin/stats", {
+				cache: "no-store",
+				headers: { "Cache-Control": "no-cache" },
+			});
 			const data = await res.json();
 			if (data) {
 				setStats(data);

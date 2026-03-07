@@ -287,7 +287,7 @@ export function SidebarUserNav({
 													: "/login?loggedOut=1";
 
 											signOut({
-												redirectTo: logoutRedirect,
+												callbackUrl: logoutRedirect,
 											});
 										}
 									}}

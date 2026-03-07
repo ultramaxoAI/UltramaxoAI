@@ -316,7 +316,7 @@ function PureArtifact({
 										},
 									}
 						}
-						className="fixed flex h-dvh flex-col overflow-y-scroll border-zinc-200 bg-background md:border-l dark:border-zinc-700 dark:bg-muted pointer-events-auto"
+						className="fixed flex h-dvh flex-col overflow-y-scroll border-zinc-800 bg-zinc-950 text-zinc-100 md:border-l pointer-events-auto"
 						exit={{
 							opacity: 0,
 							scale: 0.5,
@@ -347,12 +347,12 @@ function PureArtifact({
 									}
 						}
 					>
-						<div className="flex flex-row items-start justify-between p-2">
-							<div className="flex flex-row items-start gap-4">
+						<div className="flex flex-row items-center justify-between p-3 border-b border-zinc-800 bg-zinc-950">
+							<div className="flex flex-row items-center gap-4">
 								<ArtifactCloseButton />
 
 								<div className="flex flex-col">
-									<div className="font-medium">{artifact.title}</div>
+									<div className="font-semibold text-zinc-100 text-sm tracking-wide">{artifact.title}</div>
 
 									{isContentDirty ? (
 										<div className="text-muted-foreground text-sm">
@@ -385,7 +385,7 @@ function PureArtifact({
 							/>
 						</div>
 
-						<div className="h-full max-w-full! items-center overflow-y-scroll bg-background dark:bg-muted">
+						<div className="h-full flex-1 max-w-full! items-center overflow-y-auto bg-zinc-950">
 							<div className={artifact.kind === "code" ? "" : "p-4"}>
 								<artifactDefinition.content
 									content={

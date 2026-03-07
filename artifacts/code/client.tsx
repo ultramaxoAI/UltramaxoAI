@@ -267,6 +267,19 @@ function extractHtmlFiles(
 	return files;
 }
 
+// Convert files back to a single string for persistence
+function serializeFilesToContent(
+	files: Array<{ name: string; content: string; language?: SupportedLanguage }>,
+): string {
+	if (files.length === 1 && files[0].name.startsWith("code.")) {
+		return files[0].content;
+	}
+
+	return files
+		.map((file) => `// filename: ${file.name}\n${file.content}`)
+		.join("\n\n");
+}
+
 function getDefaultFileName(language: SupportedLanguage): string {
 	switch (language) {
 		case "python":
@@ -529,6 +542,7 @@ export const codeArtifact = new Artifact<"code", Metadata>({
 				files: updatedFiles,
 				activeFileIndex: updatedFiles.length - 1,
 			});
+			props.onSaveContent(serializeFilesToContent(updatedFiles), false);
 		};
 
 		const handleFileDelete = (index: number) => {
@@ -545,6 +559,7 @@ export const codeArtifact = new Artifact<"code", Metadata>({
 				files: updatedFiles,
 				activeFileIndex: newActiveIndex,
 			});
+			props.onSaveContent(serializeFilesToContent(updatedFiles), false);
 		};
 
 		const handleFileRename = (index: number, newName: string) => {
@@ -555,45 +570,34 @@ export const codeArtifact = new Artifact<"code", Metadata>({
 				...metadata,
 				files: updatedFiles,
 			});
+			props.onSaveContent(serializeFilesToContent(updatedFiles), false);
 		};
 
 		return (
-			<div className="flex flex-col w-full border border-zinc-800 rounded-xl overflow-hidden bg-zinc-900">
-				{/* Collapsible Header - Like Reagent */}
-				<button
-					type="button"
-					className="flex items-center gap-3 px-4 py-3 hover:bg-zinc-800/50 transition-colors border-b border-zinc-800"
-					onClick={() => setIsExpanded(!isExpanded)}
-				>
-					{isExpanded ? (
-						<ChevronDown className="w-5 h-5 text-zinc-400" />
-					) : (
-						<ChevronRight className="w-5 h-5 text-zinc-400" />
-					)}
+			<div className="flex flex-col w-full h-full border border-zinc-800 rounded-xl overflow-hidden bg-[#0A0A0A]">
+				<div className="flex items-center justify-between px-3 py-2 bg-[#141415] border-b border-zinc-800">
 					<div className="flex items-center gap-2">
-						<div className="w-10 h-10 rounded-lg bg-zinc-800 flex items-center justify-center">
-							<LogsIcon size={20} />
+						<div className="flex items-center gap-1.5 px-2 py-1 bg-zinc-800/50 rounded text-xs font-medium text-zinc-300 border border-zinc-800/80">
+							{detectedLanguage === "python" ? "🐍 Python" : detectedLanguage === "html" ? "🌐 Web" : "💻 Node.js"}
 						</div>
-						<div className="flex-1 text-left">
-							<div className="font-medium text-zinc-200">
-								{detectedLanguage.toUpperCase()}
-							</div>
-							<div className="text-xs text-zinc-500">
-								{linesCount} lines
-								{files.length > 1 ? ` • ${files.length} files` : ""}
-							</div>
+						<div className="text-xs text-zinc-500 font-mono hidden md:block">
+							{activeFile?.name || "App.js"}
 						</div>
 					</div>
-					{!isExpanded && (
-						<div className="flex-1 text-left text-sm text-zinc-500 font-mono truncate ml-4">
-							{codePreview.substring(0, 80)}...
+					<div className="flex items-center bg-zinc-900 border border-zinc-800 rounded-md p-0.5">
+						<div className="px-3 py-1 text-xs font-medium rounded bg-zinc-800 text-zinc-100 shadow-sm">
+							Code
 						</div>
-					)}
-				</button>
+						{isPreviewableWebProject(files) && (
+							<div className="px-3 py-1 text-xs font-medium rounded text-zinc-400 hover:text-zinc-200 cursor-pointer transition-colors">
+								Preview
+							</div>
+						)}
+					</div>
+				</div>
 
 				{/* Expandable Content */}
-				{isExpanded && (
-					<div className="flex w-full min-h-[72vh]" style={{ height: 760 }}>
+					<div className="flex flex-1 w-full min-h-[72vh] relative" style={{ height: "calc(100vh - 100px)" }}>
 						{/* If it's a previewable web project, display the full IDE viewer */}
 						{isPreviewableWebProject(files) ? (
 							<div className="flex-1 w-full h-full">
@@ -609,6 +613,13 @@ export const codeArtifact = new Artifact<"code", Metadata>({
 									}
 									status={props.status}
 									userDependencies={userDependencies}
+									onSaveContent={(updatedFiles) => {
+										setMetadata({
+											...metadata,
+											files: updatedFiles,
+										});
+										props.onSaveContent(serializeFilesToContent(updatedFiles), true);
+									}}
 								/>
 							</div>
 						) : (
@@ -651,7 +662,6 @@ export const codeArtifact = new Artifact<"code", Metadata>({
 							</>
 						)}
 					</div>
-				)}
 			</div>
 		);
 	},

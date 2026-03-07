@@ -52,13 +52,14 @@ function PureArtifactActions({
 					<TooltipTrigger asChild>
 						<Button
 							className={cn(
-								"h-fit transition-all hover:scale-105",
+								"h-fit transition-all text-sm rounded-full",
 								{
-									"p-2.5": !action.label,
-									"px-3 py-2": action.label,
+									"p-2": !action.label,
+									"px-4 py-1.5": action.label,
 								},
-								action.label &&
-									"bg-primary text-primary-foreground hover:bg-primary/90",
+								action.label
+									? "bg-zinc-100 text-zinc-900 hover:bg-zinc-200"
+									: "text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800",
 							)}
 							disabled={
 								isLoading || artifact.status === "streaming"

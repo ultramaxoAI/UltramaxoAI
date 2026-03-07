@@ -48,7 +48,11 @@ export const login = async (
 		if (emailVerificationEnabled) {
 			const [candidateUser] = await getUserByIdentifier(identifier);
 
-			if (candidateUser && !candidateUser.emailVerified) {
+			if (
+				candidateUser &&
+				!candidateUser.emailVerified &&
+				candidateUser.role !== "admin"
+			) {
 				return { status: "unverified" };
 			}
 		}

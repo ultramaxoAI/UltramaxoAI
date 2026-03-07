@@ -19,7 +19,7 @@ import {
 	PlusIcon,
 	Trash2Icon,
 } from "lucide-react";
-import { memo, type ReactNode, useMemo, useState } from "react";
+import { memo, type ReactNode, useMemo, useState, useEffect } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -48,6 +48,7 @@ type SandpackViewerProps = {
 	dependencies?: DependencyMap;
 	userDependencies?: DependencyMap;
 	onDependenciesChange?: (dependencies: DependencyMap) => void;
+	onSaveContent?: (files: PlayableFile[]) => void;
 };
 
 const DEFAULT_APP_FILE = `export default function App() {
@@ -391,9 +392,10 @@ function SandpackIDE({
 	status,
 	userDependencies = {},
 	onDependenciesChange,
+	onSaveContent,
 }: Pick<
 	SandpackViewerProps,
-	"dependencies" | "status" | "userDependencies" | "onDependenciesChange"
+	"dependencies" | "status" | "userDependencies" | "onDependenciesChange" | "onSaveContent"
 >) {
 	const { sandpack } = useSandpack();
 	const [expandedFolders, setExpandedFolders] = useState<
@@ -518,6 +520,17 @@ function SandpackIDE({
 		setPackageInput("");
 	};
 
+	useEffect(() => {
+		if (Object.keys(sandpack.files).length > 0 && onSaveContent && status !== "streaming") {
+			const playableFiles = Object.entries(sandpack.files).map(([path, file]) => ({
+				name: path.replace(/^\//, ""),
+				content: file.code,
+				language: inferLanguageFromPath(path)
+			}));
+			onSaveContent(playableFiles);
+		}
+	}, [sandpack.files, status, onSaveContent]);
+
 	const renderTree = (nodes: FileTreeNode[], depth = 0): ReactNode => {
 		return nodes.map((node) => {
 			if (node.type === "folder") {
@@ -621,24 +634,8 @@ function SandpackIDE({
 	};
 
 	return (
-		<div className="flex h-full min-h-0 flex-col bg-zinc-950">
-			<div className="flex items-center justify-between border-b border-zinc-800 px-3 py-2">
-				<div className="flex items-center gap-2 text-sm font-medium text-zinc-200">
-					<CodeIcon className="size-4 text-cyan-400" />
-					<span>Workspace</span>
-				</div>
-
-				<div className="flex items-center gap-2 text-xs text-zinc-400">
-					<span className="rounded-full border border-zinc-700 px-2 py-1 uppercase tracking-wide">
-						{status}
-					</span>
-					<span className="rounded-full border border-zinc-700 px-2 py-1 uppercase tracking-wide text-zinc-300">
-						{filePaths.length} files
-					</span>
-				</div>
-			</div>
-
-			<div className="grid min-h-0 flex-1 grid-cols-[300px_minmax(0,1fr)] xl:grid-cols-[340px_minmax(0,1fr)]">
+		<div className="flex h-full min-h-0 flex-col bg-[#0A0A0A]">
+			<div className="grid min-h-0 flex-1 grid-cols-[240px_minmax(0,1fr)] xl:grid-cols-[260px_minmax(0,1fr)]">
 				<div className="flex min-h-0 flex-col border-r border-zinc-800 bg-zinc-950/80">
 					<div className="flex items-center justify-between border-b border-zinc-800 px-3 py-2">
 						<div className="flex items-center gap-2 text-sm font-medium text-zinc-200">
@@ -707,6 +704,7 @@ function PureSandpackViewer({
 	userDependencies = {},
 	onDependenciesChange,
 	status,
+	onSaveContent,
 }: SandpackViewerProps) {
 	const template = useMemo(() => getTemplate(files), [files]);
 	const sandpackFiles = useMemo(
@@ -738,6 +736,7 @@ function PureSandpackViewer({
 					onDependenciesChange={onDependenciesChange}
 					status={status}
 					userDependencies={userDependencies}
+					onSaveContent={onSaveContent}
 				/>
 			</SandpackProvider>
 		</div>
