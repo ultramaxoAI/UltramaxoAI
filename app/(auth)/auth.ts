@@ -281,11 +281,15 @@ export const {
 				return true;
 			}
 
-			// For OAuth (Google, GitHub) - allow sign in and let NextAuth handle linking
-			// If the email already exists with a different provider, automatically link
+			// For OAuth (Google, GitHub) - let Auth.js handle account linking
+			// via allowDangerousEmailAccountLinking: true on the provider config.
+			// We only need to:
+			// 1. Clean up orphaned account rows (user deleted but account row left behind)
+			// 2. Patch user.id so Auth.js uses the existing user instead of creating a new one
+			// 3. Sync display name from OAuth profile
 			if (account && user.email) {
 				try {
-					const [existingUser] = await getUser(user.email);
+					// Check if this OAuth account is already linked (and if the linked user still exists)
 					const [linkedAccount] = await db
 						.select({
 							accountUserId: accountTable.userId,
@@ -302,7 +306,8 @@ export const {
 						)
 						.limit(1);
 
-					// Self-heal old/orphaned OAuth rows left behind by legacy deletes.
+					// Self-heal: delete orphaned OAuth rows where the user no longer exists.
+					// This prevents Auth.js from finding a stale account link pointing to a deleted user.
 					if (linkedAccount && !linkedAccount.linkedUserId) {
 						await db
 							.delete(accountTable)
@@ -314,15 +319,21 @@ export const {
 							);
 					}
 
-					if (existingUser) {
-						if (
-							linkedAccount?.linkedUserEmail &&
-							linkedAccount.linkedUserEmail !== existingUser.email
-						) {
+					// Block sign-in if this OAuth account is already linked to a DIFFERENT user
+					if (
+						linkedAccount?.linkedUserEmail &&
+						linkedAccount.linkedUserId
+					) {
+						const [existingUser] = await getUser(user.email);
+						if (existingUser && linkedAccount.linkedUserEmail !== existingUser.email) {
 							return false;
 						}
+					}
 
-						// User exists — update their name if not set
+					// Check if a user with this email already exists (e.g. registered via credentials)
+					const [existingUser] = await getUser(user.email);
+					if (existingUser) {
+						// Sync display name from OAuth profile if the user doesn't have one
 						if (!existingUser.name && user.name) {
 							await db
 								.update(userTable)
@@ -330,45 +341,8 @@ export const {
 								.where(eq(userTable.id, existingUser.id));
 						}
 
-						await db
-							.insert(accountTable)
-							.values({
-								userId: existingUser.id,
-								type: account.type,
-								provider: account.provider,
-								providerAccountId: account.providerAccountId,
-								refresh_token: account.refresh_token,
-								access_token: account.access_token,
-								expires_at: account.expires_at,
-								token_type: account.token_type,
-								scope: account.scope,
-								id_token: account.id_token,
-								session_state:
-									typeof account.session_state === "string"
-										? account.session_state
-										: null,
-							})
-							.onConflictDoUpdate({
-								target: [
-									accountTable.provider,
-									accountTable.providerAccountId,
-								],
-								set: {
-									userId: existingUser.id,
-									refresh_token: account.refresh_token,
-									access_token: account.access_token,
-									expires_at: account.expires_at,
-									token_type: account.token_type,
-									scope: account.scope,
-									id_token: account.id_token,
-									session_state:
-										typeof account.session_state === "string"
-											? account.session_state
-											: null,
-								},
-							});
-
-						// Patch user.id so NextAuth uses the existing user
+						// Patch user.id so Auth.js uses the existing user
+						// instead of trying to create a duplicate
 						user.id = existingUser.id;
 					}
 				} catch {
