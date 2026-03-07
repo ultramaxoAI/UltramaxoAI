@@ -47,7 +47,7 @@ export function AuthForm({
 					</p>
 				</div>
 
-				<form action={action} className="flex flex-col gap-6 w-full" onSubmit={onSubmit}>
+				<form action={action} className="flex flex-col gap-6 w-full" method="post" onSubmit={onSubmit}>
 					{type === "register" && (
 						<div className="flex flex-col gap-2">
 							<Label
