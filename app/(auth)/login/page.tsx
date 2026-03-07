@@ -43,18 +43,14 @@ export default function Page() {
 			});
 		} else if (state.status === "success") {
 			setIsSuccessful(true);
-			updateSession();
-
-			const isProductionHost =
-				typeof window !== "undefined" &&
-				window.location.hostname.endsWith("ultramaxo.tech");
-
-			if (isProductionHost) {
-				window.location.href = "https://chat.ultramaxo.tech/chat";
-				return;
-			}
-
-			router.push("/chat");
+			
+			// Wait for Auth.js to sync the session cookie before navigating.
+			// Instead of a hard window.location.href to a different domain, we navigate to the local /chat routes
+			// and let the proxy.ts middleware cleanly handle the 307 redirect to chat.ultramaxo.tech 
+			// This preserves the session boundaries properly.
+			updateSession().then(() => {
+				window.location.href = "/chat";
+			});
 		}
 	}, [state.status]);
 
