@@ -10,9 +10,11 @@ declare global {
 
 declare const self: WorkerGlobalScope;
 
+const workerOrigin = new URL(self.registration.scope).origin;
+
 const authRouteMatcher = ({ url }: { url: URL }) => {
 	return (
-		url.origin === self.location.origin &&
+		url.origin === workerOrigin &&
 		(
 			url.pathname === "/login" ||
 			url.pathname === "/register" ||
