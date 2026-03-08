@@ -7,8 +7,52 @@ import { AuthForm } from "@/components/auth-form";
 import { SubmitButton } from "@/components/submit-button";
 import { toast } from "@/components/toast";
 
+const CHAT_COOKIE_RESET_URL =
+	process.env.NODE_ENV === "production"
+		? "https://chat.ultramaxo.tech/api/auth/clear-stale-cookies"
+		: undefined;
+const COOKIE_RESET_FLAG = "auth-cookie-reset-v2";
+
 export default function Page() {
 	const [isSuccessful, setIsSuccessful] = useState(false);
+
+	useEffect(() => {
+		const resetCookies = async () => {
+			if (typeof window === "undefined") {
+				return;
+			}
+
+			if (window.sessionStorage.getItem(COOKIE_RESET_FLAG) === "1") {
+				return;
+			}
+
+			window.sessionStorage.setItem(COOKIE_RESET_FLAG, "1");
+
+			try {
+				await fetch("/api/auth/clear-stale-cookies", {
+					method: "GET",
+					cache: "no-store",
+					credentials: "include",
+				});
+			} catch {
+				// Ignore cleanup failures; normal login can still continue.
+			}
+
+			if (CHAT_COOKIE_RESET_URL) {
+				const frame = document.createElement("iframe");
+				frame.src = CHAT_COOKIE_RESET_URL;
+				frame.style.display = "none";
+				frame.setAttribute("aria-hidden", "true");
+				document.body.appendChild(frame);
+
+				window.setTimeout(() => {
+					frame.remove();
+				}, 3000);
+			}
+		};
+
+		void resetCookies();
+	}, []);
 
 	useEffect(() => {
 		if (typeof window === "undefined") {
