@@ -6,10 +6,10 @@ const WWW_URL =
 	process.env.NODE_ENV === "production"
 		? "https://www.ultramaxo.tech"
 		: undefined;
-const CHAT_URL =
-	process.env.NODE_ENV === "production"
-		? "https://chat.ultramaxo.tech/chat"
-		: "/chat";
+// Use a single /chat route on the same origin for all environments.
+// This avoids cross-subdomain cookie timing issues between ultramaxo.tech
+// and chat.ultramaxo.tech during the authentication redirect flow.
+const CHAT_URL = "/chat";
 
 export const authConfig = {
 	pages: {

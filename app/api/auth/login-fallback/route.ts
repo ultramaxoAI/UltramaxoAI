@@ -1,10 +1,7 @@
 import { NextResponse } from "next/server";
 import { signIn } from "@/app/(auth)/auth";
 
-const CHAT_SUCCESS_URL =
-	process.env.NODE_ENV === "production"
-		? "https://chat.ultramaxo.tech/chat"
-		: "/chat";
+const CHAT_SUCCESS_URL = "/chat";
 
 function resolveRedirectTo(request: Request) {
 	const url = new URL(request.url);

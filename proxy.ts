@@ -70,15 +70,11 @@ export async function proxy(request: NextRequest) {
 		return NextResponse.redirect(new URL("/login", `https://${MAIN_DOMAIN}`));
 	}
 
-	// If user is on main domain and hits /chat while in production → redirect to chat subdomain
-	if (production && !chatSubdomain && pathname.startsWith("/chat") && token) {
-		const chatPath = pathname.replace("/chat", "") || "";
-		return NextResponse.redirect(
-			new URL(
-				`/chat${chatPath}${request.nextUrl.search}`,
-				`https://${CHAT_SUBDOMAIN}`,
-			),
-		);
+	// If user is on main domain and hits /chat, stay on the same origin.
+	// We no longer force navigation to the chat subdomain to avoid
+	// cross-subdomain cookie timing issues during authentication.
+	if (!chatSubdomain && pathname.startsWith("/chat") && token) {
+		return nextWithSecurity(request);
 	}
 
 	// Allow OAuth launcher routes for unauthenticated users
@@ -132,22 +128,16 @@ export async function proxy(request: NextRequest) {
 		!(pathname === "/login" && isLoggedOutRedirect)
 	) {
 		if (isRSCRequest) {
-			// Don't redirect RSC/prefetch requests cross-origin — just pass through
+			// Don't redirect RSC/prefetch requests; just return the page.
 			return nextWithSecurity(request);
 		}
-		if (production) {
-			return NextResponse.redirect(
-				new URL("/chat", `https://${CHAT_SUBDOMAIN}`),
-			);
-		}
+		// Always send authenticated users to /chat on the same origin.
 		return NextResponse.redirect(new URL("/chat", request.url));
 	}
 
-	// Authenticated non-guest users landing on main-domain root → send to chat
-	if (production && !chatSubdomain && token && !isGuest && pathname === "/") {
-		return NextResponse.redirect(
-			new URL("/chat", `https://${CHAT_SUBDOMAIN}`),
-		);
+	// Authenticated non-guest users landing on main-domain root → send to /chat
+	if (!chatSubdomain && token && !isGuest && pathname === "/") {
+		return NextResponse.redirect(new URL("/chat", request.url));
 	}
 
 	// Apply security headers to all responses
