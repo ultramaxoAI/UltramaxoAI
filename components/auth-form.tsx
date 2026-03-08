@@ -11,6 +11,9 @@ const CHAT_CALLBACK_URL =
 		: "/chat";
 const GOOGLE_OAUTH_HREF = `/oauth/google?callbackUrl=${encodeURIComponent(CHAT_CALLBACK_URL)}`;
 const GITHUB_OAUTH_HREF = `/oauth/github?callbackUrl=${encodeURIComponent(CHAT_CALLBACK_URL)}`;
+const LOGIN_FALLBACK_ACTION = `/api/auth/login-fallback?redirectTo=${encodeURIComponent(
+	CHAT_CALLBACK_URL,
+)}`;
 
 export function AuthForm({
 	action,
@@ -27,6 +30,9 @@ export function AuthForm({
 	type: "login" | "register";
 	defaultEmail?: string;
 }) {
+	const resolvedAction =
+		type === "login" && !action ? LOGIN_FALLBACK_ACTION : action;
+
 	return (
 		<div className="relative w-full mx-auto">
 			<div className="flex flex-col gap-8 w-full p-10 rounded-4xl border border-white/5 bg-[#18181b] shadow-2xl relative z-10 mx-auto">
@@ -41,7 +47,7 @@ export function AuthForm({
 					</p>
 				</div>
 
-				<form action={action} className="flex flex-col gap-6 w-full" method="post" onSubmit={onSubmit}>
+				<form action={resolvedAction} className="flex flex-col gap-6 w-full" method="post" onSubmit={onSubmit}>
 					{type === "register" && (
 						<div className="flex flex-col gap-2">
 							<Label
