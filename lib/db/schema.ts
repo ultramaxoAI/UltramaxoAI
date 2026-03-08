@@ -329,11 +329,11 @@ export const siteSettings = pgTable("site_settings", {
 	maintenanceEnabled: boolean("maintenanceEnabled").notNull().default(false),
 	maintenanceTitle: text("maintenanceTitle")
 		.notNull()
-		.default("Scheduled maintenance in progress"),
+		.default("Situs sedang kami rapikan sebentar"),
 	maintenanceMessage: text("maintenanceMessage")
 		.notNull()
 		.default(
-			"UltramaxoAI is temporarily offline while we apply updates and verify system stability.",
+			"Beberapa bagian sedang kami perbarui agar akses berikutnya lebih stabil. Silakan coba lagi beberapa saat lagi.",
 		),
 	updatedBy: uuid("updatedBy"),
 	createdAt: timestamp("createdAt").notNull().defaultNow(),

@@ -31,9 +31,9 @@ export default function AdminDashboardClient() {
 	>("vouchers");
 	const [siteSettings, setSiteSettings] = useState({
 		maintenanceEnabled: false,
-		maintenanceTitle: "Scheduled maintenance in progress",
+		maintenanceTitle: "Situs sedang kami rapikan sebentar",
 		maintenanceMessage:
-			"UltramaxoAI is temporarily offline while we apply updates and verify system stability.",
+			"Beberapa bagian sedang kami perbarui agar akses berikutnya lebih stabil. Silakan coba lagi beberapa saat lagi.",
 		updatedAt: null as string | null,
 	});
 	const [siteSettingsSaving, setSiteSettingsSaving] = useState(false);
@@ -126,10 +126,10 @@ export default function AdminDashboardClient() {
 					maintenanceEnabled: Boolean(data.settings.maintenanceEnabled),
 					maintenanceTitle:
 						data.settings.maintenanceTitle ||
-						"Scheduled maintenance in progress",
+						"Situs sedang kami rapikan sebentar",
 					maintenanceMessage:
 						data.settings.maintenanceMessage ||
-						"UltramaxoAI is temporarily offline while we apply updates and verify system stability.",
+						"Beberapa bagian sedang kami perbarui agar akses berikutnya lebih stabil. Silakan coba lagi beberapa saat lagi.",
 					updatedAt: data.settings.updatedAt || null,
 				});
 			}

@@ -11,10 +11,10 @@ export async function GET() {
 			{
 				maintenanceEnabled: settings?.maintenanceEnabled ?? false,
 				maintenanceTitle:
-					settings?.maintenanceTitle ?? "Scheduled maintenance in progress",
+					settings?.maintenanceTitle ?? "Situs sedang kami rapikan sebentar",
 				maintenanceMessage:
 					settings?.maintenanceMessage ??
-					"UltramaxoAI is temporarily offline while we apply updates and verify system stability.",
+					"Beberapa bagian sedang kami perbarui agar akses berikutnya lebih stabil. Silakan coba lagi beberapa saat lagi.",
 				updatedAt: settings?.updatedAt ?? null,
 			},
 			{
@@ -28,9 +28,9 @@ export async function GET() {
 		return NextResponse.json(
 			{
 				maintenanceEnabled: false,
-				maintenanceTitle: "Scheduled maintenance in progress",
+				maintenanceTitle: "Situs sedang kami rapikan sebentar",
 				maintenanceMessage:
-					"UltramaxoAI is temporarily offline while we apply updates and verify system stability.",
+					"Beberapa bagian sedang kami perbarui agar akses berikutnya lebih stabil. Silakan coba lagi beberapa saat lagi.",
 				updatedAt: null,
 			},
 			{ status: 200 },

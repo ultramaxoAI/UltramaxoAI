@@ -47,8 +47,8 @@ async function ensureSiteSettingsTable() {
 		CREATE TABLE IF NOT EXISTS "site_settings" (
 			"key" varchar(50) PRIMARY KEY DEFAULT 'global',
 			"maintenanceEnabled" boolean NOT NULL DEFAULT false,
-			"maintenanceTitle" text NOT NULL DEFAULT 'Scheduled maintenance in progress',
-			"maintenanceMessage" text NOT NULL DEFAULT 'UltramaxoAI is temporarily offline while we apply updates and verify system stability.',
+			"maintenanceTitle" text NOT NULL DEFAULT 'Situs sedang kami rapikan sebentar',
+			"maintenanceMessage" text NOT NULL DEFAULT 'Beberapa bagian sedang kami perbarui agar akses berikutnya lebih stabil. Silakan coba lagi beberapa saat lagi.',
 			"updatedBy" uuid,
 			"createdAt" timestamp NOT NULL DEFAULT now(),
 			"updatedAt" timestamp NOT NULL DEFAULT now()
