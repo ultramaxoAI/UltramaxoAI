@@ -31,6 +31,7 @@ export default function AdminDashboardClient() {
 	>("vouchers");
 	const [siteSettings, setSiteSettings] = useState({
 		maintenanceEnabled: false,
+		maintenanceTemplate: "midnight",
 		maintenanceTitle: "We'll be right back.",
 		maintenanceMessage:
 			"Lagi ada update kecil. Sebentar lagi balik.",
@@ -124,6 +125,8 @@ export default function AdminDashboardClient() {
 			if (data.settings) {
 				setSiteSettings({
 					maintenanceEnabled: Boolean(data.settings.maintenanceEnabled),
+					maintenanceTemplate:
+						data.settings.maintenanceTemplate || "midnight",
 					maintenanceTitle:
 						data.settings.maintenanceTitle ||
 						"We'll be right back.",
@@ -564,6 +567,55 @@ export default function AdminDashboardClient() {
 								</button>
 							</div>
 
+							{/* Template picker */}
+							<div className="mt-8">
+								<label className="text-xs font-black uppercase tracking-[0.24em] text-zinc-500 dark:text-zinc-500">
+									Page template
+								</label>
+								<div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-4">
+									{([
+										{ id: "midnight", label: "Midnight", bg: "bg-[#09090b]", accent: "bg-violet-500", desc: "Dark + purple glow" },
+										{ id: "aurora", label: "Aurora", bg: "bg-[#050510]", accent: "bg-indigo-400", desc: "Color mesh" },
+										{ id: "minimal", label: "Minimal", bg: "bg-white dark:bg-[#0a0a0a]", accent: "bg-amber-400", desc: "Clean type" },
+										{ id: "ember", label: "Ember", bg: "bg-[#0c0a09]", accent: "bg-orange-500", desc: "Warm glow" },
+									] as const).map((t) => (
+										<button
+											key={t.id}
+											type="button"
+											onClick={() =>
+												setSiteSettings((c) => ({
+													...c,
+													maintenanceTemplate: t.id,
+												}))
+											}
+											className={`group relative flex flex-col overflow-hidden rounded-2xl border p-3 text-left transition-all ${
+												siteSettings.maintenanceTemplate === t.id
+													? "border-zinc-400 shadow-[0_0_0_1px_rgba(0,0,0,0.1)] dark:border-zinc-500 dark:shadow-[0_0_0_1px_rgba(255,255,255,0.1)]"
+													: "border-zinc-200 hover:border-zinc-300 dark:border-zinc-800 dark:hover:border-zinc-700"
+											}`}
+										>
+											{/* Mini preview */}
+											<div className={`relative mb-3 flex h-20 items-center justify-center rounded-xl ${t.bg}`}>
+												<div className="flex flex-col items-center gap-1">
+													<span className={`size-1.5 rounded-full ${t.accent}`} />
+													<div className="h-1 w-8 rounded-full bg-white/20" />
+													<div className="h-0.5 w-5 rounded-full bg-white/10" />
+												</div>
+												{siteSettings.maintenanceTemplate === t.id && (
+													<div className="absolute right-1.5 top-1.5 flex size-5 items-center justify-center rounded-full bg-white/90 dark:bg-white">
+														<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#09090b" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+															<polyline points="20 6 9 17 4 12" />
+														</svg>
+													</div>
+												)}
+											</div>
+											<span className="text-xs font-semibold text-zinc-900 dark:text-zinc-100">{t.label}</span>
+											<span className="text-[10px] text-zinc-500 dark:text-zinc-500">{t.desc}</span>
+										</button>
+									))}
+								</div>
+							</div>
+
 							<div className="mt-8 grid gap-6">
 								<div className="grid gap-2">
 									<label className="text-xs font-black uppercase tracking-[0.24em] text-zinc-500 dark:text-zinc-500">
@@ -622,40 +674,64 @@ export default function AdminDashboardClient() {
 							</div>
 						</section>
 
-						<section className="overflow-hidden rounded-[2rem] border border-zinc-200 bg-[radial-gradient(circle_at_top_left,_rgba(180,83,9,0.14),_transparent_34%),linear-gradient(180deg,_rgba(255,255,255,1),_rgba(249,250,251,0.98))] p-8 shadow-[0_24px_80px_rgba(15,23,42,0.08)] dark:border-zinc-800/60 dark:bg-[radial-gradient(circle_at_top_left,_rgba(245,158,11,0.12),_transparent_28%),linear-gradient(180deg,_rgba(18,18,20,1),_rgba(11,11,14,1))] dark:shadow-[0_28px_80px_rgba(0,0,0,0.35)]">
-							<p className="text-[11px] font-black uppercase tracking-[0.28em] text-zinc-500 dark:text-zinc-600">
-								Live preview
+						<section className="overflow-hidden rounded-[2rem] border border-zinc-200 shadow-[0_24px_80px_rgba(15,23,42,0.08)] dark:border-zinc-800/60 dark:shadow-[0_28px_80px_rgba(0,0,0,0.35)]">
+							<p className="bg-white/90 px-8 pb-0 pt-8 text-[11px] font-black uppercase tracking-[0.28em] text-zinc-500 dark:bg-[#121214] dark:text-zinc-600">
+								Live preview — {siteSettings.maintenanceTemplate}
 							</p>
-							<div className="mt-6 rounded-[1.75rem] border border-white/40 bg-white/70 p-7 backdrop-blur-sm dark:border-white/10 dark:bg-white/[0.04]">
-								<div className="inline-flex items-center gap-2 rounded-full border border-white/50 bg-black/[0.04] px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.22em] text-zinc-700 dark:border-white/10 dark:bg-white/[0.04] dark:text-zinc-300">
-									<span className={`inline-block size-2 rounded-full ${siteSettings.maintenanceEnabled ? "bg-amber-500" : "bg-emerald-500"}`} />
-									{siteSettings.maintenanceEnabled ? "Public access paused" : "Public access available"}
-								</div>
-								<h3 className="mt-5 text-3xl font-semibold tracking-[-0.04em] text-zinc-950 dark:text-white">
-									{siteSettings.maintenanceTitle}
-								</h3>
-								<p className="mt-4 text-sm leading-7 text-zinc-600 dark:text-zinc-400">
-									{siteSettings.maintenanceMessage}
-								</p>
-							</div>
-
-							<div className="mt-8 grid gap-4">
-								<div className="rounded-[1.5rem] border border-zinc-200/80 bg-white/80 p-5 dark:border-zinc-800 dark:bg-black/20">
-									<p className="text-sm font-semibold text-zinc-900 dark:text-zinc-100">
-										Public visitors are redirected automatically
-									</p>
-									<p className="mt-1 text-sm leading-6 text-zinc-500 dark:text-zinc-500">
-										Landing, chat, and user-facing screens show the maintenance notice instead of the app.
-									</p>
-								</div>
-								<div className="rounded-[1.5rem] border border-zinc-200/80 bg-white/80 p-5 dark:border-zinc-800 dark:bg-black/20">
-									<p className="text-sm font-semibold text-zinc-900 dark:text-zinc-100">
-										Admin routes stay available
-									</p>
-									<p className="mt-1 text-sm leading-6 text-zinc-500 dark:text-zinc-500">
-										You can still log in, review the dashboard, and turn maintenance mode off without touching deployments.
-									</p>
-								</div>
+							{/* Template preview area */}
+							<div className="relative mx-6 mb-6 mt-4 overflow-hidden rounded-2xl border border-zinc-200 dark:border-zinc-800" style={{ height: 340 }}>
+								{siteSettings.maintenanceTemplate === "midnight" && (
+									<div className="flex size-full flex-col items-center justify-center bg-[#09090b] p-6 text-center">
+										<div className="pointer-events-none absolute inset-0">
+											<div className="absolute left-1/2 top-0 h-40 w-60 -translate-x-1/2 -translate-y-1/3 rounded-full bg-[radial-gradient(ellipse,rgba(139,92,246,0.2),transparent_70%)]" />
+										</div>
+										<span className="relative mb-3 inline-flex items-center gap-1.5 rounded-full border border-white/[0.06] bg-white/[0.03] px-2.5 py-1 text-[9px] text-white/40">
+											<span className="size-1 rounded-full bg-amber-400" /> maintenance
+										</span>
+										<h3 className="relative max-w-xs bg-gradient-to-b from-white to-white/60 bg-clip-text text-lg font-semibold leading-tight tracking-tight text-transparent">{siteSettings.maintenanceTitle}</h3>
+										<p className="relative mt-2 max-w-xs text-[11px] leading-5 text-white/30">{siteSettings.maintenanceMessage}</p>
+									</div>
+								)}
+								{siteSettings.maintenanceTemplate === "aurora" && (
+									<div className="flex size-full flex-col items-center justify-center bg-[#050510] p-6 text-center">
+										<div className="pointer-events-none absolute inset-0 overflow-hidden">
+											<div className="absolute -left-10 top-1/4 size-32 animate-[pulse_8s_ease-in-out_infinite] rounded-full bg-[radial-gradient(circle,rgba(99,102,241,0.3),transparent_65%)] blur-2xl" />
+											<div className="absolute -right-5 top-1/3 size-28 animate-[pulse_6s_ease-in-out_infinite_1s] rounded-full bg-[radial-gradient(circle,rgba(168,85,247,0.25),transparent_65%)] blur-2xl" />
+										</div>
+										<div className="relative mb-4 flex size-10 items-center justify-center rounded-full border border-white/[0.08] bg-white/[0.02]">
+											<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="text-indigo-300/60">
+												<path d="M12 6v6l4 2" strokeLinecap="round" /><circle cx="12" cy="12" r="10" />
+											</svg>
+										</div>
+										<h3 className="relative max-w-xs bg-gradient-to-br from-white via-indigo-100 to-indigo-300/80 bg-clip-text text-lg font-bold leading-tight tracking-tight text-transparent">{siteSettings.maintenanceTitle}</h3>
+										<p className="relative mt-2 max-w-xs text-[11px] leading-5 text-white/30">{siteSettings.maintenanceMessage}</p>
+										<div className="relative mt-4 flex items-center gap-1.5">
+											<div className="h-0.5 w-5 animate-[pulse_2s_ease-in-out_infinite] rounded-full bg-indigo-500/40" />
+											<div className="h-0.5 w-5 animate-[pulse_2s_ease-in-out_infinite_0.3s] rounded-full bg-purple-500/40" />
+											<div className="h-0.5 w-5 animate-[pulse_2s_ease-in-out_infinite_0.6s] rounded-full bg-cyan-500/40" />
+										</div>
+									</div>
+								)}
+								{siteSettings.maintenanceTemplate === "minimal" && (
+									<div className="flex size-full flex-col justify-center bg-white px-8 dark:bg-[#0a0a0a]">
+										<div className="mb-3 h-px w-8 bg-zinc-200 dark:bg-white/10" />
+										<h3 className="max-w-xs text-lg font-medium leading-tight tracking-tight text-zinc-900 dark:text-white">{siteSettings.maintenanceTitle}</h3>
+										<p className="mt-2 max-w-xs text-[11px] leading-5 text-zinc-500 dark:text-white/40">{siteSettings.maintenanceMessage}</p>
+										<div className="mt-4 h-px w-8 bg-zinc-200 dark:bg-white/10" />
+									</div>
+								)}
+								{siteSettings.maintenanceTemplate === "ember" && (
+									<div className="flex size-full flex-col justify-center bg-[#0c0a09] p-8">
+										<div className="pointer-events-none absolute inset-0">
+											<div className="absolute bottom-0 left-1/2 h-32 w-48 -translate-x-1/2 translate-y-1/3 rounded-full bg-[radial-gradient(ellipse,rgba(234,88,12,0.15),transparent_65%)]" />
+										</div>
+										<span className="relative mb-3 inline-flex w-fit items-center gap-1.5 rounded-full border border-orange-500/10 bg-orange-500/[0.04] px-2.5 py-1 text-[9px] text-orange-300/70">
+											<span className="size-1 rounded-full bg-orange-500" /> offline sementara
+										</span>
+										<h3 className="relative max-w-xs bg-gradient-to-br from-white via-orange-50 to-orange-200/70 bg-clip-text text-lg font-bold leading-tight tracking-tight text-transparent">{siteSettings.maintenanceTitle}</h3>
+										<p className="relative mt-2 max-w-xs text-[11px] leading-5 text-white/30">{siteSettings.maintenanceMessage}</p>
+									</div>
+								)}
 							</div>
 						</section>
 					</div>

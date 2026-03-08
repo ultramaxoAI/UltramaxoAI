@@ -32,6 +32,7 @@ export async function PATCH(request: Request) {
 	try {
 		const body = await request.json();
 		const maintenanceEnabled = Boolean(body.maintenanceEnabled);
+		const maintenanceTemplate = String(body.maintenanceTemplate ?? "midnight").trim();
 		const maintenanceTitle = String(body.maintenanceTitle ?? "").trim();
 		const maintenanceMessage = String(body.maintenanceMessage ?? "").trim();
 
@@ -42,8 +43,12 @@ export async function PATCH(request: Request) {
 			);
 		}
 
+		const validTemplates = ["midnight", "aurora", "minimal", "ember"];
+		const template = validTemplates.includes(maintenanceTemplate) ? maintenanceTemplate : "midnight";
+
 		const [settings] = await upsertSiteSettings({
 			maintenanceEnabled,
+			maintenanceTemplate: template,
 			maintenanceTitle,
 			maintenanceMessage,
 			updatedBy: session.user.id,

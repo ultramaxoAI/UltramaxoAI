@@ -47,12 +47,19 @@ async function ensureSiteSettingsTable() {
 		CREATE TABLE IF NOT EXISTS "site_settings" (
 			"key" varchar(50) PRIMARY KEY DEFAULT 'global',
 			"maintenanceEnabled" boolean NOT NULL DEFAULT false,
+			"maintenanceTemplate" varchar(30) NOT NULL DEFAULT 'midnight',
 			"maintenanceTitle" text NOT NULL DEFAULT 'We''ll be right back.',
 			"maintenanceMessage" text NOT NULL DEFAULT 'Lagi ada update kecil. Sebentar lagi balik.',
 			"updatedBy" uuid,
 			"createdAt" timestamp NOT NULL DEFAULT now(),
 			"updatedAt" timestamp NOT NULL DEFAULT now()
 		)
+	`);
+
+	// Add column if missing (existing tables)
+	await db.execute(sql`
+		ALTER TABLE "site_settings"
+		ADD COLUMN IF NOT EXISTS "maintenanceTemplate" varchar(30) NOT NULL DEFAULT 'midnight'
 	`);
 
 	await db.execute(sql`
@@ -75,6 +82,7 @@ export async function getSiteSettings() {
 
 export async function upsertSiteSettings(data: {
 	maintenanceEnabled?: boolean;
+	maintenanceTemplate?: string;
 	maintenanceTitle?: string;
 	maintenanceMessage?: string;
 	updatedBy?: string | null;

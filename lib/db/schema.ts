@@ -327,6 +327,9 @@ export type UserSettings = InferSelectModel<typeof userSettings>;
 export const siteSettings = pgTable("site_settings", {
 	key: varchar("key", { length: 50 }).primaryKey().notNull().default("global"),
 	maintenanceEnabled: boolean("maintenanceEnabled").notNull().default(false),
+	maintenanceTemplate: varchar("maintenanceTemplate", { length: 30 })
+		.notNull()
+		.default("midnight"),
 	maintenanceTitle: text("maintenanceTitle")
 		.notNull()
 		.default("We'll be right back."),
