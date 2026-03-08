@@ -11,10 +11,10 @@ export async function GET() {
 			{
 				maintenanceEnabled: settings?.maintenanceEnabled ?? false,
 				maintenanceTitle:
-					settings?.maintenanceTitle ?? "Situs sedang kami rapikan sebentar",
+					settings?.maintenanceTitle ?? "We'll be right back.",
 				maintenanceMessage:
 					settings?.maintenanceMessage ??
-					"Beberapa bagian sedang kami perbarui agar akses berikutnya lebih stabil. Silakan coba lagi beberapa saat lagi.",
+					"Lagi ada update kecil. Sebentar lagi balik.",
 				updatedAt: settings?.updatedAt ?? null,
 			},
 			{
@@ -28,9 +28,9 @@ export async function GET() {
 		return NextResponse.json(
 			{
 				maintenanceEnabled: false,
-				maintenanceTitle: "Situs sedang kami rapikan sebentar",
+				maintenanceTitle: "We'll be right back.",
 				maintenanceMessage:
-					"Beberapa bagian sedang kami perbarui agar akses berikutnya lebih stabil. Silakan coba lagi beberapa saat lagi.",
+					"Lagi ada update kecil. Sebentar lagi balik.",
 				updatedAt: null,
 			},
 			{ status: 200 },

@@ -6,7 +6,7 @@ export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
 	title: "Maintenance | UltramaxoAI",
-	description: "UltramaxoAI sedang tidak tersedia untuk sementara waktu karena ada pembaruan sistem.",
+	description: "UltramaxoAI sedang tidak tersedia untuk sementara waktu.",
 	robots: {
 		index: false,
 		follow: false,
@@ -15,77 +15,91 @@ export const metadata: Metadata = {
 
 export default async function MaintenancePage() {
 	const settings = await getSiteSettings();
-	const title = settings?.maintenanceTitle ?? "Situs sedang kami rapikan sebentar";
+	const title = settings?.maintenanceTitle ?? "We'll be right back.";
 	const message =
 		settings?.maintenanceMessage ??
-		"Beberapa bagian sedang kami perbarui agar akses berikutnya lebih stabil. Silakan coba lagi beberapa saat lagi.";
+		"Lagi ada update kecil. Sebentar lagi balik.";
 
 	return (
-		<main className="relative min-h-[100dvh] overflow-hidden bg-[#f3efe7] text-zinc-900">
-			<div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,_rgba(120,72,25,0.12),_transparent_28%),radial-gradient(circle_at_bottom_right,_rgba(38,43,52,0.08),_transparent_30%)]" />
-			<div className="absolute inset-0 opacity-[0.08] [background-image:linear-gradient(rgba(34,34,34,0.18)_1px,transparent_1px),linear-gradient(90deg,rgba(34,34,34,0.18)_1px,transparent_1px)] [background-size:36px_36px]" />
-			<div className="absolute inset-x-0 top-0 h-40 bg-gradient-to-b from-white/60 to-transparent" />
+		<main className="relative flex min-h-[100dvh] flex-col overflow-hidden bg-[#09090b] text-white selection:bg-white/20">
+			{/* Ambient glow */}
+			<div className="pointer-events-none absolute inset-0">
+				<div className="absolute left-1/2 top-0 h-[600px] w-[900px] -translate-x-1/2 -translate-y-1/3 rounded-full bg-[radial-gradient(ellipse,rgba(139,92,246,0.15),transparent_70%)]" />
+				<div className="absolute bottom-0 right-0 h-[400px] w-[600px] translate-x-1/4 translate-y-1/4 rounded-full bg-[radial-gradient(ellipse,rgba(59,130,246,0.08),transparent_70%)]" />
+			</div>
 
-			<div className="relative mx-auto flex min-h-[100dvh] w-full max-w-6xl flex-col justify-between px-6 py-8 sm:px-10 lg:px-14">
-				<header className="flex items-start justify-between gap-6">
-					<div>
-						<p className="text-[11px] font-semibold uppercase tracking-[0.34em] text-amber-800/80">
-							UltramaxoAI
-						</p>
-						<p className="mt-3 max-w-sm text-sm leading-6 text-zinc-600">
-							Kami sedang menutup akses publik sebentar untuk memastikan semuanya kembali berjalan dengan rapi.
-						</p>
-					</div>
+			{/* Noise texture */}
+			<div className="pointer-events-none absolute inset-0 opacity-[0.03] [background-image:url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIzMDAiIGhlaWdodD0iMzAwIj48ZmlsdGVyIGlkPSJhIj48ZmVUdXJidWxlbmNlIGJhc2VGcmVxdWVuY3k9Ii43NSIgc3RpdGNoVGlsZXM9InN0aXRjaCIgdHlwZT0iZnJhY3RhbE5vaXNlIi8+PC9maWx0ZXI+PHJlY3Qgd2lkdGg9IjEwMCUiIGhlaWdodD0iMTAwJSIgZmlsdGVyPSJ1cmwoI2EpIi8+PC9zdmc+')]" />
+
+			<div className="relative z-10 mx-auto flex min-h-[100dvh] w-full max-w-5xl flex-col px-6 sm:px-10">
+				{/* Header - logo doubles as hidden admin link */}
+				<header className="flex items-center justify-between pb-0 pt-8">
 					<Link
 						href="/login"
-						className="rounded-full border border-zinc-300/80 bg-white/80 px-4 py-2.5 text-sm font-medium text-zinc-800 shadow-[0_10px_24px_rgba(15,23,42,0.06)] transition hover:border-zinc-400 hover:bg-white"
+						className="group flex items-center gap-2 text-white/40 transition-colors duration-300 hover:text-white/70"
+						title="UltramaxoAI"
 					>
-						Masuk admin
+						<svg width="20" height="20" viewBox="0 0 24 24" fill="none" className="transition-transform duration-300 group-hover:scale-110">
+							<path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" fill="currentColor" opacity="0.9" />
+						</svg>
+						<span className="text-xs font-medium tracking-[0.2em] uppercase">
+							UltramaxoAI
+						</span>
 					</Link>
+					<div className="flex items-center gap-1.5">
+						<span className="relative flex size-2">
+							<span className="absolute inline-flex size-full animate-ping rounded-full bg-amber-400 opacity-75" />
+							<span className="relative inline-flex size-2 rounded-full bg-amber-400" />
+						</span>
+						<span className="text-xs text-white/30">maintenance</span>
+					</div>
 				</header>
 
-				<section className="grid gap-10 py-12 lg:grid-cols-[minmax(0,1.15fr)_minmax(320px,0.85fr)] lg:items-end lg:py-20">
-					<div className="max-w-3xl">
-						<div className="inline-flex items-center gap-2 rounded-full border border-amber-900/10 bg-amber-900/[0.06] px-3 py-1.5 text-[11px] font-semibold tracking-[0.18em] text-amber-900/80">
-							<span className="inline-block size-2 rounded-full bg-amber-700" />
-							sementara tidak tersedia
-						</div>
-						<h1 className="mt-7 max-w-4xl text-balance font-serif text-5xl leading-[0.94] tracking-[-0.05em] text-zinc-950 sm:text-6xl lg:text-7xl">
-							{title}
-						</h1>
-						<p className="mt-7 max-w-2xl text-pretty text-lg leading-8 text-zinc-700">
-							{message}
-						</p>
+				{/* Main content - centered */}
+				<section className="flex flex-1 flex-col items-center justify-center pb-20 text-center">
+					{/* Status pill */}
+					<div className="mb-8 inline-flex items-center gap-2 rounded-full border border-white/[0.06] bg-white/[0.03] px-4 py-2 backdrop-blur-sm">
+						<span className="size-1.5 rounded-full bg-amber-400" />
+						<span className="text-xs font-medium tracking-wide text-white/50">
+							Sedang maintenance
+						</span>
 					</div>
 
-					<div className="rounded-[2rem] border border-zinc-300/70 bg-white/75 p-7 shadow-[0_24px_70px_rgba(15,23,42,0.08)] backdrop-blur-sm sm:p-8">
-						<p className="text-[11px] font-semibold uppercase tracking-[0.26em] text-zinc-500">
-							Selama maintenance
-						</p>
-						<div className="mt-6 space-y-4">
-							<div className="rounded-[1.5rem] border border-zinc-200 bg-[#f8f5ef] p-5">
-								<p className="text-sm font-semibold text-zinc-900">Akses publik ditahan dulu</p>
-								<p className="mt-1.5 text-sm leading-6 text-zinc-600">
-									Halaman utama, chat, dan alur biasa akan kembali aktif setelah mode maintenance dimatikan.
-								</p>
-							</div>
-							<div className="rounded-[1.5rem] border border-zinc-200 bg-[#f8f5ef] p-5">
-								<p className="text-sm font-semibold text-zinc-900">Akses admin tetap terbuka</p>
-								<p className="mt-1.5 text-sm leading-6 text-zinc-600">
-									Tim internal masih bisa masuk untuk pengecekan, penyesuaian, dan membuka akses lagi saat semuanya siap.
-								</p>
-							</div>
+					{/* Title */}
+					<h1 className="max-w-3xl text-balance text-4xl font-semibold leading-[1.1] tracking-tight sm:text-5xl md:text-6xl">
+						<span className="bg-gradient-to-b from-white to-white/60 bg-clip-text text-transparent">
+							{title}
+						</span>
+					</h1>
+
+					{/* Message */}
+					<p className="mt-5 max-w-lg text-pretty text-base leading-7 text-white/40 sm:text-lg sm:leading-8">
+						{message}
+					</p>
+
+					{/* Subtle countdown / action area */}
+					<div className="mt-12 flex flex-col items-center gap-6">
+						<div className="flex items-center gap-8 text-white/20">
+							<div className="h-px w-12 bg-gradient-to-r from-transparent to-white/10" />
+							<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="animate-[spin_4s_linear_infinite] text-white/15">
+								<path d="M12 2v4m0 12v4m10-10h-4M6 12H2m15.07-7.07-2.83 2.83M9.76 14.24l-2.83 2.83m11.14 0-2.83-2.83M9.76 9.76 6.93 6.93" strokeLinecap="round" />
+							</svg>
+							<div className="h-px w-12 bg-gradient-to-l from-transparent to-white/10" />
 						</div>
+						<p className="text-[13px] text-white/25">
+							Nggak perlu refresh. Balik lagi nanti aja.
+						</p>
 					</div>
 				</section>
 
-				<footer className="flex flex-col gap-3 border-t border-zinc-900/10 pt-5 text-sm text-zinc-500 sm:flex-row sm:items-center sm:justify-between">
-					<p>Kamu tidak perlu melakukan apa pun. Cukup coba lagi beberapa saat lagi.</p>
-					<div className="flex items-center gap-4">
-						<Link href="/privacy" className="transition hover:text-zinc-800">
+				{/* Footer */}
+				<footer className="flex items-center justify-between border-t border-white/[0.06] py-5 text-xs text-white/20">
+					<span>&copy; {new Date().getFullYear()} UltramaxoAI</span>
+					<div className="flex items-center gap-5">
+						<Link href="/privacy" className="transition-colors hover:text-white/50">
 							Privacy
 						</Link>
-						<Link href="/terms" className="transition hover:text-zinc-800">
+						<Link href="/terms" className="transition-colors hover:text-white/50">
 							Terms
 						</Link>
 					</div>

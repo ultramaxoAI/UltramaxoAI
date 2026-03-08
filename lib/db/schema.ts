@@ -329,11 +329,11 @@ export const siteSettings = pgTable("site_settings", {
 	maintenanceEnabled: boolean("maintenanceEnabled").notNull().default(false),
 	maintenanceTitle: text("maintenanceTitle")
 		.notNull()
-		.default("Situs sedang kami rapikan sebentar"),
+		.default("We'll be right back."),
 	maintenanceMessage: text("maintenanceMessage")
 		.notNull()
 		.default(
-			"Beberapa bagian sedang kami perbarui agar akses berikutnya lebih stabil. Silakan coba lagi beberapa saat lagi.",
+			"Lagi ada update kecil. Sebentar lagi balik.",
 		),
 	updatedBy: uuid("updatedBy"),
 	createdAt: timestamp("createdAt").notNull().defaultNow(),

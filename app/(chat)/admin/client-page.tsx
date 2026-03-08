@@ -31,9 +31,9 @@ export default function AdminDashboardClient() {
 	>("vouchers");
 	const [siteSettings, setSiteSettings] = useState({
 		maintenanceEnabled: false,
-		maintenanceTitle: "Situs sedang kami rapikan sebentar",
+		maintenanceTitle: "We'll be right back.",
 		maintenanceMessage:
-			"Beberapa bagian sedang kami perbarui agar akses berikutnya lebih stabil. Silakan coba lagi beberapa saat lagi.",
+			"Lagi ada update kecil. Sebentar lagi balik.",
 		updatedAt: null as string | null,
 	});
 	const [siteSettingsSaving, setSiteSettingsSaving] = useState(false);
@@ -126,10 +126,10 @@ export default function AdminDashboardClient() {
 					maintenanceEnabled: Boolean(data.settings.maintenanceEnabled),
 					maintenanceTitle:
 						data.settings.maintenanceTitle ||
-						"Situs sedang kami rapikan sebentar",
+						"We'll be right back.",
 					maintenanceMessage:
 						data.settings.maintenanceMessage ||
-						"Beberapa bagian sedang kami perbarui agar akses berikutnya lebih stabil. Silakan coba lagi beberapa saat lagi.",
+						"Lagi ada update kecil. Sebentar lagi balik.",
 					updatedAt: data.settings.updatedAt || null,
 				});
 			}
