@@ -274,31 +274,11 @@ export const {
 			clientId: process.env.AUTH_GOOGLE_ID,
 			clientSecret: process.env.AUTH_GOOGLE_SECRET,
 			allowDangerousEmailAccountLinking: true,
-			profile(profile) {
-				return {
-					id: profile.sub,
-					name: profile.name,
-					email: normalizeEmail(profile.email) ?? profile.email,
-					image: profile.picture,
-					type: "regular" as UserType,
-					role: "user" as const,
-				};
-			},
 		}),
 		GitHub({
 			clientId: process.env.AUTH_GITHUB_ID,
 			clientSecret: process.env.AUTH_GITHUB_SECRET,
 			allowDangerousEmailAccountLinking: true,
-			profile(profile) {
-				return {
-					id: String(profile.id),
-					name: profile.name ?? profile.login,
-					email: normalizeEmail(profile.email) ?? profile.email,
-					image: profile.avatar_url,
-					type: "regular" as UserType,
-					role: "user" as const,
-				};
-			},
 		}),
 		Credentials({
 			credentials: {
