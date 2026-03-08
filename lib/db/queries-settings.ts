@@ -1,8 +1,8 @@
 import "server-only";
 
-import { and, eq } from "drizzle-orm";
+import { and, eq, sql } from "drizzle-orm";
 import { db } from "./queries";
-import { userApiKeys, userSettings } from "./schema";
+import { siteSettings, userApiKeys, userSettings } from "./schema";
 
 // ============================================================
 // User Settings (Personalization)
@@ -35,6 +35,69 @@ export async function upsertUserSettings(
 	return db
 		.insert(userSettings)
 		.values({ userId, ...data })
+		.returning();
+}
+
+// ============================================================
+// Site Settings (Global)
+// ============================================================
+
+async function ensureSiteSettingsTable() {
+	await db.execute(sql`
+		CREATE TABLE IF NOT EXISTS "site_settings" (
+			"key" varchar(50) PRIMARY KEY DEFAULT 'global',
+			"maintenanceEnabled" boolean NOT NULL DEFAULT false,
+			"maintenanceTitle" text NOT NULL DEFAULT 'Scheduled maintenance in progress',
+			"maintenanceMessage" text NOT NULL DEFAULT 'UltramaxoAI is temporarily offline while we apply updates and verify system stability.',
+			"updatedBy" uuid,
+			"createdAt" timestamp NOT NULL DEFAULT now(),
+			"updatedAt" timestamp NOT NULL DEFAULT now()
+		)
+	`);
+
+	await db.execute(sql`
+		INSERT INTO "site_settings" ("key")
+		VALUES ('global')
+		ON CONFLICT ("key") DO NOTHING
+	`);
+}
+
+export async function getSiteSettings() {
+	await ensureSiteSettingsTable();
+
+	const result = await db
+		.select()
+		.from(siteSettings)
+		.where(eq(siteSettings.key, "global"));
+
+	return result[0] || null;
+}
+
+export async function upsertSiteSettings(data: {
+	maintenanceEnabled?: boolean;
+	maintenanceTitle?: string;
+	maintenanceMessage?: string;
+	updatedBy?: string | null;
+}) {
+	await ensureSiteSettingsTable();
+
+	const existing = await getSiteSettings();
+	const normalizedData = {
+		...data,
+		updatedAt: new Date(),
+	};
+
+	if (existing) {
+		return db
+			.update(siteSettings)
+			.set(normalizedData)
+			.where(eq(siteSettings.key, "global"))
+			.returning();
+	}
+
+	return db
+		.insert(siteSettings)
+		.values({ key: "global", ...normalizedData })
 		.returning();
 }
 

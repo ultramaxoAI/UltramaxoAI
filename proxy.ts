@@ -6,6 +6,26 @@ import { securityHeaders } from "./middleware.security";
 const CHAT_SUBDOMAIN = "chat.ultramaxo.tech";
 const MAIN_DOMAIN = "ultramaxo.tech";
 const LOGOUT_REDIRECT_FLAG = "loggedOut";
+const MAINTENANCE_ALLOWED_PATHS = new Set([
+	"/maintenance",
+	"/login",
+	"/register",
+	"/forgot-password",
+	"/reset-password",
+	"/privacy",
+	"/terms",
+	"/manifest.webmanifest",
+	"/site.webmanifest",
+	"/sw.js",
+]);
+const MAINTENANCE_ALLOWED_PREFIXES = [
+	"/oauth/",
+	"/api/auth/",
+	"/api/public/site-status",
+	"/api/admin/",
+	"/api/debug-db",
+	"/ping",
+];
 
 function nextWithSecurity(request: NextRequest) {
 	return securityHeaders(request, NextResponse.next());
@@ -19,6 +39,36 @@ function isChatSubdomain(request: NextRequest): boolean {
 function isProduction(request: NextRequest): boolean {
 	const hostname = request.headers.get("host") || "";
 	return hostname.endsWith("ultramaxo.tech");
+}
+
+function isMaintenanceBypassed(pathname: string) {
+	if (MAINTENANCE_ALLOWED_PATHS.has(pathname)) {
+		return true;
+	}
+
+	return MAINTENANCE_ALLOWED_PREFIXES.some((prefix) => pathname.startsWith(prefix));
+}
+
+async function getMaintenanceStatus(request: NextRequest) {
+	try {
+		const statusUrl = new URL("/api/public/site-status", request.url);
+		const response = await fetch(statusUrl, {
+			cache: "no-store",
+			headers: {
+				"cache-control": "no-store",
+			},
+		});
+
+		if (!response.ok) {
+			return { maintenanceEnabled: false };
+		}
+
+		return (await response.json()) as {
+			maintenanceEnabled?: boolean;
+		};
+	} catch {
+		return { maintenanceEnabled: false };
+	}
 }
 
 export async function proxy(request: NextRequest) {
@@ -44,8 +94,12 @@ export async function proxy(request: NextRequest) {
 		return new Response("pong", { status: 200 });
 	}
 
-	// ALLOW /api/auth/* AND /api/debug-db explicitly
-	if (pathname.startsWith("/api/auth") || pathname.includes("/api/debug-db")) {
+	// Allow auth and maintenance status routes to pass through immediately.
+	if (
+		pathname.startsWith("/api/auth") ||
+		pathname.startsWith("/api/public/site-status") ||
+		pathname.includes("/api/debug-db")
+	) {
 		return nextWithSecurity(request);
 	}
 
@@ -60,6 +114,31 @@ export async function proxy(request: NextRequest) {
 	});
 
 	const chatSubdomain = isChatSubdomain(request);
+	const isAdmin = token?.role === "admin";
+	const maintenance = await getMaintenanceStatus(request);
+
+	if (
+		maintenance.maintenanceEnabled &&
+		!isAdmin &&
+		!isMaintenanceBypassed(pathname)
+	) {
+		if (pathname.startsWith("/api/")) {
+			return new NextResponse(
+				JSON.stringify({
+					error: "Maintenance mode is enabled",
+				}),
+				{
+					status: 503,
+					headers: {
+						"content-type": "application/json",
+						"cache-control": "no-store",
+					},
+				},
+			);
+		}
+
+		return NextResponse.redirect(new URL("/maintenance", request.url));
+	}
 
 	if (!chatSubdomain && pathname === "/login" && isLoggedOutRedirect) {
 		return nextWithSecurity(request);

@@ -322,6 +322,27 @@ export const userSettings = pgTable("user_settings", {
 export type UserSettings = InferSelectModel<typeof userSettings>;
 
 // ============================================================
+// Site Settings (Global - singleton row keyed by "global")
+// ============================================================
+export const siteSettings = pgTable("site_settings", {
+	key: varchar("key", { length: 50 }).primaryKey().notNull().default("global"),
+	maintenanceEnabled: boolean("maintenanceEnabled").notNull().default(false),
+	maintenanceTitle: text("maintenanceTitle")
+		.notNull()
+		.default("Scheduled maintenance in progress"),
+	maintenanceMessage: text("maintenanceMessage")
+		.notNull()
+		.default(
+			"UltramaxoAI is temporarily offline while we apply updates and verify system stability.",
+		),
+	updatedBy: uuid("updatedBy"),
+	createdAt: timestamp("createdAt").notNull().defaultNow(),
+	updatedAt: timestamp("updatedAt").notNull().defaultNow(),
+});
+
+export type SiteSettings = InferSelectModel<typeof siteSettings>;
+
+// ============================================================
 // User API Keys (Custom AI - 1 per provider per user)
 // ============================================================
 export const userApiKeys = pgTable("user_api_keys", {

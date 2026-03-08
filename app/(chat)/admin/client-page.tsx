@@ -22,8 +22,21 @@ import { getEmailWrapper } from "@/lib/email-wrapper";
 
 export default function AdminDashboardClient() {
 	const [activeTab, setActiveTab] = useState<
-		"vouchers" | "users" | "upgrade-requests" | "insights" | "email-tools"
+		| "site-control"
+		| "vouchers"
+		| "users"
+		| "upgrade-requests"
+		| "insights"
+		| "email-tools"
 	>("vouchers");
+	const [siteSettings, setSiteSettings] = useState({
+		maintenanceEnabled: false,
+		maintenanceTitle: "Scheduled maintenance in progress",
+		maintenanceMessage:
+			"UltramaxoAI is temporarily offline while we apply updates and verify system stability.",
+		updatedAt: null as string | null,
+	});
+	const [siteSettingsSaving, setSiteSettingsSaving] = useState(false);
 	const [users, setUsers] = useState<
 		{
 			id: string;
@@ -100,6 +113,33 @@ export default function AdminDashboardClient() {
 		}
 	}, []);
 
+	const fetchSiteSettings = useCallback(async () => {
+		setLoading(true);
+		try {
+			const res = await fetch("/api/admin/site-settings", {
+				cache: "no-store",
+				headers: { "Cache-Control": "no-cache" },
+			});
+			const data = await res.json();
+			if (data.settings) {
+				setSiteSettings({
+					maintenanceEnabled: Boolean(data.settings.maintenanceEnabled),
+					maintenanceTitle:
+						data.settings.maintenanceTitle ||
+						"Scheduled maintenance in progress",
+					maintenanceMessage:
+						data.settings.maintenanceMessage ||
+						"UltramaxoAI is temporarily offline while we apply updates and verify system stability.",
+					updatedAt: data.settings.updatedAt || null,
+				});
+			}
+		} catch {
+			toast.error("Failed to fetch website settings");
+		} finally {
+			setLoading(false);
+		}
+	}, []);
+
 	const fetchUsers = useCallback(async () => {
 		setLoading(true);
 		try {
@@ -152,7 +192,9 @@ export default function AdminDashboardClient() {
 	}, []);
 
 	useEffect(() => {
-		if (activeTab === "users") {
+		if (activeTab === "site-control") {
+			fetchSiteSettings();
+		} else if (activeTab === "users") {
 			fetchUsers();
 			fetchStats();
 		} else if (activeTab === "upgrade-requests") {
@@ -160,7 +202,48 @@ export default function AdminDashboardClient() {
 		} else if (activeTab === "insights") {
 			fetchInsights();
 		}
-	}, [activeTab, fetchInsights, fetchStats, fetchUpgradeRequests, fetchUsers]);
+	}, [
+		activeTab,
+		fetchInsights,
+		fetchSiteSettings,
+		fetchStats,
+		fetchUpgradeRequests,
+		fetchUsers,
+	]);
+
+	const saveSiteSettings = async () => {
+		setSiteSettingsSaving(true);
+		try {
+			const res = await fetch("/api/admin/site-settings", {
+				method: "PATCH",
+				headers: { "Content-Type": "application/json" },
+				body: JSON.stringify(siteSettings),
+			});
+			const data = await res.json();
+
+			if (!res.ok) {
+				throw new Error(data.error || "Failed to update website settings");
+			}
+
+			setSiteSettings((current) => ({
+				...current,
+				updatedAt: data.settings?.updatedAt || new Date().toISOString(),
+			}));
+			toast.success(
+				siteSettings.maintenanceEnabled
+					? "Maintenance mode enabled"
+					: "Maintenance mode disabled",
+			);
+		} catch (error) {
+			toast.error(
+				error instanceof Error
+					? error.message
+					: "Failed to update website settings",
+			);
+		} finally {
+			setSiteSettingsSaving(false);
+		}
+	};
 
 	const handleVoucherSubmit = async () => {
 		try {
@@ -337,6 +420,11 @@ export default function AdminDashboardClient() {
 	);
 
 	const tabs = [
+		{
+			id: "site-control",
+			label: "Website",
+			icon: <Settings2Icon size={18} />,
+		},
 		{ id: "vouchers", label: "Vouchers", icon: <TicketIcon size={18} /> },
 		{ id: "insights", label: "Insights", icon: <BarChartIcon size={18} /> },
 		{ id: "users", label: "Users", icon: <UsersIcon size={18} /> },
@@ -436,7 +524,142 @@ export default function AdminDashboardClient() {
 					</p>
 				</header>
 
-				{activeTab === "vouchers" ? (
+				{activeTab === "site-control" ? (
+					<div className="grid grid-cols-1 gap-8 xl:grid-cols-[1.05fr_0.95fr]">
+						<section className="rounded-[2rem] border border-zinc-200 bg-white p-8 shadow-[0_24px_80px_rgba(15,23,42,0.08)] dark:border-zinc-800/60 dark:bg-[#111214] dark:shadow-[0_28px_80px_rgba(0,0,0,0.35)]">
+							<div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+								<div className="max-w-xl">
+									<p className="text-[11px] font-black uppercase tracking-[0.28em] text-zinc-400 dark:text-zinc-600">
+										Site operations
+									</p>
+									<h2 className="mt-3 text-3xl font-semibold tracking-[-0.04em] text-zinc-950 dark:text-white">
+										Maintenance control
+									</h2>
+									<p className="mt-3 text-sm leading-7 text-zinc-500 dark:text-zinc-400">
+										Turn the public site on or off without touching deployment settings. Admin routes and auth remain available for verification.
+									</p>
+								</div>
+								<button
+									type="button"
+									className={`inline-flex items-center gap-3 rounded-full px-4 py-3 text-sm font-semibold transition-all ${
+										siteSettings.maintenanceEnabled
+											? "border border-amber-300/30 bg-amber-50 text-amber-900 shadow-[0_10px_30px_rgba(217,119,6,0.12)] dark:border-amber-400/20 dark:bg-amber-500/10 dark:text-amber-100"
+											: "border border-emerald-300/30 bg-emerald-50 text-emerald-900 shadow-[0_10px_30px_rgba(16,185,129,0.12)] dark:border-emerald-400/20 dark:bg-emerald-500/10 dark:text-emerald-100"
+									}`}
+									onClick={() =>
+										setSiteSettings((current) => ({
+											...current,
+											maintenanceEnabled: !current.maintenanceEnabled,
+										}))
+									}
+								>
+									<span
+										className={`inline-block size-2.5 rounded-full ${
+											siteSettings.maintenanceEnabled
+												? "bg-amber-500"
+												: "bg-emerald-500"
+										}`}
+									/>
+									{siteSettings.maintenanceEnabled ? "Maintenance enabled" : "Website live"}
+								</button>
+							</div>
+
+							<div className="mt-8 grid gap-6">
+								<div className="grid gap-2">
+									<label className="text-xs font-black uppercase tracking-[0.24em] text-zinc-500 dark:text-zinc-500">
+										Status headline
+									</label>
+									<input
+										className="w-full rounded-[1.25rem] border border-zinc-200 bg-zinc-50 px-5 py-4 text-sm text-zinc-900 outline-none transition placeholder:text-zinc-400 focus:border-zinc-300 focus:bg-white dark:border-zinc-800 dark:bg-[#17181b] dark:text-white dark:placeholder:text-zinc-600 dark:focus:border-zinc-700"
+										onChange={(e) =>
+											setSiteSettings((current) => ({
+												...current,
+												maintenanceTitle: e.target.value,
+											}))
+										}
+										placeholder="Scheduled maintenance in progress"
+										value={siteSettings.maintenanceTitle}
+									/>
+								</div>
+
+								<div className="grid gap-2">
+									<label className="text-xs font-black uppercase tracking-[0.24em] text-zinc-500 dark:text-zinc-500">
+										Public message
+									</label>
+									<textarea
+										className="min-h-40 w-full resize-y rounded-[1.5rem] border border-zinc-200 bg-zinc-50 px-5 py-4 text-sm leading-7 text-zinc-900 outline-none transition placeholder:text-zinc-400 focus:border-zinc-300 focus:bg-white dark:border-zinc-800 dark:bg-[#17181b] dark:text-white dark:placeholder:text-zinc-600 dark:focus:border-zinc-700"
+										onChange={(e) =>
+											setSiteSettings((current) => ({
+												...current,
+												maintenanceMessage: e.target.value,
+											}))
+										}
+										placeholder="UltramaxoAI is temporarily offline while we apply updates and verify system stability."
+										value={siteSettings.maintenanceMessage}
+									/>
+								</div>
+
+								<div className="flex flex-col gap-4 border-t border-zinc-200 pt-6 dark:border-zinc-800 sm:flex-row sm:items-center sm:justify-between">
+									<div>
+										<p className="text-sm font-medium text-zinc-900 dark:text-zinc-100">
+											{siteSettings.updatedAt
+												? `Last updated ${formatDistanceToNow(new Date(siteSettings.updatedAt), { addSuffix: true })}`
+												: "No changes saved yet"}
+										</p>
+										<p className="mt-1 text-sm text-zinc-500 dark:text-zinc-500">
+											Changes apply immediately across public routes.
+										</p>
+									</div>
+									<button
+										type="button"
+										className="inline-flex items-center justify-center rounded-full bg-zinc-950 px-6 py-3 text-sm font-semibold text-white transition hover:bg-zinc-800 disabled:cursor-not-allowed disabled:opacity-60 dark:bg-white dark:text-black dark:hover:bg-zinc-200"
+										disabled={siteSettingsSaving}
+										onClick={saveSiteSettings}
+									>
+										{siteSettingsSaving ? "Saving..." : "Save website settings"}
+									</button>
+								</div>
+							</div>
+						</section>
+
+						<section className="overflow-hidden rounded-[2rem] border border-zinc-200 bg-[radial-gradient(circle_at_top_left,_rgba(180,83,9,0.14),_transparent_34%),linear-gradient(180deg,_rgba(255,255,255,1),_rgba(249,250,251,0.98))] p-8 shadow-[0_24px_80px_rgba(15,23,42,0.08)] dark:border-zinc-800/60 dark:bg-[radial-gradient(circle_at_top_left,_rgba(245,158,11,0.12),_transparent_28%),linear-gradient(180deg,_rgba(18,18,20,1),_rgba(11,11,14,1))] dark:shadow-[0_28px_80px_rgba(0,0,0,0.35)]">
+							<p className="text-[11px] font-black uppercase tracking-[0.28em] text-zinc-500 dark:text-zinc-600">
+								Live preview
+							</p>
+							<div className="mt-6 rounded-[1.75rem] border border-white/40 bg-white/70 p-7 backdrop-blur-sm dark:border-white/10 dark:bg-white/[0.04]">
+								<div className="inline-flex items-center gap-2 rounded-full border border-white/50 bg-black/[0.04] px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.22em] text-zinc-700 dark:border-white/10 dark:bg-white/[0.04] dark:text-zinc-300">
+									<span className={`inline-block size-2 rounded-full ${siteSettings.maintenanceEnabled ? "bg-amber-500" : "bg-emerald-500"}`} />
+									{siteSettings.maintenanceEnabled ? "Public access paused" : "Public access available"}
+								</div>
+								<h3 className="mt-5 text-3xl font-semibold tracking-[-0.04em] text-zinc-950 dark:text-white">
+									{siteSettings.maintenanceTitle}
+								</h3>
+								<p className="mt-4 text-sm leading-7 text-zinc-600 dark:text-zinc-400">
+									{siteSettings.maintenanceMessage}
+								</p>
+							</div>
+
+							<div className="mt-8 grid gap-4">
+								<div className="rounded-[1.5rem] border border-zinc-200/80 bg-white/80 p-5 dark:border-zinc-800 dark:bg-black/20">
+									<p className="text-sm font-semibold text-zinc-900 dark:text-zinc-100">
+										Public visitors are redirected automatically
+									</p>
+									<p className="mt-1 text-sm leading-6 text-zinc-500 dark:text-zinc-500">
+										Landing, chat, and user-facing screens show the maintenance notice instead of the app.
+									</p>
+								</div>
+								<div className="rounded-[1.5rem] border border-zinc-200/80 bg-white/80 p-5 dark:border-zinc-800 dark:bg-black/20">
+									<p className="text-sm font-semibold text-zinc-900 dark:text-zinc-100">
+										Admin routes stay available
+									</p>
+									<p className="mt-1 text-sm leading-6 text-zinc-500 dark:text-zinc-500">
+										You can still log in, review the dashboard, and turn maintenance mode off without touching deployments.
+									</p>
+								</div>
+							</div>
+						</section>
+					</div>
+				) : activeTab === "vouchers" ? (
 					<div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
 						<section className="bg-white dark:bg-[#121214] border border-zinc-200 dark:border-zinc-800/50 rounded-3xl p-8 flex flex-col gap-6 shadow-2xl">
 							<div className="flex flex-col gap-1.5">
