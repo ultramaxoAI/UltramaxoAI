@@ -49,13 +49,17 @@ export async function proxy(request: NextRequest) {
 		return nextWithSecurity(request);
 	}
 
+	// Use the same cookie name as configured in app/(auth)/auth.ts
+	// In production the cookie is prefixed with __Secure-
+	const production = isProduction(request);
+	const cookiePrefix = production ? "__Secure-" : "";
 	const token = await getToken({
 		req: request,
 		secret: process.env.AUTH_SECRET,
+		cookieName: `${cookiePrefix}authjs.session-token`,
 	});
 
 	const chatSubdomain = isChatSubdomain(request);
-	const production = isProduction(request);
 
 	if (!chatSubdomain && pathname === "/login" && isLoggedOutRedirect) {
 		return nextWithSecurity(request);
