@@ -303,6 +303,11 @@ export default function LandingPage() {
 		}
 	};
 
+	const handleUpgrade = async (planName: string, e: React.MouseEvent) => {
+		e.preventDefault();
+		router.push("/plan");
+	};
+
 	const handleInstallClick = async () => {
 		if (!deferredPrompt) {
 			return;
