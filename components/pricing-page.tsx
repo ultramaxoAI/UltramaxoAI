@@ -116,10 +116,9 @@ export function PricingPage({ user }: PricingPageProps) {
 	const handleUpgrade = async (planName: string) => {
 		setSelectedPlan(planName);
 
-		// If user is not logged in, redirect to login
 		if (!user) {
 			toast.error("Silakan login terlebih dahulu");
-			router.push("/login");
+			router.push("/login?callbackUrl=/plan");
 			return;
 		}
 
@@ -129,27 +128,47 @@ export function PricingPage({ user }: PricingPageProps) {
 		setLoading(true);
 
 		try {
-			const text = `Halo Admin, saya ingin upgrade ke paket *${planName}* seharga ${plan.price} untuk akun saya dengan email *${user.email}*. Mohon panduannya.`;
-			const waUrl = `https://wa.me/6285191689131?text=${encodeURIComponent(text)}`;
+			// Parsing the price from string like "Rp 30.000" to Number 30000
+			const rawPriceString = plan.price.replace(/[^0-9]/g, "");
+			const priceNumber = parseInt(rawPriceString, 10) || 0;
+			const months = plan.period.includes("year") ? 12 : 1;
 
-			// Optionally log the request to the database
-			await fetch("/api/user/upgrade-request", {
+			// Call internal invoice API
+			const res = await fetch("/api/payment/create-invoice", {
 				method: "POST",
 				headers: { "Content-Type": "application/json" },
 				body: JSON.stringify({
-					plan: planName,
-					price: plan.price,
+					planId: planName,
+					price: priceNumber,
+					months,
 				}),
-			}).catch(() => {});
+			});
 
-			toast.success("Mengarahkan ke WhatsApp Admin...");
-			window.open(waUrl, "_blank");
+			const data = await res.json();
+
+			if (!res.ok) {
+				throw new Error(data.error || "Gagal membuat invoice");
+			}
+
+			if (data.checkoutUrl) {
+				toast.success("Mengarahkan ke pembayaran...");
+				window.location.href = data.checkoutUrl;
+			} else if (data.fallback) {
+				toast.success("Menghubungi Admin via WhatsApp...");
+				const text = `Halo Admin, saya ingin upgrade ke paket *${planName}* seharga ${plan.price} untuk akun saya dengan email *${user.email}*. Mohon panduannya.`;
+				const waUrl = `https://wa.me/6285191689131?text=${encodeURIComponent(text)}`;
+				window.open(waUrl, "_blank");
+			} else {
+				throw new Error("Checkout URL tidak ditemukan");
+			}
 		} catch (error) {
-			console.error("Failed to process upgrade:", error);
-			toast.error("Terjadi kesalahan. Silakan coba lagi.");
+			console.error("Gagal memproses upgrade:", error);
+			toast.error(error instanceof Error ? error.message : "Gagal memproses upgrade. Coba lagi nanti.");
 		} finally {
 			setLoading(false);
-			setTimeout(() => setSelectedPlan(null), 500);
+			setTimeout(() => {
+				setSelectedPlan(null);
+			}, 500);
 		}
 	};
 
