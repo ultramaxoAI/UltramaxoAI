@@ -454,7 +454,7 @@ export async function POST(request: Request) {
 												? {
 														startAgentTask: startAgentTask(),
 														reportAgentStep: reportAgentStep(),
-														listCodeFiles: listCodeFiles({ session, getDocumentId, setDocumentId }),
+														listCodeFiles: listCodeFiles({ session, dataStream, getDocumentId, setDocumentId }),
 														createCodeFile: createCodeFile({
 															session,
 															dataStream,
