@@ -465,7 +465,7 @@ function PureMultimodalInput({
 			/>
 
 			<PromptInput
-				className="mx-auto w-full max-w-3xl rounded-[28px] border border-white/8 bg-[#27272a]/94 p-0.5 text-[#f3f4f1] outline-none ring-0 shadow-[0_14px_32px_rgba(0,0,0,0.2)] backdrop-blur-xl transition-all"
+				className="mx-auto w-full max-w-3xl rounded-[28px] border border-[#171717]/8 bg-white/80 p-0.5 text-[#171717] outline-none ring-0 shadow-[0_14px_32px_rgba(0,0,0,0.06)] backdrop-blur-xl transition-all dark:border-white/8 dark:bg-[#181a1c]/94 dark:text-[#f3f4f1] dark:shadow-[0_14px_32px_rgba(0,0,0,0.2)]"
 				onSubmit={(event) => {
 					event.preventDefault();
 					if (!input.trim() && attachments.length === 0) {
@@ -601,7 +601,7 @@ function PureMultimodalInput({
 				)}
 				<div className={cn("flex flex-row items-start px-2 pt-0.5 pb-0", status !== "ready" && "pointer-events-none opacity-50")}>
 					<PromptInputTextarea
-						className="grow resize-none border-0! bg-transparent px-2.5 py-2.5 text-[15.5px] leading-7 text-[#f3f4f1] outline-none ring-0 [-ms-overflow-style:none] [scrollbar-width:none] placeholder:text-[#8f9790] focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 [&::-webkit-scrollbar]:hidden"
+						className="grow resize-none border-0! bg-transparent px-2.5 py-2.5 text-[15.5px] leading-7 text-[#171717] dark:text-[#f3f4f1] outline-none ring-0 [-ms-overflow-style:none] [scrollbar-width:none] placeholder:text-[#5f6258] dark:placeholder:text-[#8f9790] focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 [&::-webkit-scrollbar]:hidden"
 						data-testid="multimodal-input"
 						disableAutoResize={true}
 						disabled={status !== "ready"}
@@ -620,7 +620,7 @@ function PureMultimodalInput({
 						<DropdownMenu>
 							<DropdownMenuTrigger asChild>
 								<Button
-									className="size-9 rounded-full p-2 text-[#8f9790] transition-colors hover:bg-white/7 hover:text-[#f3f4f1]"
+									className="size-9 rounded-full p-2 text-[#5f6258] dark:text-[#8f9790] transition-colors hover:bg-black/5 dark:hover:bg-white/7 hover:text-[#171717] dark:hover:text-[#f3f4f1]"
 									data-testid="all-options-button"
 									title="Options"
 									variant="ghost"
@@ -630,11 +630,11 @@ function PureMultimodalInput({
 							</DropdownMenuTrigger>
 							<DropdownMenuContent
 								align="start"
-								className="w-56 rounded-2xl border-white/10 bg-[#171b1f]/96 text-[#cfd4cf] shadow-[0_18px_40px_rgba(0,0,0,0.32)] backdrop-blur-xl"
+								className="w-56 rounded-2xl border-[#171717]/8 bg-white/96 text-[#171717] shadow-[0_18px_40px_rgba(0,0,0,0.12)] backdrop-blur-xl dark:border-white/10 dark:bg-[#171b1f]/96 dark:text-[#cfd4cf] dark:shadow-[0_18px_40px_rgba(0,0,0,0.32)]"
 							>
 								{/* File Upload Options */}
 								<DropdownMenuItem
-									className="cursor-pointer rounded-xl hover:bg-white/7 focus:bg-white/7"
+									className="cursor-pointer rounded-xl hover:bg-black/5 focus:bg-black/5 dark:hover:bg-white/7 dark:focus:bg-white/7"
 									disabled={status !== "ready"}
 									onClick={() => fileInputRef.current?.click()}
 								>
@@ -642,7 +642,7 @@ function PureMultimodalInput({
 									<span>Upload files</span>
 								</DropdownMenuItem>
 								<DropdownMenuItem
-									className="cursor-pointer rounded-xl hover:bg-white/7 focus:bg-white/7"
+									className="cursor-pointer rounded-xl hover:bg-black/5 focus:bg-black/5 dark:hover:bg-white/7 dark:focus:bg-white/7"
 									disabled={status !== "ready"}
 									onClick={() => {
 										if (fileInputRef.current && status === "ready") {
@@ -665,7 +665,7 @@ function PureMultimodalInput({
 
 								{/* Mode Settings */}
 								<DropdownMenuItem
-									className="cursor-pointer rounded-xl hover:bg-white/7 focus:bg-white/7"
+									className="cursor-pointer rounded-xl hover:bg-black/5 focus:bg-black/5 dark:hover:bg-white/7 dark:focus:bg-white/7"
 									onClick={() => setWormgptEnabled(!wormgptEnabled)}
 								>
 									<SparklesIcon
@@ -680,7 +680,7 @@ function PureMultimodalInput({
 									)}
 								</DropdownMenuItem>
 								<DropdownMenuItem
-									className="cursor-pointer rounded-xl hover:bg-white/7 focus:bg-white/7"
+									className="cursor-pointer rounded-xl hover:bg-black/5 focus:bg-black/5 dark:hover:bg-white/7 dark:focus:bg-white/7"
 									onClick={() => setDeepThinkingEnabled(!deepThinkingEnabled)}
 								>
 									<CpuIcon className="mr-2 h-4 w-4" />
@@ -690,7 +690,7 @@ function PureMultimodalInput({
 									)}
 								</DropdownMenuItem>
 								<DropdownMenuItem
-									className="cursor-pointer rounded-xl hover:bg-white/7 focus:bg-white/7"
+									className="cursor-pointer rounded-xl hover:bg-black/5 focus:bg-black/5 dark:hover:bg-white/7 dark:focus:bg-white/7"
 									onClick={() => setFullstackModeEnabled(!fullstackModeEnabled)}
 								>
 									<FileTextIcon className="mr-2 h-4 w-4" />
@@ -700,7 +700,7 @@ function PureMultimodalInput({
 									)}
 								</DropdownMenuItem>
 								<DropdownMenuItem
-									className="cursor-pointer rounded-xl hover:bg-white/7 focus:bg-white/7"
+									className="cursor-pointer rounded-xl hover:bg-black/5 focus:bg-black/5 dark:hover:bg-white/7 dark:focus:bg-white/7"
 									onClick={() => setMobileModeEnabled(!mobileModeEnabled)}
 								>
 									<CheckIcon className="mr-2 h-4 w-4" />
@@ -711,7 +711,7 @@ function PureMultimodalInput({
 								</DropdownMenuItem>
 								<DropdownMenuItem
 									className={cn(
-										"cursor-pointer rounded-xl hover:bg-white/7 focus:bg-white/7",
+										"cursor-pointer rounded-xl hover:bg-black/5 focus:bg-black/5 dark:hover:bg-white/7 dark:focus:bg-white/7",
 										!isPro && "cursor-not-allowed opacity-40",
 									)}
 									disabled={!isPro}
@@ -736,7 +736,7 @@ function PureMultimodalInput({
 								"size-9 rounded-full p-2 transition-colors",
 								webSearchEnabled
 									? "bg-teal-500/12 text-teal-700 hover:bg-teal-500/18 dark:text-teal-300 dark:hover:bg-teal-500/16"
-									: "text-[#8f9790] hover:bg-white/7 hover:text-[#f3f4f1]",
+									: "text-[#5f6258] dark:text-[#8f9790] hover:bg-black/5 dark:hover:bg-white/7 hover:text-[#171717] dark:hover:text-[#f3f4f1]",
 							)}
 							onClick={() => setWebSearchEnabled(!webSearchEnabled)}
 							title="Web Search"
@@ -779,8 +779,8 @@ function PureMultimodalInput({
 									!input.trim() &&
 										uploadQueue.length === 0 &&
 										attachments.length === 0
-										? "bg-[#34383d] text-[#68706a]"
-										: "bg-[#f3f4f1] text-[#111315] shadow-[0_10px_24px_rgba(0,0,0,0.18)] hover:bg-white",
+										? "bg-[#e5e7eb] text-[#9ca3af] dark:bg-[#34383d] dark:text-[#68706a]"
+										: "bg-[#171717] text-white shadow-[0_10px_24px_rgba(0,0,0,0.18)] hover:bg-[#2d2d2d] dark:bg-[#f3f4f1] dark:text-[#111315] dark:hover:bg-white",
 								)}
 								data-testid="send-button"
 								disabled={

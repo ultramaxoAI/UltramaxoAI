@@ -89,7 +89,7 @@ function MessageTextPart({
 		<div>
 			<MessageContent
 				className={cn("w-full", {
-					"wrap-break-word ml-auto w-fit max-w-full rounded-[18px] rounded-tr-md border border-white/5 bg-black/20 px-3 py-2 text-left text-[#f3f4f1] shadow-[0_4px_12px_rgba(0,0,0,0.08)] backdrop-blur-sm dark:border-white/6 dark:bg-white/8 dark:text-[#f3f4f1] dark:shadow-none":
+					"wrap-break-word ml-auto w-fit max-w-full rounded-[18px] rounded-tr-md border border-[#171717]/5 bg-[#171717]/5 px-3 py-2 text-left text-[#171717] shadow-none backdrop-blur-sm dark:border-white/6 dark:bg-white/8 dark:text-[#f3f4f1]":
 						messageRole === "user",
 					"w-full bg-transparent px-0 py-1 text-left prose-zinc dark:prose-invert prose-p:leading-7":
 						messageRole === "assistant",
