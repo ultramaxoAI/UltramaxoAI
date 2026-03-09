@@ -918,11 +918,11 @@ function PureModelSelectorCompact({
 		<DropdownMenu onOpenChange={setOpen} open={open}>
 			<DropdownMenuTrigger asChild>
 				<Button
-					className="h-9 min-w-0 max-w-52 justify-between gap-2 rounded-full border border-white/10 bg-[#2b2b2f] px-3.5 text-[#e7e8e4] shadow-[inset_0_1px_0_rgba(255,255,255,0.04)] transition-all hover:border-white/16 hover:bg-[#303036]"
+					className="h-9 min-w-0 max-w-52 justify-between gap-2 rounded-full border border-[#171717]/10 bg-white px-3.5 text-[#171717] shadow-[0_2px_8px_rgba(0,0,0,0.04)] transition-all hover:bg-black/5 dark:border-white/10 dark:bg-[#2b2b2f] dark:text-[#e7e8e4] dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.04)] dark:hover:border-white/16 dark:hover:bg-[#303036]"
 					variant="ghost"
 				>
 					<div className="flex min-w-0 items-center gap-2">
-						<div className="flex size-4 items-center justify-center rounded-full bg-white/6 ring-1 ring-white/8">
+						<div className="flex size-4 items-center justify-center rounded-full bg-black/5 ring-1 ring-black/10 dark:bg-white/6 dark:ring-white/8">
 							{provider && (
 								<ModelSelectorLogo
 									className="size-2.5 opacity-90 dark:invert-0"
@@ -930,13 +930,13 @@ function PureModelSelectorCompact({
 								/>
 							)}
 						</div>
-						<span className="truncate text-left text-[12.5px] font-medium text-[#eceee9]">
+						<span className="truncate text-left text-[12.5px] font-medium text-[#171717] dark:text-[#eceee9]">
 							{selectedModel.name}
 						</span>
 					</div>
 					<ChevronDownIcon
 						className={cn(
-							"size-3.5 shrink-0 text-[#8f9790] transition-transform duration-200",
+							"size-3.5 shrink-0 text-[#5f6258] transition-transform duration-200 dark:text-[#8f9790]",
 							open && "rotate-180",
 						)}
 					/>
@@ -944,49 +944,49 @@ function PureModelSelectorCompact({
 			</DropdownMenuTrigger>
 			<DropdownMenuContent
 				align="end"
-				className="w-[20rem] rounded-2xl border border-white/10 bg-[#16171b]/98 p-1.5 text-[#d9ddd8] shadow-[0_24px_80px_rgba(0,0,0,0.48)] backdrop-blur-2xl"
+				className="w-[20rem] rounded-2xl border border-[#171717]/8 bg-white/98 p-1.5 text-[#171717] shadow-[0_18px_50px_rgba(0,0,0,0.12)] backdrop-blur-2xl dark:border-white/10 dark:bg-[#16171b]/98 dark:text-[#d9ddd8] dark:shadow-[0_24px_80px_rgba(0,0,0,0.48)]"
 				sideOffset={10}
 			>
 				<div className="px-3 pb-2 pt-2">
-					<div className="text-[11px] font-medium uppercase tracking-[0.18em] text-[#7d847f]">
+					<div className="text-[11px] font-medium uppercase tracking-[0.18em] text-[#5f6258] dark:text-[#7d847f]">
 						Models
 					</div>
-					<div className="mt-1 text-[12px] text-[#9da39e]">
+					<div className="mt-1 text-[12px] text-[#5f6258] dark:text-[#9da39e]">
 						Switch model directly from the composer
 					</div>
 				</div>
 
 				{customModels && customModels.length > 0 && (
 					<>
-						<div className="px-3 pb-1 pt-2 text-[10px] font-semibold uppercase tracking-[0.18em] text-[#6f7671]">
+						<div className="px-3 pb-1 pt-2 text-[10px] font-semibold uppercase tracking-[0.18em] text-[#5f6258] dark:text-[#6f7671]">
 							My Custom Models
 						</div>
 						{customModels.map((model) => (
 							<DropdownMenuItem
-								className="min-h-11 rounded-xl px-3 py-2 text-[#e6e9e3] hover:bg-white/6 focus:bg-white/6"
+								className="min-h-11 rounded-xl px-3 py-2 text-[#171717] hover:bg-black/5 focus:bg-black/5 dark:text-[#e6e9e3] dark:hover:bg-white/6 dark:focus:bg-white/6"
 								key={model.id}
 								onSelect={() => selectModel(model.id)}
 							>
 								<div className="flex min-w-0 flex-1 items-center gap-3">
-									<div className="flex size-7 items-center justify-center rounded-full bg-white/5 ring-1 ring-white/8">
+									<div className="flex size-7 items-center justify-center rounded-full bg-black/5 ring-1 ring-black/10 dark:bg-white/5 dark:ring-white/8">
 										<ModelSelectorLogo className="size-3.5 dark:invert-0" provider={model.provider} />
 									</div>
 									<div className="min-w-0">
 										<div className="truncate text-[13px] font-medium">{model.name}</div>
-										<div className="truncate text-[11px] text-[#7f8781]">Custom</div>
+										<div className="truncate text-[11px] text-[#5f6258] dark:text-[#7f8781]">Custom</div>
 									</div>
 								</div>
-								{model.id === selectedModelId && <CheckIcon className="ml-3 size-4 text-[#f3f4f1]" />}
+								{model.id === selectedModelId && <CheckIcon className="ml-3 size-4 text-[#171717] dark:text-[#f3f4f1]" />}
 							</DropdownMenuItem>
 						))}
-						<DropdownMenuSeparator className="my-1 bg-white/8" />
+						<DropdownMenuSeparator className="my-1 bg-black/5 dark:bg-white/8" />
 					</>
 				)}
 
 				<div className="max-h-88 overflow-y-auto pr-1">
 					{Object.entries(modelsByProvider).map(([providerKey, providerModels]) => (
 						<div key={providerKey}>
-							<div className="px-3 pb-1 pt-2 text-[10px] font-semibold uppercase tracking-[0.18em] text-[#6f7671]">
+							<div className="px-3 pb-1 pt-2 text-[10px] font-semibold uppercase tracking-[0.18em] text-[#5f6258] dark:text-[#6f7671]">
 								{providerNames[providerKey] ?? providerKey}
 							</div>
 							{providerModels.map((model) => {
@@ -997,26 +997,26 @@ function PureModelSelectorCompact({
 								return (
 									<DropdownMenuItem
 										className={cn(
-											"min-h-11 rounded-xl px-3 py-2 text-[#e6e9e3] hover:bg-white/6 focus:bg-white/6",
+											"min-h-11 rounded-xl px-3 py-2 text-[#171717] hover:bg-black/5 focus:bg-black/5 dark:text-[#e6e9e3] dark:hover:bg-white/6 dark:focus:bg-white/6",
 											isLocked && "opacity-60",
 										)}
 										key={model.id}
 										onSelect={() => selectModel(model.id, isLocked)}
 									>
 										<div className="flex min-w-0 flex-1 items-center gap-3">
-											<div className="flex size-7 items-center justify-center rounded-full bg-white/5 ring-1 ring-white/8">
+											<div className="flex size-7 items-center justify-center rounded-full bg-black/5 ring-1 ring-black/10 dark:bg-white/5 dark:ring-white/8">
 												<ModelSelectorLogo className="size-3.5 dark:invert-0" provider={logoProvider} />
 											</div>
 											<div className="min-w-0">
 												<div className="flex items-center gap-2">
 													<span className="truncate text-[13px] font-medium">{model.name}</span>
 													{isProModel && (
-														<span className="rounded-full bg-white/7 px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-[0.14em] text-[#d8dcd5]">
+														<span className="rounded-full bg-black/5 px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-[0.14em] text-[#5f6258] dark:bg-white/7 dark:text-[#d8dcd5]">
 															Pro
 														</span>
 													)}
 												</div>
-												<div className="truncate text-[11px] text-[#7f8781]">
+												<div className="truncate text-[11px] text-[#5f6258] dark:text-[#7f8781]">
 													{providerNames[providerKey] ?? providerKey}
 												</div>
 											</div>
@@ -1026,7 +1026,7 @@ function PureModelSelectorCompact({
 												Locked
 											</span>
 										) : model.id === selectedModelId ? (
-											<CheckIcon className="ml-3 size-4 text-[#f3f4f1]" />
+											<CheckIcon className="ml-3 size-4 text-[#171717] dark:text-[#f3f4f1]" />
 										) : null}
 									</DropdownMenuItem>
 								);
