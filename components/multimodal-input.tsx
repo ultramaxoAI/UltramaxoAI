@@ -5,6 +5,7 @@ import type { UIMessage } from "ai";
 import equal from "fast-deep-equal";
 import {
 	CheckIcon,
+	ChevronDownIcon,
 	CpuIcon,
 	FileTextIcon,
 	GlobeIcon,
@@ -29,15 +30,7 @@ import {
 import { toast } from "sonner";
 import { useLocalStorage, useWindowSize } from "usehooks-ts";
 import {
-	ModelSelector,
-	ModelSelectorContent,
-	ModelSelectorGroup,
-	ModelSelectorInput,
-	ModelSelectorItem,
-	ModelSelectorList,
 	ModelSelectorLogo,
-	ModelSelectorName,
-	ModelSelectorTrigger,
 } from "@/components/ai-elements/model-selector";
 import {
 	DropdownMenu,
@@ -66,7 +59,7 @@ import { PreviewAttachment } from "./preview-attachment";
 import { Button } from "./ui/button";
 import type { VisibilityType } from "./visibility-selector";
 
-function setCookie(name: string, value: string) {
+	function setCookie(name: string, value: string) {
 	const maxAge = 60 * 60 * 24 * 365; // 1 year
 	// biome-ignore lint/suspicious/noDocumentCookie: needed for client-side cookie setting
 	document.cookie = `${name}=${encodeURIComponent(value)}; path=/; max-age=${maxAge}`;
@@ -141,10 +134,10 @@ function PureMultimodalInput({
 			// Temporarily set height to 0 to correctly calculate shrink
 			textareaRef.current.style.height = "0px";
 			const scrollHeight = textareaRef.current.scrollHeight;
-			// Re-apply height based on scrollHeight, clamped between 20px and 200px
+			// Re-apply height based on scrollHeight, clamped for a Reagent-like compact composer
 			textareaRef.current.style.height = `${Math.min(
-				Math.max(scrollHeight, 20),
-				200,
+				Math.max(scrollHeight, 16),
+				144,
 			)}px`;
 		}
 	}, []);
@@ -168,7 +161,7 @@ function PureMultimodalInput({
 
 	const resetHeight = useCallback(() => {
 		if (textareaRef.current) {
-			textareaRef.current.style.height = "20px";
+			textareaRef.current.style.height = "16px";
 		}
 	}, []);
 
@@ -357,8 +350,20 @@ function PureMultimodalInput({
 		}
 	}, []);
 
+	// Check if model supports vision (images)
+	const modelSupportsVision = useCallback((modelId: string): boolean => {
+		const nonVisionModels: string[] = [];
+		return !nonVisionModels.some(m => modelId.toLowerCase().includes(m.toLowerCase()));
+	}, []);
+
 	const handleFileChange = useCallback(
 		async (event: ChangeEvent<HTMLInputElement>) => {
+			// Check if model supports vision
+			if (!modelSupportsVision(selectedModelId)) {
+				toast.error("Model ini tidak mendukung input gambar. Silakan pilih model lain atau kirim tanpa gambar.");
+				return;
+			}
+
 			const files = Array.from(event.target.files || []);
 
 			setUploadQueue(files.map((file) => file.name));
@@ -385,6 +390,12 @@ function PureMultimodalInput({
 
 	const handlePaste = useCallback(
 		async (event: ClipboardEvent) => {
+			// Check if model supports vision
+			if (!modelSupportsVision(selectedModelId)) {
+				toast.error("Model ini tidak mendukung input gambar. Silakan pilih model lain.");
+				return;
+			}
+
 			const items = event.clipboardData?.items;
 			if (!items) {
 				return;
@@ -454,7 +465,7 @@ function PureMultimodalInput({
 			/>
 
 			<PromptInput
-				className="mx-auto w-full max-w-3xl rounded-[28px] border border-zinc-200 bg-white p-1 outline-none ring-0 transition-colors dark:border-white/10 dark:bg-[#212121]"
+				className="mx-auto w-full max-w-3xl rounded-[28px] border border-white/8 bg-[#27272a]/94 p-0.5 text-[#f3f4f1] outline-none ring-0 shadow-[0_14px_32px_rgba(0,0,0,0.2)] backdrop-blur-xl transition-all"
 				onSubmit={(event) => {
 					event.preventDefault();
 					if (!input.trim() && attachments.length === 0) {
@@ -507,9 +518,9 @@ function PureMultimodalInput({
 					webSearchEnabled ||
 					fullstackModeEnabled ||
 					mobileModeEnabled) && (
-					<div className="flex flex-row flex-wrap gap-1.5 px-2 pt-2">
+					<div className="flex flex-row flex-wrap gap-1 px-2 pt-0.5">
 						{imageGenerationMode && (
-							<span className="flex items-center gap-1 rounded-full bg-violet-500/15 border border-violet-500/30 px-2.5 py-0.5 text-[11px] font-bold text-violet-400">
+							<span className="flex items-center gap-1 rounded-full border border-violet-500/20 bg-violet-500/10 px-2.5 py-0.5 text-[11px] font-semibold text-violet-300">
 								<Wand2Icon className="size-3" />
 								Image
 								<button
@@ -522,7 +533,7 @@ function PureMultimodalInput({
 							</span>
 						)}
 						{wormgptEnabled && (
-							<span className="flex items-center gap-1 rounded-full bg-red-500/15 border border-red-500/30 px-2.5 py-0.5 text-[11px] font-bold text-red-400">
+							<span className="flex items-center gap-1 rounded-full border border-red-500/20 bg-red-500/10 px-2.5 py-0.5 text-[11px] font-semibold text-red-300">
 								<SparklesIcon className="size-3" />
 								WormGPT
 								<button
@@ -535,7 +546,7 @@ function PureMultimodalInput({
 							</span>
 						)}
 						{deepThinkingEnabled && (
-							<span className="flex items-center gap-1 rounded-full bg-blue-500/15 border border-blue-500/30 px-2.5 py-0.5 text-[11px] font-bold text-blue-400">
+							<span className="flex items-center gap-1 rounded-full border border-blue-500/20 bg-blue-500/10 px-2.5 py-0.5 text-[11px] font-semibold text-blue-300">
 								<CpuIcon className="size-3" />
 								Deep Thinking
 								<button
@@ -548,7 +559,7 @@ function PureMultimodalInput({
 							</span>
 						)}
 						{webSearchEnabled && (
-							<span className="flex items-center gap-1 rounded-full bg-green-500/15 border border-green-500/30 px-2.5 py-0.5 text-[11px] font-bold text-green-400">
+							<span className="flex items-center gap-1 rounded-full border border-green-500/20 bg-green-500/10 px-2.5 py-0.5 text-[11px] font-semibold text-green-300">
 								<GlobeIcon className="size-3" />
 								Web Search
 								<button
@@ -561,7 +572,7 @@ function PureMultimodalInput({
 							</span>
 						)}
 						{fullstackModeEnabled && (
-							<span className="flex items-center gap-1 rounded-full bg-orange-500/15 border border-orange-500/30 px-2.5 py-0.5 text-[11px] font-bold text-orange-400">
+							<span className="flex items-center gap-1 rounded-full border border-orange-500/20 bg-orange-500/10 px-2.5 py-0.5 text-[11px] font-semibold text-orange-300">
 								<FileTextIcon className="size-3" />
 								Fullstack
 								<button
@@ -574,7 +585,7 @@ function PureMultimodalInput({
 							</span>
 						)}
 						{mobileModeEnabled && (
-							<span className="flex items-center gap-1 rounded-full bg-pink-500/15 border border-pink-500/30 px-2.5 py-0.5 text-[11px] font-bold text-pink-400">
+							<span className="flex items-center gap-1 rounded-full border border-pink-500/20 bg-pink-500/10 px-2.5 py-0.5 text-[11px] font-semibold text-pink-300">
 								<CheckIcon className="size-3" />
 								Mobile Dev
 								<button
@@ -588,14 +599,14 @@ function PureMultimodalInput({
 						)}
 					</div>
 				)}
-				<div className={cn("flex flex-row items-start px-2 pt-2.5 pb-0", status !== "ready" && "opacity-50 pointer-events-none")}>
+				<div className={cn("flex flex-row items-start px-2 pt-0.5 pb-0", status !== "ready" && "pointer-events-none opacity-50")}>
 					<PromptInputTextarea
-						className="grow resize-none border-0! bg-transparent px-1 py-0 text-[15px] leading-relaxed text-zinc-900 dark:text-zinc-100 outline-none ring-0 [-ms-overflow-style:none] [scrollbar-width:none] placeholder:text-zinc-500 dark:placeholder:text-zinc-400 focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 [&::-webkit-scrollbar]:hidden"
+						className="grow resize-none border-0! bg-transparent px-2.5 py-2.5 text-[15.5px] leading-7 text-[#f3f4f1] outline-none ring-0 [-ms-overflow-style:none] [scrollbar-width:none] placeholder:text-[#8f9790] focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 [&::-webkit-scrollbar]:hidden"
 						data-testid="multimodal-input"
 						disableAutoResize={true}
 						disabled={status !== "ready"}
-						maxHeight={200}
-						minHeight={20}
+						maxHeight={208}
+						minHeight={44}
 						onChange={handleInput}
 						placeholder={status !== "ready" ? "Wait for AI to finish..." : "Send a message..."}
 						ref={textareaRef}
@@ -603,27 +614,27 @@ function PureMultimodalInput({
 						value={input}
 					/>
 				</div>
-				<PromptInputToolbar className="relative flex items-center justify-between px-2 pb-1 pt-0">
-					<PromptInputTools className="flex items-center gap-1.5">
+				<PromptInputToolbar className="relative flex items-center justify-between px-2 pb-2 pt-1">
+					<PromptInputTools className="flex items-center gap-1">
 						{/* Dropdown Menu All-in-One - + Icon */}
 						<DropdownMenu>
 							<DropdownMenuTrigger asChild>
 								<Button
-									className="size-9 rounded-full p-2 transition-colors hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-200"
+									className="size-9 rounded-full p-2 text-[#8f9790] transition-colors hover:bg-white/7 hover:text-[#f3f4f1]"
 									data-testid="all-options-button"
 									title="Options"
 									variant="ghost"
 								>
-									<PlusIcon size={18} />
+									<PlusIcon size={19} />
 								</Button>
 							</DropdownMenuTrigger>
 							<DropdownMenuContent
 								align="start"
-								className="w-56 bg-white dark:bg-[#1a1a1a] border-zinc-200 dark:border-white/10 rounded-xl shadow-lg text-zinc-700 dark:text-zinc-300"
+								className="w-56 rounded-2xl border-white/10 bg-[#171b1f]/96 text-[#cfd4cf] shadow-[0_18px_40px_rgba(0,0,0,0.32)] backdrop-blur-xl"
 							>
 								{/* File Upload Options */}
 								<DropdownMenuItem
-									className="cursor-pointer hover:bg-zinc-100 dark:hover:bg-white/10 rounded-lg focus:bg-zinc-100 dark:focus:bg-white/10"
+									className="cursor-pointer rounded-xl hover:bg-white/7 focus:bg-white/7"
 									disabled={status !== "ready"}
 									onClick={() => fileInputRef.current?.click()}
 								>
@@ -631,7 +642,7 @@ function PureMultimodalInput({
 									<span>Upload files</span>
 								</DropdownMenuItem>
 								<DropdownMenuItem
-									className="cursor-pointer hover:bg-zinc-100 dark:hover:bg-white/10 rounded-lg focus:bg-zinc-100 dark:focus:bg-white/10"
+									className="cursor-pointer rounded-xl hover:bg-white/7 focus:bg-white/7"
 									disabled={status !== "ready"}
 									onClick={() => {
 										if (fileInputRef.current && status === "ready") {
@@ -650,11 +661,11 @@ function PureMultimodalInput({
 									<span>Photos</span>
 								</DropdownMenuItem>
 
-								<DropdownMenuSeparator className="bg-zinc-200 dark:bg-white/10" />
+								<DropdownMenuSeparator className="bg-white/10" />
 
 								{/* Mode Settings */}
 								<DropdownMenuItem
-									className="cursor-pointer hover:bg-zinc-100 dark:hover:bg-white/10 rounded-lg focus:bg-zinc-100 dark:focus:bg-white/10"
+									className="cursor-pointer rounded-xl hover:bg-white/7 focus:bg-white/7"
 									onClick={() => setWormgptEnabled(!wormgptEnabled)}
 								>
 									<SparklesIcon
@@ -669,7 +680,7 @@ function PureMultimodalInput({
 									)}
 								</DropdownMenuItem>
 								<DropdownMenuItem
-									className="cursor-pointer hover:bg-zinc-100 dark:hover:bg-white/10 rounded-lg focus:bg-zinc-100 dark:focus:bg-white/10"
+									className="cursor-pointer rounded-xl hover:bg-white/7 focus:bg-white/7"
 									onClick={() => setDeepThinkingEnabled(!deepThinkingEnabled)}
 								>
 									<CpuIcon className="mr-2 h-4 w-4" />
@@ -679,7 +690,7 @@ function PureMultimodalInput({
 									)}
 								</DropdownMenuItem>
 								<DropdownMenuItem
-									className="cursor-pointer hover:bg-zinc-100 dark:hover:bg-white/10 rounded-lg focus:bg-zinc-100 dark:focus:bg-white/10"
+									className="cursor-pointer rounded-xl hover:bg-white/7 focus:bg-white/7"
 									onClick={() => setFullstackModeEnabled(!fullstackModeEnabled)}
 								>
 									<FileTextIcon className="mr-2 h-4 w-4" />
@@ -689,7 +700,7 @@ function PureMultimodalInput({
 									)}
 								</DropdownMenuItem>
 								<DropdownMenuItem
-									className="cursor-pointer hover:bg-zinc-100 dark:hover:bg-white/10 rounded-lg focus:bg-zinc-100 dark:focus:bg-white/10"
+									className="cursor-pointer rounded-xl hover:bg-white/7 focus:bg-white/7"
 									onClick={() => setMobileModeEnabled(!mobileModeEnabled)}
 								>
 									<CheckIcon className="mr-2 h-4 w-4" />
@@ -700,7 +711,7 @@ function PureMultimodalInput({
 								</DropdownMenuItem>
 								<DropdownMenuItem
 									className={cn(
-										"cursor-pointer hover:bg-zinc-100 dark:hover:bg-white/10 rounded-lg focus:bg-zinc-100 dark:focus:bg-white/10",
+										"cursor-pointer rounded-xl hover:bg-white/7 focus:bg-white/7",
 										!isPro && "cursor-not-allowed opacity-40",
 									)}
 									disabled={!isPro}
@@ -724,15 +735,15 @@ function PureMultimodalInput({
 							className={cn(
 								"size-9 rounded-full p-2 transition-colors",
 								webSearchEnabled
-									? "bg-blue-500/20 text-blue-600 dark:text-blue-400 hover:bg-blue-500/30"
-									: "hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-200",
+									? "bg-teal-500/12 text-teal-700 hover:bg-teal-500/18 dark:text-teal-300 dark:hover:bg-teal-500/16"
+									: "text-[#8f9790] hover:bg-white/7 hover:text-[#f3f4f1]",
 							)}
 							onClick={() => setWebSearchEnabled(!webSearchEnabled)}
 							title="Web Search"
 							type="button"
 							variant="ghost"
 						>
-							<GlobeIcon size={18} />
+							<GlobeIcon size={19} />
 						</Button>
 
 						<input
@@ -747,7 +758,7 @@ function PureMultimodalInput({
 					</PromptInputTools>
 
 					{/* Right side: Model Selector + Submit */}
-					<div className="flex items-center gap-2">
+					<div className="flex items-center gap-1.5">
 						<ModelSelectorCompact
 							onModelChange={onModelChange}
 							selectedModelId={selectedModelId}
@@ -764,12 +775,12 @@ function PureMultimodalInput({
 						) : (
 							<PromptInputSubmit
 								className={cn(
-									"size-10 rounded-full transition-all duration-200 flex items-center justify-center",
+									"flex size-9 rounded-full items-center justify-center transition-all duration-200",
 									!input.trim() &&
 										uploadQueue.length === 0 &&
 										attachments.length === 0
-										? "bg-zinc-200 dark:bg-[#333333] text-zinc-400 dark:text-zinc-500"
-										: "bg-black text-white dark:bg-white dark:text-black hover:bg-zinc-800 dark:hover:bg-zinc-200",
+										? "bg-[#34383d] text-[#68706a]"
+										: "bg-[#f3f4f1] text-[#111315] shadow-[0_10px_24px_rgba(0,0,0,0.18)] hover:bg-white",
 								)}
 								data-testid="send-button"
 								disabled={
@@ -840,19 +851,34 @@ function PureModelSelectorCompact({
 }: {
 	selectedModelId: string;
 	onModelChange?: (modelId: string) => void;
-	user?: { type?: string; isPro?: boolean };
+	user?: { type?: string; isPro?: boolean; role?: string };
 	customModels?: Array<{ id: string; name: string; provider: string }>;
 }) {
 	const [open, setOpen] = useState(false);
-	const isPro = user?.type === "pro";
+	const isPro =
+		user?.type === "pro" || user?.isPro === true || user?.role === "admin";
+
+	const isProRestrictedModel = useCallback(
+		(modelId: string, modelName?: string) =>
+			modelId === "ultramaxo/ultra-agent-pro" ||
+			modelId.endsWith("-pro") ||
+			Boolean(modelName?.includes("Pro")),
+		[],
+	);
 
 	const fallbackModel =
 		chatModels.find((m) => m.id === DEFAULT_CHAT_MODEL) ?? chatModels[0];
 
-	const selectedModel =
+	const rawSelectedModel =
 		chatModels.find((m) => m.id === selectedModelId) ??
 		customModels?.find((m) => m.id === selectedModelId) ??
 		fallbackModel;
+
+	const selectedModel =
+		!isPro &&
+		isProRestrictedModel(rawSelectedModel.id, rawSelectedModel.name)
+			? fallbackModel
+			: rawSelectedModel;
 
 	const [provider] = selectedModel.id.split("/");
 
@@ -866,99 +892,150 @@ function PureModelSelectorCompact({
 		groq: "",
 	};
 
+	const selectModel = (modelId: string, locked?: boolean) => {
+		if (locked) {
+			toast.error("Upgrade to Pro to access UltraAgent Pro");
+			return;
+		}
+
+		onModelChange?.(modelId);
+		setCookie("chat-model", modelId);
+		setOpen(false);
+	};
+
+	useEffect(() => {
+		if (
+			!isPro &&
+			rawSelectedModel &&
+			isProRestrictedModel(rawSelectedModel.id, rawSelectedModel.name)
+		) {
+			onModelChange?.(fallbackModel.id);
+			setCookie("chat-model", fallbackModel.id);
+		}
+	}, [fallbackModel.id, isPro, isProRestrictedModel, onModelChange, rawSelectedModel]);
+
 	return (
-		<ModelSelector onOpenChange={setOpen} open={open}>
-			<ModelSelectorTrigger asChild>
+		<DropdownMenu onOpenChange={setOpen} open={open}>
+			<DropdownMenuTrigger asChild>
 				<Button
-						className="h-9 min-w-0 max-w-48 justify-between gap-2 rounded-xl px-2 text-zinc-700 transition-colors hover:bg-zinc-100 dark:text-zinc-300 dark:hover:bg-white/6"
+					className="h-9 min-w-0 max-w-52 justify-between gap-2 rounded-full border border-white/10 bg-[#2b2b2f] px-3.5 text-[#e7e8e4] shadow-[inset_0_1px_0_rgba(255,255,255,0.04)] transition-all hover:border-white/16 hover:bg-[#303036]"
 					variant="ghost"
 				>
-					{provider && <ModelSelectorLogo provider={provider} />}
-						<ModelSelectorName>{selectedModel.name}</ModelSelectorName>
+					<div className="flex min-w-0 items-center gap-2">
+						<div className="flex size-4 items-center justify-center rounded-full bg-white/6 ring-1 ring-white/8">
+							{provider && (
+								<ModelSelectorLogo
+									className="size-2.5 opacity-90 dark:invert-0"
+									provider={provider}
+								/>
+							)}
+						</div>
+						<span className="truncate text-left text-[12.5px] font-medium text-[#eceee9]">
+							{selectedModel.name}
+						</span>
+					</div>
+					<ChevronDownIcon
+						className={cn(
+							"size-3.5 shrink-0 text-[#8f9790] transition-transform duration-200",
+							open && "rotate-180",
+						)}
+					/>
 				</Button>
-			</ModelSelectorTrigger>
-			<ModelSelectorContent>
-				<ModelSelectorInput placeholder="Search models..." />
-				<ModelSelectorList>
-					{customModels && customModels.length > 0 && (
-						<ModelSelectorGroup heading="My Custom Models">
-							{customModels.map((model) => {
+			</DropdownMenuTrigger>
+			<DropdownMenuContent
+				align="end"
+				className="w-[20rem] rounded-2xl border border-white/10 bg-[#16171b]/98 p-1.5 text-[#d9ddd8] shadow-[0_24px_80px_rgba(0,0,0,0.48)] backdrop-blur-2xl"
+				sideOffset={10}
+			>
+				<div className="px-3 pb-2 pt-2">
+					<div className="text-[11px] font-medium uppercase tracking-[0.18em] text-[#7d847f]">
+						Models
+					</div>
+					<div className="mt-1 text-[12px] text-[#9da39e]">
+						Switch model directly from the composer
+					</div>
+				</div>
+
+				{customModels && customModels.length > 0 && (
+					<>
+						<div className="px-3 pb-1 pt-2 text-[10px] font-semibold uppercase tracking-[0.18em] text-[#6f7671]">
+							My Custom Models
+						</div>
+						{customModels.map((model) => (
+							<DropdownMenuItem
+								className="min-h-11 rounded-xl px-3 py-2 text-[#e6e9e3] hover:bg-white/6 focus:bg-white/6"
+								key={model.id}
+								onSelect={() => selectModel(model.id)}
+							>
+								<div className="flex min-w-0 flex-1 items-center gap-3">
+									<div className="flex size-7 items-center justify-center rounded-full bg-white/5 ring-1 ring-white/8">
+										<ModelSelectorLogo className="size-3.5 dark:invert-0" provider={model.provider} />
+									</div>
+									<div className="min-w-0">
+										<div className="truncate text-[13px] font-medium">{model.name}</div>
+										<div className="truncate text-[11px] text-[#7f8781]">Custom</div>
+									</div>
+								</div>
+								{model.id === selectedModelId && <CheckIcon className="ml-3 size-4 text-[#f3f4f1]" />}
+							</DropdownMenuItem>
+						))}
+						<DropdownMenuSeparator className="my-1 bg-white/8" />
+					</>
+				)}
+
+				<div className="max-h-88 overflow-y-auto pr-1">
+					{Object.entries(modelsByProvider).map(([providerKey, providerModels]) => (
+						<div key={providerKey}>
+							<div className="px-3 pb-1 pt-2 text-[10px] font-semibold uppercase tracking-[0.18em] text-[#6f7671]">
+								{providerNames[providerKey] ?? providerKey}
+							</div>
+							{providerModels.map((model) => {
+								const logoProvider = model.id.split("/")[0];
+								const isProModel = isProRestrictedModel(model.id, model.name);
+								const isLocked = isProModel && !isPro;
+
 								return (
-									<ModelSelectorItem
-										key={model.id}
-										onSelect={() => {
-											onModelChange?.(model.id);
-											setCookie("chat-model", model.id);
-											setOpen(false);
-										}}
-										value={model.id}
-									>
-										<ModelSelectorLogo provider={model.provider} />
-										<ModelSelectorName className="text-primary font-medium">
-											{model.name}
-										</ModelSelectorName>
-										{model.id === selectedModelId && (
-											<CheckIcon className="ml-auto size-4" />
+									<DropdownMenuItem
+										className={cn(
+											"min-h-11 rounded-xl px-3 py-2 text-[#e6e9e3] hover:bg-white/6 focus:bg-white/6",
+											isLocked && "opacity-60",
 										)}
-									</ModelSelectorItem>
+										key={model.id}
+										onSelect={() => selectModel(model.id, isLocked)}
+									>
+										<div className="flex min-w-0 flex-1 items-center gap-3">
+											<div className="flex size-7 items-center justify-center rounded-full bg-white/5 ring-1 ring-white/8">
+												<ModelSelectorLogo className="size-3.5 dark:invert-0" provider={logoProvider} />
+											</div>
+											<div className="min-w-0">
+												<div className="flex items-center gap-2">
+													<span className="truncate text-[13px] font-medium">{model.name}</span>
+													{isProModel && (
+														<span className="rounded-full bg-white/7 px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-[0.14em] text-[#d8dcd5]">
+															Pro
+														</span>
+													)}
+												</div>
+												<div className="truncate text-[11px] text-[#7f8781]">
+													{providerNames[providerKey] ?? providerKey}
+												</div>
+											</div>
+										</div>
+										{isLocked ? (
+											<span className="ml-3 text-[10px] font-medium uppercase tracking-[0.16em] text-[#8d7462]">
+												Locked
+											</span>
+										) : model.id === selectedModelId ? (
+											<CheckIcon className="ml-3 size-4 text-[#f3f4f1]" />
+										) : null}
+									</DropdownMenuItem>
 								);
 							})}
-						</ModelSelectorGroup>
-					)}
-					{Object.entries(modelsByProvider).map(
-						([providerKey, providerModels]) => (
-							<ModelSelectorGroup
-								heading={providerNames[providerKey] ?? providerKey}
-								key={providerKey}
-							>
-								{providerModels.map((model) => {
-									const logoProvider = model.id.split("/")[0];
-									const isProModel = model.name.includes("Pro");
-									const isLocked = isProModel && !isPro;
-
-									return (
-										<ModelSelectorItem
-											className={isLocked ? "opacity-60" : ""}
-											key={model.id}
-											onSelect={() => {
-												if (isLocked) {
-													toast.error(
-														"Upgrade to Pro to access UltraAgent Pro",
-													);
-													return;
-												}
-												onModelChange?.(model.id);
-												setCookie("chat-model", model.id);
-												setOpen(false);
-											}}
-											value={model.id}
-										>
-											<ModelSelectorLogo provider={logoProvider} />
-											<ModelSelectorName>
-												{model.name}
-												{isProModel && (
-													<span className="ml-2 text-xs font-semibold text-purple-400 bg-purple-500/10 px-1.5 py-0.5 rounded">
-														PRO
-													</span>
-												)}
-											</ModelSelectorName>
-											{isLocked && (
-												<span className="ml-auto text-xs text-zinc-500">
-													🔒
-												</span>
-											)}
-											{model.id === selectedModelId && !isLocked && (
-												<CheckIcon className="ml-auto size-4" />
-											)}
-										</ModelSelectorItem>
-									);
-								})}
-							</ModelSelectorGroup>
-						),
-					)}
-				</ModelSelectorList>
-			</ModelSelectorContent>
-		</ModelSelector>
+						</div>
+					))}
+				</div>
+			</DropdownMenuContent>
+		</DropdownMenu>
 	);
 }
 

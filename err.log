@@ -1,0 +1,42 @@
+app/(chat)/api/chat/route.ts(460,16): error TS2322: Type 'UIMessageStreamWriter<ChatMessage>' is not assignable to type '{ write: (chunk: WorkspaceStreamChunk | Record<string, any>) => void; }'.
+  Types of property 'write' are incompatible.
+    Type '(part: InferUIMessageChunk<ChatMessage>) => void' is not assignable to type '(chunk: WorkspaceStreamChunk | Record<string, any>) => void'.
+      Types of parameters 'part' and 'chunk' are incompatible.
+        Type 'WorkspaceStreamChunk | Record<string, any>' is not assignable to type 'InferUIMessageChunk<ChatMessage>'.
+          Type 'Record<string, any>' is not assignable to type 'InferUIMessageChunk<ChatMessage>'.
+            Type 'Record<string, any>' is missing the following properties from type '{ type: "tool-input-error"; toolCallId: string; toolName: string; input: unknown; providerExecuted?: boolean | undefined; providerMetadata?: SharedV3ProviderMetadata | undefined; dynamic?: boolean | undefined; errorText: string; title?: string | undefined; }': type, toolCallId, toolName, input, errorText
+app/(chat)/api/chat/route.ts(466,16): error TS2322: Type 'UIMessageStreamWriter<ChatMessage>' is not assignable to type '{ write: (chunk: WorkspaceStreamChunk | Record<string, any>) => void; }'.
+  Types of property 'write' are incompatible.
+    Type '(part: InferUIMessageChunk<ChatMessage>) => void' is not assignable to type '(chunk: WorkspaceStreamChunk | Record<string, any>) => void'.
+      Types of parameters 'part' and 'chunk' are incompatible.
+        Type 'WorkspaceStreamChunk | Record<string, any>' is not assignable to type 'InferUIMessageChunk<ChatMessage>'.
+          Type 'Record<string, any>' is not assignable to type 'InferUIMessageChunk<ChatMessage>'.
+            Type 'Record<string, any>' is missing the following properties from type '{ type: "tool-input-error"; toolCallId: string; toolName: string; input: unknown; providerExecuted?: boolean | undefined; providerMetadata?: SharedV3ProviderMetadata | undefined; dynamic?: boolean | undefined; errorText: string; title?: string | undefined; }': type, toolCallId, toolName, input, errorText
+app/(chat)/api/chat/route.ts(472,16): error TS2322: Type 'UIMessageStreamWriter<ChatMessage>' is not assignable to type '{ write: (chunk: WorkspaceStreamChunk | Record<string, any>) => void; }'.
+  Types of property 'write' are incompatible.
+    Type '(part: InferUIMessageChunk<ChatMessage>) => void' is not assignable to type '(chunk: WorkspaceStreamChunk | Record<string, any>) => void'.
+      Types of parameters 'part' and 'chunk' are incompatible.
+        Type 'WorkspaceStreamChunk | Record<string, any>' is not assignable to type 'InferUIMessageChunk<ChatMessage>'.
+          Type 'Record<string, any>' is not assignable to type 'InferUIMessageChunk<ChatMessage>'.
+            Type 'Record<string, any>' is missing the following properties from type '{ type: "tool-input-error"; toolCallId: string; toolName: string; input: unknown; providerExecuted?: boolean | undefined; providerMetadata?: SharedV3ProviderMetadata | undefined; dynamic?: boolean | undefined; errorText: string; title?: string | undefined; }': type, toolCallId, toolName, input, errorText
+app/(chat)/api/chat/route.ts(479,17): error TS2322: Type 'UIMessageStreamWriter<ChatMessage>' is not assignable to type '{ write: (chunk: WorkspaceStreamChunk | Record<string, any>) => void; }'.
+  Types of property 'write' are incompatible.
+    Type '(part: InferUIMessageChunk<ChatMessage>) => void' is not assignable to type '(chunk: WorkspaceStreamChunk | Record<string, any>) => void'.
+      Types of parameters 'part' and 'chunk' are incompatible.
+        Type 'WorkspaceStreamChunk | Record<string, any>' is not assignable to type 'InferUIMessageChunk<ChatMessage>'.
+          Type 'Record<string, any>' is not assignable to type 'InferUIMessageChunk<ChatMessage>'.
+            Type 'Record<string, any>' is missing the following properties from type '{ type: "tool-input-error"; toolCallId: string; toolName: string; input: unknown; providerExecuted?: boolean | undefined; providerMetadata?: SharedV3ProviderMetadata | undefined; dynamic?: boolean | undefined; errorText: string; title?: string | undefined; }': type, toolCallId, toolName, input, errorText
+app/(chat)/api/chat/route.ts(483,17): error TS2322: Type 'UIMessageStreamWriter<ChatMessage>' is not assignable to type '{ write: (chunk: WorkspaceStreamChunk | Record<string, any>) => void; }'.
+  Types of property 'write' are incompatible.
+    Type '(part: InferUIMessageChunk<ChatMessage>) => void' is not assignable to type '(chunk: WorkspaceStreamChunk | Record<string, any>) => void'.
+      Types of parameters 'part' and 'chunk' are incompatible.
+        Type 'WorkspaceStreamChunk | Record<string, any>' is not assignable to type 'InferUIMessageChunk<ChatMessage>'.
+          Type 'Record<string, any>' is not assignable to type 'InferUIMessageChunk<ChatMessage>'.
+            Type 'Record<string, any>' is missing the following properties from type '{ type: "tool-input-error"; toolCallId: string; toolName: string; input: unknown; providerExecuted?: boolean | undefined; providerMetadata?: SharedV3ProviderMetadata | undefined; dynamic?: boolean | undefined; errorText: string; title?: string | undefined; }': type, toolCallId, toolName, input, errorText
+app/(chat)/api/chat/route.ts(487,17): error TS2322: Type 'UIMessageStreamWriter<ChatMessage>' is not assignable to type '{ write: (chunk: WorkspaceStreamChunk | Record<string, any>) => void; }'.
+  Types of property 'write' are incompatible.
+    Type '(part: InferUIMessageChunk<ChatMessage>) => void' is not assignable to type '(chunk: WorkspaceStreamChunk | Record<string, any>) => void'.
+      Types of parameters 'part' and 'chunk' are incompatible.
+        Type 'WorkspaceStreamChunk | Record<string, any>' is not assignable to type 'InferUIMessageChunk<ChatMessage>'.
+          Type 'Record<string, any>' is not assignable to type 'InferUIMessageChunk<ChatMessage>'.
+            Type 'Record<string, any>' is missing the following properties from type '{ type: "tool-input-error"; toolCallId: string; toolName: string; input: unknown; providerExecuted?: boolean | undefined; providerMetadata?: SharedV3ProviderMetadata | undefined; dynamic?: boolean | undefined; errorText: string; title?: string | undefined; }': type, toolCallId, toolName, input, errorText

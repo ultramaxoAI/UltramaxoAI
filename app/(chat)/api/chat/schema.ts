@@ -39,6 +39,7 @@ export const postRequestBodySchema = z.object({
 	webSearchEnabled: z.boolean().optional(),
 	fullstackModeEnabled: z.boolean().optional(),
 	mobileModeEnabled: z.boolean().optional(),
+	activeDocumentId: z.string().optional(),
 });
 
 export type PostRequestBody = z.infer<typeof postRequestBodySchema>;

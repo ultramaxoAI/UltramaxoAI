@@ -1,4 +1,4 @@
-export const DEFAULT_CHAT_MODEL = "ultramaxo/ultra-agent";
+export const DEFAULT_CHAT_MODEL = "xai/grok-4-1-fast-reasoning";
 
 export type ChatModel = {
 	id: string;
@@ -8,6 +8,12 @@ export type ChatModel = {
 };
 
 export const chatModels: ChatModel[] = [
+	{
+		id: "xai/grok-4-1-fast-reasoning",
+		name: "Grok 4 Reasoning",
+		provider: "xai",
+		description: "Fast reasoning model powered by Grok 4",
+	},
 	{
 		id: "ultramaxo/ultra-agent",
 		name: "UltraAgent",

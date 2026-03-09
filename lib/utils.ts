@@ -158,10 +158,13 @@ function sanitizeMessagePart(part: unknown) {
 		} as UIMessagePart<CustomUIDataTypes, ChatTools>;
 	}
 
+	if (part.type === "tool-invocation") {
+		return part as UIMessagePart<CustomUIDataTypes, ChatTools>;
+	}
+
 	if (
 		part.type.startsWith("tool-") &&
-		typeof part.toolCallId === "string" &&
-		typeof part.state === "string"
+		typeof part.toolCallId === "string"
 	) {
 		return part as UIMessagePart<CustomUIDataTypes, ChatTools>;
 	}

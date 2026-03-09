@@ -17,8 +17,11 @@ import { reportAgentStep, startAgentTask } from "@/lib/ai/tools/agent-mode";
 import {
 	createCodeFile,
 	deleteCodeFile,
+	executeTerminalCommand,
+	installDependency,
 	listCodeFiles,
 	runWorkspaceCommand,
+	startPreviewServer,
 	updateCodeFile,
 } from "@/lib/ai/tools/code-workspace";
 import { createDocument } from "@/lib/ai/tools/create-document";
@@ -86,6 +89,7 @@ export async function POST(request: Request) {
 			return new ChatSDKError("bad_request:api").toResponse();
 		}
 
+
 		try {
 			const {
 				id,
@@ -98,6 +102,7 @@ export async function POST(request: Request) {
 				webSearchEnabled,
 				fullstackModeEnabled,
 				mobileModeEnabled,
+				activeDocumentId,
 			} = requestBody;
 
 			const session = await auth();
@@ -254,6 +259,35 @@ export async function POST(request: Request) {
 				});
 			}
 
+			// Check if any messages (including history) have image attachments
+			const hasImagesInHistory = uiMessages.some((msg: any) => 
+				msg.parts?.some((part: any) => part && (part.type === "file" || part.type === "image"))
+			);
+
+			// Check if current message has file attachments
+			const hasFileAttachment = message?.parts?.some(
+				(part: any) => part && (part.type === "file" || part.type === "image")
+			);
+
+			// Allow all models to attempt vision parsing if forced
+			const nonVisionModels: string[] = [];
+			const isNonVisionModel = nonVisionModels.some(m => 
+				selectedChatModel.toLowerCase().includes(m.toLowerCase())
+			);
+
+			// Block if trying to use non-vision model with images
+			if (isNonVisionModel && (hasImagesInHistory || hasFileAttachment)) {
+				console.log("[Chat API] Blocked: Non-vision model with image input", {
+					selectedChatModel,
+					hasImagesInHistory,
+					hasFileAttachment,
+				});
+				return new Response(
+					"Model yang dipilih tidak mendukung input gambar. Silakan:\n1. Pilih model lain\n2. Atau mulai chat baru tanpa gambar",
+					{ status: 400 }
+				);
+			}
+
 			const isReasoningModel =
 				selectedChatModel.includes("reasoning") ||
 				selectedChatModel.includes("thinking") ||
@@ -288,6 +322,30 @@ export async function POST(request: Request) {
 				: "";
 
 			const modelMessages = await convertToModelMessages(recentUiMessages);
+
+			// Filter out problematic image parts that might cause "Cannot read" errors
+			// This handles screenshots from web preview that might have inaccessible URLs
+			const filteredModelMessages = modelMessages.map((msg: any) => {
+				if (msg.role === "user" && msg.content) {
+					const filteredContent = Array.isArray(msg.content) 
+						? msg.content.filter((part: any) => {
+								// Keep text, skip images that might have inaccessible URLs
+								if (part.type === "text") return true;
+								if (part.type === "image") {
+									// Check if image URL is accessible (not blob/localhost)
+									const url = part.image?.url || part.url || "";
+									if (url.startsWith("blob:") || url.startsWith("http://localhost") || url.startsWith("http://127.0.0.1")) {
+										console.log("[Chat API] Filtering out inaccessible image URL:", url);
+										return false;
+									}
+								}
+								return true;
+							})
+						: msg.content;
+					return { ...msg, content: filteredContent };
+				}
+				return msg;
+			});
 
 			// PROMPT LEAK PROTECTION
 			const allText = JSON.stringify(recentUiMessages).toLowerCase();
@@ -354,6 +412,21 @@ export async function POST(request: Request) {
 								baseSystemPrompt = `USER CUSTOM INSTRUCTIONS (MUST FOLLOW):\n${customInstructions}\n\n---\n\n${baseSystemPrompt}`;
 							}
 
+							// Inject active document context so AI knows where to write code
+							let currentDocumentId = activeDocumentId;
+							if (isIdeAgentMode && currentDocumentId) {
+								baseSystemPrompt += `\n\n[ACTIVE WORKSPACE]\nYou are currently operating in an active workspace artifact (documentId: ${currentDocumentId}).\nWhen calling createCodeFile, updateCodeFile, deleteCodeFile, or listCodeFiles, you MUST use this exact documentId.\nDo NOT call createDocument unless you are explicitly starting a brand new, separate project.`;
+							}
+
+							const getDocumentId = () => currentDocumentId;
+							const setDocumentId = (id: string) => { currentDocumentId = id; };
+
+							// Determine which model to use
+							let effectiveModel = selectedChatModel;
+							if (deepThinkingEnabled) {
+								effectiveModel = "maia/gemini-2.5-flash";
+							}
+
 							const result = streamText({
 								// Use smarter model for Deep Thinking mode
 								model: getLanguageModel(
@@ -363,8 +436,8 @@ export async function POST(request: Request) {
 									customConfig, // Pass custom key config
 								),
 								system: baseSystemPrompt,
-								messages: modelMessages,
-								stopWhen: stepCountIs(isIdeAgentMode ? 5 : 3),
+								messages: filteredModelMessages as any,
+								stopWhen: stepCountIs(isIdeAgentMode ? 12 : 3),
 								toolChoice: "auto",
 								providerOptions: deepThinkingEnabled
 									? {
@@ -381,25 +454,44 @@ export async function POST(request: Request) {
 												? {
 														startAgentTask: startAgentTask(),
 														reportAgentStep: reportAgentStep(),
-														listCodeFiles: listCodeFiles({ session }),
+														listCodeFiles: listCodeFiles({ session, getDocumentId, setDocumentId }),
 														createCodeFile: createCodeFile({
 															session,
 															dataStream,
+															getDocumentId,
+															setDocumentId,
 														}),
 														updateCodeFile: updateCodeFile({
 															session,
 															dataStream,
+															getDocumentId,
+															setDocumentId,
 														}),
 														deleteCodeFile: deleteCodeFile({
 															session,
 															dataStream,
+															getDocumentId,
+															setDocumentId,
 														}),
 														runWorkspaceCommand: runWorkspaceCommand(),
+														executeTerminalCommand:
+															executeTerminalCommand({
+																dataStream,
+															}),
+														installDependency:
+															installDependency({
+																dataStream,
+															}),
+														startPreviewServer:
+															startPreviewServer({
+																dataStream,
+															}),
 													}
 												: {}),
 											createDocument: createDocument({
 												session,
 												dataStream,
+												setDocumentId,
 											}),
 											updateDocument: updateDocument({
 												session,
@@ -454,6 +546,19 @@ export async function POST(request: Request) {
 								cause: streamError?.cause,
 								stack: streamError?.stack?.split("\n").slice(0, 3),
 							});
+
+							// Check if error is related to image processing
+							const isImageError = 
+								(error instanceof Error && error.message.includes("Cannot read")) ||
+								(error instanceof Error && error.message.includes("image")) ||
+								(error instanceof Error && error.message.includes("vision")) ||
+								(error instanceof Error && error.message.includes("does not support image"));
+
+							if (isImageError) {
+								throw new Error(
+									"Gambar tidak dapat diproses. Gambar dari screenshot web preview mungkin menggunakan URL yang tidak dapat diakses server. Silakan:\n1. Coba nonaktifkan fitur screenshot di preview\n2. Atau mulai chat baru tanpa screenshot",
+								);
+							}
 
 							const isFunctionError =
 								(error instanceof Error &&

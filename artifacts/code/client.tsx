@@ -1,5 +1,5 @@
 import { ChevronDown, ChevronRight } from "lucide-react";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 import { CodeEditor, type SupportedLanguage } from "@/components/code-editor";
 import {
@@ -18,7 +18,10 @@ import {
 	UndoIcon,
 } from "@/components/icons";
 import { SandpackViewer } from "@/components/sandpack-viewer";
-import { generateUUID } from "@/lib/utils";
+import { WebContainerRunner } from "@/components/webcontainer-runner";
+import { WebTerminal, formatTerminalOutput, type WebTerminalHandle } from "@/components/web-terminal";
+import { useWebContainerOptional } from "@/components/webcontainer-provider";
+import { cn, generateUUID } from "@/lib/utils";
 
 function _getFileIcon(filename: string) {
 	const ext = filename.split(".").pop()?.toLowerCase();
@@ -502,6 +505,9 @@ export const codeArtifact = new Artifact<"code", Metadata>({
 	},
 	content: ({ metadata, setMetadata, content, ...props }) => {
 		const [isExpanded, setIsExpanded] = useState(true);
+		const [activeTab, setActiveTab] = useState<"code" | "preview">("code");
+		const terminalRef = useRef<WebTerminalHandle>(null);
+		const wc = useWebContainerOptional();
 		const files = metadata?.files || parseCodeFiles(content || "");
 		const activeFileIndex = metadata?.activeFileIndex || 0;
 		const activeFile = files[activeFileIndex] || files[0];
@@ -585,82 +591,120 @@ export const codeArtifact = new Artifact<"code", Metadata>({
 						</div>
 					</div>
 					<div className="flex items-center bg-zinc-900 border border-zinc-800 rounded-md p-0.5">
-						<div className="px-3 py-1 text-xs font-medium rounded bg-zinc-800 text-zinc-100 shadow-sm">
+						<button
+							type="button"
+							onClick={() => setActiveTab("code")}
+							className={cn(
+								"px-3 py-1 text-xs font-medium rounded transition-colors",
+								activeTab === "code" ? "bg-zinc-800 text-zinc-100 shadow-sm" : "text-zinc-400 hover:text-zinc-200 cursor-pointer"
+							)}
+						>
 							Code
-						</div>
+						</button>
 						{isPreviewableWebProject(files) && (
-							<div className="px-3 py-1 text-xs font-medium rounded text-zinc-400 hover:text-zinc-200 cursor-pointer transition-colors">
+							<button
+								type="button"
+								onClick={() => setActiveTab("preview")}
+								className={cn(
+									"px-3 py-1 text-xs font-medium rounded transition-colors",
+									activeTab === "preview" ? "bg-zinc-800 text-zinc-100 shadow-sm" : "text-zinc-400 hover:text-zinc-200 cursor-pointer"
+								)}
+							>
 								Preview
-							</div>
+							</button>
 						)}
 					</div>
 				</div>
 
 				{/* Expandable Content */}
-					<div className="flex flex-1 w-full min-h-[72vh] relative" style={{ height: "calc(100vh - 100px)" }}>
-						{/* If it's a previewable web project, display the full IDE viewer */}
-						{isPreviewableWebProject(files) ? (
-							<div className="flex-1 w-full h-full">
-								<SandpackViewer
-									dependencies={mergedDependencies}
-									files={files}
-									activeFileIndex={activeFileIndex}
-									onDependenciesChange={(nextDependencies) =>
-										setMetadata((currentMetadata) => ({
-											...currentMetadata,
-											userDependencies: nextDependencies,
-										}))
-									}
-									status={props.status}
-									userDependencies={userDependencies}
-									onSaveContent={(updatedFiles) => {
-										setMetadata({
-											...metadata,
-											files: updatedFiles,
-										});
-										props.onSaveContent(serializeFilesToContent(updatedFiles), true);
-									}}
-								/>
-							</div>
-						) : (
-							<>
-								{/* File Explorer Sidebar - Show when multiple files and NOT a React project (Sandpack has its own File Explorer if we want, or we keep this one) */}
-								{files.length > 1 && (
-									<FileExplorer
-										activeFileIndex={activeFileIndex}
-										className="w-56 shrink-0 border-r border-zinc-800"
-										files={files}
-										onFileAdd={handleFileAdd}
-										onFileDelete={handleFileDelete}
-										onFileRename={handleFileRename}
-										onFileSelect={(index) =>
-											setMetadata({ ...metadata, activeFileIndex: index })
-										}
-									/>
-								)}
+					<div className="flex flex-1 w-full relative" style={{ height: "calc(100vh - 120px)" }}>
+						{/* WebContainer Runner (headless) */}
+						{isPreviewableWebProject(files) && <WebContainerRunner />}
 
-								{/* Code Editor Area */}
-								<div className="flex-1 flex flex-col min-w-0 overflow-y-auto">
-									<CodeEditor
-										{...props}
-										content={activeFile?.content || content || ""}
-										language={detectedLanguage}
-									/>
+						{/* File Explorer Sidebar - Always show if there are files */}
+						{files.length > 0 && (
+							<FileExplorer
+								activeFileIndex={activeFileIndex}
+								className="w-56 shrink-0 border-r border-zinc-800"
+								files={files}
+								onFileAdd={handleFileAdd}
+								onFileDelete={handleFileDelete}
+								onFileRename={handleFileRename}
+								onFileSelect={(index) =>
+									setMetadata({ ...metadata, activeFileIndex: index })
+								}
+							/>
+						)}
 
-									{metadata?.outputs && metadata.outputs.length > 0 && (
-										<Console
-											consoleOutputs={metadata.outputs}
-											setConsoleOutputs={() => {
+						{/* Main Right Area: Editor/Preview (Top) + Terminal (Bottom) */}
+						<div className="flex-1 flex flex-col min-w-0 bg-[#0E0E0E]">
+							{/* Top Editor/Preview Section */}
+							<div className="flex-1 min-h-0 relative">
+								{activeTab === "preview" && isPreviewableWebProject(files) ? (
+									wc?.devServer?.ready ? (
+										<div className="w-full h-full bg-white rounded-tl-md overflow-hidden">
+											<iframe
+												title="WebContainer Preview"
+												src={wc.devServer.url}
+												className="w-full h-full border-0"
+												sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-modals"
+											/>
+										</div>
+									) : (
+										// Fallback if dev server is still starting or failed
+										<SandpackViewer
+											dependencies={mergedDependencies}
+											files={files}
+											activeFileIndex={activeFileIndex}
+											onDependenciesChange={(nextDependencies) =>
+												setMetadata((currentMetadata) => ({
+													...currentMetadata,
+													userDependencies: nextDependencies,
+												}))
+											}
+											status={props.status}
+											userDependencies={userDependencies}
+											onSaveContent={(updatedFiles) => {
 												setMetadata({
 													...metadata,
-													outputs: [],
+													files: updatedFiles,
 												});
+												props.onSaveContent(serializeFilesToContent(updatedFiles), true);
 											}}
 										/>
-									)}
-								</div>
-							</>
-						)}
+									)
+								) : (
+									<div className="w-full h-full flex flex-col">
+										<CodeEditor
+											{...props}
+											content={activeFile?.content || content || ""}
+											language={detectedLanguage}
+										/>
+										{!isPreviewableWebProject(files) && metadata?.outputs && metadata.outputs.length > 0 && (
+											<Console
+												consoleOutputs={metadata.outputs}
+												setConsoleOutputs={() => {
+													setMetadata({
+														...metadata,
+														outputs: [],
+													});
+												}}
+											/>
+										)}
+									</div>
+								)}
+							</div>
+
+							{/* Terminal Section */}
+							{isPreviewableWebProject(files) && (
+								<WebTerminal
+									ref={terminalRef}
+									defaultCollapsed={false}
+									status={wc?.status === "installing" ? "Installing..." : wc?.status === "running" ? "Running..." : undefined}
+									isRunning={wc?.isRunning ?? false}
+								/>
+							)}
+						</div>
 					</div>
 			</div>
 		);

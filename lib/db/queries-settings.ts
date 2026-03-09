@@ -5,15 +5,62 @@ import { db } from "./queries";
 import { siteSettings, userApiKeys, userSettings } from "./schema";
 
 // ============================================================
+// Auto-create tables if missing
+// ============================================================
+
+async function ensureUserSettingsTable() {
+	try {
+		await db.execute(sql`
+			CREATE TABLE IF NOT EXISTS "user_settings" (
+				"id" uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+				"userId" uuid NOT NULL REFERENCES "user"("id") ON DELETE CASCADE,
+				"displayName" text,
+				"customInstructions" text,
+				"language" varchar(10) DEFAULT 'en',
+				"createdAt" timestamp NOT NULL DEFAULT now(),
+				"updatedAt" timestamp NOT NULL DEFAULT now()
+			)
+		`);
+	} catch (error) {
+		console.warn("Could not ensure user_settings table:", error);
+	}
+}
+
+async function ensureUserApiKeysTable() {
+	try {
+		await db.execute(sql`
+			CREATE TABLE IF NOT EXISTS "user_api_keys" (
+				"id" uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+				"userId" uuid NOT NULL REFERENCES "user"("id") ON DELETE CASCADE,
+				"provider" varchar(50) NOT NULL,
+				"keysEncrypted" text,
+				"isEnabled" boolean NOT NULL DEFAULT false,
+				"customModels" json DEFAULT '[]',
+				"createdAt" timestamp NOT NULL DEFAULT now(),
+				"updatedAt" timestamp NOT NULL DEFAULT now()
+			)
+		`);
+	} catch (error) {
+		console.warn("Could not ensure user_api_keys table:", error);
+	}
+}
+
+// ============================================================
 // User Settings (Personalization)
 // ============================================================
 
 export async function getUserSettings(userId: string) {
-	const result = await db
-		.select()
-		.from(userSettings)
-		.where(eq(userSettings.userId, userId));
-	return result[0] || null;
+	try {
+		await ensureUserSettingsTable();
+		const result = await db
+			.select()
+			.from(userSettings)
+			.where(eq(userSettings.userId, userId));
+		return result[0] || null;
+	} catch (error) {
+		console.error("Database Error (getUserSettings):", error);
+		return null;
+	}
 }
 
 export async function upsertUserSettings(
@@ -114,20 +161,31 @@ export async function upsertSiteSettings(data: {
 // ============================================================
 
 export async function getUserApiKeys(userId: string) {
-	return db.select().from(userApiKeys).where(eq(userApiKeys.userId, userId));
+	try {
+		await ensureUserApiKeysTable();
+		return await db.select().from(userApiKeys).where(eq(userApiKeys.userId, userId));
+	} catch (error) {
+		console.error("Database Error (getUserApiKeys):", error);
+		return [];
+	}
 }
 
 export async function getUserApiKeyByProvider(
 	userId: string,
 	provider: string,
 ) {
-	const result = await db
-		.select()
-		.from(userApiKeys)
-		.where(
-			and(eq(userApiKeys.userId, userId), eq(userApiKeys.provider, provider)),
-		);
-	return result[0] || null;
+	try {
+		const result = await db
+			.select()
+			.from(userApiKeys)
+			.where(
+				and(eq(userApiKeys.userId, userId), eq(userApiKeys.provider, provider)),
+			);
+		return result[0] || null;
+	} catch (error) {
+		console.error("Database Error (getUserApiKeyByProvider):", error);
+		return null;
+	}
 }
 
 export async function upsertUserApiKey(
@@ -170,11 +228,16 @@ export async function deleteUserApiKey(userId: string, provider: string) {
 }
 
 export async function getEnabledUserApiKey(userId: string) {
-	const result = await db
-		.select()
-		.from(userApiKeys)
-		.where(
-			and(eq(userApiKeys.userId, userId), eq(userApiKeys.isEnabled, true)),
-		);
-	return result[0] || null;
+	try {
+		const result = await db
+			.select()
+			.from(userApiKeys)
+			.where(
+				and(eq(userApiKeys.userId, userId), eq(userApiKeys.isEnabled, true)),
+			);
+		return result[0] || null;
+	} catch (error) {
+		console.error("Database Error (getEnabledUserApiKey):", error);
+		return null;
+	}
 }

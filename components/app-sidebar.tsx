@@ -63,10 +63,10 @@ export function AppSidebar({ user }: { user: User | undefined }) {
 	return (
 		<>
 			<Sidebar
-				className="border-r border-border bg-white dark:bg-zinc-900 z-30"
+				className="z-30 border-r border-[#171717]/7 bg-[linear-gradient(180deg,rgba(250,248,243,0.92),rgba(244,241,234,0.98))] dark:border-white/7 dark:bg-[linear-gradient(180deg,rgba(17,19,21,0.98),rgba(14,16,18,1))]"
 				collapsible="icon"
 			>
-				<SidebarHeader className="border-b border-border/10">
+				<SidebarHeader className="border-b border-[#171717]/6 dark:border-white/7">
 					<SidebarMenu>
 						<div className="flex flex-col gap-2 px-3 py-4">
 							{/* Toggle + Title Row */}
@@ -76,7 +76,7 @@ export function AppSidebar({ user }: { user: User | undefined }) {
 									aria-label={
 										isSidebarOpen ? "Collapse sidebar" : "Expand sidebar"
 									}
-									className="h-8 w-8 p-0 rounded-md hover:bg-zinc-200 dark:hover:bg-white/10 transition-colors shrink-0"
+									className="h-8 w-8 shrink-0 rounded-full p-0 transition-colors hover:bg-black/4 dark:hover:bg-white/7"
 									onClick={() => setOpen(!open)}
 									type="button"
 									variant="ghost"
@@ -91,7 +91,7 @@ export function AppSidebar({ user }: { user: User | undefined }) {
 										href="/chat"
 										onClick={() => setOpenMobile(false)}
 									>
-										<span className="font-semibold text-base tracking-tight text-zinc-900 dark:text-white">
+										<span className="text-base font-semibold tracking-[-0.03em] text-[#171717] dark:text-[#f3f4f1]">
 											UltramaxoAI
 										</span>
 									</Link>
@@ -101,10 +101,10 @@ export function AppSidebar({ user }: { user: User | undefined }) {
 							{/* New Chat Button */}
 							<Button
 								className={cn(
-									"rounded-md hover:bg-zinc-200 dark:hover:bg-white/10 transition-colors",
+									"rounded-2xl border border-[#171717]/6 bg-white/48 transition-all hover:bg-white/70 dark:border-white/7 dark:bg-white/4 dark:hover:bg-white/7",
 									isSidebarOpen
-										? "w-full justify-start gap-2 px-2 h-9"
-										: "h-9 w-9 p-0 mx-auto",
+										? "h-10 w-full justify-start gap-2 px-3"
+										: "mx-auto h-10 w-10 p-0",
 								)}
 								onClick={() => {
 									setOpenMobile(false);
@@ -126,7 +126,7 @@ export function AppSidebar({ user }: { user: User | undefined }) {
 					) : (
 						<div className="flex items-center justify-center py-4">
 							<span
-								className="text-zinc-500 text-xs rotate-180"
+								className="rotate-180 text-xs text-[#7a807a] dark:text-[#8f9790]"
 								style={{ writingMode: "vertical-rl" }}
 							>
 								History

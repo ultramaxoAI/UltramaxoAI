@@ -5,6 +5,7 @@ import { AppSidebar } from "@/components/app-sidebar";
 import { DataStreamProvider } from "@/components/data-stream-provider";
 import { MainContentWrapper } from "@/components/main-content-wrapper";
 import { SidebarProvider } from "@/components/ui/sidebar";
+import { WebContainerProvider } from "@/components/webcontainer-provider";
 import { auth } from "../(auth)/auth";
 
 export default function Layout({ children }: { children: React.ReactNode }) {
@@ -14,11 +15,13 @@ export default function Layout({ children }: { children: React.ReactNode }) {
 				src="https://cdn.jsdelivr.net/pyodide/v0.23.4/full/pyodide.js"
 				strategy="lazyOnload"
 			/>
-			<DataStreamProvider>
-				<Suspense fallback={<div className="flex h-dvh" />}>
-					<SidebarWrapper>{children}</SidebarWrapper>
-				</Suspense>
-			</DataStreamProvider>
+			<WebContainerProvider>
+				<DataStreamProvider>
+					<Suspense fallback={<div className="flex h-dvh" />}>
+						<SidebarWrapper>{children}</SidebarWrapper>
+					</Suspense>
+				</DataStreamProvider>
+			</WebContainerProvider>
 		</>
 	);
 }

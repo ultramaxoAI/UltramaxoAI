@@ -10,6 +10,25 @@ const withSerwist = withSerwistInit({
 const nextConfig: NextConfig = {
 	// Disable cacheComponents to allow dynamic route segments
 	cacheComponents: false,
+	// Cross-Origin headers required by WebContainers API
+	async headers() {
+		return [
+			{
+				// Apply COOP/COEP only to chat routes where WebContainers are used
+				source: "/chat/:path*",
+				headers: [
+					{
+						key: "Cross-Origin-Embedder-Policy",
+						value: "require-corp",
+					},
+					{
+						key: "Cross-Origin-Opener-Policy",
+						value: "same-origin",
+					},
+				],
+			},
+		];
+	},
 	images: {
 		remotePatterns: [
 			{

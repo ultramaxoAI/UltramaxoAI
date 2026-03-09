@@ -108,7 +108,7 @@ function PureChatContextHeader({
 	};
 
 	return (
-		<div className="flex items-center justify-between gap-3 border-b border-black/6 bg-transparent px-1 py-2 dark:border-white/8">
+		<div className="flex items-center justify-between gap-3 rounded-2xl border border-[#171717]/6 bg-[#f4f1ea]/28 px-2 py-1.5 shadow-[0_6px_16px_rgba(23,23,23,0.025)] backdrop-blur-xl dark:border-white/6 dark:bg-[#14181c]/44 dark:shadow-[0_8px_20px_rgba(0,0,0,0.16)]">
 			<div className="flex items-center gap-2">
 				{isMobile && (
 					<Button
@@ -125,7 +125,7 @@ function PureChatContextHeader({
 				{user && user.type !== "pro" && (
 					<Link href="/plan">
 						<Button
-							className="h-9 rounded-full bg-[#111315] px-4 text-xs font-semibold text-[#f3f4f1] hover:bg-[#1c1f22] dark:bg-[#f3f4f1] dark:text-[#111315] dark:hover:bg-[#e7e9e5]"
+							className="h-9 rounded-full bg-[#111315] px-4 text-xs font-semibold text-[#f3f4f1] shadow-[0_10px_26px_rgba(17,19,21,0.18)] hover:bg-[#1c1f22] dark:bg-[#f3f4f1] dark:text-[#111315] dark:hover:bg-[#e7e9e5] dark:shadow-none"
 							size="sm"
 						>
 							<Sparkles className="mr-1.5 h-3.5 w-3.5" />
@@ -136,7 +136,7 @@ function PureChatContextHeader({
 			</div>
 
 			<div className="min-w-0 flex-1 text-center">
-				<h2 className="truncate text-sm font-medium tracking-[-0.01em] text-[#5f6258] dark:text-[#b4bbb5]">
+				<h2 className="truncate text-sm font-medium tracking-[-0.02em] text-[#5f6258] dark:text-[#b4bbb5]">
 					{chatTitle}
 				</h2>
 			</div>

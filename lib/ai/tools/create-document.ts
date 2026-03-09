@@ -15,9 +15,11 @@ type CreateDocumentStreamChunk =
 export const createDocument = ({
 	session,
 	dataStream,
+	setDocumentId,
 }: {
 	session: Session | null;
 	dataStream: { write: (chunk: CreateDocumentStreamChunk) => void };
+	setDocumentId?: (id: string) => void;
 }) => {
 	return {
 		description:
@@ -29,8 +31,9 @@ export const createDocument = ({
 				.describe("The type of document to create"),
 			content: z
 				.string()
+				.nullish()
 				.describe(
-					"The FULL initial content of the document (code, text, or csv). YOU MUST PUT THE FINAL, COMPLETE CODE OR TEXT HERE. DO NOT LEAVE THIS EMPTY.",
+					"The FULL initial content of the document (code, text, or csv). Can be empty for code scaffolds.",
 				),
 		}),
 		execute: async ({
@@ -40,11 +43,15 @@ export const createDocument = ({
 		}: {
 			title: string;
 			kind: "code" | "text" | "sheet" | "image";
-			content: string;
+			content?: string;
 		}) => {
 			const id = generateUUID();
+			if (setDocumentId) {
+				setDocumentId(id);
+			}
+
 			const normalizedTitle = title.trim() || "Untitled Document";
-			const normalizedContent = content.trim();
+			const normalizedContent = content?.trim() || "";
 			let persisted = false;
 
 			console.log(

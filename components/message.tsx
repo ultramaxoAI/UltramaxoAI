@@ -89,9 +89,9 @@ function MessageTextPart({
 		<div>
 			<MessageContent
 				className={cn("w-full", {
-					"bg-zinc-100/90 dark:bg-zinc-800/90 text-zinc-900 dark:text-zinc-100 wrap-break-word ml-auto w-fit max-w-full rounded-[22px] px-4 py-3 text-left":
+					"wrap-break-word ml-auto w-fit max-w-full rounded-[18px] rounded-tr-md border border-white/5 bg-black/20 px-3 py-2 text-left text-[#f3f4f1] shadow-[0_4px_12px_rgba(0,0,0,0.08)] backdrop-blur-sm dark:border-white/6 dark:bg-white/8 dark:text-[#f3f4f1] dark:shadow-none":
 						messageRole === "user",
-					"bg-transparent px-0 py-0 text-left w-full prose-zinc dark:prose-invert prose-p:leading-relaxed":
+					"w-full bg-transparent px-0 py-1 text-left prose-zinc dark:prose-invert prose-p:leading-7":
 						messageRole === "assistant",
 				})}
 				data-testid="message-content"
@@ -103,7 +103,7 @@ function MessageTextPart({
 						text={displayText}
 					/>
 				) : (
-					<Response className="text-[15px] leading-relaxed">
+					<Response className="text-[14px] leading-relaxed">
 						{displayText}
 					</Response>
 				)}
@@ -111,7 +111,7 @@ function MessageTextPart({
 			{isHuge && !expanded && (
 				<div className="mt-2 text-center">
 					<button
-						className="rounded-md bg-zinc-800 px-4 py-2 text-xs text-zinc-300 transition-colors hover:bg-zinc-700 hover:text-white"
+						className="rounded-full border border-white/8 bg-[#1a1d20] px-4 py-2 text-xs text-[#f3f4f1] transition-colors hover:bg-[#22262a] dark:border-black/8 dark:bg-[#eceee9] dark:text-[#111315] dark:hover:bg-[#e1e4de]"
 						onClick={() => setExpanded(true)}
 						type="button"
 					>
@@ -178,20 +178,20 @@ const PurePreviewMessage = ({
 			data-testid={`message-${message.role}`}
 		>
 			<div
-				className={cn("flex w-full items-start gap-2 md:gap-3", {
+				className={cn("flex w-full items-start gap-2 md:gap-2.5", {
 					"justify-end": message.role === "user" && mode !== "edit",
 					"justify-start": message.role === "assistant",
 				})}
 			>
 				{message.role === "assistant" && (
-					<div className="mt-1 flex size-8 shrink-0 items-center justify-center rounded-full bg-background ring-1 ring-border text-zinc-900 dark:text-zinc-100">
+					<div className="mt-0.5 flex size-6 shrink-0 items-center justify-center rounded-full text-[#6f746f] dark:text-[#8f9790]">
 						<SparklesIcon size={14} />
 					</div>
 				)}
 
 				<div
 					className={cn("flex flex-col min-w-0", {
-						"gap-2 md:gap-4": message.parts?.some(
+						"gap-1 md:gap-2": message.parts?.some(
 							(p) => p.type === "text" && p.text?.trim(),
 						),
 						"w-full":
@@ -201,13 +201,13 @@ const PurePreviewMessage = ({
 								) ||
 									message.parts?.some((p) => p.type.startsWith("tool-")))) ||
 							mode === "edit",
-						"max-w-[calc(100%-2.5rem)] sm:max-w-[min(fit-content,85%)]":
+						"max-w-[calc(100%-1.75rem)] sm:max-w-[min(fit-content,68%)]":
 							message.role === "user" && mode !== "edit",
 					})}
 				>
 					{attachmentsFromMessage.length > 0 && (
 						<div
-							className="flex flex-row justify-end gap-2"
+							className="flex flex-row justify-end gap-2 pr-0.5"
 							data-testid={"message-attachments"}
 						>
 							{attachmentsFromMessage.map((attachment) => (
@@ -820,14 +820,14 @@ export const ThinkingMessage = () => {
 			data-testid="message-assistant-loading"
 		>
 			<div className="flex items-start justify-start gap-3">
-				<div className="-mt-1 flex size-8 shrink-0 items-center justify-center rounded-full bg-background ring-1 ring-border">
+				<div className="-mt-0.5 flex size-7 shrink-0 items-center justify-center text-[#6f746f] dark:text-[#8f9790]">
 					<div className="animate-pulse">
 						<SparklesIcon size={14} />
 					</div>
 				</div>
 
 				<div className="flex w-full flex-col gap-2 md:gap-4">
-					<div className="flex items-center gap-1 p-0 text-muted-foreground text-sm">
+					<div className="flex items-center gap-1 p-0 text-[#6f746f] text-sm dark:text-[#8f9790]">
 						<span className="animate-pulse">Thinking</span>
 						<span className="inline-flex">
 							<span className="animate-bounce [animation-delay:0ms]">.</span>

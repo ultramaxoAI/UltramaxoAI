@@ -8,10 +8,12 @@ import { initialArtifactData, useArtifact } from "@/hooks/use-artifact";
 import { artifactDefinitions } from "./artifact";
 import { useDataStream } from "./data-stream-provider";
 import { getChatHistoryPaginationKey } from "./sidebar-history";
+import { useWebContainerOptional } from "./webcontainer-provider";
 
 export function DataStreamHandler() {
 	const { dataStream, setDataStream } = useDataStream();
 	const { mutate } = useSWRConfig();
+	const wc = useWebContainerOptional();
 
 	const { artifact, setArtifact, setMetadata } = useArtifact();
 
@@ -26,11 +28,42 @@ export function DataStreamHandler() {
 		let currentKind = artifact.kind;
 
 		for (const delta of newDeltas) {
+			// Cast for custom event type comparisons
+			const deltaType = delta.type as string;
+			const deltaData = (delta as { data?: unknown }).data;
+
 			// Handle chat title updates
-			if (delta.type === "data-chat-title") {
+			if (deltaType === "data-chat-title") {
 				mutate(unstable_serialize(getChatHistoryPaginationKey));
 				continue;
 			}
+
+			// ── WebContainer terminal events ──────────────────────────────
+			if (deltaType === "data-terminal-command" && wc) {
+				try {
+					const { command, purpose } = JSON.parse(deltaData as string);
+					wc.queueCommand(command, purpose);
+				} catch (e) {
+					console.error("[DataStream] Failed to parse terminal command:", e);
+				}
+				continue;
+			}
+
+			if (deltaType === "data-install-package" && wc) {
+				try {
+					const { packages, purpose } = JSON.parse(deltaData as string);
+					wc.queueInstall(packages, purpose);
+				} catch (e) {
+					console.error("[DataStream] Failed to parse install event:", e);
+				}
+				continue;
+			}
+
+			if (deltaType === "data-start-dev-server" && wc) {
+				wc.queueDevServer();
+				continue;
+			}
+			// ── End WebContainer events ───────────────────────────────────
 
 			if (delta.type === "data-kind") {
 				currentKind = delta.data as ArtifactKind;
@@ -98,7 +131,8 @@ export function DataStreamHandler() {
 				}
 			});
 		}
-	}, [dataStream, setArtifact, setMetadata, artifact, setDataStream, mutate]);
+	}, [dataStream, setArtifact, setMetadata, artifact, setDataStream, mutate, wc]);
 
 	return null;
 }
+

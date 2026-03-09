@@ -93,6 +93,7 @@ export function Chat({
 	const [fullstackModeEnabled, setFullstackModeEnabled] = useState(false);
 	const [mobileModeEnabled, setMobileModeEnabled] = useState(false);
 	const currentModelIdRef = useRef(currentModelId);
+	const activeDocumentId = useArtifactSelector((state) => state.documentId);
 	const togglesRef = useRef({
 		wormgptEnabled,
 		deepThinkingEnabled,
@@ -100,6 +101,7 @@ export function Chat({
 		fullstackModeEnabled,
 		mobileModeEnabled,
 		visibilityType,
+		activeDocumentId,
 	});
 
 	useEffect(() => {
@@ -111,6 +113,7 @@ export function Chat({
 			fullstackModeEnabled,
 			mobileModeEnabled,
 			visibilityType,
+			activeDocumentId,
 		};
 	}, [
 		currentModelId,
@@ -120,6 +123,7 @@ export function Chat({
 		fullstackModeEnabled,
 		mobileModeEnabled,
 		visibilityType,
+		activeDocumentId,
 	]);
 
 	const {
@@ -140,6 +144,8 @@ export function Chat({
 			const shouldContinue =
 				lastMessage?.parts?.some(
 					(part) =>
+						part &&
+						typeof part === "object" &&
 						"state" in part &&
 						part.state === "approval-responded" &&
 						"approval" in part &&
@@ -156,7 +162,7 @@ export function Chat({
 					lastMessage?.role !== "user" ||
 					request.messages.some((msg) =>
 						msg.parts?.some((part) => {
-							const state = (part as { state?: string }).state;
+							const state = part && typeof part === "object" ? (part as { state?: string }).state : undefined;
 							return (
 								state === "approval-responded" || state === "output-denied"
 							);
@@ -176,6 +182,10 @@ export function Chat({
 						webSearchEnabled: togglesRef.current.webSearchEnabled,
 						fullstackModeEnabled: togglesRef.current.fullstackModeEnabled,
 						mobileModeEnabled: togglesRef.current.mobileModeEnabled,
+						activeDocumentId:
+							togglesRef.current.activeDocumentId === "init"
+								? undefined
+								: togglesRef.current.activeDocumentId,
 						...request.body,
 					},
 				};
@@ -305,11 +315,13 @@ export function Chat({
 		<>
 			<div
 				className={cn(
-					"relative flex h-dvh min-w-0 flex-col overflow-hidden bg-[#f7f7f4] text-[#171717] transition-all duration-300 ease-in-out dark:bg-[#111213] dark:text-[#f3f4f1]",
+					"relative flex h-dvh min-w-0 flex-col overflow-hidden bg-[#f3efe6] text-[#171717] transition-all duration-300 ease-in-out dark:bg-[#111315] dark:text-[#f3f4f1]",
 					isArtifactVisible ? "lg:w-[55%]" : "w-full",
 				)}
 			>
-				<div className="pointer-events-none absolute inset-x-0 top-0 h-32 bg-[linear-gradient(180deg,rgba(17,19,21,0.03),transparent)] dark:bg-[linear-gradient(180deg,rgba(255,255,255,0.02),transparent)]" />
+				<div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(20,184,166,0.08),transparent_30%),radial-gradient(circle_at_82%_14%,rgba(45,212,191,0.06),transparent_20%)] dark:bg-[radial-gradient(circle_at_top,rgba(20,184,166,0.12),transparent_28%),radial-gradient(circle_at_82%_14%,rgba(45,212,191,0.08),transparent_20%)]" />
+				<div className="pointer-events-none absolute inset-0 bg-[radial-gradient(#111315_0.7px,transparent_0.7px)] bg-size-[14px_14px] opacity-[0.04] dark:bg-[radial-gradient(#f3f4f1_0.6px,transparent_0.6px)] dark:opacity-[0.05]" />
+				<div className="pointer-events-none absolute inset-x-0 top-0 h-32 bg-[linear-gradient(180deg,rgba(17,19,21,0.04),transparent)] dark:bg-[linear-gradient(180deg,rgba(255,255,255,0.025),transparent)]" />
 
 				<div className="pointer-events-none absolute left-0 right-0 top-0 z-20 px-3 pt-2 sm:px-4 sm:pt-2.5">
 					<div className="pointer-events-auto mx-auto max-w-4xl">
@@ -329,7 +341,7 @@ export function Chat({
 				>
 					{messages.length > 0 && (
 						<div className="flex flex-1 flex-col overflow-hidden px-3 pb-3 sm:px-4 sm:pb-4">
-							<div className="mx-auto flex h-full w-full max-w-4xl flex-1 flex-col overflow-hidden">
+							<div className="mx-auto flex h-full w-full max-w-4xl flex-1 flex-col overflow-hidden bg-transparent">
 								<Messages
 									addToolApprovalResponse={addToolApprovalResponse}
 									chatId={id}
@@ -349,12 +361,12 @@ export function Chat({
 					{messages.length === 0 && (
 						<div className="flex w-full flex-1 items-center justify-center px-4 pb-4">
 							<div className="mx-auto w-full max-w-4xl space-y-4">
-								<div className="px-4 py-8 sm:px-8 sm:py-10">
+								<div className="rounded-[36px] border border-[#171717]/7 bg-white/42 px-4 py-8 shadow-[0_20px_70px_rgba(23,23,23,0.05)] backdrop-blur-xl dark:border-white/7 dark:bg-[#171b1f]/70 dark:shadow-[0_28px_90px_rgba(0,0,0,0.32)] sm:px-8 sm:py-10">
 									<div className="mx-auto max-w-2xl text-center">
-										<div className="inline-flex rounded-full border border-black/8 bg-white/70 px-3 py-1 text-[11px] font-medium tracking-[0.14em] uppercase text-[#6b6b63] dark:border-white/10 dark:bg-white/5 dark:text-[#9ca39d]">
+										<div className="inline-flex rounded-full border border-teal-700/10 bg-teal-600/8 px-3 py-1 text-[11px] font-semibold tracking-[0.18em] uppercase text-teal-800 dark:border-teal-400/15 dark:bg-teal-500/10 dark:text-teal-300">
 											Ultramaxo Workspace
 										</div>
-										<h1 className="mt-5 text-balance text-3xl font-semibold tracking-[-0.04em] text-[#171717] sm:text-4xl dark:text-[#f3f4f1]">
+										<h1 className="mt-5 text-balance text-3xl font-semibold tracking-[-0.05em] text-[#171717] sm:text-4xl dark:text-[#f3f4f1]">
 											Mau bantu apa hari ini?
 										</h1>
 										<p className="mt-4 text-sm leading-7 text-[#5f6258] dark:text-[#a6aca6] sm:text-base">
@@ -364,7 +376,7 @@ export function Chat({
 											<div className="mt-5 flex flex-wrap justify-center gap-2">
 												{activeModes.map((mode) => (
 													<span
-														className="rounded-full border border-black/8 px-3 py-1 text-xs text-[#5f6258] dark:border-white/10 dark:text-[#a6aca6]"
+														className="rounded-full border border-[#171717]/8 bg-white/45 px-3 py-1 text-xs text-[#5f6258] dark:border-white/10 dark:bg-white/4 dark:text-[#a6aca6]"
 														key={mode}
 													>
 														{mode}
@@ -377,7 +389,7 @@ export function Chat({
 									<div className="mt-8 grid gap-3 sm:grid-cols-3">
 										{emptyStatePrompts.map((item) => (
 											<button
-												className="rounded-3xl border border-black/6 bg-white/85 p-4 text-left transition-colors hover:bg-[#f3f2ed] dark:border-white/8 dark:bg-white/5 dark:hover:bg-white/8"
+												className="rounded-[28px] border border-[#171717]/7 bg-[linear-gradient(180deg,rgba(255,255,255,0.84),rgba(244,241,234,0.96))] p-4 text-left shadow-[0_12px_30px_rgba(23,23,23,0.04)] transition-all hover:-translate-y-0.5 hover:bg-[#f5f2ea] dark:border-white/7 dark:bg-[linear-gradient(180deg,rgba(28,31,35,0.9),rgba(17,19,21,0.96))] dark:shadow-none dark:hover:bg-[linear-gradient(180deg,rgba(31,35,39,0.94),rgba(18,21,24,0.98))]"
 												key={item.title}
 												onClick={() => handleStarterPrompt(item.prompt)}
 												type="button"
@@ -394,7 +406,7 @@ export function Chat({
 								</div>
 
 								{isReadonly ? (
-									<div className="rounded-3xl border border-dashed border-black/8 bg-white/85 px-6 py-5 text-center dark:border-white/10 dark:bg-white/5">
+									<div className="rounded-[28px] border border-dashed border-[#171717]/8 bg-white/42 px-6 py-5 text-center backdrop-blur-xl dark:border-white/10 dark:bg-white/4">
 										<p className="text-sm text-[#5f6258] dark:text-[#a6aca6]">
 											Masuk dulu untuk mulai ngobrol dan buka workspace penuh Ultramaxo AI.
 										</p>
@@ -408,7 +420,7 @@ export function Chat({
 										</div>
 									</div>
 								) : isAtLimit ? (
-									<div className="rounded-3xl border border-dashed border-black/8 bg-white/85 px-6 py-5 text-center dark:border-white/10 dark:bg-white/5">
+									<div className="rounded-[28px] border border-dashed border-[#171717]/8 bg-white/42 px-6 py-5 text-center backdrop-blur-xl dark:border-white/10 dark:bg-white/4">
 										<p className="text-sm font-medium text-[#171717] dark:text-[#f3f4f1]">
 											You have reached your free daily limit of 10 messages.
 										</p>
@@ -462,7 +474,7 @@ export function Chat({
 						<div className="mx-auto w-full max-w-4xl">
 							{isReadonly ? (
 								<div className="flex w-full items-center justify-center p-4">
-										<div className="w-full max-w-3xl rounded-3xl border border-dashed border-black/8 bg-white/90 p-6 text-center dark:border-white/10 dark:bg-[#17181a]">
+									<div className="w-full max-w-3xl rounded-[28px] border border-dashed border-[#171717]/8 bg-white/42 p-6 text-center shadow-[0_18px_50px_rgba(23,23,23,0.05)] backdrop-blur-xl dark:border-white/10 dark:bg-[#171b1f]/78 dark:shadow-[0_18px_50px_rgba(0,0,0,0.24)]">
 										<p className="text-sm text-[#5f6258] dark:text-[#a6aca6]">
 											Please sign in to start chatting with Ultramaxo AI.
 										</p>
@@ -478,7 +490,7 @@ export function Chat({
 								</div>
 							) : isAtLimit ? (
 								<div className="flex w-full items-center justify-center p-4">
-										<div className="w-full max-w-3xl rounded-3xl border border-dashed border-black/8 bg-white/90 p-6 text-center dark:border-white/10 dark:bg-[#17181a]">
+									<div className="w-full max-w-3xl rounded-[28px] border border-dashed border-[#171717]/8 bg-white/42 p-6 text-center shadow-[0_18px_50px_rgba(23,23,23,0.05)] backdrop-blur-xl dark:border-white/10 dark:bg-[#171b1f]/78 dark:shadow-[0_18px_50px_rgba(0,0,0,0.24)]">
 										<p className="text-sm font-medium text-[#171717] dark:text-[#f3f4f1]">
 											You have reached your free daily limit of 10 messages.
 										</p>
@@ -495,7 +507,7 @@ export function Chat({
 								</div>
 							) : (
 								<div className="relative flex flex-col gap-2">
-										<div className="mx-auto w-full max-w-3xl">
+									<div className="mx-auto w-full max-w-3xl">
 										<MultimodalInput
 										attachments={attachments}
 										chatId={id}
