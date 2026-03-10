@@ -7,7 +7,7 @@ import {
 	TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
-import { SidebarLeftIcon } from "./icons";
+import { PanelLeft } from "lucide-react";
 import { Button } from "./ui/button";
 
 export function SidebarToggle({
@@ -19,12 +19,12 @@ export function SidebarToggle({
 		<Tooltip>
 			<TooltipTrigger asChild>
 				<Button
-					className={cn("h-8 px-2 md:h-fit md:px-2", className)}
+					className={cn("h-8 px-2 md:h-fit md:px-2 cursor-pointer", className)}
 					data-testid="sidebar-toggle-button"
 					onClick={toggleSidebar}
 					variant="outline"
 				>
-					<SidebarLeftIcon size={16} />
+					<PanelLeft className="h-4 w-4" />
 				</Button>
 			</TooltipTrigger>
 			<TooltipContent align="start" className="hidden md:block">
