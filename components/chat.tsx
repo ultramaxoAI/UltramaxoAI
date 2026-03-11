@@ -89,7 +89,7 @@ export function Chat({
 	const [currentModelId, setCurrentModelId] = useState(initialChatModel);
 	const [wormgptEnabled, setWormgptEnabled] = useState(false);
 	const [deepThinkingEnabled, setDeepThinkingEnabled] = useState(false);
-	const [webSearchEnabled, setWebSearchEnabled] = useState(false);
+	const [webSearchEnabled, setWebSearchEnabled] = useState(true);
 	const [fullstackModeEnabled, setFullstackModeEnabled] = useState(false);
 	const [mobileModeEnabled, setMobileModeEnabled] = useState(false);
 	const currentModelIdRef = useRef(currentModelId);
