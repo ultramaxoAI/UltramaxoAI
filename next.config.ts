@@ -35,6 +35,10 @@ const nextConfig: NextConfig = {
 				hostname: "avatar.vercel.sh",
 			},
 			{
+				protocol: "https",
+				hostname: "models.dev",
+			},
+			{
 				hostname: "ui-avatars.com",
 			},
 			{

@@ -50,7 +50,7 @@ export default function ReagentInputExample() {
 						<button className="bg-app-accent hover:bg-indigo-600 text-white rounded-full p-2 transition-colors">
 							<svg
 								className="w-5 h-5"
-								fill="none"
+								fill="none" 
 								stroke="currentColor"
 								viewBox="0 0 24 24"
 							>

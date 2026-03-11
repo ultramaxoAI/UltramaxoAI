@@ -36,9 +36,10 @@ export async function PATCH(request: Request) {
 		}
 
 		const body = await request.json();
-		const { id, status } = body;
+		const { id, requestId, status } = body;
+		const resolvedId = id ?? requestId;
 
-		if (!id || !status) {
+		if (!resolvedId || !status) {
 			return NextResponse.json(
 				{ error: "Missing required fields" },
 				{ status: 400 },
@@ -52,14 +53,14 @@ export async function PATCH(request: Request) {
 				status,
 				updatedAt: new Date(),
 			})
-			.where(eq(purchaseRequest.id, id));
+			.where(eq(purchaseRequest.id, resolvedId));
 
 		// If approved, upgrade the user to pro
 		if (status === "approved") {
 			const [request] = await db
 				.select()
 				.from(purchaseRequest)
-				.where(eq(purchaseRequest.id, id));
+				.where(eq(purchaseRequest.id, resolvedId));
 
 			if (request?.userId) {
 				const now = new Date();
