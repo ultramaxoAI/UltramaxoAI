@@ -2,9 +2,8 @@ import { type NextRequest, NextResponse } from "next/server";
 import { auth } from "@/app/(auth)/auth";
 
 const MAIA_API_KEY = (process.env.OPENROUTER_API_KEY_1 || "").trim();
-// Use Vertex AI Gemini endpoint — gemini-2.5-flash can generate images
-const MODEL_NAME = "gemini-2.5-flash-image-preview";
-const VERTEX_URL = `https://api.maiarouter.ai/vertex_ai/publishers/google/models/${MODEL_NAME}:generateContent`;
+// Use OpenRouter Flux for fast, uncensored, high-quality images
+const OPENROUTER_URL = "https://openrouter.ai/api/v1/chat/completions";
 
 export async function POST(request: NextRequest) {
 	try {
@@ -14,7 +13,7 @@ export async function POST(request: NextRequest) {
 			return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 		}
 
-		// PRO-only feature — check type (set in JWT callback) or role
+		// PRO-only feature check
 		const userType = (session.user as { type?: string }).type;
 		const userRole = (session.user as { role?: string }).role;
 		const hasPro = userType === "pro" || userRole === "admin";
@@ -42,10 +41,11 @@ export async function POST(request: NextRequest) {
 			);
 		}
 
-		console.log("[generate-image] Calling Vertex AI Gemini:", VERTEX_URL);
+		console.log("[generate-image] Calling OpenRouter Flux...");
 
-		// Use Gemini generateContent format for Vertex AI image generation
-		const response = await fetch(VERTEX_URL, {
+		// Call OpenRouter with an image generation model like pollinations/any-image-generator
+		// This model returns an image URL in the content when prompted
+		const response = await fetch(OPENROUTER_URL, {
 			method: "POST",
 			headers: {
 				"Content-Type": "application/json",
@@ -54,21 +54,18 @@ export async function POST(request: NextRequest) {
 				"X-Title": "Ultramaxo AI",
 			},
 			body: JSON.stringify({
-				contents: [
+				model: "pollinations/any-image-generator",
+				messages: [
 					{
 						role: "user",
-						parts: [{ text: prompt.trim() }],
+						content: prompt.trim(),
 					},
 				],
-				generation_config: {
-					response_modalities: ["IMAGE", "TEXT"],
-				},
 			}),
 		});
 
 		const rawText = await response.text();
 		console.log("[generate-image] status:", response.status);
-		console.log("[generate-image] response:", rawText.slice(0, 800));
 
 		if (!response.ok) {
 			return NextResponse.json(
@@ -77,7 +74,7 @@ export async function POST(request: NextRequest) {
 			);
 		}
 
-		let data: unknown;
+		let data: any;
 		try {
 			data = JSON.parse(rawText);
 		} catch {
@@ -87,31 +84,27 @@ export async function POST(request: NextRequest) {
 			);
 		}
 
-		// Extract image from Gemini response: candidates[0].content.parts[].inlineData
-		const parts = (data as any)?.candidates?.[0]?.content?.parts ?? [];
-		for (const part of parts) {
-			if (part?.inlineData?.data) {
-				const mimeType =
-					part.inlineData.mime_type || part.inlineData.mimeType || "image/png";
-				return NextResponse.json({
-					imageUrl: `data:${mimeType};base64,${part.inlineData.data}`,
-				});
-			}
+		// pollinations/any-image-generator returns the Markdown image link in content: ![Image](url)
+		const contentResponse = data?.choices?.[0]?.message?.content || "";
+		
+		// Extract URL from markdown `![...](https://...)`
+		const urlMatch = contentResponse.match(/!\[.*?\]\((https?:\/\/[^\s)]+)\)/);
+		
+		let finalUrl = "";
+		if (urlMatch && urlMatch[1]) {
+			finalUrl = urlMatch[1];
+		} else if (contentResponse.startsWith("http")) {
+			// In case it just returns the raw URL
+			finalUrl = contentResponse.trim();
 		}
 
-		// Fallback: check standard OpenAI images format just in case
-		const urlImg = (data as any)?.data?.[0]?.url;
-		const b64Img = (data as any)?.data?.[0]?.b64_json;
-		if (urlImg) {
-			return NextResponse.json({ imageUrl: urlImg });
-		}
-		if (b64Img) {
-			return NextResponse.json({ imageUrl: `data:image/png;base64,${b64Img}` });
+		if (finalUrl) {
+			return NextResponse.json({ imageUrl: finalUrl });
 		}
 
 		console.error(
 			"[generate-image] Unexpected response shape:",
-			JSON.stringify(data).slice(0, 500),
+			contentResponse.slice(0, 500),
 		);
 		return NextResponse.json(
 			{ error: "No image returned from generator" },
