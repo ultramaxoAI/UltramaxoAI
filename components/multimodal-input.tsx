@@ -105,6 +105,7 @@ function PureMultimodalInput({
 	setMessages,
 	sendMessage,
 	className,
+	selectedVisibilityType,
 	selectedModelId,
 	onModelChange,
 	wormgptEnabled,
@@ -198,6 +199,7 @@ function PureMultimodalInput({
 
 		if (imageGenerationMode) {
 			const userMessageId = nanoid();
+			const loadingMessageId = nanoid();
 			const currentInput = input;
 
 			// 1. Append user message
@@ -219,7 +221,6 @@ function PureMultimodalInput({
 			setImageGenerationMode(false); // Disable image mode after use
 
 			// 2. Append loading message
-			const loadingMessageId = nanoid();
 			setMessages((messages: ChatMessage[]) => [
 				...messages,
 				{
@@ -234,7 +235,13 @@ function PureMultimodalInput({
 				const res = await fetch("/api/generate-image", {
 					method: "POST",
 					headers: { "Content-Type": "application/json" },
-					body: JSON.stringify({ prompt: currentInput }),
+					body: JSON.stringify({
+						prompt: currentInput,
+						chatId,
+						userMessageId,
+						assistantMessageId: loadingMessageId,
+						selectedVisibilityType,
+					}),
 				});
 
 				if (!res.ok) {
@@ -242,6 +249,7 @@ function PureMultimodalInput({
 				}
 
 				const data = await res.json();
+				const assistantMessage = data.assistantMessage;
 
 				// 3. Replace loading message with image
 				setMessages((messages: ChatMessage[]) =>
@@ -249,13 +257,17 @@ function PureMultimodalInput({
 						m.id === loadingMessageId
 							? {
 									...m,
-									content: `![Generated Image](${data.imageUrl})`,
-									parts: [
-										{
-											type: "text",
-											text: `![Generated Image](${data.imageUrl})`,
-										},
-									],
+									role: assistantMessage?.role ?? m.role,
+									parts:
+										assistantMessage?.parts ?? [
+											{
+												type: "file",
+												url: data.imageUrl,
+												mediaType: "image/png",
+												filename: `generated-image-${loadingMessageId}.png`,
+											},
+											{ type: "text", text: "Generated image" },
+										],
 								}
 							: m,
 					),
@@ -320,6 +332,7 @@ function PureMultimodalInput({
 		chatId,
 		resetHeight,
 		imageGenerationMode,
+		selectedVisibilityType,
 		setMessages,
 	]);
 

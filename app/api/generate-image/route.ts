@@ -1,11 +1,162 @@
 import { type NextRequest, NextResponse } from "next/server";
 import { auth } from "@/app/(auth)/auth";
+import { generateTitleFromUserMessage } from "@/app/(chat)/actions";
+import type { VisibilityType } from "@/components/visibility-selector";
+import { getChatById, saveChat, saveMessages } from "@/lib/db/queries";
 
 const MAIA_API_URL = "https://api.maiarouter.ai/v1/images/generations";
-const MAIA_API_KEY = (process.env.OPENROUTER_API_KEY_1 || "").trim();
+const MAIA_API_KEY = (process.env.MAIA_API_KEY || process.env.OPENROUTER_API_KEY_1 || "").trim();
 const MAIA_MODEL = "maia/imagen-3.0-generate-002";
 
 const POLLINATIONS_URL = "https://image.pollinations.ai/prompt/";
+
+type GenerateImageRequestBody = {
+	prompt?: string;
+	chatId?: string;
+	userMessageId?: string;
+	assistantMessageId?: string;
+	selectedVisibilityType?: VisibilityType;
+};
+
+function getMediaTypeFromImageUrl(imageUrl: string) {
+	const dataUrlMatch = imageUrl.match(/^data:(image\/[a-zA-Z0-9.+-]+);base64,/);
+
+	if (dataUrlMatch?.[1]) {
+		return dataUrlMatch[1];
+	}
+
+	if (imageUrl.includes(".jpg") || imageUrl.includes(".jpeg")) {
+		return "image/jpeg";
+	}
+
+	if (imageUrl.includes(".webp")) {
+		return "image/webp";
+	}
+
+	return "image/png";
+}
+
+async function persistSuccessfulImageGeneration({
+	sessionUser,
+	chatId,
+	userMessageId,
+	assistantMessageId,
+	selectedVisibilityType,
+	prompt,
+	imageUrl,
+}: {
+	sessionUser: { id?: string };
+	chatId?: string;
+	userMessageId?: string;
+	assistantMessageId?: string;
+	selectedVisibilityType?: VisibilityType;
+	prompt: string;
+	imageUrl: string;
+}) {
+	if (!chatId || !userMessageId || !assistantMessageId || !sessionUser.id) {
+		return null;
+	}
+
+	const existingChat = await getChatById({ id: chatId });
+
+	if (existingChat && existingChat.userId !== sessionUser.id) {
+		throw new Error("Forbidden chat access");
+	}
+
+	if (!existingChat) {
+		const title =
+			(await generateTitleFromUserMessage({
+				message: {
+					id: userMessageId,
+					role: "user",
+					parts: [{ type: "text", text: prompt }],
+				},
+			})) || prompt.slice(0, 80);
+
+		await saveChat({
+			id: chatId,
+			userId: sessionUser.id,
+			title,
+			visibility: selectedVisibilityType ?? "private",
+		});
+	}
+
+	const assistantParts = [
+		{
+			type: "file",
+			url: imageUrl,
+			mediaType: getMediaTypeFromImageUrl(imageUrl),
+			filename: `generated-image-${assistantMessageId}.png`,
+		},
+		{
+			type: "text",
+			text: "Generated image",
+		},
+	];
+
+	await saveMessages({
+		messages: [
+			{
+				id: userMessageId,
+				chatId,
+				role: "user",
+				parts: [{ type: "text", text: prompt }],
+				attachments: [],
+				createdAt: new Date(),
+			},
+			{
+				id: assistantMessageId,
+				chatId,
+				role: "assistant",
+				parts: assistantParts,
+				attachments: [],
+				createdAt: new Date(),
+			},
+		],
+	});
+
+	return assistantParts;
+}
+
+async function createSuccessResponse({
+	sessionUser,
+	chatId,
+	userMessageId,
+	assistantMessageId,
+	selectedVisibilityType,
+	prompt,
+	imageUrl,
+}: {
+	sessionUser: { id?: string };
+	chatId?: string;
+	userMessageId?: string;
+	assistantMessageId?: string;
+	selectedVisibilityType?: VisibilityType;
+	prompt: string;
+	imageUrl: string;
+}) {
+	const assistantParts = await persistSuccessfulImageGeneration({
+		sessionUser,
+		chatId,
+		userMessageId,
+		assistantMessageId,
+		selectedVisibilityType,
+		prompt,
+		imageUrl,
+	});
+
+	return NextResponse.json({
+		imageUrl,
+		assistantMessage:
+			assistantParts && assistantMessageId
+				? {
+					id: assistantMessageId,
+					role: "assistant",
+					parts: assistantParts,
+				}
+				: null,
+	});
+}
 
 export async function POST(request: NextRequest) {
 	try {
@@ -26,7 +177,13 @@ export async function POST(request: NextRequest) {
 			);
 		}
 
-		const { prompt } = await request.json();
+		const {
+			prompt,
+			chatId,
+			userMessageId,
+			assistantMessageId,
+			selectedVisibilityType,
+		} = (await request.json()) as GenerateImageRequestBody;
 
 		if (!prompt?.trim()) {
 			return NextResponse.json(
@@ -36,6 +193,7 @@ export async function POST(request: NextRequest) {
 		}
 
 		const cleanPrompt = prompt.trim();
+		const sessionUser = session.user as { id?: string };
 		console.log(`[generate-image] Prompt: "${cleanPrompt.slice(0, 80)}..."`);
 
 		// ============================================================
@@ -57,7 +215,9 @@ export async function POST(request: NextRequest) {
 					},
 					body: JSON.stringify({
 						model: MAIA_MODEL,
-						messages: [{ role: "user", content: cleanPrompt }],
+						prompt: cleanPrompt,
+						n: 1,
+						size: "1024x1024",
 					}),
 					signal: controller.signal,
 				});
@@ -74,7 +234,15 @@ export async function POST(request: NextRequest) {
 					const b64 = data?.data?.[0]?.b64_json;
 
 					if (b64) {
-						return NextResponse.json({ imageUrl: `data:image/png;base64,${b64}` });
+						return createSuccessResponse({
+							sessionUser,
+							chatId,
+							userMessageId,
+							assistantMessageId,
+							selectedVisibilityType,
+							prompt: cleanPrompt,
+							imageUrl: `data:image/png;base64,${b64}`,
+						});
 					}
 
 					if (imgUrl) {
@@ -83,11 +251,27 @@ export async function POST(request: NextRequest) {
 							const imgRes = await fetch(imgUrl);
 							if (imgRes.ok) {
 								const buf = Buffer.from(await imgRes.arrayBuffer());
-								return NextResponse.json({ imageUrl: `data:image/png;base64,${buf.toString("base64")}` });
+								return createSuccessResponse({
+									sessionUser,
+									chatId,
+									userMessageId,
+									assistantMessageId,
+									selectedVisibilityType,
+									prompt: cleanPrompt,
+									imageUrl: `data:image/png;base64,${buf.toString("base64")}`,
+								});
 							}
 						} catch {
 							// If proxy fails, return URL directly (might work on non-COEP pages)
-							return NextResponse.json({ imageUrl: imgUrl });
+							return createSuccessResponse({
+								sessionUser,
+								chatId,
+								userMessageId,
+								assistantMessageId,
+								selectedVisibilityType,
+								prompt: cleanPrompt,
+								imageUrl: imgUrl,
+							});
 						}
 					}
 				}
@@ -117,7 +301,15 @@ export async function POST(request: NextRequest) {
 
 			if (pollRes.ok) {
 				const buf = Buffer.from(await pollRes.arrayBuffer());
-				return NextResponse.json({ imageUrl: `data:image/jpeg;base64,${buf.toString("base64")}` });
+				return createSuccessResponse({
+					sessionUser,
+					chatId,
+					userMessageId,
+					assistantMessageId,
+					selectedVisibilityType,
+					prompt: cleanPrompt,
+					imageUrl: `data:image/jpeg;base64,${buf.toString("base64")}`,
+				});
 			}
 		} catch (pollError) {
 			console.error("[generate-image] Pollinations fallback error:", pollError);
