@@ -33,32 +33,59 @@ export async function POST(request: NextRequest) {
 
 		console.log(`[generate-image] Request Uncensored: "${prompt.trim().slice(0, 80)}..."`);
 
-		// Clean prompt for URL injection
 		const sanitizedPrompt = encodeURIComponent(prompt.trim() + " detailed, masterpiece, high quality, 8k resolution, best quality");
-		
 		const seed = Math.floor(Math.random() * 1000000);
-		// Force the uncensored 'flux' model from pollinations
-		const finalUrl = `${POLLINATIONS_URL}${sanitizedPrompt}?width=1024&height=1024&nofeed=yes&nologo=yes&seed=${seed}&model=flux`;
+		
+		// Priority 1: flux (Best quality, highly uncensored)
+		const fluxUrl = `${POLLINATIONS_URL}${sanitizedPrompt}?width=1024&height=1024&nofeed=yes&nologo=yes&seed=${seed}&model=flux`;
+		// Priority 2: turbo (Fast fallback, robust)
+		const turboUrl = `${POLLINATIONS_URL}${sanitizedPrompt}?width=1024&height=1024&nofeed=yes&nologo=yes&seed=${seed}&model=turbo`;
 
-		console.log(`[generate-image] Fetching from Pollinations to bypass CORS COEP issue...`);
-		// Fetch the image on the server-side to bypass Strict browser COEP / CSP policies
-		const imageReq = await fetch(finalUrl, { 
-			method: "GET",
-			headers: { "Accept": "image/jpeg" }
-		});
+		const tryFetchImage = async (url: string, timeoutMs: number) => {
+			const controller = new AbortController();
+			const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
 
-		if (!imageReq.ok) {
+			try {
+				const response = await fetch(url, { 
+					method: "GET",
+					headers: { "Accept": "image/jpeg" },
+					signal: controller.signal
+				});
+				clearTimeout(timeoutId);
+				return response;
+			} catch (e) {
+				clearTimeout(timeoutId);
+				throw e;
+			}
+		};
+
+		let imageReq;
+		try {
+			console.log(`[generate-image] Attempting primary model (flux)...`);
+			imageReq = await tryFetchImage(fluxUrl, 25000); // 25s timeout
+		} catch (error) {
+			console.warn(`[generate-image] Flux failed or timed out, trying turbo fallback:`, error);
+		}
+
+		if (!imageReq || !imageReq.ok) {
+			console.log(`[generate-image] Attempting fallback model (turbo)...`);
+			try {
+				imageReq = await tryFetchImage(turboUrl, 20000);
+			} catch (fallbackError) {
+				console.error(`[generate-image] Fallback also failed:`, fallbackError);
+			}
+		}
+
+		if (!imageReq || !imageReq.ok) {
 			return NextResponse.json(
-				{ error: "Image generation backend failure." },
-				{ status: 500 }
+				{ error: "Image generation backend failure. Both models are currently busy." },
+				{ status: 502 }
 			);
 		}
 
 		const arrayBuffer = await imageReq.arrayBuffer();
 		const buffer = Buffer.from(arrayBuffer);
-		const base64Str = buffer.toString('base64');
-		
-		const base64Url = `data:image/jpeg;base64,${base64Str}`;
+		const base64Url = `data:image/jpeg;base64,${buffer.toString('base64')}`;
 
 		return NextResponse.json({ imageUrl: base64Url });
 		
