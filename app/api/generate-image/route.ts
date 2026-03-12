@@ -40,7 +40,27 @@ export async function POST(request: NextRequest) {
 		// Force the uncensored 'flux' model from pollinations
 		const finalUrl = `${POLLINATIONS_URL}${sanitizedPrompt}?width=1024&height=1024&nofeed=yes&nologo=yes&seed=${seed}&model=flux`;
 
-		return NextResponse.json({ imageUrl: finalUrl });
+		console.log(`[generate-image] Fetching from Pollinations to bypass CORS COEP issue...`);
+		// Fetch the image on the server-side to bypass Strict browser COEP / CSP policies
+		const imageReq = await fetch(finalUrl, { 
+			method: "GET",
+			headers: { "Accept": "image/jpeg" }
+		});
+
+		if (!imageReq.ok) {
+			return NextResponse.json(
+				{ error: "Image generation backend failure." },
+				{ status: 500 }
+			);
+		}
+
+		const arrayBuffer = await imageReq.arrayBuffer();
+		const buffer = Buffer.from(arrayBuffer);
+		const base64Str = buffer.toString('base64');
+		
+		const base64Url = `data:image/jpeg;base64,${base64Str}`;
+
+		return NextResponse.json({ imageUrl: base64Url });
 		
 	} catch (error) {
 		console.error("[generate-image] Error:", error);

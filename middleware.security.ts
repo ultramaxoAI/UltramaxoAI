@@ -22,7 +22,7 @@ export function securityHeaders(request: NextRequest, response: NextResponse) {
 		"style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
 		"font-src 'self' https://fonts.gstatic.com",
 		"img-src 'self' data: https: blob:",
-		"connect-src 'self' https://ultramaxo.tech https://chat.ultramaxo.tech https://api.groq.com https://*.vercel.com wss://*.vercel.com",
+		"connect-src 'self' https://ultramaxo.tech https://chat.ultramaxo.tech https://api.groq.com https://*.vercel.com wss://*.vercel.com https://image.pollinations.ai",
 		"frame-ancestors 'none'",
 		"base-uri 'self'",
 		"form-action 'self' https://ultramaxo.tech https://www.ultramaxo.tech https://chat.ultramaxo.tech https://accounts.google.com https://github.com",
