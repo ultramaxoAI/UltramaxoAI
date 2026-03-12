@@ -98,6 +98,7 @@
 		"prosemirror-schema-list": "^1.4.1",
 		"prosemirror-state": "^1.4.3",
 		"prosemirror-view": "^1.34.3",
+		"puppeteer": "^24.39.0",
 		"radix-ui": "^1.4.3",
 		"react": "19.0.1",
 		"react-data-grid": "7.0.0-beta.47",
