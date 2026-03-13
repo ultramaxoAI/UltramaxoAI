@@ -20,6 +20,7 @@ import { Artifact } from "./artifact";
 import { useDataStream } from "./data-stream-provider";
 import { Messages } from "./messages";
 import { MultimodalInput } from "./multimodal-input";
+import { ContextualUpgradeBanner } from "./contextual-upgrade-banner";
 import { getChatHistoryPaginationKey } from "./sidebar-history";
 import { toast } from "./toast";
 import { Button } from "./ui/button";
@@ -88,6 +89,7 @@ export function Chat({
 	const [input, setInput] = useState<string>("");
 	const [currentModelId, setCurrentModelId] = useState(initialChatModel);
 	const [wormgptEnabled, setWormgptEnabled] = useState(false);
+	const [isRateLimited, setIsRateLimited] = useState(false);
 	const [deepThinkingEnabled, setDeepThinkingEnabled] = useState(false);
 	const [webSearchEnabled, setWebSearchEnabled] = useState(true);
 	const [fullstackModeEnabled, setFullstackModeEnabled] = useState(false);
@@ -227,11 +229,20 @@ export function Chat({
 			}
 			console.error("=== END CLIENT ERROR ===");
 
+			// Detect rate limit errors and trigger upgrade banner instead of just showing a toast
+			const errorMsg = error instanceof Error ? error.message : String(error);
+			const isRateLimitError = errorMsg.includes("rate_limit") || errorMsg.includes("Rate limit") || errorMsg.includes("Too many requests");
+
+			if (isRateLimitError) {
+				setIsRateLimited(true);
+				// Auto-reset after 60 seconds
+				setTimeout(() => setIsRateLimited(false), 60_000);
+			}
+
 			if (error instanceof ChatSDKError) {
 				if (
 					error.message?.includes("AI Gateway requires a valid credit card")
 				) {
-					// This is a Groq-based app, not using AI Gateway
 					toast({
 						type: "error",
 						description:
@@ -244,7 +255,6 @@ export function Chat({
 					});
 				}
 			} else {
-				// Show generic error for non-ChatSDKError but catch the IDE Limit specifically
 				if (error instanceof Error && error.message.includes("IDE Mode Limit!")) {
 					toast({
 						type: "error",
@@ -285,6 +295,9 @@ export function Chat({
 
 	const [attachments, setAttachments] = useState<Attachment[]>([]);
 	const isArtifactVisible = useArtifactSelector((state) => state.isVisible);
+
+	// Count user messages for contextual upgrade banner
+	const userMessageCount = messages.filter((m) => m.role === "user").length;
 
 	const handleStarterPrompt = (prompt: string) => {
 		setInput(prompt);
@@ -471,6 +484,14 @@ export function Chat({
 
 				{messages.length > 0 && (
 					<div className="relative z-10 w-full px-3 pb-3 sm:px-4 sm:pb-4">
+						{/* Contextual Upgrade Banner */}
+						{user?.type !== "pro" && (
+							<ContextualUpgradeBanner
+								messageCount={userMessageCount}
+								isRateLimited={isRateLimited}
+								userType={user?.type}
+							/>
+						)}
 						<div className="mx-auto w-full max-w-4xl">
 							{isReadonly ? (
 								<div className="flex w-full items-center justify-center p-4">

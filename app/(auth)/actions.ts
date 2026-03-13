@@ -127,12 +127,13 @@ export const register = async (
 			email: formData.get("email"),
 			password: formData.get("password"),
 			username: formData.get("username"),
-			confirmPassword: formData.get("confirmPassword"),
+			confirmPassword: formData.get("confirmPassword") || undefined,
 		});
 		const normalizedEmail = validatedData.email?.trim().toLowerCase();
-		const normalizedUsername = validatedData.username?.trim();
+		// Username is optional -- generate from email prefix if not provided
+		const normalizedUsername = validatedData.username?.trim() || normalizedEmail?.split("@")[0] || "";
 
-		if (!normalizedEmail || !normalizedUsername) {
+		if (!normalizedEmail) {
 			return { status: "invalid_data" };
 		}
 
@@ -147,7 +148,8 @@ export const register = async (
 			return { status: "username_exists" };
 		}
 
-		if (validatedData.password !== validatedData.confirmPassword) {
+		// Only check password match if confirmPassword was provided
+		if (validatedData.confirmPassword && validatedData.password !== validatedData.confirmPassword) {
 			return { status: "password_mismatch" };
 		}
 
