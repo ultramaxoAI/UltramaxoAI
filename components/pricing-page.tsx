@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowLeft, Check } from "lucide-react";
+import { ArrowLeft, Check, Flame, Users, Zap } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import type { User } from "next-auth";
@@ -12,10 +12,14 @@ interface PricingPageProps {
 	user?: User;
 }
 
+const TOTAL_EARLY_ADOPTER_SLOTS = 100;
+const SLOTS_TAKEN = 8; // Update this manually or fetch from DB
+
 const pricingPlans = [
 	{
 		name: "Free",
 		price: "Rp 0",
+		originalPrice: null,
 		period: "selamanya",
 		desc: "Coba semua fitur dasar tanpa biaya",
 		features: [
@@ -30,10 +34,11 @@ const pricingPlans = [
 		ctaDisabled: true,
 	},
 	{
-		name: "Pro",
-		price: "Rp 30.000",
+		name: "Early Adopter (Pro)",
+		price: "Rp 15.000",
+		originalPrice: "Rp 30.000",
 		period: "per bulan",
-		desc: "Untuk yang butuh lebih — tanpa batas",
+		desc: `Khusus ${TOTAL_EARLY_ADOPTER_SLOTS} pengguna pertama. Harga naik setelah slot habis.`,
 		features: [
 			"AI Chat (UltraAgent Pro)",
 			"Semua fitur Free",
@@ -50,8 +55,9 @@ const pricingPlans = [
 	{
 		name: "1 Tahun",
 		price: "Rp 150.000",
+		originalPrice: "Rp 360.000",
 		period: "per tahun",
-		desc: "Hemat lebih banyak dengan paket tahunan",
+		desc: "Hemat 58% dengan komitmen tahunan",
 		features: [
 			"Semua fitur Pro",
 			"Dedicated support",
@@ -98,7 +104,7 @@ export function PricingPage({ user }: PricingPageProps) {
 					// Refresh session to get updated user data
 					await fetch("/api/auth/session/refresh", { method: "POST" });
 
-					toast.success("🎉 Upgrade berhasil! Selamat datang di PRO!");
+					toast.success("Upgrade berhasil! Selamat datang di PRO!");
 
 					// Redirect to chat
 					setTimeout(() => {
@@ -172,8 +178,11 @@ export function PricingPage({ user }: PricingPageProps) {
 		}
 	};
 
+	const slotsRemaining = TOTAL_EARLY_ADOPTER_SLOTS - SLOTS_TAKEN;
+	const slotPercentage = (SLOTS_TAKEN / TOTAL_EARLY_ADOPTER_SLOTS) * 100;
+
 	return (
-		<div className="min-h-screen bg-linear-to-b from-zinc-950 via-zinc-900 to-black">
+		<div className="min-h-screen bg-linear-to-b from-zinc-50 via-white to-zinc-100 dark:from-zinc-950 dark:via-zinc-900 dark:to-black">
 			{/* Background Effects */}
 			<div className="fixed inset-0 overflow-hidden pointer-events-none">
 				<div className="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-[600px] bg-indigo-600/5 rounded-full blur-3xl" />
@@ -183,7 +192,7 @@ export function PricingPage({ user }: PricingPageProps) {
 			<div className="relative max-w-7xl mx-auto px-4 py-12 sm:px-6 lg:px-8">
 				{/* Back Button */}
 				<Link
-					className="inline-flex items-center gap-2 text-sm text-gray-400 hover:text-white transition-colors mb-8"
+					className="inline-flex items-center gap-2 text-sm text-zinc-500 dark:text-gray-400 hover:text-zinc-900 dark:hover:text-white transition-colors mb-8"
 					href="/chat"
 				>
 					<ArrowLeft className="h-4 w-4" />
@@ -191,17 +200,49 @@ export function PricingPage({ user }: PricingPageProps) {
 				</Link>
 
 				{/* Header */}
-				<div className="text-center mb-16">
-					<h1 className="text-4xl sm:text-5xl font-bold mb-4 bg-linear-to-r from-white via-gray-200 to-gray-400 bg-clip-text text-transparent">
+				<div className="text-center mb-8">
+					<h1 className="text-4xl sm:text-5xl font-bold mb-4 bg-linear-to-r from-zinc-900 via-zinc-700 to-zinc-500 dark:from-white dark:via-gray-200 dark:to-gray-400 bg-clip-text text-transparent">
 						Pilih Paket Anda
 					</h1>
-					<p className="text-gray-400 text-lg max-w-2xl mx-auto">
+					<p className="text-zinc-500 dark:text-gray-400 text-lg max-w-2xl mx-auto">
 						Tidak ada biaya tersembunyi. Upgrade kapan saja, downgrade kapan
 						saja.
 					</p>
-					<p className="text-sm text-gray-500 mt-2">
+					<p className="text-sm text-zinc-400 dark:text-gray-500 mt-2">
 						Pakai gratis selamanya atau upgrade untuk fitur unlimited
 					</p>
+				</div>
+
+				{/* FOMO / Scarcity Banner */}
+				<div className="max-w-2xl mx-auto mb-12">
+					<div className="relative overflow-hidden rounded-2xl border border-amber-500/30 dark:border-amber-500/20 bg-amber-50 dark:bg-amber-950/20 p-4 sm:p-5">
+						<div className="flex items-center justify-center gap-3 flex-wrap">
+							<div className="flex items-center gap-2">
+								<Flame className="w-5 h-5 text-amber-600 dark:text-amber-400 animate-pulse" />
+								<span className="text-sm font-bold text-amber-800 dark:text-amber-300">
+									Promo Early Adopter
+								</span>
+							</div>
+							<div className="h-4 w-px bg-amber-400/50 hidden sm:block" />
+							<div className="flex items-center gap-2">
+								<Users className="w-4 h-4 text-amber-600 dark:text-amber-400" />
+								<span className="text-sm text-amber-700 dark:text-amber-200">
+									<span className="font-extrabold text-red-600 dark:text-red-400">{slotsRemaining}</span> dari {TOTAL_EARLY_ADOPTER_SLOTS} slot tersedia
+								</span>
+							</div>
+							<div className="h-4 w-px bg-amber-400/50 hidden sm:block" />
+							<span className="text-xs text-amber-600/80 dark:text-amber-400/60 font-medium">
+								Harga naik 2x setelah slot habis
+							</span>
+						</div>
+						{/* Progress bar showing slots taken */}
+						<div className="mt-3 h-1.5 rounded-full bg-amber-200 dark:bg-amber-900/50 overflow-hidden">
+							<div
+								className="h-full rounded-full bg-linear-to-r from-amber-500 to-red-500 transition-all duration-1000"
+								style={{ width: `${slotPercentage}%` }}
+							/>
+						</div>
+					</div>
 				</div>
 
 				{/* Pricing Cards */}
@@ -210,30 +251,41 @@ export function PricingPage({ user }: PricingPageProps) {
 						<div
 							className={`relative rounded-3xl p-8 backdrop-blur-sm transition-all duration-300 hover:scale-105 ${
 								plan.popular
-									? "border-2 border-indigo-500/40 bg-linear-to-b from-indigo-950/50 to-purple-950/30 shadow-[0_0_60px_rgba(99,102,241,0.15)]"
-									: "border border-white/10 bg-linear-to-b from-white/5 to-white/2 hover:border-white/20"
+									? "border-2 border-indigo-400/50 dark:border-indigo-500/40 bg-linear-to-b from-indigo-50 via-white to-purple-50 dark:from-indigo-950/50 dark:via-zinc-900/50 dark:to-purple-950/30 shadow-lg shadow-indigo-500/10 dark:shadow-indigo-500/15"
+									: "border border-zinc-200 dark:border-white/10 bg-white dark:bg-zinc-900/50 hover:border-zinc-300 dark:hover:border-white/20 shadow-sm hover:shadow-md"
 							}`}
 							key={plan.name}
 						>
 							{plan.popular && (
-								<div className="absolute -top-4 left-1/2 -translate-x-1/2 px-5 py-1.5 bg-linear-to-r from-indigo-500 to-purple-600 rounded-full text-xs font-semibold shadow-lg shadow-indigo-500/30">
+								<div className="absolute -top-4 left-1/2 -translate-x-1/2 px-5 py-1.5 bg-linear-to-r from-indigo-500 to-purple-600 rounded-full text-xs font-semibold shadow-lg shadow-indigo-500/30 text-white flex items-center gap-1.5">
+									<Zap className="w-3 h-3" />
 									Paling Populer
 								</div>
 							)}
 
 							<div className="mb-8">
-								<p className="font-semibold text-white text-lg mb-2">
+								<p className="font-semibold text-zinc-900 dark:text-white text-lg mb-2">
 									{plan.name}
 								</p>
-								<div className="flex items-end gap-2 mb-3">
-									<span className="text-4xl font-extrabold text-white">
+								<div className="flex items-end gap-2 mb-1">
+									{plan.originalPrice && (
+										<span className="text-lg text-zinc-400 dark:text-gray-500 line-through mb-1">
+											{plan.originalPrice}
+										</span>
+									)}
+									<span className="text-4xl font-extrabold text-zinc-900 dark:text-white">
 										{plan.price}
 									</span>
-									<span className="text-sm text-gray-500 mb-2">
+									<span className="text-sm text-zinc-400 dark:text-gray-500 mb-2">
 										/ {plan.period}
 									</span>
 								</div>
-								<p className="text-sm text-gray-400 leading-relaxed">
+								{plan.originalPrice && (
+									<span className="inline-block text-xs font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/30 px-2 py-0.5 rounded-full mb-2">
+										HEMAT 50%
+									</span>
+								)}
+								<p className="text-sm text-zinc-500 dark:text-gray-400 leading-relaxed">
 									{plan.desc}
 								</p>
 							</div>
@@ -241,10 +293,10 @@ export function PricingPage({ user }: PricingPageProps) {
 							<ul className="space-y-4 mb-8">
 								{plan.features.map((feat) => (
 									<li
-										className="flex items-start gap-3 text-sm text-gray-300"
+										className="flex items-start gap-3 text-sm text-zinc-600 dark:text-gray-300"
 										key={feat}
 									>
-										<Check className="w-5 h-5 text-indigo-400 mt-0.5 shrink-0" />
+										<Check className="w-5 h-5 text-indigo-500 dark:text-indigo-400 mt-0.5 shrink-0" />
 										<span className="leading-relaxed">{feat}</span>
 									</li>
 								))}
@@ -255,8 +307,8 @@ export function PricingPage({ user }: PricingPageProps) {
 									plan.popular
 										? "bg-linear-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white shadow-lg shadow-indigo-500/30"
 										: plan.ctaDisabled
-											? "bg-white/10 text-gray-400 cursor-not-allowed"
-											: "bg-white/10 hover:bg-white/20 text-white"
+											? "bg-zinc-100 dark:bg-white/10 text-zinc-400 dark:text-gray-400 cursor-not-allowed"
+											: "bg-zinc-900 dark:bg-white/10 hover:bg-zinc-800 dark:hover:bg-white/20 text-white"
 								}`}
 								disabled={plan.ctaDisabled || loading}
 								onClick={(e) => {
@@ -276,22 +328,41 @@ export function PricingPage({ user }: PricingPageProps) {
 					))}
 				</div>
 
+				{/* Price Comparison Banner */}
+				<div className="max-w-2xl mx-auto mt-12 mb-8">
+					<div className="rounded-2xl border border-zinc-200 dark:border-white/10 bg-zinc-50 dark:bg-white/5 p-6 text-center">
+						<p className="text-sm text-zinc-500 dark:text-gray-400 mb-2">Perbandingan Harga</p>
+						<div className="flex items-center justify-center gap-4 flex-wrap">
+							<div className="text-center">
+								<p className="text-xs text-zinc-400 dark:text-gray-500">ChatGPT Plus</p>
+								<p className="text-lg font-bold text-zinc-400 dark:text-gray-500 line-through">~Rp 310.000</p>
+							</div>
+							<span className="text-zinc-300 dark:text-gray-600 text-2xl">vs</span>
+							<div className="text-center">
+								<p className="text-xs text-indigo-600 dark:text-indigo-400">Ultramaxo Pro</p>
+								<p className="text-lg font-bold text-indigo-600 dark:text-indigo-400">Rp 15.000</p>
+							</div>
+						</div>
+						<p className="text-xs text-emerald-600 dark:text-emerald-400 font-semibold mt-2">Kemampuan setara, 20x lebih hemat</p>
+					</div>
+				</div>
+
 				{/* Footer Note */}
-				<div className="text-center mt-16 space-y-4">
-					<p className="text-sm text-gray-500">
+				<div className="text-center mt-8 space-y-4">
+					<p className="text-sm text-zinc-500 dark:text-gray-500">
 						Dengan melanjutkan, Anda menyetujui{" "}
 						<Link
-							className="text-indigo-400 hover:text-indigo-300 underline"
+							className="text-indigo-600 dark:text-indigo-400 hover:text-indigo-500 dark:hover:text-indigo-300 underline"
 							href="/terms"
 						>
 							Syarat & Ketentuan
 						</Link>{" "}
 						kami.
 					</p>
-					<div className="flex items-center justify-center gap-6 text-xs text-gray-600">
-						<span>🔒 Pembayaran Aman</span>
-						<span>💳 Via DompetX</span>
-						<span>⚡ Aktivasi Instant</span>
+					<div className="flex items-center justify-center gap-6 text-xs text-zinc-400 dark:text-gray-600">
+						<span>Pembayaran Aman</span>
+						<span>Via DompetX</span>
+						<span>Aktivasi Instant</span>
 					</div>
 				</div>
 			</div>

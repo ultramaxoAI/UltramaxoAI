@@ -837,6 +837,7 @@ export async function listUsersWithChatCount() {
 				name: user.name,
 				email: user.email,
 				role: user.role,
+				onboardingReason: user.onboardingReason,
 				isPro: user.isPro,
 				limitCount: user.limitCount,
 				createdAt: user.createdAt,

@@ -1,6 +1,6 @@
 "use client";
 
-import { Check, X } from "lucide-react";
+import { Check, Flame, Users, X, Zap } from "lucide-react";
 import { useRouter } from "next/navigation";
 import type { User } from "next-auth";
 import { useEffect, useState } from "react";
@@ -20,10 +20,14 @@ interface PricingModalProps {
 	user?: User;
 }
 
+const TOTAL_EARLY_ADOPTER_SLOTS = 100;
+const SLOTS_TAKEN = 8;
+
 const pricingPlans = [
 	{
 		name: "Free",
 		price: "Rp 0",
+		originalPrice: null,
 		period: "forever",
 		desc: "Try all basic features at no cost",
 		features: [
@@ -38,10 +42,11 @@ const pricingPlans = [
 		ctaDisabled: true,
 	},
 	{
-		name: "Pro",
-		price: "Rp 30.000",
+		name: "Early Adopter (Pro)",
+		price: "Rp 15.000",
+		originalPrice: "Rp 30.000",
 		period: "per month",
-		desc: "For those who need more — completely unlimited",
+		desc: `Only for first ${TOTAL_EARLY_ADOPTER_SLOTS} users. Price doubles after slots run out.`,
 		features: [
 			"AI Chat (UltraAgent Pro)",
 			"All Free features",
@@ -58,8 +63,9 @@ const pricingPlans = [
 	{
 		name: "1 Year",
 		price: "Rp 150.000",
+		originalPrice: "Rp 360.000",
 		period: "per year",
-		desc: "Save more with annual plan",
+		desc: "Save 58% with annual commitment",
 		features: [
 			"All Pro features",
 			"Dedicated support",
@@ -188,15 +194,25 @@ export function PricingModal({ open, onOpenChange, user }: PricingModalProps) {
 					</button>
 
 					{/* Header */}
-					<div className="relative bg-gradient-to-b from-zinc-900 to-[#0a0a0a] pt-12 pb-8 px-8 border-b border-white/5">
+					<div className="relative bg-gradient-to-b from-zinc-100 dark:from-zinc-900 to-white dark:to-[#0a0a0a] pt-12 pb-6 px-8 border-b border-zinc-200 dark:border-white/5">
 						<DialogHeader className="text-center space-y-2">
-							<DialogTitle className="text-3xl font-bold bg-gradient-to-r from-white to-gray-400 bg-clip-text text-transparent">
+							<DialogTitle className="text-3xl font-bold bg-gradient-to-r from-zinc-900 to-zinc-600 dark:from-white dark:to-gray-400 bg-clip-text text-transparent">
 								Choose Your Plan
 							</DialogTitle>
-							<DialogDescription className="text-gray-400 text-base">
+							<DialogDescription className="text-zinc-500 dark:text-gray-400 text-base">
 								No hidden fees. Upgrade anytime, downgrade anytime.
 							</DialogDescription>
 						</DialogHeader>
+						{/* FOMO Banner */}
+						<div className="mt-4 rounded-xl border border-amber-500/30 dark:border-amber-500/20 bg-amber-50 dark:bg-amber-950/20 p-3">
+							<div className="flex items-center justify-center gap-2 flex-wrap text-sm">
+								<Flame className="w-4 h-4 text-amber-600 dark:text-amber-400 animate-pulse" />
+								<span className="font-bold text-amber-800 dark:text-amber-300">Early Adopter</span>
+								<span className="text-amber-700 dark:text-amber-200">
+									<span className="font-extrabold text-red-600 dark:text-red-400">{TOTAL_EARLY_ADOPTER_SLOTS - SLOTS_TAKEN}</span>/{TOTAL_EARLY_ADOPTER_SLOTS} slot
+								</span>
+							</div>
+						</div>
 					</div>
 
 					{/* Pricing Cards */}
@@ -211,22 +227,33 @@ export function PricingModal({ open, onOpenChange, user }: PricingModalProps) {
 								key={i}
 							>
 								{plan.popular && (
-									<div className="absolute -top-3 left-1/2 -translate-x-1/2 px-4 py-1 bg-gradient-to-r from-indigo-500 to-violet-600 rounded-full text-xs font-medium shadow-lg shadow-indigo-500/25">
+									<div className="absolute -top-3 left-1/2 -translate-x-1/2 px-4 py-1 bg-gradient-to-r from-indigo-500 to-violet-600 rounded-full text-xs font-medium shadow-lg shadow-indigo-500/25 text-white flex items-center gap-1">
+										<Zap className="w-3 h-3" />
 										Most Popular
 									</div>
 								)}
 
 								<div className="mb-7">
-									<p className="font-semibold text-white mb-1">{plan.name}</p>
-									<div className="flex items-end gap-1.5 mb-2">
-										<span className="text-3xl font-extrabold text-white">
+									<p className="font-semibold text-zinc-900 dark:text-white mb-1">{plan.name}</p>
+									<div className="flex items-end gap-1.5 mb-1">
+										{plan.originalPrice && (
+											<span className="text-base text-zinc-400 dark:text-gray-500 line-through mb-0.5">
+												{plan.originalPrice}
+											</span>
+										)}
+										<span className="text-3xl font-extrabold text-zinc-900 dark:text-white">
 											{plan.price}
 										</span>
-										<span className="text-sm text-gray-500 mb-1">
+										<span className="text-sm text-zinc-400 dark:text-gray-500 mb-1">
 											/ {plan.period}
 										</span>
 									</div>
-									<p className="text-sm text-gray-400">{plan.desc}</p>
+									{plan.originalPrice && (
+										<span className="inline-block text-xs font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/30 px-2 py-0.5 rounded-full mb-1">
+											SAVE 50%
+										</span>
+									)}
+									<p className="text-sm text-zinc-500 dark:text-gray-400">{plan.desc}</p>
 								</div>
 
 								<ul className="space-y-3 mb-8">

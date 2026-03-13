@@ -21,6 +21,7 @@ export const user = pgTable("user", {
 	image: text("image"),
 	password: text("password"),
 	role: text("role").default("user").notNull(),
+	onboardingReason: text("onboardingReason"),
 	isPro: boolean("isPro").default(false).notNull(),
 	limitCount: integer("limitCount").default(0).notNull(),
 	freeIdeModeUsedAt: timestamp("freeIdeModeUsedAt", { mode: "date" }),
@@ -332,7 +333,7 @@ export const siteSettings = pgTable("site_settings", {
 		.default("midnight"),
 	maintenanceTitle: text("maintenanceTitle")
 		.notNull()
-		.default("We'll be right back."),
+		.default("We will be right back."),
 	maintenanceMessage: text("maintenanceMessage")
 		.notNull()
 		.default(

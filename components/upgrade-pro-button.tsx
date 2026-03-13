@@ -32,31 +32,31 @@ interface UpgradeProButtonProps {
 const PLANS = [
 	{
 		id: "pro-1",
-		name: "Pro - 1 Bulan",
+		name: "Early Adopter - 1 Bulan",
 		months: 1,
-		price: 20_000,
-		originalPrice: 20_000,
+		price: 15_000,
+		originalPrice: 30_000,
 	},
 	{
 		id: "pro-3",
-		name: "Pro - 3 Bulan",
+		name: "Early Adopter - 3 Bulan",
 		months: 3,
-		price: 54_000,
-		originalPrice: 60_000,
+		price: 45_000,
+		originalPrice: 90_000,
 	},
 	{
 		id: "pro-6",
-		name: "Pro - 6 Bulan",
+		name: "Early Adopter - 6 Bulan",
 		months: 6,
-		price: 100_000,
-		originalPrice: 120_000,
+		price: 85_000,
+		originalPrice: 180_000,
 	},
 	{
 		id: "pro-12",
-		name: "Pro - 12 Bulan (1 Tahun)",
+		name: "Pro - 1 Tahun",
 		months: 12,
-		price: 120_000,
-		originalPrice: 240_000,
+		price: 150_000,
+		originalPrice: 360_000,
 	},
 ];
 
@@ -119,7 +119,7 @@ export function UpgradeProButton({
 		</button>
 	) : (
 		<Button
-			className="relative bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 text-white font-medium rounded-lg shadow-md hover:shadow-lg transition-all duration-200"
+			className="relative bg-linear-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 text-white font-medium rounded-lg shadow-md hover:shadow-lg transition-all duration-200"
 			onClick={() => setOpen(true)}
 			size="sm"
 		>
@@ -134,13 +134,13 @@ export function UpgradeProButton({
 
 			<Dialog onOpenChange={setOpen} open={open}>
 				<DialogContent className="sm:max-w-[500px] border-0 bg-black/40 backdrop-blur-2xl p-0 overflow-hidden shadow-2xl">
-					<div className="relative border border-white/10 rounded-2xl bg-gradient-to-b from-zinc-900/90 to-black/90 p-6">
+					<div className="relative border border-white/10 rounded-2xl bg-linear-to-b from-zinc-900/90 to-black/90 p-6">
 						<DialogHeader className="space-y-3">
 							<DialogTitle className="flex items-center gap-3 text-2xl">
-								<div className="p-2 rounded-xl bg-gradient-to-br from-purple-500 to-blue-500 shadow-lg shadow-purple-500/50">
+								<div className="p-2 rounded-xl bg-linear-to-br from-purple-500 to-blue-500 shadow-lg shadow-purple-500/50">
 									<CrownIcon className="h-6 w-6 text-white" />
 								</div>
-								<span className="bg-gradient-to-r from-purple-400 to-blue-400 bg-clip-text text-transparent font-bold">
+								<span className="bg-linear-to-r from-purple-400 to-blue-400 bg-clip-text text-transparent font-bold">
 									Upgrade ke Pro
 								</span>
 							</DialogTitle>
@@ -203,9 +203,9 @@ export function UpgradeProButton({
 							</div>
 
 							{selectedPlan && (
-								<div className="rounded-xl bg-gradient-to-br from-purple-500/10 to-blue-500/10 border border-purple-500/20 p-5 backdrop-blur-sm">
+								<div className="rounded-xl bg-linear-to-br from-purple-500/10 to-blue-500/10 border border-purple-500/20 p-5 backdrop-blur-sm">
 									<h4 className="font-bold mb-3 text-purple-300 flex items-center gap-2">
-										<span className="w-1 h-4 bg-gradient-to-b from-purple-400 to-blue-400 rounded-full" />
+										<span className="w-1 h-4 bg-linear-to-b from-purple-400 to-blue-400 rounded-full" />
 										Detail Paket
 									</h4>
 									<div className="text-sm space-y-2">
@@ -227,7 +227,7 @@ export function UpgradeProButton({
 													<span className="font-semibold text-white">
 														Harga Diskon:
 													</span>
-													<span className="font-bold text-xl bg-gradient-to-r from-green-400 to-emerald-400 bg-clip-text text-transparent">
+													<span className="font-bold text-xl bg-linear-to-r from-green-400 to-emerald-400 bg-clip-text text-transparent">
 														Rp {plan.price.toLocaleString("id-ID")}
 													</span>
 												</div>
@@ -257,7 +257,7 @@ export function UpgradeProButton({
 								Batal
 							</Button>
 							<Button
-								className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white rounded-xl shadow-lg shadow-purple-500/50 disabled:opacity-50 disabled:shadow-none font-bold"
+								className="bg-linear-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white rounded-xl shadow-lg shadow-purple-500/50 disabled:opacity-50 disabled:shadow-none font-bold"
 								disabled={!selectedPlan}
 								onClick={handleSubmit}
 							>

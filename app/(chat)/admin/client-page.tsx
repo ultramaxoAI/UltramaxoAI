@@ -1080,6 +1080,9 @@ export default function AdminDashboardClient() {
 												User
 											</th>
 											<th className="p-4 text-xs font-bold text-zinc-500 uppercase tracking-widest whitespace-nowrap">
+												Reason Joined
+											</th>
+											<th className="p-4 text-xs font-bold text-zinc-500 uppercase tracking-widest whitespace-nowrap">
 												Usage & Limit
 											</th>
 											<th className="p-4 text-xs font-bold text-zinc-500 uppercase tracking-widest text-right whitespace-nowrap">
@@ -1092,7 +1095,7 @@ export default function AdminDashboardClient() {
 											<tr>
 												<td
 													className="p-20 text-center text-zinc-500"
-													colSpan={6}
+													colSpan={7}
 												>
 													<div className="animate-pulse flex flex-col items-center gap-4">
 														<div className="size-10 rounded-full bg-zinc-200 dark:bg-zinc-800" />
@@ -1106,7 +1109,7 @@ export default function AdminDashboardClient() {
 											<tr>
 												<td
 													className="p-20 text-center text-zinc-600"
-													colSpan={6}
+													colSpan={7}
 												>
 													No users found.
 												</td>
@@ -1143,6 +1146,13 @@ export default function AdminDashboardClient() {
 																	{user.email}
 																</span>
 															</div>
+														</div>
+													</td>
+													<td className="p-4 max-w-[150px] sm:max-w-[200px]">
+														<div className="flex items-start gap-2 text-zinc-500 dark:text-zinc-400">
+															<span className="text-xs italic truncate" title={user.onboardingReason || "Belum ada alasan"}>
+																{user.onboardingReason ? `"${user.onboardingReason}"` : "—"}
+															</span>
 														</div>
 													</td>
 													<td className="p-4">

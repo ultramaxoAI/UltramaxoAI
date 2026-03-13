@@ -8,6 +8,7 @@ import "./globals.css";
 import { SessionProvider } from "next-auth/react";
 import { VisitorTracker } from "@/components/visitor-tracker";
 import { CookieConsent } from "@/components/cookie-consent";
+import { OnboardingWizard } from "@/components/onboarding-wizard";
 
 export const metadata: Metadata = {
 	metadataBase: new URL("https://ultramaxo.tech"),
@@ -136,7 +137,10 @@ export default function RootLayout({
 					<Toaster position="top-center" />
 					<VisitorTracker />
 					<CookieConsent />
-					<SessionProvider>{children}</SessionProvider>
+					<SessionProvider>
+						<OnboardingWizard />
+						{children}
+					</SessionProvider>
 				</ThemeProvider>
 			</body>
 		</html>

