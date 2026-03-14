@@ -5,7 +5,16 @@ export default function robots(): MetadataRoute.Robots {
 		rules: {
 			userAgent: "*",
 			allow: "/",
-			disallow: ["/api/", "/admin/", "/settings/"],
+			disallow: [
+				"/api/",
+				"/admin/",
+				"/settings/",
+				"/chat/",
+				"/payment/",
+				"/redeem/",
+				"/maintenance/",
+				"/oauth/",
+			],
 		},
 		sitemap: "https://ultramaxo.tech/sitemap.xml",
 	};

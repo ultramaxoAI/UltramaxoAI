@@ -9,6 +9,7 @@ import { SessionProvider } from "next-auth/react";
 import { VisitorTracker } from "@/components/visitor-tracker";
 import { CookieConsent } from "@/components/cookie-consent";
 import { OnboardingWizard } from "@/components/onboarding-wizard";
+import { JsonLd } from "@/components/json-ld";
 
 export const metadata: Metadata = {
 	metadataBase: new URL("https://ultramaxo.tech"),
@@ -19,12 +20,13 @@ export const metadata: Metadata = {
 	description:
 		"UltramaxoAI adalah AI workspace multimodal untuk chat, coding, dan dokumen yang bantu kamu kerja lebih cepat tanpa sensor. Semua di satu tempat.",
 	keywords: [
+		"ultramaxo",
+		"ultramaxo ai",
+		"ultramaxo tech",
 		"AI Chatbot",
 		"Uncensored AI",
 		"AI Workspace",
 		"Coding AI",
-		"Ultramaxo",
-		"UltramaxoAI",
 		"AI Assistant",
 		"Multimodal AI",
 	],
@@ -55,7 +57,7 @@ export const metadata: Metadata = {
 		siteName: "UltramaxoAI",
 		images: [
 			{
-				url: "/og-image.png", // We should create this later or leave it to fallback
+				url: "/og-image.jpg",
 				width: 1200,
 				height: 630,
 				alt: "UltramaxoAI Workspace",
@@ -67,7 +69,7 @@ export const metadata: Metadata = {
 		title: "UltramaxoAI - The Uncensored AI Workspace",
 		description:
 			"AI workspace multimodal untuk chat, coding, dan dokumen yang bantu kamu kerja lebih cepat tanpa sensor.",
-		images: ["/og-image.png"],
+		images: ["/og-image.jpg"],
 		creator: "@ultramaxo",
 	},
 	icons: {
@@ -140,6 +142,7 @@ export default function RootLayout({
 					<SessionProvider>
 						<OnboardingWizard />
 						{children}
+						<JsonLd />
 					</SessionProvider>
 				</ThemeProvider>
 			</body>
