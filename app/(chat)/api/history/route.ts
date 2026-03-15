@@ -9,6 +9,12 @@ export async function GET(request: NextRequest) {
 	const limit = Number.parseInt(searchParams.get("limit") || "10", 10);
 	const startingAfter = searchParams.get("starting_after");
 	const endingBefore = searchParams.get("ending_before");
+	const searchQuery = searchParams.get("q");
+	const visibility =
+		(searchParams.get("visibility") as "all" | "private" | "public" | null) ??
+		"all";
+	const pinnedOnly = searchParams.get("pinned_only") === "true";
+	const folder = searchParams.get("folder");
 
 	if (startingAfter && endingBefore) {
 		return new ChatSDKError(
@@ -29,6 +35,10 @@ export async function GET(request: NextRequest) {
 			limit,
 			startingAfter,
 			endingBefore,
+			searchQuery,
+			visibility,
+			pinnedOnly,
+			folder,
 		});
 
 		return Response.json(chats);

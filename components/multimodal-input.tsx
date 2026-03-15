@@ -94,6 +94,17 @@ export interface MultimodalInputProps {
 	customModels?: Array<{ id: string; name: string; provider: string }>;
 }
 
+type PromptPreset = {
+	id: string;
+	title: string;
+	prompt: string;
+	modelId: string | null;
+	webSearchEnabled: boolean;
+	deepThinkingEnabled: boolean;
+	fullstackModeEnabled: boolean;
+	mobileModeEnabled: boolean;
+};
+
 function PureMultimodalInput({
 	chatId,
 	input,
@@ -125,6 +136,7 @@ function PureMultimodalInput({
 	const { width } = useWindowSize();
 	const [imageGenerationOpen, setImageGenerationOpen] = useState(false);
 	const [imageGenerationMode, setImageGenerationMode] = useState(false);
+	const [promptPresets, setPromptPresets] = useState<PromptPreset[]>([]);
 
 	// Grant image gen access to PRO users and admins
 	const isPro =
@@ -187,12 +199,54 @@ function PureMultimodalInput({
 		setLocalStorageInput(input);
 	}, [input, setLocalStorageInput]);
 
+	useEffect(() => {
+		async function loadPromptPresets() {
+			if (!user) {
+				setPromptPresets([]);
+				return;
+			}
+
+			try {
+				const response = await fetch("/api/user/prompt-presets");
+				if (!response.ok) {
+					return;
+				}
+
+				const data = await response.json();
+				setPromptPresets(data.presets || []);
+			} catch {
+				setPromptPresets([]);
+			}
+		}
+
+		loadPromptPresets();
+	}, [user]);
+
 	const handleInput = (event: React.ChangeEvent<HTMLTextAreaElement>) => {
 		setInput(event.target.value);
 	};
 
 	const fileInputRef = useRef<HTMLInputElement>(null);
 	const [uploadQueue, setUploadQueue] = useState<string[]>([]);
+
+	const applyPromptPreset = (preset: PromptPreset) => {
+		setInput(preset.prompt);
+		setWebSearchEnabled(preset.webSearchEnabled);
+		setDeepThinkingEnabled(preset.deepThinkingEnabled);
+		setFullstackModeEnabled(preset.fullstackModeEnabled);
+		setMobileModeEnabled(preset.mobileModeEnabled);
+
+		if (preset.modelId && onModelChange) {
+			onModelChange(preset.modelId);
+		}
+
+		requestAnimationFrame(() => {
+			textareaRef.current?.focus();
+			adjustHeight();
+		});
+
+		toast.success(`Loaded preset: ${preset.title}`);
+	};
 
 	const submitForm = useCallback(async () => {
 		window.history.pushState({}, "", `/chat/${chatId}`);
@@ -742,6 +796,41 @@ function PureMultimodalInput({
 								</DropdownMenuItem>
 							</DropdownMenuContent>
 						</DropdownMenu>
+
+						{promptPresets.length > 0 ? (
+							<DropdownMenu>
+								<DropdownMenuTrigger asChild>
+									<Button
+										className="h-9 rounded-full px-3 text-xs font-medium text-[#5f6258] dark:text-[#8f9790] transition-colors hover:bg-black/5 dark:hover:bg-white/7 hover:text-[#171717] dark:hover:text-[#f3f4f1]"
+										title="Prompt library"
+										type="button"
+										variant="ghost"
+									>
+										<SparklesIcon className="mr-2 h-4 w-4" />
+										Presets
+									</Button>
+								</DropdownMenuTrigger>
+								<DropdownMenuContent
+									align="start"
+									className="w-72 rounded-2xl border-[#171717]/8 bg-white/96 text-[#171717] shadow-[0_18px_40px_rgba(0,0,0,0.12)] backdrop-blur-xl dark:border-white/10 dark:bg-[#171b1f]/96 dark:text-[#cfd4cf]"
+								>
+									{promptPresets.map((preset) => (
+										<DropdownMenuItem
+											className="cursor-pointer rounded-xl items-start py-3"
+											key={preset.id}
+											onClick={() => applyPromptPreset(preset)}
+										>
+											<div>
+												<div className="text-sm font-medium">{preset.title}</div>
+												<div className="mt-1 line-clamp-2 text-xs text-[#5f6258] dark:text-[#8f9790]">
+													{preset.prompt}
+												</div>
+											</div>
+										</DropdownMenuItem>
+									))}
+								</DropdownMenuContent>
+							</DropdownMenu>
+						) : null}
 
 						{/* Globe Button for Web Search Mode */}
 						<Button

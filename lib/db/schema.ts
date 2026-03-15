@@ -109,6 +109,10 @@ export const chat = pgTable("Chat", {
 	visibility: varchar("visibility", { enum: ["public", "private"] })
 		.notNull()
 		.default("private"),
+	isPinned: boolean("isPinned").notNull().default(false),
+	folder: text("folder"),
+	tags: json("tags").$type<string[]>().default([]),
+	updatedAt: timestamp("updatedAt").notNull().defaultNow(),
 });
 
 export type Chat = InferSelectModel<typeof chat>;
@@ -195,6 +199,7 @@ export const document = pgTable(
 		userId: uuid("userId")
 			.notNull()
 			.references(() => user.id),
+		isShared: boolean("isShared").notNull().default(false),
 	},
 	(table) => {
 		return {
@@ -345,6 +350,41 @@ export const siteSettings = pgTable("site_settings", {
 });
 
 export type SiteSettings = InferSelectModel<typeof siteSettings>;
+
+export const chatFolder = pgTable("chat_folder", {
+	id: uuid("id").primaryKey().notNull().defaultRandom(),
+	userId: uuid("userId")
+		.notNull()
+		.references(() => user.id, { onDelete: "cascade" }),
+	name: text("name").notNull(),
+	createdAt: timestamp("createdAt").notNull().defaultNow(),
+	updatedAt: timestamp("updatedAt").notNull().defaultNow(),
+});
+
+export type ChatFolder = InferSelectModel<typeof chatFolder>;
+
+export const promptPreset = pgTable("prompt_preset", {
+	id: uuid("id").primaryKey().notNull().defaultRandom(),
+	userId: uuid("userId")
+		.notNull()
+		.references(() => user.id, { onDelete: "cascade" }),
+	title: text("title").notNull(),
+	prompt: text("prompt").notNull(),
+	modelId: text("modelId"),
+	visibility: varchar("visibility", { enum: ["public", "private"] })
+		.notNull()
+		.default("private"),
+	webSearchEnabled: boolean("webSearchEnabled").notNull().default(true),
+	deepThinkingEnabled: boolean("deepThinkingEnabled").notNull().default(false),
+	fullstackModeEnabled: boolean("fullstackModeEnabled")
+		.notNull()
+		.default(false),
+	mobileModeEnabled: boolean("mobileModeEnabled").notNull().default(false),
+	createdAt: timestamp("createdAt").notNull().defaultNow(),
+	updatedAt: timestamp("updatedAt").notNull().defaultNow(),
+});
+
+export type PromptPreset = InferSelectModel<typeof promptPreset>;
 
 // ============================================================
 // User API Keys (Custom AI - 1 per provider per user)

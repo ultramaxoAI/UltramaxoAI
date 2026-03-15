@@ -9,6 +9,7 @@ import {
 	exists,
 	gt,
 	gte,
+	ilike,
 	inArray,
 	lt,
 	or,
@@ -26,12 +27,14 @@ import {
 	account,
 	type Chat,
 	chat,
+	chatFolder,
 	type DBMessage,
 	document,
 	message,
 	messageDeprecated,
 	pageVisit,
 	passwordResetToken,
+	promptPreset,
 	purchaseRequest,
 	redeemCode,
 	session,
@@ -178,6 +181,7 @@ export async function saveChat({
 			userId,
 			title,
 			visibility,
+			updatedAt: new Date(),
 		});
 		console.log("saveChat insert success");
 		return result;
@@ -242,25 +246,63 @@ export async function getChatsByUserId({
 	limit,
 	startingAfter,
 	endingBefore,
+	searchQuery,
+	visibility,
+	pinnedOnly,
+	folder,
 }: {
 	id: string;
 	limit: number;
 	startingAfter: string | null;
 	endingBefore: string | null;
+	searchQuery?: string | null;
+	visibility?: "all" | "private" | "public";
+	pinnedOnly?: boolean;
+	folder?: string | null;
 }) {
 	try {
 		const extendedLimit = limit + 1;
+		const normalizedSearch = searchQuery?.trim();
+
+		const baseConditions: SQL<unknown>[] = [eq(chat.userId, id)];
+
+		if (visibility && visibility !== "all") {
+			baseConditions.push(eq(chat.visibility, visibility));
+		}
+
+		if (pinnedOnly) {
+			baseConditions.push(eq(chat.isPinned, true));
+		}
+
+		if (folder && folder !== "all") {
+			if (folder === "uncategorized") {
+				baseConditions.push(sql`(${chat.folder} IS NULL OR ${chat.folder} = '')`);
+			} else {
+				baseConditions.push(eq(chat.folder, folder));
+			}
+		}
+
+		if (normalizedSearch) {
+			const pattern = `%${normalizedSearch}%`;
+			baseConditions.push(
+				or(
+					ilike(chat.title, pattern),
+					ilike(chat.folder, pattern),
+					sql`EXISTS (
+						SELECT 1
+						FROM json_array_elements_text(COALESCE(${chat.tags}, '[]'::json)) AS tag
+						WHERE tag ILIKE ${pattern}
+					)`,
+				) as SQL<unknown>,
+			);
+		}
 
 		const query = (whereCondition?: SQL<unknown>) =>
 			db
 				.select()
 				.from(chat)
-				.where(
-					whereCondition
-						? and(whereCondition, eq(chat.userId, id))
-						: eq(chat.userId, id),
-				)
-				.orderBy(desc(chat.createdAt))
+				.where(and(...baseConditions, ...(whereCondition ? [whereCondition] : [])))
+				.orderBy(desc(chat.isPinned), desc(chat.updatedAt), desc(chat.createdAt))
 				.limit(extendedLimit);
 
 		let filteredChats: Chat[] = [];
@@ -640,7 +682,10 @@ export async function updateChatVisibilityById({
 	visibility: "private" | "public";
 }) {
 	try {
-		return await db.update(chat).set({ visibility }).where(eq(chat.id, chatId));
+		return await db
+			.update(chat)
+			.set({ visibility, updatedAt: new Date() })
+			.where(eq(chat.id, chatId));
 	} catch (_error) {
 		throw new ChatSDKError(
 			"bad_request:database",
@@ -657,10 +702,448 @@ export async function updateChatTitleById({
 	title: string;
 }) {
 	try {
-		return await db.update(chat).set({ title }).where(eq(chat.id, chatId));
+		return await db
+			.update(chat)
+			.set({ title, updatedAt: new Date() })
+			.where(eq(chat.id, chatId));
 	} catch (error) {
 		console.warn("Failed to update title for chat", chatId, error);
 		return;
+	}
+}
+
+export async function updateChatOrganizationById({
+	chatId,
+	userId,
+	isPinned,
+	folder,
+	tags,
+}: {
+	chatId: string;
+	userId: string;
+	isPinned?: boolean;
+	folder?: string | null;
+	tags?: string[];
+}) {
+	try {
+		const payload: Partial<typeof chat.$inferInsert> = {
+			updatedAt: new Date(),
+		};
+
+		if (typeof isPinned === "boolean") {
+			payload.isPinned = isPinned;
+		}
+
+		if (folder !== undefined) {
+			const normalizedFolder = folder?.trim() ? folder.trim() : null;
+			payload.folder = normalizedFolder;
+
+			if (normalizedFolder) {
+				const [existingFolder] = await db
+					.select()
+					.from(chatFolder)
+					.where(
+						and(
+							eq(chatFolder.userId, userId),
+							eq(chatFolder.name, normalizedFolder),
+						),
+					)
+					.limit(1);
+
+				if (!existingFolder) {
+					await db.insert(chatFolder).values({
+						userId,
+						name: normalizedFolder,
+						updatedAt: new Date(),
+					});
+				}
+			}
+		}
+
+		if (tags !== undefined) {
+			payload.tags = tags;
+		}
+
+		const [updatedChat] = await db
+			.update(chat)
+			.set(payload)
+			.where(and(eq(chat.id, chatId), eq(chat.userId, userId)))
+			.returning();
+
+		return updatedChat;
+	} catch (error) {
+		console.error("Database Error (updateChatOrganizationById):", error);
+		throw new ChatSDKError(
+			"bad_request:database",
+			"Failed to update chat organization",
+		);
+	}
+}
+
+export async function getChatFoldersByUserId({ userId }: { userId: string }) {
+	try {
+		return await db
+			.select()
+			.from(chatFolder)
+			.where(eq(chatFolder.userId, userId))
+			.orderBy(asc(chatFolder.name));
+	} catch (error) {
+		console.error("Database Error (getChatFoldersByUserId):", error);
+		throw new ChatSDKError(
+			"bad_request:database",
+			"Failed to load chat folders",
+		);
+	}
+}
+
+export async function createChatFolder({
+	userId,
+	name,
+}: {
+	userId: string;
+	name: string;
+}) {
+	try {
+		const normalizedName = name.trim();
+
+		const [existingFolder] = await db
+			.select()
+			.from(chatFolder)
+			.where(and(eq(chatFolder.userId, userId), eq(chatFolder.name, normalizedName)))
+			.limit(1);
+
+		if (existingFolder) {
+			return existingFolder;
+		}
+
+		const [folder] = await db
+			.insert(chatFolder)
+			.values({
+				userId,
+				name: normalizedName,
+				updatedAt: new Date(),
+			})
+			.returning();
+
+		return folder;
+	} catch (error) {
+		console.error("Database Error (createChatFolder):", error);
+		throw new ChatSDKError(
+			"bad_request:database",
+			"Failed to create chat folder",
+		);
+	}
+}
+
+export async function renameChatFolder({
+	userId,
+	previousName,
+	nextName,
+}: {
+	userId: string;
+	previousName: string;
+	nextName: string;
+}) {
+	try {
+		const normalizedPrev = previousName.trim();
+		const normalizedNext = nextName.trim();
+
+		const [folder] = await db
+			.update(chatFolder)
+			.set({ name: normalizedNext, updatedAt: new Date() })
+			.where(
+				and(eq(chatFolder.userId, userId), eq(chatFolder.name, normalizedPrev)),
+			)
+			.returning();
+
+		await db
+			.update(chat)
+			.set({ folder: normalizedNext, updatedAt: new Date() })
+			.where(and(eq(chat.userId, userId), eq(chat.folder, normalizedPrev)));
+
+		return folder;
+	} catch (error) {
+		console.error("Database Error (renameChatFolder):", error);
+		throw new ChatSDKError(
+			"bad_request:database",
+			"Failed to rename chat folder",
+		);
+	}
+}
+
+export async function deleteChatFolder({
+	userId,
+	name,
+}: {
+	userId: string;
+	name: string;
+}) {
+	try {
+		const normalizedName = name.trim();
+
+		await db
+			.update(chat)
+			.set({ folder: null, updatedAt: new Date() })
+			.where(and(eq(chat.userId, userId), eq(chat.folder, normalizedName)));
+
+		const [folder] = await db
+			.delete(chatFolder)
+			.where(and(eq(chatFolder.userId, userId), eq(chatFolder.name, normalizedName)))
+			.returning();
+
+		return folder;
+	} catch (error) {
+		console.error("Database Error (deleteChatFolder):", error);
+		throw new ChatSDKError(
+			"bad_request:database",
+			"Failed to delete chat folder",
+		);
+	}
+}
+
+export async function getPromptPresetsByUserId({ userId }: { userId: string }) {
+	try {
+		return await db
+			.select()
+			.from(promptPreset)
+			.where(eq(promptPreset.userId, userId))
+			.orderBy(desc(promptPreset.updatedAt), desc(promptPreset.createdAt));
+	} catch (error) {
+		console.error("Database Error (getPromptPresetsByUserId):", error);
+		throw new ChatSDKError(
+			"bad_request:database",
+			"Failed to load prompt presets",
+		);
+	}
+}
+
+export async function createPromptPreset({
+	userId,
+	title,
+	prompt,
+	modelId,
+	visibility,
+	webSearchEnabled,
+	deepThinkingEnabled,
+	fullstackModeEnabled,
+	mobileModeEnabled,
+}: {
+	userId: string;
+	title: string;
+	prompt: string;
+	modelId?: string | null;
+	visibility?: VisibilityType;
+	webSearchEnabled?: boolean;
+	deepThinkingEnabled?: boolean;
+	fullstackModeEnabled?: boolean;
+	mobileModeEnabled?: boolean;
+}) {
+	try {
+		const [preset] = await db
+			.insert(promptPreset)
+			.values({
+				userId,
+				title,
+				prompt,
+				modelId: modelId ?? null,
+				visibility: visibility ?? "private",
+				webSearchEnabled: webSearchEnabled ?? true,
+				deepThinkingEnabled: deepThinkingEnabled ?? false,
+				fullstackModeEnabled: fullstackModeEnabled ?? false,
+				mobileModeEnabled: mobileModeEnabled ?? false,
+				updatedAt: new Date(),
+			})
+			.returning();
+
+		return preset;
+	} catch (error) {
+		console.error("Database Error (createPromptPreset):", error);
+		throw new ChatSDKError(
+			"bad_request:database",
+			"Failed to create prompt preset",
+		);
+	}
+}
+
+export async function updatePromptPresetById({
+	id,
+	userId,
+	title,
+	prompt,
+	modelId,
+	visibility,
+	webSearchEnabled,
+	deepThinkingEnabled,
+	fullstackModeEnabled,
+	mobileModeEnabled,
+}: {
+	id: string;
+	userId: string;
+	title?: string;
+	prompt?: string;
+	modelId?: string | null;
+	visibility?: VisibilityType;
+	webSearchEnabled?: boolean;
+	deepThinkingEnabled?: boolean;
+	fullstackModeEnabled?: boolean;
+	mobileModeEnabled?: boolean;
+}) {
+	try {
+		const payload: Partial<typeof promptPreset.$inferInsert> = {
+			updatedAt: new Date(),
+		};
+
+		if (title !== undefined) payload.title = title;
+		if (prompt !== undefined) payload.prompt = prompt;
+		if (modelId !== undefined) payload.modelId = modelId;
+		if (visibility !== undefined) payload.visibility = visibility;
+		if (webSearchEnabled !== undefined)
+			payload.webSearchEnabled = webSearchEnabled;
+		if (deepThinkingEnabled !== undefined)
+			payload.deepThinkingEnabled = deepThinkingEnabled;
+		if (fullstackModeEnabled !== undefined)
+			payload.fullstackModeEnabled = fullstackModeEnabled;
+		if (mobileModeEnabled !== undefined)
+			payload.mobileModeEnabled = mobileModeEnabled;
+
+		const [preset] = await db
+			.update(promptPreset)
+			.set(payload)
+			.where(and(eq(promptPreset.id, id), eq(promptPreset.userId, userId)))
+			.returning();
+
+		return preset;
+	} catch (error) {
+		console.error("Database Error (updatePromptPresetById):", error);
+		throw new ChatSDKError(
+			"bad_request:database",
+			"Failed to update prompt preset",
+		);
+	}
+}
+
+export async function deletePromptPresetById({
+	id,
+	userId,
+}: {
+	id: string;
+	userId: string;
+}) {
+	try {
+		const [preset] = await db
+			.delete(promptPreset)
+			.where(and(eq(promptPreset.id, id), eq(promptPreset.userId, userId)))
+			.returning();
+
+		return preset;
+	} catch (error) {
+		console.error("Database Error (deletePromptPresetById):", error);
+		throw new ChatSDKError(
+			"bad_request:database",
+			"Failed to delete prompt preset",
+		);
+	}
+}
+
+export async function setDocumentSharingById({
+	id,
+	userId,
+	isShared,
+}: {
+	id: string;
+	userId: string;
+	isShared: boolean;
+}) {
+	try {
+		const [sharedDocument] = await db
+			.update(document)
+			.set({ isShared })
+			.where(and(eq(document.id, id), eq(document.userId, userId)))
+			.returning();
+
+		return sharedDocument;
+	} catch (error) {
+		console.error("Database Error (setDocumentSharingById):", error);
+		throw new ChatSDKError(
+			"bad_request:database",
+			"Failed to update document sharing",
+		);
+	}
+}
+
+export async function getSharedDocumentById({ id }: { id: string }) {
+	try {
+		const [sharedDocument] = await db
+			.select()
+			.from(document)
+			.where(and(eq(document.id, id), eq(document.isShared, true)))
+			.orderBy(desc(document.createdAt));
+
+		return sharedDocument;
+	} catch (error) {
+		console.error("Database Error (getSharedDocumentById):", error);
+		throw new ChatSDKError(
+			"bad_request:database",
+			"Failed to get shared document",
+		);
+	}
+}
+
+export async function getUserUsageOverview({ userId }: { userId: string }) {
+	try {
+		const [chatStats] = await db
+			.select({
+				totalChats: count(chat.id),
+				publicChats: sql<number>`COALESCE(SUM(CASE WHEN ${chat.visibility} = 'public' THEN 1 ELSE 0 END), 0)`,
+				pinnedChats: sql<number>`COALESCE(SUM(CASE WHEN ${chat.isPinned} = true THEN 1 ELSE 0 END), 0)`,
+			})
+			.from(chat)
+			.where(eq(chat.userId, userId));
+
+		const [messageStats] = await db
+			.select({
+				totalMessages: count(message.id),
+				messagesLast24Hours: sql<number>`COALESCE(SUM(CASE WHEN ${message.createdAt} >= NOW() - INTERVAL '24 hours' THEN 1 ELSE 0 END), 0)`,
+			})
+			.from(message)
+			.innerJoin(chat, eq(message.chatId, chat.id))
+			.where(eq(chat.userId, userId));
+
+		const [documentStats] = await db
+			.select({
+				totalDocuments: count(document.id),
+				sharedDocuments: sql<number>`COALESCE(SUM(CASE WHEN ${document.isShared} = true THEN 1 ELSE 0 END), 0)`,
+			})
+			.from(document)
+			.where(eq(document.userId, userId));
+
+		const [presetStats] = await db
+			.select({ totalPresets: count(promptPreset.id) })
+			.from(promptPreset)
+			.where(eq(promptPreset.userId, userId));
+
+		const [providerStats] = await db
+			.select({ connectedProviders: count(userApiKeys.id) })
+			.from(userApiKeys)
+			.where(and(eq(userApiKeys.userId, userId), eq(userApiKeys.isEnabled, true)));
+
+		return {
+			totalChats: Number(chatStats?.totalChats ?? 0),
+			publicChats: Number(chatStats?.publicChats ?? 0),
+			pinnedChats: Number(chatStats?.pinnedChats ?? 0),
+			totalMessages: Number(messageStats?.totalMessages ?? 0),
+			messagesLast24Hours: Number(messageStats?.messagesLast24Hours ?? 0),
+			totalDocuments: Number(documentStats?.totalDocuments ?? 0),
+			sharedDocuments: Number(documentStats?.sharedDocuments ?? 0),
+			totalPresets: Number(presetStats?.totalPresets ?? 0),
+			connectedProviders: Number(providerStats?.connectedProviders ?? 0),
+		};
+	} catch (error) {
+		console.error("Database Error (getUserUsageOverview):", error);
+		throw new ChatSDKError(
+			"bad_request:database",
+			"Failed to load user usage overview",
+		);
 	}
 }
 

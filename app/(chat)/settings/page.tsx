@@ -14,9 +14,11 @@ import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
 
+import { PromptLibraryPanel } from "@/components/prompt-library-panel";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { UsageOverviewPanel } from "@/components/usage-overview-panel";
 
 // ============================================================
 // Types
@@ -180,7 +182,12 @@ const PROVIDERS: ProviderConfig[] = [
 	},
 ];
 
-type TabId = "profile" | "custom-ai" | "personalization";
+type TabId =
+	| "profile"
+	| "custom-ai"
+	| "personalization"
+	| "prompt-library"
+	| "usage";
 
 // ============================================================
 // Main Component
@@ -196,6 +203,8 @@ export default function SettingsPage() {
 			label: "Personalization",
 			icon: <SparklesIcon size={16} />,
 		},
+		{ id: "prompt-library", label: "Prompt Library", icon: <ZapIcon size={16} /> },
+		{ id: "usage", label: "Usage", icon: <ShieldCheckIcon size={16} /> },
 	];
 
 	return (
@@ -261,6 +270,8 @@ export default function SettingsPage() {
 					{activeTab === "profile" && <ProfileTab />}
 					{activeTab === "custom-ai" && <CustomAITab />}
 					{activeTab === "personalization" && <PersonalizationTab />}
+					{activeTab === "prompt-library" && <PromptLibraryPanel />}
+					{activeTab === "usage" && <UsageOverviewPanel />}
 				</div>
 			</main>
 

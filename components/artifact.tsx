@@ -20,6 +20,7 @@ import { useArtifact } from "@/hooks/use-artifact";
 import type { Document, Vote } from "@/lib/db/schema";
 import type { Attachment, ChatMessage } from "@/lib/types";
 import { fetcher } from "@/lib/utils";
+import { ArtifactShareButton } from "./artifact-share-button";
 import { ArtifactActions } from "./artifact-actions";
 import { ArtifactCloseButton } from "./artifact-close-button";
 import { Toolbar } from "./toolbar";
@@ -374,6 +375,13 @@ function PureArtifact({
 								</div>
 							</div>
 
+						<div className="flex items-center gap-2">
+							{document ? (
+								<ArtifactShareButton
+									defaultShared={Boolean(document.isShared)}
+									documentId={artifact.documentId}
+								/>
+							) : null}
 							<ArtifactActions
 								artifact={artifact}
 								currentVersionIndex={currentVersionIndex}
@@ -384,6 +392,7 @@ function PureArtifact({
 								setMetadata={setMetadata}
 							/>
 						</div>
+					</div>
 
 						<div className="h-full flex-1 max-w-full! items-center overflow-y-auto bg-zinc-950">
 							<div className={artifact.kind === "code" ? "" : "p-4"}>

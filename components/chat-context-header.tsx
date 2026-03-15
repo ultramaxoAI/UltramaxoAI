@@ -48,7 +48,7 @@ function PureChatContextHeader({
 	};
 
 	const handleShareChat = async () => {
-		const shareUrl = `${window.location.origin}/chat/${chatId}`;
+		const shareUrl = `${window.location.origin}/share/chat/${chatId}`;
 		try {
 			await navigator.clipboard.writeText(shareUrl);
 			toast.success("Link copied to clipboard!");
