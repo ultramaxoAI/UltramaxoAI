@@ -278,10 +278,10 @@ function PureArtifact({
 			{artifact.isVisible && (
 				<motion.div
 					animate={{ opacity: 1 }}
-					className="fixed top-0 left-0 z-50 flex h-dvh w-dvw flex-row bg-transparent pointer-events-none"
+					className="fixed inset-0 z-50 flex h-dvh w-dvw flex-row bg-black/30 backdrop-blur-[2px] pointer-events-none lg:bg-transparent lg:backdrop-blur-0"
 					data-testid="artifact"
 					exit={{ opacity: 0, transition: { delay: 0.4 } }}
-					initial={{ opacity: 1 }}
+					initial={{ opacity: 0 }}
 				>
 					<motion.div
 						animate={
@@ -317,7 +317,7 @@ function PureArtifact({
 										},
 									}
 						}
-						className="fixed flex h-dvh flex-col overflow-y-scroll border-zinc-800 bg-zinc-950 text-zinc-100 md:border-l pointer-events-auto"
+						className="fixed inset-0 flex h-dvh flex-col overflow-y-auto border-zinc-800 bg-zinc-950 text-zinc-100 pointer-events-auto md:border-l shadow-2xl"
 						exit={{
 							opacity: 0,
 							scale: 0.5,
@@ -331,15 +331,15 @@ function PureArtifact({
 						initial={
 							isMobile
 								? {
-										opacity: 1,
-										x: artifact.boundingBox.left,
-										y: artifact.boundingBox.top,
-										height: artifact.boundingBox.height,
-										width: artifact.boundingBox.width,
-										borderRadius: 50,
+										opacity: 0,
+										x: 0,
+										y: 24,
+										height: windowHeight ? windowHeight : "100dvh",
+										width: windowWidth ? windowWidth : "100dvw",
+										borderRadius: 0,
 									}
 								: {
-										opacity: 1,
+										opacity: 0.8,
 										x: artifact.boundingBox.left,
 										y: artifact.boundingBox.top,
 										height: artifact.boundingBox.height,
@@ -348,19 +348,19 @@ function PureArtifact({
 									}
 						}
 					>
-						<div className="flex flex-row items-center justify-between p-3 border-b border-zinc-800 bg-zinc-950">
-							<div className="flex flex-row items-center gap-4">
+						<div className="sticky top-0 z-20 flex flex-row items-center justify-between gap-3 border-b border-zinc-800 bg-zinc-950/95 px-3 py-3 backdrop-blur md:px-4">
+							<div className="flex min-w-0 flex-row items-center gap-3 md:gap-4">
 								<ArtifactCloseButton />
 
-								<div className="flex flex-col">
-									<div className="font-semibold text-zinc-100 text-sm tracking-wide">{artifact.title}</div>
+								<div className="flex min-w-0 flex-col">
+									<div className="truncate font-semibold text-zinc-100 text-sm tracking-wide md:text-base">{artifact.title}</div>
 
 									{isContentDirty ? (
-										<div className="text-muted-foreground text-sm">
+										<div className="text-muted-foreground text-xs md:text-sm">
 											Saving changes...
 										</div>
 									) : document ? (
-										<div className="text-muted-foreground text-sm">
+										<div className="text-muted-foreground text-xs md:text-sm">
 											{`Updated ${formatDistance(
 												new Date(document.createdAt),
 												new Date(),
@@ -375,7 +375,7 @@ function PureArtifact({
 								</div>
 							</div>
 
-						<div className="flex items-center gap-2">
+						<div className="flex shrink-0 items-center gap-2">
 							{document ? (
 								<ArtifactShareButton
 									defaultShared={Boolean(document.isShared)}
@@ -395,7 +395,7 @@ function PureArtifact({
 					</div>
 
 						<div className="h-full flex-1 max-w-full! items-center overflow-y-auto bg-zinc-950">
-							<div className={artifact.kind === "code" ? "" : "p-4"}>
+							<div className={artifact.kind === "code" ? "" : "p-3 md:p-4"}>
 								<artifactDefinition.content
 									content={
 										isCurrentVersion

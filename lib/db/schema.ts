@@ -363,6 +363,123 @@ export const chatFolder = pgTable("chat_folder", {
 
 export type ChatFolder = InferSelectModel<typeof chatFolder>;
 
+export const creditAccount = pgTable("credit_account", {
+	id: uuid("id").primaryKey().notNull().defaultRandom(),
+	userId: uuid("userId")
+		.notNull()
+		.references(() => user.id, { onDelete: "cascade" })
+		.unique(),
+	balance: integer("balance").notNull().default(0),
+	lifetimeGranted: integer("lifetimeGranted").notNull().default(0),
+	lifetimeSpent: integer("lifetimeSpent").notNull().default(0),
+	lastRefillAt: timestamp("lastRefillAt").notNull().defaultNow(),
+	createdAt: timestamp("createdAt").notNull().defaultNow(),
+	updatedAt: timestamp("updatedAt").notNull().defaultNow(),
+});
+
+export type CreditAccount = InferSelectModel<typeof creditAccount>;
+
+export const creditTransaction = pgTable("credit_transaction", {
+	id: uuid("id").primaryKey().notNull().defaultRandom(),
+	userId: uuid("userId")
+		.notNull()
+		.references(() => user.id, { onDelete: "cascade" }),
+	amount: integer("amount").notNull(),
+	balanceAfter: integer("balanceAfter").notNull(),
+	type: varchar("type", {
+		enum: ["grant", "spend", "refund", "bonus"],
+	})
+		.notNull()
+		.default("spend"),
+	reason: text("reason").notNull(),
+	metadata: json("metadata"),
+	createdAt: timestamp("createdAt").notNull().defaultNow(),
+});
+
+export type CreditTransaction = InferSelectModel<typeof creditTransaction>;
+
+export const userMemory = pgTable("user_memory", {
+	id: uuid("id").primaryKey().notNull().defaultRandom(),
+	userId: uuid("userId")
+		.notNull()
+		.references(() => user.id, { onDelete: "cascade" }),
+	category: varchar("category", {
+		enum: ["profile", "coding", "product", "instruction"],
+	})
+		.notNull()
+		.default("instruction"),
+	title: text("title").notNull(),
+	content: text("content").notNull(),
+	isEnabled: boolean("isEnabled").notNull().default(true),
+	isPinned: boolean("isPinned").notNull().default(false),
+	createdAt: timestamp("createdAt").notNull().defaultNow(),
+	updatedAt: timestamp("updatedAt").notNull().defaultNow(),
+});
+
+export type UserMemory = InferSelectModel<typeof userMemory>;
+
+export const userKnowledgeEntry = pgTable("user_knowledge_entry", {
+	id: uuid("id").primaryKey().notNull().defaultRandom(),
+	userId: uuid("userId")
+		.notNull()
+		.references(() => user.id, { onDelete: "cascade" }),
+	category: varchar("category", {
+		enum: ["project", "product", "brand", "reference"],
+	})
+		.notNull()
+		.default("project"),
+	title: text("title").notNull(),
+	content: text("content").notNull(),
+	source: text("source"),
+	workspace: text("workspace"),
+	isEnabled: boolean("isEnabled").notNull().default(true),
+	isPinned: boolean("isPinned").notNull().default(false),
+	createdAt: timestamp("createdAt").notNull().defaultNow(),
+	updatedAt: timestamp("updatedAt").notNull().defaultNow(),
+});
+
+export type UserKnowledgeEntry = InferSelectModel<typeof userKnowledgeEntry>;
+
+export const agentRun = pgTable("agent_run", {
+	id: uuid("id").primaryKey().notNull().defaultRandom(),
+	userId: uuid("userId")
+		.notNull()
+		.references(() => user.id, { onDelete: "cascade" }),
+	chatId: uuid("chatId").references(() => chat.id, { onDelete: "set null" }),
+	mode: varchar("mode", { enum: ["fullstack", "mobile"] }).notNull(),
+	goal: text("goal").notNull(),
+	plan: json("plan").$type<string[]>().notNull().default([]),
+	deliverable: text("deliverable").notNull(),
+	status: varchar("status", {
+		enum: ["running", "paused", "completed", "cancelled"],
+	})
+		.notNull()
+		.default("running"),
+	startedAt: timestamp("startedAt").notNull().defaultNow(),
+	updatedAt: timestamp("updatedAt").notNull().defaultNow(),
+});
+
+export type AgentRun = InferSelectModel<typeof agentRun>;
+
+export const agentStep = pgTable("agent_step", {
+	id: uuid("id").primaryKey().notNull().defaultRandom(),
+	runId: uuid("runId")
+		.notNull()
+		.references(() => agentRun.id, { onDelete: "cascade" }),
+	title: text("title").notNull(),
+	status: varchar("status", { enum: ["in_progress", "completed"] })
+		.notNull()
+		.default("in_progress"),
+	detail: text("detail").notNull(),
+	files: json("files").$type<string[]>().notNull().default([]),
+	packages: json("packages").$type<string[]>().notNull().default([]),
+	command: text("command"),
+	createdAt: timestamp("createdAt").notNull().defaultNow(),
+	updatedAt: timestamp("updatedAt").notNull().defaultNow(),
+});
+
+export type AgentStep = InferSelectModel<typeof agentStep>;
+
 export const promptPreset = pgTable("prompt_preset", {
 	id: uuid("id").primaryKey().notNull().defaultRandom(),
 	userId: uuid("userId")

@@ -31,6 +31,7 @@ import {
 	TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { guestRegex } from "@/lib/constants";
+import { CreditBalanceBadge } from "./credit-balance-badge";
 import { LoaderIcon } from "./icons";
 import { ProfileEditDialog } from "./profile-edit-dialog";
 import { toast } from "./toast";
@@ -198,10 +199,15 @@ export function SidebarUserNav({
 												</span>
 											)}
 										</div>
-										<div className="text-xs text-zinc-500 dark:text-zinc-400 truncate">
-											{isGuest ? "Not logged in" : user?.email}
-										</div>
+								<div className="text-xs text-zinc-500 dark:text-zinc-400 truncate">
+									{isGuest ? "Not logged in" : user?.email}
+								</div>
+								{!isGuest ? (
+									<div className="mt-2">
+										<CreditBalanceBadge compact />
 									</div>
+								) : null}
+							</div>
 									<MoreVertical className="h-5 w-5 text-zinc-400 group-hover:text-zinc-600 dark:group-hover:text-zinc-200 transition-colors shrink-0" />
 								</button>
 							)}

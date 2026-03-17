@@ -2,6 +2,7 @@ import { cookies } from "next/headers";
 import Script from "next/script";
 import { Suspense } from "react";
 import { AppSidebar } from "@/components/app-sidebar";
+import { ChatRouteLoading } from "@/components/chat-route-loading";
 import { DataStreamProvider } from "@/components/data-stream-provider";
 import { MainContentWrapper } from "@/components/main-content-wrapper";
 import { SidebarProvider } from "@/components/ui/sidebar";
@@ -17,7 +18,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
 			/>
 			<WebContainerProvider>
 				<DataStreamProvider>
-					<Suspense fallback={<div className="flex h-dvh" />}>
+					<Suspense fallback={<ChatRouteLoading label="Loading chat shell..." />}>
 						<SidebarWrapper>{children}</SidebarWrapper>
 					</Suspense>
 				</DataStreamProvider>

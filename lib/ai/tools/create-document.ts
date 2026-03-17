@@ -1,6 +1,6 @@
 import type { Session } from "next-auth";
 import { z } from "zod";
-import { saveDocument } from "@/lib/db/queries";
+import { resolveExistingUserId, saveDocument } from "@/lib/db/queries";
 import { generateUUID } from "@/lib/utils";
 
 type CreateDocumentStreamChunk =
@@ -61,14 +61,23 @@ export const createDocument = ({
 				`[Tool: createDocument] Content length received: ${normalizedContent.length} chars. Preview: ${normalizedContent ? normalizedContent.substring(0, 50).replace(/\n/g, "\\n") : "EMPTY"}`,
 			);
 
-			if (session?.user?.id) {
+			if (session?.user?.id || session?.user?.email) {
 				try {
+					const effectiveUserId = await resolveExistingUserId({
+						userId: session?.user?.id,
+						email: session?.user?.email,
+					});
+
+					if (!effectiveUserId) {
+						throw new Error("Unable to resolve effective user id");
+					}
+
 					await saveDocument({
 						id,
 						title: normalizedTitle,
 						kind,
 						content: normalizedContent,
-						userId: session.user.id,
+						userId: effectiveUserId,
 					});
 					persisted = true;
 				} catch (error) {

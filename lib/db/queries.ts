@@ -20,14 +20,19 @@ import { drizzle } from "drizzle-orm/postgres-js";
 import postgres from "postgres";
 import type { ArtifactKind } from "@/components/artifact";
 import type { VisibilityType } from "@/components/visibility-selector";
+import { getCreditResetWindowDays, getStartingCredits } from "@/lib/credits";
 import { ChatSDKError } from "../errors";
 import { generateUUID } from "../utils";
 import {
 	authenticator,
+	agentRun,
+	agentStep,
 	account,
 	type Chat,
 	chat,
 	chatFolder,
+	creditAccount,
+	creditTransaction,
 	type DBMessage,
 	document,
 	message,
@@ -42,6 +47,8 @@ import {
 	suggestion,
 	type Suggestion,
 	type User,
+	userMemory,
+	userKnowledgeEntry,
 	user,
 	userApiKeys,
 	userSettings,
@@ -511,6 +518,29 @@ export async function saveDocument({
 	userId: string;
 }) {
 	try {
+		await db.execute(sql`
+			DO $$
+			BEGIN
+				IF EXISTS (
+					SELECT 1
+					FROM pg_constraint
+					WHERE conname = 'Document_userId_User_id_fk'
+				) THEN
+					ALTER TABLE "Document" DROP CONSTRAINT "Document_userId_User_id_fk";
+				END IF;
+
+				IF NOT EXISTS (
+					SELECT 1
+					FROM pg_constraint
+					WHERE conname = 'Document_userId_user_id_fk'
+				) THEN
+					ALTER TABLE "Document"
+					ADD CONSTRAINT "Document_userId_user_id_fk"
+					FOREIGN KEY ("userId") REFERENCES "user"("id") ON DELETE CASCADE;
+				END IF;
+			END $$;
+		`);
+
 		return await db
 			.insert(document)
 			.values({
@@ -522,7 +552,14 @@ export async function saveDocument({
 				createdAt: new Date(),
 			})
 			.returning();
-	} catch (_error) {
+	} catch (error) {
+		console.error("Database Error (saveDocument):", error, {
+			id,
+			title,
+			kind,
+			userId,
+			contentLength: content.length,
+		});
 		throw new ChatSDKError("bad_request:database", "Failed to save document");
 	}
 }
@@ -1272,10 +1309,35 @@ export async function redeemVoucher({
 			updates.proExpiresAt = nextExpiry;
 		} else {
 			const add = voucher.value || 0;
-			updates.limitCount = (currentUser.limitCount || 0) + add;
+			if (add > 0) {
+				await grantCreditsToUser({
+					userId,
+					amount: add,
+					reason: "voucher redemption",
+					type: "bonus",
+					metadata: { code: voucher.code },
+				});
+			}
 		}
 
-		await db.update(user).set(updates).where(eq(user.id, userId));
+		if (Object.keys(updates).length > 0) {
+			await db.update(user).set(updates).where(eq(user.id, userId));
+
+			if (voucher.type === "PRO") {
+				const proAllowance = getStartingCredits({ isPro: true, role: currentUser.role });
+				const currentAccount = await ensureCreditAccountForUser({ userId });
+
+				if (currentAccount.balance < proAllowance) {
+					await grantCreditsToUser({
+						userId,
+						amount: proAllowance - currentAccount.balance,
+						reason: "pro upgrade top-up",
+						type: "grant",
+						metadata: { source: "voucher", code: voucher.code },
+					});
+				}
+			}
+		}
 		await db
 			.update(redeemCode)
 			.set({
@@ -1366,7 +1428,825 @@ export async function getUserById(id: string): Promise<User[]> {
 		return await db.select().from(user).where(eq(user.id, id));
 	} catch (error) {
 		console.error("Database Error (getUserById):", error);
-		throw new ChatSDKError("bad_request:database", "Failed to get user by id");
+		return [];
+	}
+}
+
+export async function resolveExistingUserId({
+	userId,
+	email,
+}: {
+	userId?: string | null;
+	email?: string | null;
+}) {
+	if (userId) {
+		const usersById = await getUserById(userId);
+		if (usersById[0]?.id) {
+			return usersById[0].id;
+		}
+	}
+
+	if (email) {
+		const usersByEmail = await getUser(email);
+		if (usersByEmail[0]?.id) {
+			return usersByEmail[0].id;
+		}
+	}
+
+	return null;
+}
+
+export async function ensureCreditAccountForUser({ userId }: { userId: string }) {
+	try {
+		const [currentUser] = await db
+			.select()
+			.from(user)
+			.where(eq(user.id, userId))
+			.limit(1);
+
+		if (!currentUser) {
+			throw new ChatSDKError("bad_request:database", "User not found");
+		}
+
+		const [existingAccount] = await db
+			.select()
+			.from(creditAccount)
+			.where(eq(creditAccount.userId, userId))
+			.limit(1);
+
+		if (existingAccount) {
+			const refillWindowDays = getCreditResetWindowDays({
+				isPro: currentUser.isPro,
+				role: currentUser.role,
+			});
+			const allowance = getStartingCredits({
+				isPro: currentUser.isPro,
+				role: currentUser.role,
+			});
+			const now = new Date();
+			const nextRefillAt = new Date(existingAccount.lastRefillAt);
+			nextRefillAt.setDate(nextRefillAt.getDate() + refillWindowDays);
+
+			if (nextRefillAt <= now) {
+				const grantAmount = Math.max(0, allowance - existingAccount.balance);
+				const [updatedAccount] = await db
+					.update(creditAccount)
+					.set({
+						balance:
+							grantAmount > 0
+								? existingAccount.balance + grantAmount
+								: existingAccount.balance,
+						lifetimeGranted: existingAccount.lifetimeGranted + grantAmount,
+						lastRefillAt: now,
+						updatedAt: now,
+					})
+					.where(eq(creditAccount.userId, userId))
+					.returning();
+
+				if (grantAmount > 0) {
+					await db.insert(creditTransaction).values({
+						userId,
+						amount: grantAmount,
+						balanceAfter: updatedAccount.balance,
+						type: "grant",
+						reason: currentUser.isPro ? "daily pro refill" : "free refill",
+						metadata: { allowance, refillWindowDays },
+					});
+				}
+
+				return updatedAccount;
+			}
+
+			return existingAccount;
+		}
+
+		const startingCredits = getStartingCredits({
+			isPro: currentUser.isPro,
+			role: currentUser.role,
+		});
+
+		const [createdAccount] = await db
+			.insert(creditAccount)
+			.values({
+				userId,
+				balance: startingCredits,
+				lifetimeGranted: startingCredits,
+				lifetimeSpent: 0,
+				lastRefillAt: new Date(),
+				updatedAt: new Date(),
+			})
+			.returning();
+
+		await db.insert(creditTransaction).values({
+			userId,
+			amount: startingCredits,
+			balanceAfter: startingCredits,
+			type: "grant",
+			reason: currentUser.role === "admin" ? "admin bootstrap" : "initial allocation",
+			metadata: { isPro: currentUser.isPro },
+		});
+
+		return createdAccount;
+	} catch (error) {
+		console.error("Database Error (ensureCreditAccountForUser):", error);
+		if (error instanceof ChatSDKError) {
+			throw error;
+		}
+		throw new ChatSDKError(
+			"bad_request:database",
+			"Failed to ensure credit account",
+		);
+	}
+}
+
+export async function getCreditSummaryByUserId({
+	userId,
+	limit = 20,
+}: {
+	userId: string;
+	limit?: number;
+}) {
+	try {
+		const account = await ensureCreditAccountForUser({ userId });
+		const transactions = await db
+			.select()
+			.from(creditTransaction)
+			.where(eq(creditTransaction.userId, userId))
+			.orderBy(desc(creditTransaction.createdAt))
+			.limit(limit);
+
+		return { account, transactions };
+	} catch (error) {
+		console.error("Database Error (getCreditSummaryByUserId):", error);
+		throw new ChatSDKError(
+			"bad_request:database",
+			"Failed to get credit summary",
+		);
+	}
+}
+
+export async function getUserMemoryByUserId({ userId }: { userId: string }) {
+	try {
+		return await db
+			.select()
+			.from(userMemory)
+			.where(eq(userMemory.userId, userId))
+			.orderBy(desc(userMemory.isPinned), desc(userMemory.updatedAt));
+	} catch (error) {
+		console.error("Database Error (getUserMemoryByUserId):", error);
+		throw new ChatSDKError(
+			"bad_request:database",
+			"Failed to load user memory",
+		);
+	}
+}
+
+async function ensureUserKnowledgeEntryTable() {
+	try {
+		await db.execute(sql`
+			CREATE TABLE IF NOT EXISTS "user_knowledge_entry" (
+				"id" uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+				"userId" uuid NOT NULL REFERENCES "user"("id") ON DELETE CASCADE,
+				"category" varchar(20) NOT NULL DEFAULT 'project',
+				"title" text NOT NULL,
+				"content" text NOT NULL,
+				"source" text,
+				"workspace" text,
+				"isEnabled" boolean NOT NULL DEFAULT true,
+				"isPinned" boolean NOT NULL DEFAULT false,
+				"createdAt" timestamp NOT NULL DEFAULT now(),
+				"updatedAt" timestamp NOT NULL DEFAULT now()
+			)
+		`);
+		await db.execute(sql`
+			ALTER TABLE "user_knowledge_entry"
+			ADD COLUMN IF NOT EXISTS "workspace" text
+		`);
+	} catch (error) {
+		console.warn("Could not ensure user_knowledge_entry table:", error);
+	}
+}
+
+export async function getUserKnowledgeEntriesByUserId({
+	userId,
+}: {
+	userId: string;
+}) {
+	try {
+		await ensureUserKnowledgeEntryTable();
+		return await db
+			.select()
+			.from(userKnowledgeEntry)
+			.where(eq(userKnowledgeEntry.userId, userId))
+			.orderBy(
+				desc(userKnowledgeEntry.isPinned),
+				desc(userKnowledgeEntry.updatedAt),
+			);
+	} catch (error) {
+		console.error("Database Error (getUserKnowledgeEntriesByUserId):", error);
+		throw new ChatSDKError(
+			"bad_request:database",
+			"Failed to load knowledge base entries",
+		);
+	}
+}
+
+export async function getEnabledUserKnowledgeEntriesByUserId({
+	userId,
+	limit = 8,
+	workspace,
+}: {
+	userId: string;
+	limit?: number;
+	workspace?: string | null;
+}) {
+	try {
+		await ensureUserKnowledgeEntryTable();
+		const normalizedWorkspace = workspace?.trim() || null;
+		return await db
+			.select()
+			.from(userKnowledgeEntry)
+			.where(
+				and(
+					eq(userKnowledgeEntry.userId, userId),
+					eq(userKnowledgeEntry.isEnabled, true),
+					normalizedWorkspace
+						? or(
+								eq(userKnowledgeEntry.workspace, normalizedWorkspace),
+								sql`(${userKnowledgeEntry.workspace} IS NULL OR ${userKnowledgeEntry.workspace} = '')`,
+							)
+						: sql`(${userKnowledgeEntry.workspace} IS NULL OR ${userKnowledgeEntry.workspace} = '')`,
+				),
+			)
+			.orderBy(
+				desc(userKnowledgeEntry.isPinned),
+				desc(userKnowledgeEntry.updatedAt),
+			)
+			.limit(limit);
+	} catch (error) {
+		console.error(
+			"Database Error (getEnabledUserKnowledgeEntriesByUserId):",
+			error,
+		);
+		throw new ChatSDKError(
+			"bad_request:database",
+			"Failed to load enabled knowledge base entries",
+		);
+	}
+}
+
+export async function createUserKnowledgeEntry({
+	userId,
+	category,
+	title,
+	content,
+	source,
+	workspace,
+	isEnabled,
+	isPinned,
+}: {
+	userId: string;
+	category: "project" | "product" | "brand" | "reference";
+	title: string;
+	content: string;
+	source?: string | null;
+	workspace?: string | null;
+	isEnabled?: boolean;
+	isPinned?: boolean;
+}) {
+	try {
+		await ensureUserKnowledgeEntryTable();
+		const [entry] = await db
+			.insert(userKnowledgeEntry)
+			.values({
+				userId,
+				category,
+				title,
+				content,
+				source: source ?? null,
+				workspace: workspace?.trim() || null,
+				isEnabled: isEnabled ?? true,
+				isPinned: isPinned ?? false,
+				updatedAt: new Date(),
+			})
+			.returning();
+
+		return entry;
+	} catch (error) {
+		console.error("Database Error (createUserKnowledgeEntry):", error);
+		throw new ChatSDKError(
+			"bad_request:database",
+			"Failed to create knowledge base entry",
+		);
+	}
+}
+
+export async function updateUserKnowledgeEntryById({
+	id,
+	userId,
+	category,
+	title,
+	content,
+	source,
+	workspace,
+	isEnabled,
+	isPinned,
+}: {
+	id: string;
+	userId: string;
+	category?: "project" | "product" | "brand" | "reference";
+	title?: string;
+	content?: string;
+	source?: string | null;
+	workspace?: string | null;
+	isEnabled?: boolean;
+	isPinned?: boolean;
+}) {
+	try {
+		await ensureUserKnowledgeEntryTable();
+		const payload: Partial<typeof userKnowledgeEntry.$inferInsert> = {
+			updatedAt: new Date(),
+		};
+
+		if (category !== undefined) payload.category = category;
+		if (title !== undefined) payload.title = title;
+		if (content !== undefined) payload.content = content;
+		if (source !== undefined) payload.source = source;
+		if (workspace !== undefined) payload.workspace = workspace?.trim() || null;
+		if (isEnabled !== undefined) payload.isEnabled = isEnabled;
+		if (isPinned !== undefined) payload.isPinned = isPinned;
+
+		const [entry] = await db
+			.update(userKnowledgeEntry)
+			.set(payload)
+			.where(
+				and(
+					eq(userKnowledgeEntry.id, id),
+					eq(userKnowledgeEntry.userId, userId),
+				),
+			)
+			.returning();
+
+		return entry;
+	} catch (error) {
+		console.error("Database Error (updateUserKnowledgeEntryById):", error);
+		throw new ChatSDKError(
+			"bad_request:database",
+			"Failed to update knowledge base entry",
+		);
+	}
+}
+
+export async function deleteUserKnowledgeEntryById({
+	id,
+	userId,
+}: {
+	id: string;
+	userId: string;
+}) {
+	try {
+		await ensureUserKnowledgeEntryTable();
+		const [entry] = await db
+			.delete(userKnowledgeEntry)
+			.where(
+				and(
+					eq(userKnowledgeEntry.id, id),
+					eq(userKnowledgeEntry.userId, userId),
+				),
+			)
+			.returning();
+
+		return entry;
+	} catch (error) {
+		console.error("Database Error (deleteUserKnowledgeEntryById):", error);
+		throw new ChatSDKError(
+			"bad_request:database",
+			"Failed to delete knowledge base entry",
+		);
+	}
+}
+
+export async function getEnabledUserMemoryByUserId({
+	userId,
+	limit = 12,
+}: {
+	userId: string;
+	limit?: number;
+}) {
+	try {
+		return await db
+			.select()
+			.from(userMemory)
+			.where(and(eq(userMemory.userId, userId), eq(userMemory.isEnabled, true)))
+			.orderBy(desc(userMemory.isPinned), desc(userMemory.updatedAt))
+			.limit(limit);
+	} catch (error) {
+		console.error("Database Error (getEnabledUserMemoryByUserId):", error);
+		throw new ChatSDKError(
+			"bad_request:database",
+			"Failed to load enabled user memory",
+		);
+	}
+}
+
+export async function createUserMemory({
+	userId,
+	category,
+	title,
+	content,
+	isEnabled,
+	isPinned,
+}: {
+	userId: string;
+	category: "profile" | "coding" | "product" | "instruction";
+	title: string;
+	content: string;
+	isEnabled?: boolean;
+	isPinned?: boolean;
+}) {
+	try {
+		const [memory] = await db
+			.insert(userMemory)
+			.values({
+				userId,
+				category,
+				title,
+				content,
+				isEnabled: isEnabled ?? true,
+				isPinned: isPinned ?? false,
+				updatedAt: new Date(),
+			})
+			.returning();
+
+		return memory;
+	} catch (error) {
+		console.error("Database Error (createUserMemory):", error);
+		throw new ChatSDKError(
+			"bad_request:database",
+			"Failed to create user memory",
+		);
+	}
+}
+
+export async function updateUserMemoryById({
+	id,
+	userId,
+	category,
+	title,
+	content,
+	isEnabled,
+	isPinned,
+}: {
+	id: string;
+	userId: string;
+	category?: "profile" | "coding" | "product" | "instruction";
+	title?: string;
+	content?: string;
+	isEnabled?: boolean;
+	isPinned?: boolean;
+}) {
+	try {
+		const payload: Partial<typeof userMemory.$inferInsert> = {
+			updatedAt: new Date(),
+		};
+
+		if (category !== undefined) payload.category = category;
+		if (title !== undefined) payload.title = title;
+		if (content !== undefined) payload.content = content;
+		if (isEnabled !== undefined) payload.isEnabled = isEnabled;
+		if (isPinned !== undefined) payload.isPinned = isPinned;
+
+		const [memory] = await db
+			.update(userMemory)
+			.set(payload)
+			.where(and(eq(userMemory.id, id), eq(userMemory.userId, userId)))
+			.returning();
+
+		return memory;
+	} catch (error) {
+		console.error("Database Error (updateUserMemoryById):", error);
+		throw new ChatSDKError(
+			"bad_request:database",
+			"Failed to update user memory",
+		);
+	}
+}
+
+export async function deleteUserMemoryById({
+	id,
+	userId,
+}: {
+	id: string;
+	userId: string;
+}) {
+	try {
+		const [memory] = await db
+			.delete(userMemory)
+			.where(and(eq(userMemory.id, id), eq(userMemory.userId, userId)))
+			.returning();
+
+		return memory;
+	} catch (error) {
+		console.error("Database Error (deleteUserMemoryById):", error);
+		throw new ChatSDKError(
+			"bad_request:database",
+			"Failed to delete user memory",
+		);
+	}
+}
+
+export async function createAgentRun({
+	userId,
+	chatId,
+	mode,
+	goal,
+	plan,
+	deliverable,
+}: {
+	userId: string;
+	chatId?: string;
+	mode: "fullstack" | "mobile";
+	goal: string;
+	plan: string[];
+	deliverable: string;
+}) {
+	try {
+		const [run] = await db
+			.insert(agentRun)
+			.values({
+				userId,
+				chatId: chatId ?? null,
+				mode,
+				goal,
+				plan,
+				deliverable,
+				status: "running",
+				updatedAt: new Date(),
+			})
+			.returning();
+
+		return run;
+	} catch (error) {
+		console.error("Database Error (createAgentRun):", error);
+		throw new ChatSDKError("bad_request:database", "Failed to create agent run");
+	}
+}
+
+export async function addAgentStep({
+	runId,
+	title,
+	status,
+	detail,
+	files,
+	packages,
+	command,
+}: {
+	runId: string;
+	title: string;
+	status: "in_progress" | "completed";
+	detail: string;
+	files?: string[];
+	packages?: string[];
+	command?: string | null;
+}) {
+	try {
+		const [step] = await db
+			.insert(agentStep)
+			.values({
+				runId,
+				title,
+				status,
+				detail,
+				files: files ?? [],
+				packages: packages ?? [],
+				command: command ?? null,
+				updatedAt: new Date(),
+			})
+			.returning();
+
+		await db
+			.update(agentRun)
+			.set({
+				status: status === "completed" ? "running" : "running",
+				updatedAt: new Date(),
+			})
+			.where(eq(agentRun.id, runId));
+
+		return step;
+	} catch (error) {
+		console.error("Database Error (addAgentStep):", error);
+		throw new ChatSDKError("bad_request:database", "Failed to add agent step");
+	}
+}
+
+export async function updateAgentRunStatus({
+	runId,
+	userId,
+	status,
+}: {
+	runId: string;
+	userId: string;
+	status: "running" | "paused" | "completed" | "cancelled";
+}) {
+	try {
+		const [run] = await db
+			.update(agentRun)
+			.set({ status, updatedAt: new Date() })
+			.where(and(eq(agentRun.id, runId), eq(agentRun.userId, userId)))
+			.returning();
+
+		return run;
+	} catch (error) {
+		console.error("Database Error (updateAgentRunStatus):", error);
+		throw new ChatSDKError(
+			"bad_request:database",
+			"Failed to update agent run status",
+		);
+	}
+}
+
+export async function updateAgentRunStatusById({
+	runId,
+	status,
+}: {
+	runId: string;
+	status: "running" | "paused" | "completed" | "cancelled";
+}) {
+	try {
+		const [run] = await db
+			.update(agentRun)
+			.set({ status, updatedAt: new Date() })
+			.where(eq(agentRun.id, runId))
+			.returning();
+
+		return run;
+	} catch (error) {
+		console.error("Database Error (updateAgentRunStatusById):", error);
+		throw new ChatSDKError(
+			"bad_request:database",
+			"Failed to update agent run status",
+		);
+	}
+}
+
+export async function getAgentRunsByUserId({ userId }: { userId: string }) {
+	try {
+		const runs = await db
+			.select()
+			.from(agentRun)
+			.where(eq(agentRun.userId, userId))
+			.orderBy(desc(agentRun.updatedAt), desc(agentRun.startedAt));
+
+		const runIds = runs.map((run) => run.id);
+		const steps =
+			runIds.length > 0
+				? await db
+					.select()
+					.from(agentStep)
+					.where(inArray(agentStep.runId, runIds))
+					.orderBy(desc(agentStep.createdAt))
+				: [];
+
+		return runs.map((run) => ({
+			...run,
+			steps: steps.filter((step) => step.runId === run.id),
+		}));
+	} catch (error) {
+		console.error("Database Error (getAgentRunsByUserId):", error);
+		throw new ChatSDKError("bad_request:database", "Failed to load agent runs");
+	}
+}
+
+export async function grantCreditsToUser({
+	userId,
+	amount,
+	reason,
+	type = "grant",
+	metadata,
+}: {
+	userId: string;
+	amount: number;
+	reason: string;
+	type?: "grant" | "refund" | "bonus";
+	metadata?: Record<string, unknown>;
+}) {
+	if (amount <= 0) {
+		throw new ChatSDKError("bad_request:database", "Credit amount must be positive");
+	}
+
+	try {
+		return await db.transaction(async (tx) => {
+			const ensuredAccount = await ensureCreditAccountForUser({ userId });
+			const nextBalance = ensuredAccount.balance + amount;
+
+			const [updatedAccount] = await tx
+				.update(creditAccount)
+				.set({
+					balance: nextBalance,
+					lifetimeGranted: ensuredAccount.lifetimeGranted + amount,
+					updatedAt: new Date(),
+				})
+				.where(eq(creditAccount.userId, userId))
+				.returning();
+
+			const [transaction] = await tx
+				.insert(creditTransaction)
+				.values({
+					userId,
+					amount,
+					balanceAfter: nextBalance,
+					type,
+					reason,
+					metadata,
+				})
+				.returning();
+
+			return { account: updatedAccount, transaction };
+		});
+	} catch (error) {
+		console.error("Database Error (grantCreditsToUser):", error);
+		if (error instanceof ChatSDKError) {
+			throw error;
+		}
+		throw new ChatSDKError("bad_request:database", "Failed to grant credits");
+	}
+}
+
+export async function spendCreditsForUser({
+	userId,
+	amount,
+	reason,
+	metadata,
+}: {
+	userId: string;
+	amount: number;
+	reason: string;
+	metadata?: Record<string, unknown>;
+}) {
+	if (amount <= 0) {
+		throw new ChatSDKError("bad_request:database", "Credit amount must be positive");
+	}
+
+	try {
+		return await db.transaction(async (tx) => {
+			const [currentUser] = await tx
+				.select()
+				.from(user)
+				.where(eq(user.id, userId))
+				.limit(1);
+
+			if (!currentUser) {
+				throw new ChatSDKError("bad_request:database", "User not found");
+			}
+
+			if (currentUser.role === "admin") {
+				const account = await ensureCreditAccountForUser({ userId });
+				return { account, transaction: null, skipped: true };
+			}
+
+			const ensuredAccount = await ensureCreditAccountForUser({ userId });
+
+			if (ensuredAccount.balance < amount) {
+				return {
+					account: ensuredAccount,
+					transaction: null,
+					skipped: false,
+					error: "Insufficient credits",
+				};
+			}
+
+			const nextBalance = ensuredAccount.balance - amount;
+
+			const [updatedAccount] = await tx
+				.update(creditAccount)
+				.set({
+					balance: nextBalance,
+					lifetimeSpent: ensuredAccount.lifetimeSpent + amount,
+					updatedAt: new Date(),
+				})
+				.where(eq(creditAccount.userId, userId))
+				.returning();
+
+			const [transaction] = await tx
+				.insert(creditTransaction)
+				.values({
+					userId,
+					amount: -amount,
+					balanceAfter: nextBalance,
+					type: "spend",
+					reason,
+					metadata,
+				})
+				.returning();
+
+			return { account: updatedAccount, transaction, skipped: false };
+		});
+	} catch (error) {
+		console.error("Database Error (spendCreditsForUser):", error);
+		if (error instanceof ChatSDKError) {
+			throw error;
+		}
+		throw new ChatSDKError("bad_request:database", "Failed to spend credits");
 	}
 }
 
@@ -1674,6 +2554,21 @@ export async function updatePurchaseRequestStatus({
 						proExpiresAt: nextExpiry,
 					})
 					.where(eq(user.id, currentUser.id));
+
+				const proAllowance = getStartingCredits({ isPro: true, role: currentUser.role });
+				const currentAccount = await ensureCreditAccountForUser({
+					userId: currentUser.id,
+				});
+
+				if (currentAccount.balance < proAllowance) {
+					await grantCreditsToUser({
+						userId: currentUser.id,
+						amount: proAllowance - currentAccount.balance,
+						reason: "pro approval top-up",
+						type: "grant",
+						metadata: { purchaseRequestId: requestRow.id },
+					});
+				}
 			}
 		}
 
@@ -1764,6 +2659,9 @@ export async function deleteUserById(id: string) {
 			await tx.delete(purchaseRequest).where(eq(purchaseRequest.userId, id));
 			await tx.delete(userSettings).where(eq(userSettings.userId, id));
 			await tx.delete(userApiKeys).where(eq(userApiKeys.userId, id));
+			await tx
+				.delete(userKnowledgeEntry)
+				.where(eq(userKnowledgeEntry.userId, id));
 
 			// 3. Delete suggestions & documents
 			await tx.delete(suggestion).where(eq(suggestion.userId, id));

@@ -50,10 +50,20 @@ function isMaintenanceBypassed(pathname: string) {
 }
 
 async function getMaintenanceStatus(request: NextRequest) {
+	const hostname = request.nextUrl.hostname;
+	if (
+		process.env.NODE_ENV !== "production" ||
+		hostname === "localhost" ||
+		hostname === "127.0.0.1"
+	) {
+		return { maintenanceEnabled: false };
+	}
+
 	try {
 		const statusUrl = new URL("/api/public/site-status", request.url);
 		const response = await fetch(statusUrl, {
 			cache: "no-store",
+			signal: AbortSignal.timeout(1200),
 			headers: {
 				"cache-control": "no-store",
 			},

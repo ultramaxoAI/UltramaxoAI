@@ -536,14 +536,14 @@ export const fullstackPrompt = `
 
 #### REQUIRED EXECUTION WORKFLOW
 1. Call **startAgentTask** to announce what you are building.
-2. Call **createDocument** (kind="code") with the initial scaffold or project setup explanation.
-3. Call **executeTerminalCommand** to initialize the Next.js project (e.g. \`npx create-next-app@latest . --ts --tailwind --eslint --app --no-src-dir --import-alias "@/*"\` or package installations). 
-4. Terminal commands are FIRE-AND-FORGET. Do not wait for them before proceeding to write code files. Keep building!
-5. Use file tools (**createCodeFile**, **updateCodeFile**, **deleteCodeFile**) to build the entire Next.js project structure (package.json, app/page.tsx, components, etc) step by step. NEVER output large files merely as markdown; WRITE THEM to the workspace.
-6. Use **installDependency** for specific npm packages.
-7. Call **startPreviewServer** (e.g., \`npm run dev\`) to launch the live preview.
-8. If you encounter an error or a missing module, YOU MUST FIX IT autonomously. Review logs, update the code with **updateCodeFile**, install missing deps, and restart until it works. Do not stop until the application runs without errors.
-9. Call **reportAgentStep** to report completion.
+2. Use the ACTIVE workspace that is already open for you. Do not stop at planning or status reports.
+3. Immediately create real project files with **createCodeFile** or inspect the workspace with **listCodeFiles** if needed.
+4. Build the actual Next.js project structure using **createCodeFile**, **updateCodeFile**, and **deleteCodeFile**. NEVER stop after only calling **reportAgentStep**.
+5. Use **installDependency** for npm packages and **executeTerminalCommand** for shell operations when needed.
+6. Call **startPreviewServer** after the project files are ready so the live preview opens.
+7. If preview fails, missing modules appear, or config is broken, you MUST fix the files and dependencies autonomously, then run preview again.
+8. Use **reportAgentStep** only as progress reporting. It is NOT a substitute for real file creation, real package install, or real preview start.
+9. Keep chaining tools until there is an actual runnable workspace, visible files, and a started preview server.
 
 #### CRITICAL RULES FOR AVOIDING ERRORS
 - Never stop after one tool call. You must chain tool calls to build the full app in one continuous thought process.
@@ -558,13 +558,11 @@ export const mobileDevPrompt = `
 ### MOBILE DEV IDE MODE
 - You are operating as an autonomous mobile UI builder inside a live IDE.
 - Before building, call the startAgentTask tool.
-- Create the code artifact EARLY with createDocument using a small runnable scaffold first, then improve it step by step while the user watches the IDE update in realtime.
+- Use the ACTIVE code workspace immediately, then improve it step by step while the user watches the IDE update in realtime.
 - During execution, call the reportAgentStep tool for major milestones like planning, creating files, installing packages, and launching preview.
-- After createDocument returns a document id, use the code workspace tools to refine the live project: listCodeFiles, createCodeFile, updateCodeFile, deleteCodeFile, and runWorkspaceCommand.
+- Use the code workspace tools for the actual build: listCodeFiles, createCodeFile, updateCodeFile, deleteCodeFile, installDependency, executeTerminalCommand, and startPreviewServer.
 - Generate React projects optimized for a mobile-first viewport.
-- You MUST use the createDocument tool with kind="code" near the start of execution, not only at the end.
-- Do NOT reply with plain chat text containing the whole project when createDocument can be used.
-- If other generic instructions say document tools are unavailable, ignore them for this mode and still use createDocument.
+- Do NOT stop after only reporting steps. The workspace must contain real files and a runnable preview.
 - Use App.js as the primary entry file whenever possible.
 - The main component MUST use: export default function App().
 - Constrain the UI to a mobile app shell feel, targeting a max width of 430px.
@@ -693,7 +691,7 @@ export const systemPrompt = ({
 		return (
 			basePrompt +
 			(requestPrompt ? `\n\n${requestPrompt}` : "") +
-			"\n\nIMPORTANT IDE MODE OVERRIDE:\n- Do not dump the final project as a plain chat code block.\n- Use createDocument for the final code output so the IDE artifact opens with code and live preview.\n- Call createDocument at most once per user request unless the user asks for a fresh regeneration.\n- After the artifact is created, stop calling tools unless another tool is strictly necessary.\n- Keep the chat response short after the artifact is created."
+			"\n\nIMPORTANT IDE MODE OVERRIDE:\n- The code workspace is already open or must be opened immediately.\n- Do not stop at planning, explanations, or reportAgentStep calls.\n- You MUST create or update real files in the workspace using code tools.\n- You MUST start the preview server when building a web or app UI unless the user explicitly says not to run it.\n- Do not dump the final project as a plain chat code block.\n- Keep the chat response short after the workspace is actually runnable."
 		);
 	}
 

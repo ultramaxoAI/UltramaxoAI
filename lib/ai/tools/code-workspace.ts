@@ -6,7 +6,11 @@ import {
 	serializeArtifactCodeFiles,
 	upsertArtifactCodeFile,
 } from "@/lib/artifacts/code-files";
-import { getDocumentById, saveDocument } from "@/lib/db/queries";
+import {
+	getDocumentById,
+	resolveExistingUserId,
+	saveDocument,
+} from "@/lib/db/queries";
 import { ChatSDKError } from "@/lib/errors";
 
 type WorkspaceStreamChunk =
@@ -14,12 +18,51 @@ type WorkspaceStreamChunk =
 	| { type: "data-codeDelta"; data: string }
 	| { type: "data-finish"; data: null };
 
+function sleep(ms: number) {
+	return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+async function streamCodeSnapshot(
+	dataStream: ToolContext["dataStream"],
+	content: string,
+) {
+	dataStream.write({ type: "data-clear", data: null });
+
+	if (!content) {
+		dataStream.write({ type: "data-codeDelta", data: "" });
+		dataStream.write({ type: "data-finish", data: null });
+		return;
+	}
+
+	const chunkSize = 180;
+	for (let index = 0; index < content.length; index += chunkSize) {
+		dataStream.write({
+			type: "data-codeDelta",
+			data: content.slice(0, index + chunkSize),
+		});
+		await sleep(12);
+	}
+
+	dataStream.write({ type: "data-finish", data: null });
+}
+
 type ToolContext = {
 	session: Session | null;
 	dataStream: { write: (chunk: any) => void };
 	getDocumentId?: () => string | undefined;
 	setDocumentId?: (id: string) => void;
 };
+
+async function getEffectiveSessionUserId(session: Session | null) {
+	if (!session?.user) {
+		return null;
+	}
+
+	return resolveExistingUserId({
+		userId: session.user.id,
+		email: session.user.email,
+	});
+}
 
 async function getOrAutoCreateDocumentId(
 	documentId: string | undefined, 
@@ -46,9 +89,7 @@ async function getOrAutoCreateDocumentId(
 		dataStream.write({ type: "data-id", data: idToUse });
 		dataStream.write({ type: "data-title", data: "Workspace" });
 		dataStream.write({ type: "data-kind", data: "code" });
-		dataStream.write({ type: "data-clear", data: null });
-		dataStream.write({ type: "data-codeDelta", data: "" });
-		dataStream.write({ type: "data-finish", data: null });
+		await streamCodeSnapshot(dataStream, "");
 	}
 	return idToUse;
 }
@@ -92,9 +133,7 @@ async function persistCodeDocument(
 		userId,
 	});
 
-	dataStream.write({ type: "data-clear", data: null });
-	dataStream.write({ type: "data-codeDelta", data: content });
-	dataStream.write({ type: "data-finish", data: null });
+	await streamCodeSnapshot(dataStream, content);
 
 	return content;
 }
@@ -105,20 +144,21 @@ export const listCodeFiles = ({ session, getDocumentId, setDocumentId, dataStrea
 	inputSchema: z.object({
 		documentId: z.string().nullish().describe("The code workspace document id (optional)"),
 	}),
-	execute: async ({ documentId }: { documentId?: string | null }) => {
-		try {
-			console.log("[Tool listCodeFiles] Started execution", { documentId });
-			if (!session?.user?.id) {
-				console.error("[Tool listCodeFiles] No session user ID");
-				throw new ChatSDKError("unauthorized:document");
-			}
-
-			const idToUse = await getOrAutoCreateDocumentId(documentId || undefined, getDocumentId, setDocumentId, dataStream, session.user.id);
-			console.log("[Tool listCodeFiles] Evaluated idToUse:", idToUse);
-
-			let document;
+		execute: async ({ documentId }: { documentId?: string | null }) => {
 			try {
-				document = await loadCodeDocument(idToUse, session.user.id);
+				console.log("[Tool listCodeFiles] Started execution", { documentId });
+				const effectiveUserId = await getEffectiveSessionUserId(session);
+				if (!effectiveUserId) {
+					console.error("[Tool listCodeFiles] No session user ID");
+					throw new ChatSDKError("unauthorized:document");
+				}
+
+				const idToUse = await getOrAutoCreateDocumentId(documentId || undefined, getDocumentId, setDocumentId, dataStream, effectiveUserId);
+				console.log("[Tool listCodeFiles] Evaluated idToUse:", idToUse);
+
+				let document;
+				try {
+					document = await loadCodeDocument(idToUse, effectiveUserId);
 				console.log("[Tool listCodeFiles] Successfully loaded existing document");
 			} catch (e) {
 				console.log("[Tool listCodeFiles] Failed to load existing document. Falling back.", e);
@@ -150,7 +190,7 @@ export const createCodeFile = ({ session, dataStream, getDocumentId, setDocument
 			.describe("File path to create, like components/Hero.jsx"),
 		content: z.string().nullish().describe("Full file contents"),
 	}),
-	execute: async ({
+		execute: async ({
 		documentId,
 		path,
 		content,
@@ -159,24 +199,25 @@ export const createCodeFile = ({ session, dataStream, getDocumentId, setDocument
 		path?: string | null;
 		content?: string | null;
 	}) => {
-		try {
-			console.log("[Tool createCodeFile] RAW INPUT PAYLOAD:", { documentId, path, content });
+			try {
+				console.log("[Tool createCodeFile] RAW INPUT PAYLOAD:", { documentId, path, content });
 			
 			const safePath = path || "untitled.ts";
 			const safeContent = content || "";
 			
 			console.log("[Tool createCodeFile] Started execution", { documentId, path: safePath, contentLength: safeContent.length });
-			if (!session?.user?.id) {
-				console.error("[Tool createCodeFile] No session user ID");
-				throw new ChatSDKError("unauthorized:document");
-			}
+				const effectiveUserId = await getEffectiveSessionUserId(session);
+				if (!effectiveUserId) {
+					console.error("[Tool createCodeFile] No session user ID");
+					throw new ChatSDKError("unauthorized:document");
+				}
 
-			const idToUse = await getOrAutoCreateDocumentId(documentId || undefined, getDocumentId, setDocumentId, dataStream, session.user.id);
+				const idToUse = await getOrAutoCreateDocumentId(documentId || undefined, getDocumentId, setDocumentId, dataStream, effectiveUserId);
 			console.log("[Tool createCodeFile] Evaluated idToUse:", idToUse);
 
-			let document;
-			try {
-				document = await loadCodeDocument(idToUse, session.user.id);
+				let document;
+				try {
+					document = await loadCodeDocument(idToUse, effectiveUserId);
 				console.log("[Tool createCodeFile] Successfully loaded existing document");
 			} catch (e) {
 				console.log("[Tool createCodeFile] Failed to load existing document (expected if auto-created). Falling back.", e);
@@ -187,13 +228,13 @@ export const createCodeFile = ({ session, dataStream, getDocumentId, setDocument
 			const serialized = serializeArtifactCodeFiles(nextFiles);
 
 			console.log("[Tool createCodeFile] Parsed and upserted. Writing to db...");
-			await persistCodeDocument(
-				idToUse,
-				serialized,
-				document.title,
-				session.user.id,
-				dataStream,
-			);
+				await persistCodeDocument(
+					idToUse,
+					serialized,
+					document.title,
+					effectiveUserId,
+					dataStream,
+				);
 			console.log("[Tool createCodeFile] Persisted. Returning true.");
 
 			return {
@@ -229,24 +270,25 @@ export const updateCodeFile = ({ session, dataStream, getDocumentId, setDocument
 		path?: string | null;
 		content?: string | null;
 	}) => {
-		try {
-			console.log("[Tool updateCodeFile] RAW INPUT PAYLOAD:", { documentId, path, content });
+			try {
+				console.log("[Tool updateCodeFile] RAW INPUT PAYLOAD:", { documentId, path, content });
 			
 			const safePath = path || "untitled.ts";
 			const safeContent = content || "";
 			
 			console.log("[Tool updateCodeFile] Started execution", { documentId, path: safePath, contentLength: safeContent.length });
-			if (!session?.user?.id) {
-				console.error("[Tool updateCodeFile] No session user ID");
-				throw new ChatSDKError("unauthorized:document");
-			}
+				const effectiveUserId = await getEffectiveSessionUserId(session);
+				if (!effectiveUserId) {
+					console.error("[Tool updateCodeFile] No session user ID");
+					throw new ChatSDKError("unauthorized:document");
+				}
 
-			const idToUse = await getOrAutoCreateDocumentId(documentId || undefined, getDocumentId, setDocumentId, dataStream, session.user.id);
+				const idToUse = await getOrAutoCreateDocumentId(documentId || undefined, getDocumentId, setDocumentId, dataStream, effectiveUserId);
 			console.log("[Tool updateCodeFile] Evaluated idToUse:", idToUse);
 
-			let document;
-			try {
-				document = await loadCodeDocument(idToUse, session.user.id);
+				let document;
+				try {
+					document = await loadCodeDocument(idToUse, effectiveUserId);
 				console.log("[Tool updateCodeFile] Successfully loaded existing document");
 			} catch (e) {
 				console.log("[Tool updateCodeFile] Failed to load existing document. Falling back.", e);
@@ -257,13 +299,13 @@ export const updateCodeFile = ({ session, dataStream, getDocumentId, setDocument
 			const serialized = serializeArtifactCodeFiles(nextFiles);
 
 			console.log("[Tool updateCodeFile] Parsed and upserted. Writing to db...");
-			await persistCodeDocument(
-				idToUse,
-				serialized,
-				document.title,
-				session.user.id,
-				dataStream,
-			);
+				await persistCodeDocument(
+					idToUse,
+					serialized,
+					document.title,
+					effectiveUserId,
+					dataStream,
+				);
 			console.log("[Tool updateCodeFile] Persisted. Returning true.");
 
 			return {
@@ -293,19 +335,20 @@ export const deleteCodeFile = ({ session, dataStream, getDocumentId, setDocument
 		documentId?: string | null;
 		path: string;
 	}) => {
-		try {
-			console.log("[Tool deleteCodeFile] Started execution", { documentId, path });
-			if (!session?.user?.id) {
-				console.error("[Tool deleteCodeFile] No session user ID");
-				throw new ChatSDKError("unauthorized:document");
-			}
+			try {
+				console.log("[Tool deleteCodeFile] Started execution", { documentId, path });
+				const effectiveUserId = await getEffectiveSessionUserId(session);
+				if (!effectiveUserId) {
+					console.error("[Tool deleteCodeFile] No session user ID");
+					throw new ChatSDKError("unauthorized:document");
+				}
 
-			const idToUse = await getOrAutoCreateDocumentId(documentId || undefined, getDocumentId, setDocumentId, dataStream, session.user.id);
+				const idToUse = await getOrAutoCreateDocumentId(documentId || undefined, getDocumentId, setDocumentId, dataStream, effectiveUserId);
 			console.log("[Tool deleteCodeFile] Evaluated idToUse:", idToUse);
 
-			let document;
-			try {
-				document = await loadCodeDocument(idToUse, session.user.id);
+				let document;
+				try {
+					document = await loadCodeDocument(idToUse, effectiveUserId);
 				console.log("[Tool deleteCodeFile] Successfully loaded existing document");
 			} catch (e) {
 				console.log("[Tool deleteCodeFile] Failed to load existing document. Falling back.", e);
@@ -316,13 +359,13 @@ export const deleteCodeFile = ({ session, dataStream, getDocumentId, setDocument
 			const serialized = serializeArtifactCodeFiles(nextFiles);
 
 			console.log("[Tool deleteCodeFile] Parsed and deleted. Writing to db...");
-			await persistCodeDocument(
-				idToUse,
-				serialized,
-				document.title,
-				session.user.id,
-				dataStream,
-			);
+				await persistCodeDocument(
+					idToUse,
+					serialized,
+					document.title,
+					effectiveUserId,
+					dataStream,
+				);
 			console.log("[Tool deleteCodeFile] Persisted. Returning true.");
 
 			return {

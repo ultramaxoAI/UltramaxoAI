@@ -1,0 +1,1 @@
+ALTER TABLE "credit_account" ADD COLUMN "lastRefillAt" timestamp DEFAULT now() NOT NULL;

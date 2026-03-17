@@ -2,7 +2,8 @@ import { type NextRequest, NextResponse } from "next/server";
 import { auth } from "@/app/(auth)/auth";
 import { generateTitleFromUserMessage } from "@/app/(chat)/actions";
 import type { VisibilityType } from "@/components/visibility-selector";
-import { getChatById, saveChat, saveMessages } from "@/lib/db/queries";
+import { CREDIT_COSTS } from "@/lib/credits";
+import { getChatById, saveChat, saveMessages, spendCreditsForUser } from "@/lib/db/queries";
 
 const MAIA_API_URL = "https://api.maiarouter.ai/v1/images/generations";
 const MAIA_API_KEY = (process.env.MAIA_API_KEY || process.env.OPENROUTER_API_KEY_1 || "").trim();
@@ -195,6 +196,24 @@ export async function POST(request: NextRequest) {
 		const cleanPrompt = prompt.trim();
 		const sessionUser = session.user as { id?: string };
 		console.log(`[generate-image] Prompt: "${cleanPrompt.slice(0, 80)}..."`);
+
+		if (session.user.id) {
+			const creditResult = await spendCreditsForUser({
+				userId: session.user.id,
+				amount: CREDIT_COSTS.imageGeneration,
+				reason: "image generation",
+				metadata: { promptLength: cleanPrompt.length },
+			});
+
+			if (creditResult.error) {
+				return NextResponse.json(
+					{
+						error: `Insufficient credits. Image generation needs ${CREDIT_COSTS.imageGeneration} credits.`,
+					},
+					{ status: 402 },
+				);
+			}
+		}
 
 		// ============================================================
 		// PRIMARY: MAIA Router — maia/imagen-3.0-generate-002

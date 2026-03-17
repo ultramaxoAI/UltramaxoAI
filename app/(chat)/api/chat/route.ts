@@ -11,9 +11,13 @@ import { after } from "next/server";
 import { createResumableStreamContext } from "resumable-stream";
 import { auth } from "@/app/(auth)/auth";
 import { type RequestHints, systemPrompt } from "@/lib/ai/prompts";
+import { getChatCreditCost } from "@/lib/credits";
 
 import { getLanguageModel } from "@/lib/ai/providers";
-import { reportAgentStep, startAgentTask } from "@/lib/ai/tools/agent-mode";
+import {
+	reportAgentStepWithPersistence,
+	startAgentTaskWithPersistence,
+} from "@/lib/ai/tools/agent-mode";
 import {
 	createCodeFile,
 	deleteCodeFile,
@@ -37,9 +41,14 @@ import {
 	getChatById,
 	getMessagesByChatId,
 	getTodayMessageCount,
+	getEnabledUserMemoryByUserId,
+	getEnabledUserKnowledgeEntriesByUserId,
 	getUserById,
+	resolveExistingUserId,
 	saveChat,
+	saveDocument,
 	saveMessages,
+	spendCreditsForUser,
 	updateChatTitleById,
 	updateMessage,
 	getRecentCrossChatMemory,
@@ -210,6 +219,39 @@ export async function POST(request: Request) {
 
 			const isToolApprovalFlow = Boolean(messages);
 
+			if (
+				message?.role === "user" &&
+				!isToolApprovalFlow &&
+				!customConfig
+			) {
+				const creditCost = getChatCreditCost({
+					deepThinkingEnabled,
+					webSearchEnabled,
+					fullstackModeEnabled,
+					mobileModeEnabled,
+				});
+
+				const creditResult = await spendCreditsForUser({
+					userId: session.user.id,
+					amount: creditCost,
+					reason: "chat request",
+					metadata: {
+						model: selectedChatModel,
+						deepThinkingEnabled,
+						webSearchEnabled,
+						fullstackModeEnabled,
+						mobileModeEnabled,
+					},
+				});
+
+				if (creditResult.error) {
+					return new Response(
+						`Insufficient credits. This request needs ${creditCost} credits.`,
+						{ status: 402 },
+					);
+				}
+			}
+
 			const chat = await getChatById({ id });
 			let messagesFromDb: DBMessage[] = [];
 			let titlePromise: Promise<string> | null = null;
@@ -321,6 +363,36 @@ export async function POST(request: Request) {
 				? `\n\n[CROSS-CHAT MEMORY]\nInformasi dari obrolan user sebelumnya di chat lain (Gunakan sebagai konteks jika relevan):\n${crossChatMemoryData.map((m: any, i: number) => `${i+1}. "${m.content}"`).join("\n")}`
 				: "";
 
+			const persistentMemoryLimit = isPro ? 12 : 6;
+			const persistentMemoryData = await getEnabledUserMemoryByUserId({
+				userId: session.user.id,
+				limit: persistentMemoryLimit,
+			});
+			const persistentMemoryContext = persistentMemoryData.length > 0
+				? `\n\n[PERSISTENT USER MEMORY]\nInstruksi dan konteks tetap user yang harus diprioritaskan jika relevan:\n${persistentMemoryData.map((memory, index) => `${index + 1}. [${memory.category}] ${memory.title}: ${memory.content}`).join("\n")}`
+				: "";
+
+			const knowledgeBaseLimit = isPro ? 10 : 5;
+			const knowledgeBaseData = await getEnabledUserKnowledgeEntriesByUserId({
+				userId: session.user.id,
+				limit: knowledgeBaseLimit,
+				workspace: chat?.folder ?? null,
+			});
+			const knowledgeBaseContext =
+				knowledgeBaseData.length > 0
+					? `\n\n[KNOWLEDGE BASE]\nGunakan konteks terstruktur berikut sebagai referensi kerja yang stabil jika relevan dengan permintaan user:\n${knowledgeBaseData
+							.map((entry, index) => {
+								const sourceLabel = entry.source
+									? ` | source: ${entry.source}`
+									: "";
+								const workspaceLabel = entry.workspace
+									? ` | workspace: ${entry.workspace}`
+									: " | workspace: global";
+								return `${index + 1}. [${entry.category}] ${entry.title}${sourceLabel}${workspaceLabel}: ${entry.content}`;
+							})
+							.join("\n")}`
+					: "";
+
 			const modelMessages = await convertToModelMessages(recentUiMessages);
 
 			// Filter out problematic image parts that might cause "Cannot read" errors
@@ -379,6 +451,46 @@ export async function POST(request: Request) {
 				execute: async ({ writer: dataStream }) => {
 					let retryCount = 0;
 					const maxRetries = 1;
+					let activeAgentRunId: string | null = null;
+					let currentDocumentId = activeDocumentId;
+
+					if (isIdeAgentMode && !currentDocumentId) {
+						currentDocumentId = generateUUID();
+						const effectiveUserId = await resolveExistingUserId({
+							userId: session.user.id,
+							email: session.user.email,
+						});
+
+						if (effectiveUserId) {
+							await saveDocument({
+								id: currentDocumentId,
+								title:
+									fullstackModeEnabled
+										? "Fullstack Workspace"
+										: "Mobile Workspace",
+								kind: "code",
+								content: "",
+								userId: effectiveUserId,
+							});
+						} else {
+							console.warn(
+								"[Chat API] Could not resolve effective user id for IDE workspace bootstrap. Continuing without initial persistence.",
+							);
+						}
+
+						dataStream.write({ type: "data-id", data: currentDocumentId });
+						dataStream.write({
+							type: "data-title",
+							data:
+								fullstackModeEnabled
+									? "Fullstack Workspace"
+									: "Mobile Workspace",
+						});
+						dataStream.write({ type: "data-kind", data: "code" });
+						dataStream.write({ type: "data-clear", data: null });
+						dataStream.write({ type: "data-codeDelta", data: "" });
+						dataStream.write({ type: "data-finish", data: null });
+					}
 
 					while (retryCount <= maxRetries) {
 						try {
@@ -411,13 +523,24 @@ export async function POST(request: Request) {
 								console.log(`[Chat API] Injected ${crossChatMemoryData.length} cross-chat memories (Max: ${memoryLimit})`);
 							}
 
+							if (persistentMemoryContext) {
+								baseSystemPrompt += persistentMemoryContext;
+								console.log(`[Chat API] Injected ${persistentMemoryData.length} persistent memories (Max: ${persistentMemoryLimit})`);
+							}
+
+							if (knowledgeBaseContext) {
+								baseSystemPrompt += knowledgeBaseContext;
+								console.log(
+									`[Chat API] Injected ${knowledgeBaseData.length} knowledge entries (Max: ${knowledgeBaseLimit})`,
+								);
+							}
+
 							// Prepend Personalization Custom Instructions
 							if (customInstructions) {
 								baseSystemPrompt = `USER CUSTOM INSTRUCTIONS (MUST FOLLOW):\n${customInstructions}\n\n---\n\n${baseSystemPrompt}`;
 							}
 
 							// Inject active document context so AI knows where to write code
-							let currentDocumentId = activeDocumentId;
 							if (isIdeAgentMode && currentDocumentId) {
 								baseSystemPrompt += `\n\n[ACTIVE WORKSPACE]\nYou are currently operating in an active workspace artifact (documentId: ${currentDocumentId}).\nWhen calling createCodeFile, updateCodeFile, deleteCodeFile, or listCodeFiles, you MUST use this exact documentId.\nDo NOT call createDocument unless you are explicitly starting a brand new, separate project.`;
 							}
@@ -456,8 +579,16 @@ export async function POST(request: Request) {
 											...(webSearchEnabled ? { webSearch } : {}),
 											...(isIdeAgentMode
 												? {
-														startAgentTask: startAgentTask(),
-														reportAgentStep: reportAgentStep(),
+														startAgentTask: startAgentTaskWithPersistence({
+															chatId: id,
+															userId: session.user.id,
+															setRunId: (runId) => {
+																activeAgentRunId = runId;
+															},
+														}),
+														reportAgentStep: reportAgentStepWithPersistence({
+															getRunId: () => activeAgentRunId,
+														}),
 														listCodeFiles: listCodeFiles({ session, dataStream, getDocumentId, setDocumentId }),
 														createCodeFile: createCodeFile({
 															session,

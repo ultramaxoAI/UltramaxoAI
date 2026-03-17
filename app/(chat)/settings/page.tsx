@@ -1,7 +1,11 @@
 "use client";
 
 import {
+	BrainCircuitIcon,
 	ArrowLeft,
+	BrainIcon,
+	BookOpenIcon,
+	CoinsIcon,
 	KeyIcon,
 	Loader2Icon,
 	LockIcon,
@@ -14,6 +18,10 @@ import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
 
+import { CreditOverviewPanel } from "@/components/credit-overview-panel";
+import { AgentRunsPanel } from "@/components/agent-runs-panel";
+import { KnowledgeBasePanel } from "@/components/knowledge-base-panel";
+import { MemoryCenterPanel } from "@/components/memory-center-panel";
 import { PromptLibraryPanel } from "@/components/prompt-library-panel";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -187,6 +195,10 @@ type TabId =
 	| "custom-ai"
 	| "personalization"
 	| "prompt-library"
+	| "knowledge-base"
+	| "memory"
+	| "agent-runs"
+	| "credits"
 	| "usage";
 
 // ============================================================
@@ -204,6 +216,14 @@ export default function SettingsPage() {
 			icon: <SparklesIcon size={16} />,
 		},
 		{ id: "prompt-library", label: "Prompt Library", icon: <ZapIcon size={16} /> },
+		{
+			id: "knowledge-base",
+			label: "Knowledge Base",
+			icon: <BookOpenIcon size={16} />,
+		},
+		{ id: "memory", label: "Memory", icon: <BrainIcon size={16} /> },
+		{ id: "agent-runs", label: "Agent Runs", icon: <BrainCircuitIcon size={16} /> },
+		{ id: "credits", label: "Credits", icon: <CoinsIcon size={16} /> },
 		{ id: "usage", label: "Usage", icon: <ShieldCheckIcon size={16} /> },
 	];
 
@@ -271,6 +291,10 @@ export default function SettingsPage() {
 					{activeTab === "custom-ai" && <CustomAITab />}
 					{activeTab === "personalization" && <PersonalizationTab />}
 					{activeTab === "prompt-library" && <PromptLibraryPanel />}
+					{activeTab === "knowledge-base" && <KnowledgeBasePanel />}
+					{activeTab === "memory" && <MemoryCenterPanel />}
+					{activeTab === "agent-runs" && <AgentRunsPanel />}
+					{activeTab === "credits" && <CreditOverviewPanel />}
 					{activeTab === "usage" && <UsageOverviewPanel />}
 				</div>
 			</main>

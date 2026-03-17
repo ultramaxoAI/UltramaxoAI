@@ -28,19 +28,19 @@ import type { VisibilityType } from "./visibility-selector";
 
 const emptyStatePrompts = [
 	{
-		title: "Rancang landing page",
-		description: "Susun hero, CTA, dan alur section untuk produk AI workspace.",
-		prompt: "Bantu saya rancang landing page premium untuk produk AI workspace dengan tone modern dan jelas.",
+		title: "Mulai build fullstack",
+		description: "Minta agent memecah fitur ke UI, API, database, dan langkah eksekusi.",
+		prompt: "Aktifkan mode fullstack dan bantu saya membangun fitur dari flow, database, API, hingga UI production-ready.",
 	},
 	{
-		title: "Analisis file kerja",
-		description: "Ringkas isi file, cari masalah utama, lalu urutkan perbaikannya.",
-		prompt: "Tolong analisis file yang saya upload, jelaskan masalah utamanya, lalu beri urutan perbaikannya.",
+		title: "Audit codebase aktif",
+		description: "Minta AI membaca struktur project, cari bottleneck, dan urutkan perbaikannya.",
+		prompt: "Audit codebase saya, cari masalah paling penting, lalu buat urutan perbaikan yang paling efisien.",
 	},
 	{
-		title: "Mulai mode fullstack",
-		description: "Rancang flow feature, API, state, dan komponen yang perlu dibuat.",
-		prompt: "Bantu saya rancang fitur fullstack dari UI, API, database, sampai deployment checklist.",
+		title: "Buat workspace web",
+		description: "Susun halaman, komponen, state, dan detail implementasi untuk app web modern.",
+		prompt: "Saya mau bikin app web modern. Tolong rancang halaman, komponen inti, state, dan urutan implementasinya.",
 	},
 ];
 
@@ -376,14 +376,11 @@ export function Chat({
 							<div className="mx-auto w-full max-w-4xl space-y-4">
 								<div className="rounded-[36px] border border-[#171717]/7 bg-white/42 px-4 py-8 shadow-[0_20px_70px_rgba(23,23,23,0.05)] backdrop-blur-xl dark:border-white/7 dark:bg-[#171b1f]/70 dark:shadow-[0_28px_90px_rgba(0,0,0,0.32)] sm:px-8 sm:py-10">
 									<div className="mx-auto max-w-2xl text-center">
-										<div className="inline-flex rounded-full border border-teal-700/10 bg-teal-600/8 px-3 py-1 text-[11px] font-semibold tracking-[0.18em] uppercase text-teal-800 dark:border-teal-400/15 dark:bg-teal-500/10 dark:text-teal-300">
-											Ultramaxo Workspace
-										</div>
 										<h1 className="mt-5 text-balance text-3xl font-semibold tracking-[-0.05em] text-[#171717] sm:text-4xl dark:text-[#f3f4f1]">
-											Mau bantu apa hari ini?
+											Bangun, audit, atau lanjutkan flow fullstack
 										</h1>
 										<p className="mt-4 text-sm leading-7 text-[#5f6258] dark:text-[#a6aca6] sm:text-base">
-											Mulai dengan prompt singkat. Kalau perlu, lanjutkan ke artifact, file analysis, atau flow fullstack tanpa pindah konteks.
+											Mulai dari brief singkat, lalu lanjutkan ke implementasi, audit code, atau workflow workspace yang lebih teknis tanpa memecah konteks kerja.
 										</p>
 										{activeModes.length > 0 && (
 											<div className="mt-5 flex flex-wrap justify-center gap-2">
@@ -416,7 +413,8 @@ export function Chat({
 											</button>
 										))}
 									</div>
-								</div>
+
+						</div>
 
 								{isReadonly ? (
 									<div className="rounded-[28px] border border-dashed border-[#171717]/8 bg-white/42 px-6 py-5 text-center backdrop-blur-xl dark:border-white/10 dark:bg-white/4">
@@ -483,7 +481,7 @@ export function Chat({
 				</div>
 
 				{messages.length > 0 && (
-					<div className="relative z-10 w-full px-3 pb-3 sm:px-4 sm:pb-4">
+					<div className="relative z-10 w-full px-3 pb-6 sm:px-4 sm:pb-6">
 						{/* Contextual Upgrade Banner */}
 						{user?.type !== "pro" && (
 							<ContextualUpgradeBanner
@@ -530,34 +528,34 @@ export function Chat({
 								<div className="relative flex flex-col gap-2">
 									<div className="mx-auto w-full max-w-3xl">
 										<MultimodalInput
-										attachments={attachments}
-										chatId={id}
-										deepThinkingEnabled={deepThinkingEnabled}
-										input={input}
-										messages={messages}
-										onModelChange={setCurrentModelId}
-										selectedModelId={currentModelId}
-										selectedVisibilityType={visibilityType}
-										sendMessage={sendMessage}
-										setAttachments={setAttachments}
-										setDeepThinkingEnabled={setDeepThinkingEnabled}
-										setInput={setInput}
-										setMessages={setMessages}
-										setWebSearchEnabled={setWebSearchEnabled}
-										setWormgptEnabled={setWormgptEnabled}
-										fullstackModeEnabled={fullstackModeEnabled}
-										setFullstackModeEnabled={setFullstackModeEnabled}
-										mobileModeEnabled={mobileModeEnabled}
-										setMobileModeEnabled={setMobileModeEnabled}
-										status={status}
-										stop={stop}
-										user={user}
-										webSearchEnabled={webSearchEnabled}
-										wormgptEnabled={wormgptEnabled}
-										customModels={customModels}
+											attachments={attachments}
+											chatId={id}
+											deepThinkingEnabled={deepThinkingEnabled}
+											input={input}
+											messages={messages}
+											onModelChange={setCurrentModelId}
+											selectedModelId={currentModelId}
+											selectedVisibilityType={visibilityType}
+											sendMessage={sendMessage}
+											setAttachments={setAttachments}
+											setDeepThinkingEnabled={setDeepThinkingEnabled}
+											setInput={setInput}
+											setMessages={setMessages}
+											setWebSearchEnabled={setWebSearchEnabled}
+											setWormgptEnabled={setWormgptEnabled}
+											fullstackModeEnabled={fullstackModeEnabled}
+											setFullstackModeEnabled={setFullstackModeEnabled}
+											mobileModeEnabled={mobileModeEnabled}
+											setMobileModeEnabled={setMobileModeEnabled}
+											status={status}
+											stop={stop}
+											user={user}
+											webSearchEnabled={webSearchEnabled}
+											wormgptEnabled={wormgptEnabled}
+											customModels={customModels}
 										/>
 									</div>
-									<p className="mx-auto max-w-xl text-center text-[10px] text-[#5f6258] dark:text-[#8e948e]">
+									<p className="mx-auto max-w-xl text-center text-[10px] text-[#5f6258] dark:text-[#8e948e] px-2">
 										UltraAgent can make mistakes. Consider verifying important
 										information.
 									</p>

@@ -1,6 +1,25 @@
 import { z } from "zod";
+import { CREDIT_COSTS } from "@/lib/credits";
+import {
+	addAgentStep,
+	createAgentRun,
+	spendCreditsForUser,
+	updateAgentRunStatusById,
+} from "@/lib/db/queries";
 
 export const startAgentTask = () => {
+	return startAgentTaskWithPersistence({});
+};
+
+export const startAgentTaskWithPersistence = ({
+	chatId,
+	setRunId,
+	userId,
+}: {
+	chatId?: string;
+	setRunId?: (runId: string) => void;
+	userId?: string;
+}) => {
 	return {
 		description:
 			"Start an autonomous build session for Fullstack Web or Mobile Dev mode. Use this at the beginning to announce the goal and the execution plan.",
@@ -30,18 +49,58 @@ export const startAgentTask = () => {
 			plan: string[];
 			deliverable: string;
 		}) => {
-			return {
+			return (async () => {
+				let persistedRunId: string | null = null;
+
+				if (userId) {
+					const chargeResult = await spendCreditsForUser({
+						userId,
+						amount: CREDIT_COSTS.agentExecution,
+						reason: "agent execution",
+						metadata: { mode, goal },
+					});
+
+					if (chargeResult.error) {
+						throw new Error(
+							`Insufficient credits. Agent mode needs ${CREDIT_COSTS.agentExecution} credits.`,
+						);
+					}
+
+					const run = await createAgentRun({
+						userId,
+						chatId,
+						mode,
+						goal,
+						plan,
+						deliverable,
+					});
+
+					persistedRunId = run.id;
+					setRunId?.(run.id);
+				}
+
+				return {
 				mode,
 				goal,
 				plan,
 				deliverable,
+				runId: persistedRunId,
 				startedAt: new Date().toISOString(),
-			};
+				};
+			})();
 		},
 	};
 };
 
 export const reportAgentStep = () => {
+	return reportAgentStepWithPersistence({});
+};
+
+export const reportAgentStepWithPersistence = ({
+	getRunId,
+}: {
+	getRunId?: () => string | null;
+}) => {
 	return {
 		description:
 			"Report a concrete agent step while building the Fullstack Web or Mobile Dev project. Use this to show progress like creating files, adding packages, or launching preview.",
@@ -79,15 +138,36 @@ export const reportAgentStep = () => {
 			packages?: string[];
 			command?: string;
 		}) => {
-			return {
+			return (async () => {
+				const runId = getRunId?.() ?? null;
+
+				if (runId) {
+					await addAgentStep({
+						runId,
+						title,
+						status,
+						detail,
+						files,
+						packages,
+						command,
+					});
+
+					await updateAgentRunStatusById({ runId, status: "running" }).catch(
+						() => undefined,
+					);
+				}
+
+				return {
 				title,
 				status,
 				detail,
 				files: files ?? [],
 				packages: packages ?? [],
 				command: command ?? null,
+				runId,
 				updatedAt: new Date().toISOString(),
-			};
+				};
+			})();
 		},
 	};
 };

@@ -228,6 +228,11 @@ function PureMultimodalInput({
 
 	const fileInputRef = useRef<HTMLInputElement>(null);
 	const [uploadQueue, setUploadQueue] = useState<string[]>([]);
+	const activeDevModeLabel = fullstackModeEnabled
+		? "Fullstack agent active"
+		: mobileModeEnabled
+			? "Mobile agent active"
+			: null;
 
 	const applyPromptPreset = (preset: PromptPreset) => {
 		setInput(preset.prompt);
@@ -683,6 +688,12 @@ function PureMultimodalInput({
 				</div>
 				<PromptInputToolbar className="relative flex items-center justify-between px-2 pb-2 pt-1">
 					<PromptInputTools className="flex items-center gap-1">
+						{activeDevModeLabel ? (
+							<div className="hidden items-center gap-2 rounded-full border border-orange-500/20 bg-orange-500/10 px-3 py-1 text-[11px] font-medium text-orange-700 dark:border-orange-400/15 dark:bg-orange-500/10 dark:text-orange-300 sm:flex">
+								<FileTextIcon className="h-3.5 w-3.5" />
+								<span>{activeDevModeLabel}</span>
+							</div>
+						) : null}
 						{/* Dropdown Menu All-in-One - + Icon */}
 						<DropdownMenu>
 							<DropdownMenuTrigger asChild>

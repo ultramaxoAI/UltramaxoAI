@@ -128,6 +128,7 @@ export const {
 	signOut,
 } = NextAuth({
 	...authConfig,
+	trustHost: true,
 	redirectProxyUrl,
 	cookies: {
 		sessionToken: {
@@ -382,17 +383,33 @@ export const {
 				token.id = user.id as string;
 				token.type = user.type;
 				token.role = user.role;
+				token.email = user.email ?? token.email;
+				token.name = user.name ?? token.name;
 			}
 
 			// Refresh user data from database on every request to keep it fresh
 			// This ensures that when admin approves, the next request will have updated data
 			if (token.id) {
 				try {
-					const [dbUser] = await db
+					let [dbUser] = await db
 						.select()
 						.from(userTable)
 						.where(eq(userTable.id, token.id))
 						.limit(1);
+
+					if (!dbUser && token.email) {
+						const normalizedEmail = normalizeEmail(token.email);
+						if (normalizedEmail) {
+							[dbUser] = await db
+								.select()
+								.from(userTable)
+								.where(sql`lower(${userTable.email}) = ${normalizedEmail}`)
+								.limit(1);
+							if (dbUser) {
+								token.id = dbUser.id;
+							}
+						}
+					}
 
 					if (dbUser) {
 						// Update token with fresh data from database
@@ -418,8 +435,8 @@ export const {
 				session.user.id = token.id;
 				session.user.type = token.type;
 				session.user.role = token.role;
-				session.user.email = token.email as string;
-				session.user.name = token.name as string;
+				session.user.email = (token.email as string | undefined) ?? session.user.email;
+				session.user.name = (token.name as string | undefined) ?? session.user.name;
 			}
 
 			return session;
@@ -432,6 +449,19 @@ export const {
 			return true;
 		},
 	},
+	logger: {
+		error(error) {
+			console.error("[Auth.js][error]", error);
+		},
+		warn(code) {
+			console.warn("[Auth.js][warn]", code);
+		},
+		debug(code, metadata) {
+			if (process.env.NODE_ENV !== "production") {
+				console.debug("[Auth.js][debug]", code, metadata);
+			}
+		},
+	},
 	events: {
 		async linkAccount({ user, profile }) {
 			// Sync name from Google/GitHub if available
@@ -441,20 +471,28 @@ export const {
 			const displayName = oauthProfile?.name || oauthProfile?.login;
 
 			if (displayName) {
-				await db
-					.update(userTable)
-					.set({
-						name: displayName,
-					})
-					.where(eq(userTable.id, user.id as string));
+				try {
+					await db
+						.update(userTable)
+						.set({
+							name: displayName,
+						})
+						.where(eq(userTable.id, user.id as string));
+				} catch (error) {
+					console.error("[Auth.js][linkAccount] Failed to sync profile", error);
+				}
 			}
 		},
 		async createUser({ user }) {
 			// Default type and role for new OAuth users
-			await db
-				.update(userTable)
-				.set({ role: "user", isPro: false })
-				.where(eq(userTable.id, user.id as string));
+			try {
+				await db
+					.update(userTable)
+					.set({ role: "user", isPro: false })
+					.where(eq(userTable.id, user.id as string));
+			} catch (error) {
+				console.error("[Auth.js][createUser] Failed to finalize OAuth user", error);
+			}
 		},
 	},
 });

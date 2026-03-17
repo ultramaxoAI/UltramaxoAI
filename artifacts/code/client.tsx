@@ -528,6 +528,12 @@ export const codeArtifact = new Artifact<"code", Metadata>({
 			metadata?.language ||
 			detectCodeLanguage(content || "");
 
+		useEffect(() => {
+			if (wc?.devServer?.ready && isPreviewableWebProject(files)) {
+				setActiveTab("preview");
+			}
+		}, [wc?.devServer?.ready, files]);
+
 		// Get preview of code (first few lines)
 		const codePreview = (activeFile?.content || content || "")
 			.split("\n")

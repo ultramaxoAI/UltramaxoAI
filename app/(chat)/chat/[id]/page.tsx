@@ -4,6 +4,7 @@ import { Suspense } from "react";
 
 import { auth } from "@/app/(auth)/auth";
 import { Chat } from "@/components/chat";
+import { ChatRouteLoading } from "@/components/chat-route-loading";
 import { DataStreamHandler } from "@/components/data-stream-handler";
 import { DEFAULT_CHAT_MODEL } from "@/lib/ai/models";
 import {
@@ -17,7 +18,7 @@ import { convertToUIMessages } from "@/lib/utils";
 
 export default function Page(props: { params: Promise<{ id: string }> }) {
 	return (
-		<Suspense fallback={<div className="flex h-dvh" />}>
+		<Suspense fallback={<ChatRouteLoading label="Opening chat..." />}>
 			<ChatPage params={props.params} />
 		</Suspense>
 	);
@@ -54,8 +55,12 @@ async function ChatPage({ params }: { params: Promise<{ id: string }> }) {
 		[];
 
 	if (session?.user?.id) {
-		const todayCount = await getTodayMessageCount(session.user.id);
-		const [currentUser] = await getUserById(session.user.id);
+		const [todayCount, userRows, apiKeys] = await Promise.all([
+			getTodayMessageCount(session.user.id),
+			getUserById(session.user.id),
+			getUserApiKeys(session.user.id),
+		]);
+		const [currentUser] = userRows;
 		if (
 			!currentUser?.isPro &&
 			currentUser?.role !== "admin" &&
@@ -65,7 +70,6 @@ async function ChatPage({ params }: { params: Promise<{ id: string }> }) {
 			isAtLimit = true;
 		}
 
-		const apiKeys = await getUserApiKeys(session.user.id);
 		for (const key of apiKeys) {
 			if (key.isEnabled && key.customModels) {
 				for (const modelId of key.customModels) {
@@ -79,9 +83,7 @@ async function ChatPage({ params }: { params: Promise<{ id: string }> }) {
 		}
 	}
 
-	const messagesFromDb = await getMessagesByChatId({
-		id,
-	});
+	const messagesFromDb = await getMessagesByChatId({ id });
 
 	const uiMessages = convertToUIMessages(messagesFromDb);
 
