@@ -19,6 +19,14 @@ export const initialArtifactData: UIArtifact = {
 	},
 };
 
+type ArtifactUiState = {
+	isIdeLocked: boolean;
+};
+
+const initialArtifactUiState: ArtifactUiState = {
+	isIdeLocked: false,
+};
+
 type Selector<T> = (state: UIArtifact) => T;
 
 export function useArtifactSelector<Selected>(selector: Selector<Selected>) {
@@ -85,5 +93,47 @@ export function useArtifact() {
 			setMetadata: setLocalArtifactMetadata,
 		}),
 		[artifact, setArtifact, localArtifactMetadata, setLocalArtifactMetadata],
+	);
+}
+
+export function useArtifactUiState() {
+	const { data: localUiState, mutate: setLocalUiState } = useSWR<ArtifactUiState>(
+		"artifact-ui-state",
+		null,
+		{
+			fallbackData: initialArtifactUiState,
+		},
+	);
+
+	const uiState = useMemo(
+		() => localUiState || initialArtifactUiState,
+		[localUiState],
+	);
+
+	const setUiState = useCallback(
+		(
+			updater:
+				| ArtifactUiState
+				| ((currentUiState: ArtifactUiState) => ArtifactUiState),
+		) => {
+			setLocalUiState((currentUiState) => {
+				const uiStateToUpdate = currentUiState || initialArtifactUiState;
+
+				if (typeof updater === "function") {
+					return updater(uiStateToUpdate);
+				}
+
+				return updater;
+			});
+		},
+		[setLocalUiState],
+	);
+
+	return useMemo(
+		() => ({
+			uiState,
+			setUiState,
+		}),
+		[uiState, setUiState],
 	);
 }

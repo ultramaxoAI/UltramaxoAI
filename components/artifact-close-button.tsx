@@ -1,10 +1,17 @@
 import { memo } from "react";
-import { initialArtifactData, useArtifact } from "@/hooks/use-artifact";
+import { initialArtifactData, useArtifact, useArtifactUiState } from "@/hooks/use-artifact";
 import { CrossIcon } from "./icons";
 import { Button } from "./ui/button";
 
 function PureArtifactCloseButton() {
 	const { setArtifact } = useArtifact();
+	const {
+		uiState: { isIdeLocked },
+	} = useArtifactUiState();
+
+	if (isIdeLocked) {
+		return null;
+	}
 
 	return (
 		<Button

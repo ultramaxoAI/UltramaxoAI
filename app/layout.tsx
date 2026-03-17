@@ -73,9 +73,9 @@ export const metadata: Metadata = {
 		creator: "@ultramaxo",
 	},
 	icons: {
-		icon: "/favicon.svg",
-		shortcut: "/favicon.svg",
-		apple: "/favicon.svg",
+		icon: "/icons/icon-192x192.png",
+		shortcut: "/icons/icon-192x192.png",
+		apple: "/icons/icon-512x512.png",
 	},
 };
 

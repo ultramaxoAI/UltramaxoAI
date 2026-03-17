@@ -44,6 +44,10 @@ import {
 	DEFAULT_CHAT_MODEL,
 	modelsByProvider,
 } from "@/lib/ai/models";
+import {
+	isFullstackModeInMaintenance,
+	isMobileModeInMaintenance,
+} from "@/lib/constants";
 import type { Attachment, ChatMessage } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import {
@@ -238,8 +242,12 @@ function PureMultimodalInput({
 		setInput(preset.prompt);
 		setWebSearchEnabled(preset.webSearchEnabled);
 		setDeepThinkingEnabled(preset.deepThinkingEnabled);
-		setFullstackModeEnabled(preset.fullstackModeEnabled);
-		setMobileModeEnabled(preset.mobileModeEnabled);
+		setFullstackModeEnabled(
+			isFullstackModeInMaintenance ? false : preset.fullstackModeEnabled,
+		);
+		setMobileModeEnabled(
+			isMobileModeInMaintenance ? false : preset.mobileModeEnabled,
+		);
 
 		if (preset.modelId && onModelChange) {
 			onModelChange(preset.modelId);
@@ -251,6 +259,33 @@ function PureMultimodalInput({
 		});
 
 		toast.success(`Loaded preset: ${preset.title}`);
+
+		if (
+			(preset.fullstackModeEnabled && isFullstackModeInMaintenance) ||
+			(preset.mobileModeEnabled && isMobileModeInMaintenance)
+		) {
+			toast.error("Mode Fullstack/Mobile sedang maintenance sementara.");
+		}
+	};
+
+	const toggleFullstackMode = () => {
+		if (isFullstackModeInMaintenance) {
+			setFullstackModeEnabled(false);
+			toast.error("Fullstack mode sedang maintenance sementara.");
+			return;
+		}
+
+		setFullstackModeEnabled(!fullstackModeEnabled);
+	};
+
+	const toggleMobileMode = () => {
+		if (isMobileModeInMaintenance) {
+			setMobileModeEnabled(false);
+			toast.error("Mobile Dev sedang maintenance sementara.");
+			return;
+		}
+
+		setMobileModeEnabled(!mobileModeEnabled);
 	};
 
 	const submitForm = useCallback(async () => {
@@ -769,20 +804,26 @@ function PureMultimodalInput({
 								</DropdownMenuItem>
 								<DropdownMenuItem
 									className="cursor-pointer rounded-xl hover:bg-black/5 focus:bg-black/5 dark:hover:bg-white/7 dark:focus:bg-white/7"
-									onClick={() => setFullstackModeEnabled(!fullstackModeEnabled)}
+									onClick={toggleFullstackMode}
 								>
 									<FileTextIcon className="mr-2 h-4 w-4" />
-									<span>Fullstack Web</span>
+									<span>
+										Fullstack Web
+										{isFullstackModeInMaintenance ? " (Maintenance)" : ""}
+									</span>
 									{fullstackModeEnabled && (
 										<CheckIcon className="ml-auto h-4 w-4 text-orange-500" />
 									)}
 								</DropdownMenuItem>
 								<DropdownMenuItem
 									className="cursor-pointer rounded-xl hover:bg-black/5 focus:bg-black/5 dark:hover:bg-white/7 dark:focus:bg-white/7"
-									onClick={() => setMobileModeEnabled(!mobileModeEnabled)}
+									onClick={toggleMobileMode}
 								>
 									<CheckIcon className="mr-2 h-4 w-4" />
-									<span>Mobile Dev</span>
+									<span>
+										Mobile Dev
+										{isMobileModeInMaintenance ? " (Maintenance)" : ""}
+									</span>
 									{mobileModeEnabled && (
 										<CheckIcon className="ml-auto h-4 w-4 text-pink-500" />
 									)}

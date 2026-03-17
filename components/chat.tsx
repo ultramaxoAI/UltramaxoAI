@@ -9,7 +9,7 @@ import { useEffect, useRef, useState } from "react";
 import useSWR, { useSWRConfig } from "swr";
 import { unstable_serialize } from "swr/infinite";
 import { ChatContextHeader } from "@/components/chat-context-header";
-import { useArtifactSelector } from "@/hooks/use-artifact";
+import { useArtifactSelector, useArtifactUiState } from "@/hooks/use-artifact";
 import { useAutoResume } from "@/hooks/use-auto-resume";
 import { useChatVisibility } from "@/hooks/use-chat-visibility";
 import type { Vote } from "@/lib/db/schema";
@@ -85,6 +85,7 @@ export function Chat({
 		return () => window.removeEventListener("popstate", handlePopState);
 	}, [router]);
 	const { setDataStream } = useDataStream();
+	const { setUiState: setArtifactUiState } = useArtifactUiState();
 
 	const [input, setInput] = useState<string>("");
 	const [currentModelId, setCurrentModelId] = useState(initialChatModel);
@@ -127,6 +128,21 @@ export function Chat({
 		visibilityType,
 		activeDocumentId,
 	]);
+
+	useEffect(() => {
+		setArtifactUiState((currentState) => {
+			const nextIsIdeLocked = fullstackModeEnabled || mobileModeEnabled;
+
+			if (currentState.isIdeLocked === nextIsIdeLocked) {
+				return currentState;
+			}
+
+			return {
+				...currentState,
+				isIdeLocked: nextIsIdeLocked,
+			};
+		});
+	}, [fullstackModeEnabled, mobileModeEnabled, setArtifactUiState]);
 
 	const {
 		messages,
@@ -295,6 +311,9 @@ export function Chat({
 
 	const [attachments, setAttachments] = useState<Attachment[]>([]);
 	const isArtifactVisible = useArtifactSelector((state) => state.isVisible);
+	const {
+		uiState: { isIdeLocked: isIdeArtifactLocked },
+	} = useArtifactUiState();
 
 	// Count user messages for contextual upgrade banner
 	const userMessageCount = messages.filter((m) => m.role === "user").length;
@@ -329,7 +348,11 @@ export function Chat({
 			<div
 				className={cn(
 					"relative flex h-dvh min-w-0 flex-col overflow-hidden bg-[#f3efe6] text-[#171717] transition-all duration-300 ease-in-out dark:bg-[#111315] dark:text-[#f3f4f1]",
-					isArtifactVisible ? "lg:w-[55%]" : "w-full",
+					isArtifactVisible
+						? isIdeArtifactLocked
+							? "lg:w-[46%]"
+							: "lg:w-[55%]"
+						: "w-full",
 				)}
 			>
 				<div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(20,184,166,0.08),transparent_30%),radial-gradient(circle_at_82%_14%,rgba(45,212,191,0.06),transparent_20%)] dark:bg-[radial-gradient(circle_at_top,rgba(20,184,166,0.12),transparent_28%),radial-gradient(circle_at_82%_14%,rgba(45,212,191,0.08),transparent_20%)]" />

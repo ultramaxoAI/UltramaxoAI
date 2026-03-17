@@ -16,10 +16,10 @@ import { codeArtifact } from "@/artifacts/code/client";
 import { imageArtifact } from "@/artifacts/image/client";
 import { sheetArtifact } from "@/artifacts/sheet/client";
 import { textArtifact } from "@/artifacts/text/client";
-import { useArtifact } from "@/hooks/use-artifact";
+import { useArtifact, useArtifactUiState } from "@/hooks/use-artifact";
 import type { Document, Vote } from "@/lib/db/schema";
 import type { Attachment, ChatMessage } from "@/lib/types";
-import { fetcher } from "@/lib/utils";
+import { cn, fetcher } from "@/lib/utils";
 import { ArtifactShareButton } from "./artifact-share-button";
 import { ArtifactActions } from "./artifact-actions";
 import { ArtifactCloseButton } from "./artifact-close-button";
@@ -99,6 +99,9 @@ function PureArtifact({
 	setWebSearchEnabled: Dispatch<SetStateAction<boolean>>;
 }) {
 	const { artifact, setArtifact, metadata, setMetadata } = useArtifact();
+	const {
+		uiState: { isIdeLocked },
+	} = useArtifactUiState();
 
 	const {
 		data: documents,
@@ -278,7 +281,12 @@ function PureArtifact({
 			{artifact.isVisible && (
 				<motion.div
 					animate={{ opacity: 1 }}
-					className="fixed inset-0 z-50 flex h-dvh w-dvw flex-row bg-black/30 backdrop-blur-[2px] pointer-events-none lg:bg-transparent lg:backdrop-blur-0"
+					className={cn(
+						"fixed inset-0 z-50 flex h-dvh w-dvw flex-row pointer-events-none",
+						isIdeLocked
+							? "bg-transparent backdrop-blur-0"
+							: "bg-black/30 backdrop-blur-[2px] lg:bg-transparent lg:backdrop-blur-0",
+					)}
 					data-testid="artifact"
 					exit={{ opacity: 0, transition: { delay: 0.4 } }}
 					initial={{ opacity: 0 }}
@@ -290,7 +298,10 @@ function PureArtifact({
 										opacity: 1,
 										x: 0,
 										y: 0,
-										height: windowHeight ? windowHeight : "100dvh",
+										height:
+											isIdeLocked && windowHeight
+												? windowHeight * 0.56
+												: windowHeight ? windowHeight : "100dvh",
 										width: windowWidth ? windowWidth : "100dvw",
 										borderRadius: 0,
 										transition: {
@@ -303,10 +314,16 @@ function PureArtifact({
 									}
 								: {
 										opacity: 1,
-										x: windowWidth ? windowWidth * 0.32 : 0,
+										x: windowWidth
+											? windowWidth * (isIdeLocked ? 0.46 : 0.32)
+											: 0,
 										y: 0,
 										height: windowHeight ? windowHeight : "100dvh",
-										width: windowWidth ? windowWidth * 0.68 : "68dvw",
+										width: windowWidth
+											? windowWidth * (isIdeLocked ? 0.54 : 0.68)
+											: isIdeLocked
+												? "54dvw"
+												: "68dvw",
 										borderRadius: 0,
 										transition: {
 											delay: 0,
@@ -317,7 +334,10 @@ function PureArtifact({
 										},
 									}
 						}
-						className="fixed inset-0 flex h-dvh flex-col overflow-y-auto border-zinc-800 bg-zinc-950 text-zinc-100 pointer-events-auto md:border-l shadow-2xl"
+						className={cn(
+							"fixed inset-0 flex h-dvh flex-col overflow-y-auto border-zinc-800 bg-zinc-950 text-zinc-100 pointer-events-auto shadow-2xl",
+							isIdeLocked ? "border-b md:border-l" : "md:border-l",
+						)}
 						exit={{
 							opacity: 0,
 							scale: 0.5,
@@ -333,8 +353,11 @@ function PureArtifact({
 								? {
 										opacity: 0,
 										x: 0,
-										y: 24,
-										height: windowHeight ? windowHeight : "100dvh",
+										y: isIdeLocked ? 32 : 24,
+										height:
+											isIdeLocked && windowHeight
+												? windowHeight * 0.52
+												: windowHeight ? windowHeight : "100dvh",
 										width: windowWidth ? windowWidth : "100dvw",
 										borderRadius: 0,
 									}

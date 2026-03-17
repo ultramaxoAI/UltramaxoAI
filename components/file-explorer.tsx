@@ -5,12 +5,16 @@ import {
 	ChevronDownIcon,
 	ChevronRightIcon,
 	DownloadIcon,
+	FileCodeIcon,
 	FileIcon,
+	FileJsonIcon,
+	FileTextIcon,
 	FolderIcon,
+	ImageIcon,
 	PlusIcon,
 	TrashIcon,
 } from "lucide-react";
-import { useState } from "react";
+import { Fragment, type ReactNode, useMemo, useState } from "react";
 import { toast } from "sonner";
 import type { SupportedLanguage } from "@/components/code-editor";
 import { Button } from "@/components/ui/button";
@@ -33,29 +37,98 @@ type FileExplorerProps = {
 	className?: string;
 };
 
+type FileTreeNode = {
+	name: string;
+	path: string;
+	type: "file" | "directory";
+	index?: number;
+	children?: FileTreeNode[];
+};
+
 function getFileIcon(filename: string, size = 16) {
 	const ext = filename.split(".").pop()?.toLowerCase();
 
 	switch (ext) {
 		case "js":
 		case "jsx":
-			return <span style={{ fontSize: size }}>📜</span>;
 		case "ts":
 		case "tsx":
-			return <span style={{ fontSize: size }}>📘</span>;
 		case "py":
-			return <span style={{ fontSize: size }}>🐍</span>;
 		case "html":
-			return <span style={{ fontSize: size }}>🌐</span>;
 		case "css":
-			return <span style={{ fontSize: size }}>🎨</span>;
+			return <FileCodeIcon className="text-cyan-300" size={size} />;
 		case "json":
-			return <span style={{ fontSize: size }}>📋</span>;
+			return <FileJsonIcon className="text-amber-300" size={size} />;
 		case "md":
-			return <span style={{ fontSize: size }}>📝</span>;
+			return <FileTextIcon className="text-zinc-300" size={size} />;
+		case "png":
+		case "jpg":
+		case "jpeg":
+		case "gif":
+		case "svg":
+			return <ImageIcon className="text-pink-300" size={size} />;
 		default:
 			return <FileIcon className="text-gray-400" size={size} />;
 	}
+}
+
+function buildFileTree(files: FileNode[]): FileTreeNode[] {
+	const root: FileTreeNode[] = [];
+	const directories = new Map<string, FileTreeNode>();
+
+	for (const [index, file] of files.entries()) {
+		const segments = file.name.split("/").filter(Boolean);
+		let currentChildren = root;
+		let currentPath = "";
+
+		for (const [segmentIndex, segment] of segments.entries()) {
+			currentPath = currentPath ? `${currentPath}/${segment}` : segment;
+			const isFile = segmentIndex === segments.length - 1;
+
+			if (isFile) {
+				currentChildren.push({
+					name: segment,
+					path: currentPath,
+					type: "file",
+					index,
+				});
+				continue;
+			}
+
+			let directoryNode = directories.get(currentPath);
+			if (!directoryNode) {
+				directoryNode = {
+					name: segment,
+					path: currentPath,
+					type: "directory",
+					children: [],
+				};
+				directories.set(currentPath, directoryNode);
+				currentChildren.push(directoryNode);
+			}
+
+			currentChildren = directoryNode.children ?? [];
+		}
+	}
+
+	const sortNodes = (nodes: FileTreeNode[]) => {
+		nodes.sort((left, right) => {
+			if (left.type !== right.type) {
+				return left.type === "directory" ? -1 : 1;
+			}
+
+			return left.name.localeCompare(right.name);
+		});
+
+		for (const node of nodes) {
+			if (node.children) {
+				sortNodes(node.children);
+			}
+		}
+	};
+
+	sortNodes(root);
+	return root;
 }
 
 async function downloadProjectAsZip(
@@ -100,6 +173,8 @@ export function FileExplorer({
 	const [newFileName, setNewFileName] = useState("");
 	const [editingIndex, setEditingIndex] = useState<number | null>(null);
 	const [editingName, setEditingName] = useState("");
+	const [expandedDirectories, setExpandedDirectories] = useState<Record<string, boolean>>({});
+	const fileTree = useMemo(() => buildFileTree(files), [files]);
 
 	const handleCreateFile = () => {
 		if (newFileName.trim() && onFileAdd) {
@@ -140,6 +215,117 @@ export function FileExplorer({
 		downloadProjectAsZip(files);
 	};
 
+	const toggleDirectory = (path: string) => {
+		setExpandedDirectories((current) => ({
+			...current,
+			[path]: current[path] === false,
+		}));
+	};
+
+	const renderNode = (node: FileTreeNode, depth = 0): ReactNode => {
+		if (node.type === "directory") {
+			const isDirectoryExpanded = expandedDirectories[node.path] !== false;
+
+			return (
+				<Fragment key={node.path}>
+					<button
+						type="button"
+						className="flex w-full items-center gap-2 py-1.5 pr-2 text-left text-sm text-zinc-300 transition-colors hover:bg-zinc-800/40"
+						style={{ paddingLeft: `${depth * 14 + 8}px` }}
+						onClick={() => toggleDirectory(node.path)}
+					>
+						{isDirectoryExpanded ? (
+							<ChevronDownIcon size={14} className="text-zinc-500" />
+						) : (
+							<ChevronRightIcon size={14} className="text-zinc-500" />
+						)}
+						<FolderIcon size={14} className="text-cyan-300" />
+						<span className="truncate">{node.name}</span>
+					</button>
+					{isDirectoryExpanded &&
+						node.children?.map((childNode) => renderNode(childNode, depth + 1))}
+				</Fragment>
+			);
+		}
+
+		const index = node.index ?? 0;
+		const file = files[index];
+
+		return (
+			<div
+				className={cn(
+					"flex items-center justify-between group py-1.5 pr-2 cursor-pointer transition-colors",
+					activeFileIndex === index
+						? "bg-zinc-800 text-white"
+						: "text-gray-400 hover:bg-zinc-800/50 hover:text-gray-300",
+				)}
+				key={node.path}
+				onClick={() => onFileSelect(index)}
+				style={{ paddingLeft: `${depth * 14 + 28}px` }}
+			>
+				{editingIndex === index ? (
+					<Input
+						autoFocus
+						className="h-6 text-sm bg-zinc-700 border-zinc-600"
+						onBlur={() => {
+							if (editingName.trim()) {
+								handleRenameFile(index);
+							} else {
+								setEditingIndex(null);
+								setEditingName("");
+							}
+						}}
+						onChange={(event) => setEditingName(event.target.value)}
+						onClick={(event) => event.stopPropagation()}
+						onKeyDown={(event) => {
+							if (event.key === "Enter") {
+								handleRenameFile(index);
+							}
+							if (event.key === "Escape") {
+								setEditingIndex(null);
+								setEditingName("");
+							}
+						}}
+						value={editingName}
+					/>
+				) : (
+					<>
+						<div className="flex items-center gap-2 flex-1 min-w-0">
+							{getFileIcon(file.name, 14)}
+							<span
+								className="text-sm truncate"
+								onDoubleClick={(event) => {
+									event.stopPropagation();
+									if (onFileRename) {
+										setEditingIndex(index);
+										setEditingName(file.name);
+									}
+								}}
+							>
+								{node.name}
+							</span>
+						</div>
+
+						{onFileDelete && files.length > 1 && (
+							<Button
+								className="h-5 w-5 opacity-0 group-hover:opacity-100"
+								onClick={(event) => {
+									event.stopPropagation();
+									onFileDelete(index);
+									toast.success(`Deleted ${file.name}`);
+								}}
+								size="icon"
+								variant="ghost"
+							>
+								<TrashIcon size={12} />
+							</Button>
+						)}
+					</>
+				)}
+			</div>
+		);
+	};
+
 	return (
 		<div
 			className={cn(
@@ -147,11 +333,11 @@ export function FileExplorer({
 				className,
 			)}
 		>
-			{/* Header */}
 			<div className="flex items-center justify-between p-2 border-b border-zinc-800">
 				<button
 					className="flex items-center gap-1 text-sm font-semibold text-gray-300 hover:text-white"
 					onClick={() => setIsExpanded(!isExpanded)}
+					type="button"
 				>
 					{isExpanded ? (
 						<ChevronDownIcon size={16} />
@@ -186,10 +372,8 @@ export function FileExplorer({
 				</div>
 			</div>
 
-			{/* File List */}
 			{isExpanded && (
 				<div className="flex-1 overflow-y-auto">
-					{/* New File Input */}
 					{isCreating && (
 						<div className="p-2 border-b border-zinc-800">
 							<Input
@@ -202,95 +386,29 @@ export function FileExplorer({
 										setIsCreating(false);
 									}
 								}}
-								onChange={(e) => setNewFileName(e.target.value)}
-								onKeyDown={(e) => {
-									if (e.key === "Enter") {
+								onChange={(event) => setNewFileName(event.target.value)}
+								onKeyDown={(event) => {
+									if (event.key === "Enter") {
 										handleCreateFile();
 									}
-									if (e.key === "Escape") {
+									if (event.key === "Escape") {
 										setIsCreating(false);
 										setNewFileName("");
 									}
 								}}
-								placeholder="filename.ext"
+								placeholder="folder/file.ext"
 								value={newFileName}
 							/>
 						</div>
 					)}
 
-					{/* Files */}
-					{files.map((file, index) => (
-						<div
-							className={cn(
-								"flex items-center justify-between group px-2 py-1.5 cursor-pointer transition-colors",
-								activeFileIndex === index
-									? "bg-zinc-800 text-white"
-									: "text-gray-400 hover:bg-zinc-800/50 hover:text-gray-300",
-							)}
-							key={index}
-							onClick={() => onFileSelect(index)}
-						>
-							{editingIndex === index ? (
-								<Input
-									autoFocus
-									className="h-6 text-sm bg-zinc-700 border-zinc-600"
-									onBlur={() => {
-										if (editingName.trim()) {
-											handleRenameFile(index);
-										} else {
-											setEditingIndex(null);
-											setEditingName("");
-										}
-									}}
-									onChange={(e) => setEditingName(e.target.value)}
-									onClick={(e) => e.stopPropagation()}
-									onKeyDown={(e) => {
-										if (e.key === "Enter") {
-											handleRenameFile(index);
-										}
-										if (e.key === "Escape") {
-											setEditingIndex(null);
-											setEditingName("");
-										}
-									}}
-									value={editingName}
-								/>
-							) : (
-								<>
-									<div className="flex items-center gap-2 flex-1 min-w-0">
-										{getFileIcon(file.name, 14)}
-										<span
-											className="text-sm truncate"
-											onDoubleClick={(e) => {
-												e.stopPropagation();
-												if (onFileRename) {
-													setEditingIndex(index);
-													setEditingName(file.name);
-												}
-											}}
-										>
-											{file.name}
-										</span>
-									</div>
-
-									{onFileDelete && files.length > 1 && (
-										<Button
-											className="h-5 w-5 opacity-0 group-hover:opacity-100"
-											onClick={(e) => {
-												e.stopPropagation();
-												onFileDelete(index);
-												toast.success(`Deleted ${file.name}`);
-											}}
-											size="icon"
-											variant="ghost"
-										>
-											<TrashIcon size={12} />
-										</Button>
-									)}
-								</>
-							)}
+					{fileTree.length > 0 ? (
+						fileTree.map((node) => renderNode(node))
+					) : (
+						<div className="px-3 py-4 text-sm text-zinc-500">
+							Workspace files will appear here.
 						</div>
-					))}
+					)}
 				</div>
 			)}
 		</div>

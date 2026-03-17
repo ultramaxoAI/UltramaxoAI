@@ -19,7 +19,7 @@ import {
 } from "@/components/icons";
 import { SandpackViewer } from "@/components/sandpack-viewer";
 import { WebContainerRunner } from "@/components/webcontainer-runner";
-import { WebTerminal, formatTerminalOutput, type WebTerminalHandle } from "@/components/web-terminal";
+import { WebTerminal, type WebTerminalHandle } from "@/components/web-terminal";
 import { useWebContainerOptional } from "@/components/webcontainer-provider";
 import { cn, generateUUID } from "@/lib/utils";
 
@@ -412,7 +412,26 @@ type Metadata = {
 	files?: Array<{ name: string; content: string; language: SupportedLanguage }>;
 	activeFileIndex?: number;
 	userDependencies?: Record<string, string>;
+	parsedContentLength?: number;
 };
+
+function shouldRefreshParsedFiles(
+	nextContent: string,
+	previousParsedLength?: number,
+) {
+	const nextLength = nextContent.length;
+	const previousLength = previousParsedLength ?? 0;
+
+	if (nextLength <= 200) {
+		return nextLength !== previousLength;
+	}
+
+	if (nextContent.includes("// file:") || nextContent.includes("<!-- file:")) {
+		return nextLength - previousLength >= 240;
+	}
+
+	return nextLength - previousLength >= 900;
+}
 
 function getErrorMessage(error: unknown) {
 	return error instanceof Error ? error.message : String(error);
@@ -478,6 +497,7 @@ export const codeArtifact = new Artifact<"code", Metadata>({
 			files: [],
 			activeFileIndex: 0,
 			userDependencies: {},
+			parsedContentLength: 0,
 		});
 	},
 	onStreamPart: ({ streamPart, setArtifact, setMetadata }) => {
@@ -492,14 +512,27 @@ export const codeArtifact = new Artifact<"code", Metadata>({
 
 			// Parse files and detect language when enough content is available
 			if (streamPart.data.length > 50) {
-				const files = parseCodeFiles(streamPart.data);
-				const detectedLang =
-					files[0]?.language || detectCodeLanguage(streamPart.data);
-				setMetadata((metadata) => ({
-					...metadata,
-					language: detectedLang,
-					files,
-				}));
+				setMetadata((metadata) => {
+					if (
+						!shouldRefreshParsedFiles(
+							streamPart.data,
+							metadata?.parsedContentLength,
+						)
+					) {
+						return metadata;
+					}
+
+					const files = parseCodeFiles(streamPart.data);
+					const detectedLang =
+						files[0]?.language || detectCodeLanguage(streamPart.data);
+
+					return {
+						...metadata,
+						language: detectedLang,
+						files,
+						parsedContentLength: streamPart.data.length,
+					};
+				});
 			}
 		}
 	},
@@ -507,8 +540,12 @@ export const codeArtifact = new Artifact<"code", Metadata>({
 		const [isExpanded, setIsExpanded] = useState(true);
 		const [activeTab, setActiveTab] = useState<"code" | "preview">("code");
 		const terminalRef = useRef<WebTerminalHandle>(null);
+		const lastWorkspaceSignatureRef = useRef("");
 		const wc = useWebContainerOptional();
-		const files = metadata?.files || parseCodeFiles(content || "");
+		const files = useMemo(
+			() => metadata?.files || parseCodeFiles(content || ""),
+			[metadata?.files, content],
+		);
 		const activeFileIndex = metadata?.activeFileIndex || 0;
 		const activeFile = files[activeFileIndex] || files[0];
 		const autoDetectedDependencies = useMemo(
@@ -533,6 +570,27 @@ export const codeArtifact = new Artifact<"code", Metadata>({
 				setActiveTab("preview");
 			}
 		}, [wc?.devServer?.ready, files]);
+
+		useEffect(() => {
+			if (!wc) {
+				return;
+			}
+
+			const nextWorkspaceFiles = files.map((file) => ({
+				path: file.name,
+				content: file.content,
+			}));
+			const nextSignature = JSON.stringify(
+				nextWorkspaceFiles.map((file) => [file.path, file.content]),
+			);
+
+			if (lastWorkspaceSignatureRef.current === nextSignature) {
+				return;
+			}
+
+			lastWorkspaceSignatureRef.current = nextSignature;
+			wc.setWorkspaceFiles(nextWorkspaceFiles);
+		}, [wc, files]);
 
 		// Get preview of code (first few lines)
 		const codePreview = (activeFile?.content || content || "")
@@ -585,12 +643,53 @@ export const codeArtifact = new Artifact<"code", Metadata>({
 			props.onSaveContent(serializeFilesToContent(updatedFiles), false);
 		};
 
+		const handleActiveFileContentChange = (
+			updatedFileContent: string,
+			debounce: boolean,
+		) => {
+			if (!activeFile) {
+				props.onSaveContent(updatedFileContent, debounce);
+				return;
+			}
+
+			const updatedFiles = files.map((file, index) =>
+				index === activeFileIndex
+					? { ...file, content: updatedFileContent }
+					: file,
+			);
+
+			setMetadata({
+				...metadata,
+				files: updatedFiles,
+				activeFileIndex,
+			});
+
+			props.onSaveContent(serializeFilesToContent(updatedFiles), debounce);
+		};
+
 		return (
 			<div className="flex flex-col w-full h-full border border-zinc-800 rounded-xl overflow-hidden bg-[#0A0A0A]">
 				<div className="flex items-center justify-between px-3 py-2 bg-[#141415] border-b border-zinc-800">
 					<div className="flex items-center gap-2">
 						<div className="flex items-center gap-1.5 px-2 py-1 bg-zinc-800/50 rounded text-xs font-medium text-zinc-300 border border-zinc-800/80">
 							{detectedLanguage === "python" ? "🐍 Python" : detectedLanguage === "html" ? "🌐 Web" : "💻 Node.js"}
+						</div>
+						<div className="hidden items-center gap-1.5 rounded border border-zinc-800/80 bg-zinc-900 px-2 py-1 text-[11px] font-medium text-zinc-400 md:flex">
+							<span
+								className={cn(
+									"h-2 w-2 rounded-full",
+									wc?.status === "running"
+										? "bg-emerald-400"
+										: wc?.status === "installing" || wc?.status === "booting"
+											? "bg-amber-400"
+											: wc?.status === "error"
+												? "bg-red-400"
+												: "bg-zinc-500",
+								)}
+							/>
+							<span>{wc?.status ?? "idle"}</span>
+							<span className="text-zinc-600">•</span>
+							<span>{files.length} files</span>
 						</div>
 						<div className="text-xs text-zinc-500 font-mono hidden md:block">
 							{activeFile?.name || "App.js"}
@@ -685,6 +784,7 @@ export const codeArtifact = new Artifact<"code", Metadata>({
 											{...props}
 											content={activeFile?.content || content || ""}
 											language={detectedLanguage}
+											onSaveContent={handleActiveFileContentChange}
 										/>
 										{!isPreviewableWebProject(files) && metadata?.outputs && metadata.outputs.length > 0 && (
 											<Console
@@ -706,6 +806,7 @@ export const codeArtifact = new Artifact<"code", Metadata>({
 								<WebTerminal
 									ref={terminalRef}
 									defaultCollapsed={false}
+									outputs={wc?.terminalOutputs}
 									status={wc?.status === "installing" ? "Installing..." : wc?.status === "running" ? "Running..." : undefined}
 									isRunning={wc?.isRunning ?? false}
 								/>

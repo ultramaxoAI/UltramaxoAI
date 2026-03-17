@@ -46,6 +46,8 @@ interface WebTerminalProps {
 	status?: string;
 	/** Whether a command is currently running */
 	isRunning?: boolean;
+	/** Terminal output stream from WebContainer */
+	outputs?: TerminalOutput[];
 	/** Class overrides */
 	className?: string;
 }
@@ -59,6 +61,7 @@ function PureWebTerminal(
 		defaultCollapsed = true,
 		status,
 		isRunning = false,
+		outputs = [],
 		className,
 	}: WebTerminalProps,
 	ref: React.Ref<WebTerminalHandle>,
@@ -66,6 +69,7 @@ function PureWebTerminal(
 	const containerRef = useRef<HTMLDivElement>(null);
 	const xtermRef = useRef<XTerm | null>(null);
 	const fitRef = useRef<FitAddon | null>(null);
+	const renderedOutputCountRef = useRef(0);
 	const [collapsed, setCollapsed] = useState(defaultCollapsed);
 
 	// Initialise xterm
@@ -159,7 +163,24 @@ function PureWebTerminal(
 
 	const handleClear = useCallback(() => {
 		xtermRef.current?.clear();
+		renderedOutputCountRef.current = 0;
 	}, []);
+
+	useEffect(() => {
+		const terminal = xtermRef.current;
+		if (!terminal || outputs.length === 0) {
+			return;
+		}
+
+		const startIndex = renderedOutputCountRef.current;
+		const nextOutputs = outputs.slice(startIndex);
+
+		for (const output of nextOutputs) {
+			terminal.writeln(formatTerminalOutput(output));
+		}
+
+		renderedOutputCountRef.current = outputs.length;
+	}, [outputs]);
 
 	return (
 		<div

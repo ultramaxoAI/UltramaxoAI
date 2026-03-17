@@ -10,6 +10,11 @@ import {
 } from "react";
 import type { DevServerInfo, EngineStatus, TerminalOutput } from "@/lib/webcontainer/types";
 
+type WorkspaceFile = {
+	path: string;
+	content: string;
+};
+
 // ---------------------------------------------------------------------------
 // Types
 // ---------------------------------------------------------------------------
@@ -27,6 +32,10 @@ interface WebContainerContextValue {
 	queueInstall: (packages: string[], purpose?: string) => void;
 	/** Queue dev server start */
 	queueDevServer: () => void;
+	/** Current virtual workspace snapshot */
+	workspaceFiles: WorkspaceFile[];
+	/** Replace the current virtual workspace snapshot */
+	setWorkspaceFiles: (files: WorkspaceFile[]) => void;
 	/** Pending command queue (consumed by the WebContainerRunner) */
 	commandQueue: QueuedAction[];
 	/** Pop next action from the queue */
@@ -76,7 +85,9 @@ export function WebContainerProvider({ children }: { children: ReactNode }) {
 	const [isRunning, setIsRunning] = useState(false);
 	const [devServer, setDevServer] = useState<DevServerInfo | null>(null);
 	const [terminalOutputs, setTerminalOutputs] = useState<TerminalOutput[]>([]);
+	const [workspaceFiles, setWorkspaceFilesState] = useState<WorkspaceFile[]>([]);
 	const queueRef = useRef<QueuedAction[]>([]);
+	const workspaceSignatureRef = useRef("[]");
 	const [, setQueueVersion] = useState(0); // trigger re-renders on queue change
 
 	const addTerminalOutput = useCallback((output: TerminalOutput) => {
@@ -94,8 +105,28 @@ export function WebContainerProvider({ children }: { children: ReactNode }) {
 	}, []);
 
 	const queueDevServer = useCallback(() => {
+		if (
+			devServer?.ready ||
+			queueRef.current.some((action) => action.type === "dev-server")
+		) {
+			return;
+		}
+
 		queueRef.current.push({ type: "dev-server" });
 		setQueueVersion((v) => v + 1);
+	}, [devServer?.ready]);
+
+	const setWorkspaceFiles = useCallback((files: WorkspaceFile[]) => {
+		const nextSignature = JSON.stringify(
+			files.map((file) => [file.path, file.content]),
+		);
+
+		if (workspaceSignatureRef.current === nextSignature) {
+			return;
+		}
+
+		workspaceSignatureRef.current = nextSignature;
+		setWorkspaceFilesState(files);
 	}, []);
 
 	const popAction = useCallback((): QueuedAction | undefined => {
@@ -111,6 +142,8 @@ export function WebContainerProvider({ children }: { children: ReactNode }) {
 				queueCommand,
 				queueInstall,
 				queueDevServer,
+				workspaceFiles,
+				setWorkspaceFiles,
 				commandQueue: queueRef.current,
 				popAction,
 				terminalOutputs,

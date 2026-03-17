@@ -22,6 +22,7 @@ export function WebContainerRunner() {
 	const ctx = useWebContainerOptional();
 	const processingRef = useRef(false);
 	const bootedRef = useRef(false);
+	const syncedWorkspaceSignatureRef = useRef("");
 
 	// Boot WebContainer on first render
 	useEffect(() => {
@@ -56,6 +57,49 @@ export function WebContainerRunner() {
 			}
 		})();
 	}, [ctx]);
+
+	useEffect(() => {
+		if (!ctx || ctx.status === "idle" || ctx.workspaceFiles.length === 0) {
+			return;
+		}
+
+		const nextSignature = JSON.stringify(
+			ctx.workspaceFiles.map((file) => [file.path, file.content]),
+		);
+
+		if (syncedWorkspaceSignatureRef.current === nextSignature) {
+			return;
+		}
+
+		let isCancelled = false;
+
+		(async () => {
+			try {
+				await mountFiles(
+					ctx.workspaceFiles.map((file) => ({
+						path: file.path,
+						content: file.content,
+					})),
+				);
+
+				if (!isCancelled) {
+					syncedWorkspaceSignatureRef.current = nextSignature;
+				}
+			} catch (err) {
+				if (!isCancelled) {
+					ctx.addTerminalOutput({
+						type: "error",
+						data: `Workspace sync failed: ${err instanceof Error ? err.message : String(err)}`,
+						timestamp: Date.now(),
+					});
+				}
+			}
+		})();
+
+		return () => {
+			isCancelled = true;
+		};
+	}, [ctx, ctx?.status, ctx?.workspaceFiles]);
 
 	// Create output handler
 	const createOutputHandler = useCallback(

@@ -2,7 +2,7 @@
 
 import { javascript } from "@codemirror/lang-javascript";
 import { python } from "@codemirror/lang-python";
-import { EditorState, Transaction } from "@codemirror/state";
+import { Compartment, EditorState, Transaction } from "@codemirror/state";
 import { oneDark } from "@codemirror/theme-one-dark";
 import { EditorView } from "@codemirror/view";
 import { basicSetup } from "codemirror";
@@ -149,10 +149,19 @@ function PureCodeEditor({
 }: EditorProps) {
 	const containerRef = useRef<HTMLDivElement>(null);
 	const editorRef = useRef<EditorView | null>(null);
+	const languageCompartmentRef = useRef<Compartment | null>(null);
+	const onSaveContentRef = useRef(onSaveContent);
 	const detectedLanguage = providedLanguage || detectLanguage(content);
 
 	useEffect(() => {
+		onSaveContentRef.current = onSaveContent;
+	}, [onSaveContent]);
+
+	useEffect(() => {
 		if (containerRef.current && !editorRef.current) {
+			const languageCompartment = new Compartment();
+			languageCompartmentRef.current = languageCompartment;
+
 			(async () => {
 				const langExtension = await getLanguageExtension(detectedLanguage);
 
@@ -164,7 +173,24 @@ function PureCodeEditor({
 
 				const startState = EditorState.create({
 					doc: content,
-					extensions: [basicSetup, langExtension, oneDark, editorTheme],
+					extensions: [
+						basicSetup,
+						languageCompartment.of(langExtension),
+						EditorView.updateListener.of((update) => {
+							if (update.docChanged) {
+								const transaction = update.transactions.find(
+									(tr) => !tr.annotation(Transaction.remote),
+								);
+
+								if (transaction) {
+									const newContent = update.state.doc.toString();
+									onSaveContentRef.current(newContent, true);
+								}
+							}
+						}),
+						oneDark,
+						editorTheme,
+					],
 				});
 
 				editorRef.current = new EditorView({
@@ -180,50 +206,27 @@ function PureCodeEditor({
 				editorRef.current = null;
 			}
 		};
-		// NOTE: we only want to run this effect once
-		// eslint-disable-next-line
-	}, [content, detectedLanguage]);
+		// Create the editor only once; content and language are updated by dedicated effects.
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+	}, []);
 
 	useEffect(() => {
-		if (!editorRef.current) {
+		const view = editorRef.current;
+		const languageCompartment = languageCompartmentRef.current;
+		if (!view || !languageCompartment) {
 			return;
 		}
 
 		(async () => {
-			const view = editorRef.current;
-			if (!view) {
-				return;
-			}
-
 			const langExtension = await getLanguageExtension(detectedLanguage);
-
-			const updateListener = EditorView.updateListener.of((update) => {
-				if (update.docChanged) {
-					const transaction = update.transactions.find(
-						(tr) => !tr.annotation(Transaction.remote),
-					);
-
-					if (transaction) {
-						const newContent = update.state.doc.toString();
-						onSaveContent(newContent, true);
-					}
-				}
+			view.dispatch({
+				effects: languageCompartment.reconfigure(langExtension),
 			});
-
-			const currentSelection = view.state.selection;
-
-			const newState = EditorState.create({
-				doc: view.state.doc,
-				extensions: [basicSetup, langExtension, oneDark, updateListener],
-				selection: currentSelection,
-			});
-
-			view.setState(newState);
 		})();
-	}, [onSaveContent, detectedLanguage]);
+	}, [detectedLanguage]);
 
 	useEffect(() => {
-		if (editorRef.current && content) {
+		if (editorRef.current) {
 			const currentContent = editorRef.current.state.doc.toString();
 
 			if (status === "streaming" || currentContent !== content) {

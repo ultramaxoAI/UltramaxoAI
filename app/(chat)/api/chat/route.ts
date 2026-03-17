@@ -32,7 +32,12 @@ import { createDocument } from "@/lib/ai/tools/create-document";
 import { requestSuggestions } from "@/lib/ai/tools/request-suggestions";
 import { updateDocument } from "@/lib/ai/tools/update-document";
 import { webSearch } from "@/lib/ai/tools/web-search";
-import { isProductionEnvironment } from "@/lib/constants";
+import {
+	isFullstackModeInMaintenance,
+	isDevelopmentEnvironment,
+	isMobileModeInMaintenance,
+	isProductionEnvironment,
+} from "@/lib/constants";
 import {
 	createStreamId,
 	deductUserLimitCount,
@@ -113,6 +118,10 @@ export async function POST(request: Request) {
 				mobileModeEnabled,
 				activeDocumentId,
 			} = requestBody;
+			const effectiveFullstackModeEnabled =
+				Boolean(fullstackModeEnabled) && !isFullstackModeInMaintenance;
+			const effectiveMobileModeEnabled =
+				Boolean(mobileModeEnabled) && !isMobileModeInMaintenance;
 
 			const session = await auth();
 
@@ -126,8 +135,8 @@ export async function POST(request: Request) {
 				wormgptEnabled,
 				deepThinkingEnabled,
 				webSearchEnabled,
-				fullstackModeEnabled,
-				mobileModeEnabled,
+				fullstackModeEnabled: effectiveFullstackModeEnabled,
+				mobileModeEnabled: effectiveMobileModeEnabled,
 			});
 
 			// Per-account rate limiting: 10 chat requests per minute per user
@@ -196,7 +205,8 @@ export async function POST(request: Request) {
 			}
 
 			// Daily IDE Mode Limit Check for Free Users (1x per day)
-			const isIdeAgentModeRequested = Boolean(fullstackModeEnabled) || Boolean(mobileModeEnabled);
+			const isIdeAgentModeRequested =
+				effectiveFullstackModeEnabled || effectiveMobileModeEnabled;
 			if (isIdeAgentModeRequested && !customConfig && !currentUser?.isPro && currentUser?.role !== "admin") {
 				const lastIdeUsageDate = currentUser?.freeIdeModeUsedAt;
 				const today = new Date();
@@ -227,8 +237,8 @@ export async function POST(request: Request) {
 				const creditCost = getChatCreditCost({
 					deepThinkingEnabled,
 					webSearchEnabled,
-					fullstackModeEnabled,
-					mobileModeEnabled,
+					fullstackModeEnabled: effectiveFullstackModeEnabled,
+					mobileModeEnabled: effectiveMobileModeEnabled,
 				});
 
 				const creditResult = await spendCreditsForUser({
@@ -239,8 +249,8 @@ export async function POST(request: Request) {
 						model: selectedChatModel,
 						deepThinkingEnabled,
 						webSearchEnabled,
-						fullstackModeEnabled,
-						mobileModeEnabled,
+						fullstackModeEnabled: effectiveFullstackModeEnabled,
+						mobileModeEnabled: effectiveMobileModeEnabled,
 					},
 				});
 
@@ -346,8 +356,8 @@ export async function POST(request: Request) {
 				wormgptEnabled,
 				deepThinkingEnabled,
 				webSearchEnabled,
-				fullstackModeEnabled,
-				mobileModeEnabled,
+				fullstackModeEnabled: effectiveFullstackModeEnabled,
+				mobileModeEnabled: effectiveMobileModeEnabled,
 			});
 
 			// Fetch CROSS-CHAT MEMORY based on Pro status
@@ -885,6 +895,28 @@ export async function POST(request: Request) {
 			}
 
 			console.error("Unhandled error in chat API:", error, { vercelId });
+
+			if (isDevelopmentEnvironment) {
+				return new Response(
+					JSON.stringify({
+						code: "offline:chat",
+						message:
+							error instanceof Error ? error.message : "Unhandled chat API error",
+						cause:
+							error instanceof Error
+								? {
+										name: error.name,
+										stack: error.stack,
+									}
+								: error,
+					}),
+					{
+						status: 500,
+						headers: { "Content-Type": "application/json" },
+					},
+				);
+			}
+
 			return new ChatSDKError("offline:chat").toResponse();
 		}
 	} catch (panic: unknown) {
@@ -892,6 +924,11 @@ export async function POST(request: Request) {
 		return new Response(
 			JSON.stringify({
 				error: panic instanceof Error ? panic.message : "Unknown error",
+				...(isDevelopmentEnvironment
+					? {
+							stack: panic instanceof Error ? panic.stack : undefined,
+						}
+					: {}),
 			}),
 			{
 				status: 500,
