@@ -8,12 +8,10 @@ import {
 	ChevronDownIcon,
 	CpuIcon,
 	FileTextIcon,
-	GlobeIcon,
 	ImageIcon,
 	PlusIcon,
 	SparklesIcon,
 	Wand2Icon,
-	XIcon,
 } from "lucide-react";
 
 import { nanoid } from "nanoid";
@@ -98,17 +96,6 @@ export interface MultimodalInputProps {
 	customModels?: Array<{ id: string; name: string; provider: string }>;
 }
 
-type PromptPreset = {
-	id: string;
-	title: string;
-	prompt: string;
-	modelId: string | null;
-	webSearchEnabled: boolean;
-	deepThinkingEnabled: boolean;
-	fullstackModeEnabled: boolean;
-	mobileModeEnabled: boolean;
-};
-
 function PureMultimodalInput({
 	chatId,
 	input,
@@ -140,7 +127,6 @@ function PureMultimodalInput({
 	const { width } = useWindowSize();
 	const [imageGenerationOpen, setImageGenerationOpen] = useState(false);
 	const [imageGenerationMode, setImageGenerationMode] = useState(false);
-	const [promptPresets, setPromptPresets] = useState<PromptPreset[]>([]);
 
 	// Grant image gen access to PRO users and admins
 	const isPro =
@@ -203,70 +189,18 @@ function PureMultimodalInput({
 		setLocalStorageInput(input);
 	}, [input, setLocalStorageInput]);
 
-	useEffect(() => {
-		async function loadPromptPresets() {
-			if (!user) {
-				setPromptPresets([]);
-				return;
-			}
-
-			try {
-				const response = await fetch("/api/user/prompt-presets");
-				if (!response.ok) {
-					return;
-				}
-
-				const data = await response.json();
-				setPromptPresets(data.presets || []);
-			} catch {
-				setPromptPresets([]);
-			}
-		}
-
-		loadPromptPresets();
-	}, [user]);
-
 	const handleInput = (event: React.ChangeEvent<HTMLTextAreaElement>) => {
 		setInput(event.target.value);
 	};
 
 	const fileInputRef = useRef<HTMLInputElement>(null);
 	const [uploadQueue, setUploadQueue] = useState<string[]>([]);
-	const activeDevModeLabel = fullstackModeEnabled
-		? "Fullstack agent active"
-		: mobileModeEnabled
-			? "Mobile agent active"
-			: null;
-
-	const applyPromptPreset = (preset: PromptPreset) => {
-		setInput(preset.prompt);
-		setWebSearchEnabled(preset.webSearchEnabled);
-		setDeepThinkingEnabled(preset.deepThinkingEnabled);
-		setFullstackModeEnabled(
-			isFullstackModeInMaintenance ? false : preset.fullstackModeEnabled,
-		);
-		setMobileModeEnabled(
-			isMobileModeInMaintenance ? false : preset.mobileModeEnabled,
-		);
-
-		if (preset.modelId && onModelChange) {
-			onModelChange(preset.modelId);
-		}
-
-		requestAnimationFrame(() => {
-			textareaRef.current?.focus();
-			adjustHeight();
-		});
-
-		toast.success(`Loaded preset: ${preset.title}`);
-
-		if (
-			(preset.fullstackModeEnabled && isFullstackModeInMaintenance) ||
-			(preset.mobileModeEnabled && isMobileModeInMaintenance)
-		) {
-			toast.error("Mode Fullstack/Mobile sedang maintenance sementara.");
-		}
-	};
+	const activeModeCount = [
+		deepThinkingEnabled,
+		fullstackModeEnabled,
+		mobileModeEnabled,
+		imageGenerationMode,
+	].filter(Boolean).length;
 
 	const toggleFullstackMode = () => {
 		if (isFullstackModeInMaintenance) {
@@ -572,7 +506,7 @@ function PureMultimodalInput({
 			/>
 
 			<PromptInput
-				className="mx-auto w-full max-w-3xl rounded-[28px] border border-[#171717]/8 bg-white/80 p-0.5 text-[#171717] outline-none ring-0 shadow-[0_14px_32px_rgba(0,0,0,0.06)] backdrop-blur-xl transition-all dark:border-white/8 dark:bg-[#181a1c]/94 dark:text-[#f3f4f1] dark:shadow-[0_14px_32px_rgba(0,0,0,0.2)]"
+				className="mx-auto w-full max-w-3xl rounded-[30px] border border-[#171717]/8 bg-white/78 p-0.5 text-[#171717] outline-none ring-0 shadow-[0_10px_28px_rgba(0,0,0,0.05)] backdrop-blur-xl transition-all dark:border-white/8 dark:bg-[#181a1c]/92 dark:text-[#f3f4f1] dark:shadow-[0_12px_30px_rgba(0,0,0,0.22)]"
 				onSubmit={(event) => {
 					event.preventDefault();
 					if (!input.trim() && attachments.length === 0) {
@@ -619,123 +553,58 @@ function PureMultimodalInput({
 					</div>
 				)}
 				{/* Active Mode Chips — like Gemini */}
-				{(imageGenerationMode ||
-					wormgptEnabled ||
-					deepThinkingEnabled ||
-					webSearchEnabled ||
-					fullstackModeEnabled ||
-					mobileModeEnabled) && (
-					<div className="flex flex-row flex-wrap gap-1 px-2 pt-0.5">
-						{imageGenerationMode && (
-							<span className="flex items-center gap-1 rounded-full border border-violet-500/20 bg-violet-500/10 px-2.5 py-0.5 text-[11px] font-semibold text-violet-300">
-								<Wand2Icon className="size-3" />
-								Image
-								<button
-									className="ml-1 rounded-full p-0.5 hover:bg-violet-500/30 transition-colors"
-									onClick={() => setImageGenerationMode(false)}
-									type="button"
-								>
-									<XIcon className="size-3.5" />
-								</button>
-							</span>
-						)}
-						{wormgptEnabled && (
-							<span className="flex items-center gap-1 rounded-full border border-red-500/20 bg-red-500/10 px-2.5 py-0.5 text-[11px] font-semibold text-red-300">
-								<SparklesIcon className="size-3" />
-								WormGPT
-								<button
-									className="ml-1 rounded-full p-0.5 hover:bg-red-500/30 transition-colors"
-									onClick={() => setWormgptEnabled(false)}
-									type="button"
-								>
-									<XIcon className="size-3.5" />
-								</button>
-							</span>
-						)}
-						{deepThinkingEnabled && (
-							<span className="flex items-center gap-1 rounded-full border border-blue-500/20 bg-blue-500/10 px-2.5 py-0.5 text-[11px] font-semibold text-blue-300">
+				{activeModeCount > 0 ? (
+					<div className="flex flex-row flex-wrap gap-1.5 px-2.5 pt-2">
+						{deepThinkingEnabled ? (
+							<span className="inline-flex items-center gap-1 rounded-full border border-blue-500/18 bg-blue-500/10 px-2.5 py-1 text-[11px] font-medium text-blue-700 dark:border-blue-400/20 dark:bg-blue-500/10 dark:text-blue-300">
 								<CpuIcon className="size-3" />
 								Deep Thinking
-								<button
-									className="ml-1 rounded-full p-0.5 hover:bg-blue-500/30 transition-colors"
-									onClick={() => setDeepThinkingEnabled(false)}
-									type="button"
-								>
-									<XIcon className="size-3.5" />
-								</button>
 							</span>
-						)}
-						{webSearchEnabled && (
-							<span className="flex items-center gap-1 rounded-full border border-green-500/20 bg-green-500/10 px-2.5 py-0.5 text-[11px] font-semibold text-green-300">
-								<GlobeIcon className="size-3" />
-								Web Search
-								<button
-									className="ml-1 rounded-full p-0.5 hover:bg-green-500/30 transition-colors"
-									onClick={() => setWebSearchEnabled(false)}
-									type="button"
-								>
-									<XIcon className="size-3.5" />
-								</button>
-							</span>
-						)}
-						{fullstackModeEnabled && (
-							<span className="flex items-center gap-1 rounded-full border border-orange-500/20 bg-orange-500/10 px-2.5 py-0.5 text-[11px] font-semibold text-orange-300">
+						) : null}
+						{fullstackModeEnabled ? (
+							<span className="inline-flex items-center gap-1 rounded-full border border-orange-500/18 bg-orange-500/10 px-2.5 py-1 text-[11px] font-medium text-orange-700 dark:border-orange-400/20 dark:bg-orange-500/10 dark:text-orange-300">
 								<FileTextIcon className="size-3" />
 								Fullstack
-								<button
-									className="ml-1 rounded-full p-0.5 hover:bg-orange-500/30 transition-colors"
-									onClick={() => setFullstackModeEnabled(false)}
-									type="button"
-								>
-									<XIcon className="size-3.5" />
-								</button>
 							</span>
-						)}
-						{mobileModeEnabled && (
-							<span className="flex items-center gap-1 rounded-full border border-pink-500/20 bg-pink-500/10 px-2.5 py-0.5 text-[11px] font-semibold text-pink-300">
+						) : null}
+						{mobileModeEnabled ? (
+							<span className="inline-flex items-center gap-1 rounded-full border border-pink-500/18 bg-pink-500/10 px-2.5 py-1 text-[11px] font-medium text-pink-700 dark:border-pink-400/20 dark:bg-pink-500/10 dark:text-pink-300">
 								<CheckIcon className="size-3" />
 								Mobile Dev
-								<button
-									className="ml-1 rounded-full p-0.5 hover:bg-pink-500/30 transition-colors"
-									onClick={() => setMobileModeEnabled(false)}
-									type="button"
-								>
-									<XIcon className="size-3.5" />
-								</button>
 							</span>
-						)}
+						) : null}
+						{imageGenerationMode ? (
+							<span className="inline-flex items-center gap-1 rounded-full border border-violet-500/18 bg-violet-500/10 px-2.5 py-1 text-[11px] font-medium text-violet-700 dark:border-violet-400/20 dark:bg-violet-500/10 dark:text-violet-300">
+								<Wand2Icon className="size-3" />
+								Image Gen
+							</span>
+						) : null}
 					</div>
-				)}
-				<div className={cn("flex flex-row items-start px-2 pt-0.5 pb-0", status !== "ready" && "pointer-events-none opacity-50")}>
+				) : null}
+				<div className={cn("flex flex-row items-start px-2.5 pb-0 pt-1", status !== "ready" && "pointer-events-none opacity-50")}>
 					<PromptInputTextarea
-						className="grow resize-none border-0! bg-transparent px-2.5 py-2.5 text-[15.5px] leading-7 text-[#171717] dark:text-[#f3f4f1] outline-none ring-0 [-ms-overflow-style:none] [scrollbar-width:none] placeholder:text-[#5f6258] dark:placeholder:text-[#8f9790] focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 [&::-webkit-scrollbar]:hidden"
+						className="grow resize-none border-0! bg-transparent px-1 py-2 text-[15px] leading-7 text-[#171717] dark:text-[#f3f4f1] outline-none ring-0 [-ms-overflow-style:none] [scrollbar-width:none] placeholder:text-[#5f6258] dark:placeholder:text-[#8f9790] focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 [&::-webkit-scrollbar]:hidden"
 						data-testid="multimodal-input"
 						disableAutoResize={true}
 						disabled={status !== "ready"}
 						maxHeight={208}
 						minHeight={44}
 						onChange={handleInput}
-						placeholder={status !== "ready" ? "Wait for AI to finish..." : "Send a message..."}
+						placeholder={status !== "ready" ? "Wait for AI to finish..." : "Message UltraAgent"}
 						ref={textareaRef}
 						rows={1}
 						value={input}
 					/>
 				</div>
-				<PromptInputToolbar className="relative flex items-center justify-between px-2 pb-2 pt-1">
+				<PromptInputToolbar className="relative flex items-center justify-between px-2.5 pb-2.5 pt-1">
 					<PromptInputTools className="flex items-center gap-1">
-						{activeDevModeLabel ? (
-							<div className="hidden items-center gap-2 rounded-full border border-orange-500/20 bg-orange-500/10 px-3 py-1 text-[11px] font-medium text-orange-700 dark:border-orange-400/15 dark:bg-orange-500/10 dark:text-orange-300 sm:flex">
-								<FileTextIcon className="h-3.5 w-3.5" />
-								<span>{activeDevModeLabel}</span>
-							</div>
-						) : null}
-						{/* Dropdown Menu All-in-One - + Icon */}
+						{/* Primary tools */}
 						<DropdownMenu>
 							<DropdownMenuTrigger asChild>
 								<Button
 									className="size-9 rounded-full p-2 text-[#5f6258] dark:text-[#8f9790] transition-colors hover:bg-black/5 dark:hover:bg-white/7 hover:text-[#171717] dark:hover:text-[#f3f4f1]"
 									data-testid="all-options-button"
-									title="Options"
+									title="Tools"
 									variant="ghost"
 								>
 									<PlusIcon size={19} />
@@ -775,32 +644,15 @@ function PureMultimodalInput({
 								</DropdownMenuItem>
 
 								<DropdownMenuSeparator className="bg-white/10" />
-
-								{/* Mode Settings */}
-								<DropdownMenuItem
-									className="cursor-pointer rounded-xl hover:bg-black/5 focus:bg-black/5 dark:hover:bg-white/7 dark:focus:bg-white/7"
-									onClick={() => setWormgptEnabled(!wormgptEnabled)}
-								>
-									<SparklesIcon
-										className={cn(
-											"mr-2 h-4 w-4",
-											wormgptEnabled && "fill-current text-red-500",
-										)}
-									/>
-									<span>WormGPT Mode</span>
-									{wormgptEnabled && (
-										<CheckIcon className="ml-auto h-4 w-4 text-red-500" />
-									)}
-								</DropdownMenuItem>
 								<DropdownMenuItem
 									className="cursor-pointer rounded-xl hover:bg-black/5 focus:bg-black/5 dark:hover:bg-white/7 dark:focus:bg-white/7"
 									onClick={() => setDeepThinkingEnabled(!deepThinkingEnabled)}
 								>
 									<CpuIcon className="mr-2 h-4 w-4" />
 									<span>Deep Thinking</span>
-									{deepThinkingEnabled && (
+									{deepThinkingEnabled ? (
 										<CheckIcon className="ml-auto h-4 w-4 text-blue-500" />
-									)}
+									) : null}
 								</DropdownMenuItem>
 								<DropdownMenuItem
 									className="cursor-pointer rounded-xl hover:bg-black/5 focus:bg-black/5 dark:hover:bg-white/7 dark:focus:bg-white/7"
@@ -811,9 +663,9 @@ function PureMultimodalInput({
 										Fullstack Web
 										{isFullstackModeInMaintenance ? " (Maintenance)" : ""}
 									</span>
-									{fullstackModeEnabled && (
+									{fullstackModeEnabled ? (
 										<CheckIcon className="ml-auto h-4 w-4 text-orange-500" />
-									)}
+									) : null}
 								</DropdownMenuItem>
 								<DropdownMenuItem
 									className="cursor-pointer rounded-xl hover:bg-black/5 focus:bg-black/5 dark:hover:bg-white/7 dark:focus:bg-white/7"
@@ -824,9 +676,9 @@ function PureMultimodalInput({
 										Mobile Dev
 										{isMobileModeInMaintenance ? " (Maintenance)" : ""}
 									</span>
-									{mobileModeEnabled && (
+									{mobileModeEnabled ? (
 										<CheckIcon className="ml-auto h-4 w-4 text-pink-500" />
-									)}
+									) : null}
 								</DropdownMenuItem>
 								<DropdownMenuItem
 									className={cn(
@@ -848,57 +700,6 @@ function PureMultimodalInput({
 								</DropdownMenuItem>
 							</DropdownMenuContent>
 						</DropdownMenu>
-
-						{promptPresets.length > 0 ? (
-							<DropdownMenu>
-								<DropdownMenuTrigger asChild>
-									<Button
-										className="h-9 rounded-full px-3 text-xs font-medium text-[#5f6258] dark:text-[#8f9790] transition-colors hover:bg-black/5 dark:hover:bg-white/7 hover:text-[#171717] dark:hover:text-[#f3f4f1]"
-										title="Prompt library"
-										type="button"
-										variant="ghost"
-									>
-										<SparklesIcon className="mr-2 h-4 w-4" />
-										Presets
-									</Button>
-								</DropdownMenuTrigger>
-								<DropdownMenuContent
-									align="start"
-									className="w-72 rounded-2xl border-[#171717]/8 bg-white/96 text-[#171717] shadow-[0_18px_40px_rgba(0,0,0,0.12)] backdrop-blur-xl dark:border-white/10 dark:bg-[#171b1f]/96 dark:text-[#cfd4cf]"
-								>
-									{promptPresets.map((preset) => (
-										<DropdownMenuItem
-											className="cursor-pointer rounded-xl items-start py-3"
-											key={preset.id}
-											onClick={() => applyPromptPreset(preset)}
-										>
-											<div>
-												<div className="text-sm font-medium">{preset.title}</div>
-												<div className="mt-1 line-clamp-2 text-xs text-[#5f6258] dark:text-[#8f9790]">
-													{preset.prompt}
-												</div>
-											</div>
-										</DropdownMenuItem>
-									))}
-								</DropdownMenuContent>
-							</DropdownMenu>
-						) : null}
-
-						{/* Globe Button for Web Search Mode */}
-						<Button
-							className={cn(
-								"size-9 rounded-full p-2 transition-colors",
-								webSearchEnabled
-									? "bg-teal-500/12 text-teal-700 hover:bg-teal-500/18 dark:text-teal-300 dark:hover:bg-teal-500/16"
-									: "text-[#5f6258] dark:text-[#8f9790] hover:bg-black/5 dark:hover:bg-white/7 hover:text-[#171717] dark:hover:text-[#f3f4f1]",
-							)}
-							onClick={() => setWebSearchEnabled(!webSearchEnabled)}
-							title="Web Search"
-							type="button"
-							variant="ghost"
-						>
-							<GlobeIcon size={19} />
-						</Button>
 
 						<input
 							accept="image/*,text/plain,application/pdf,application/json"

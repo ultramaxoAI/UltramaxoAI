@@ -69,15 +69,15 @@ export function AppSidebar({ user }: { user: User | undefined }) {
 	return (
 		<>
 			<Sidebar
-				className="z-30 border-r border-[#171717]/7 bg-[linear-gradient(180deg,rgba(250,248,243,0.92),rgba(244,241,234,0.98))] dark:border-white/7 dark:bg-[linear-gradient(180deg,rgba(17,19,21,0.98),rgba(14,16,18,1))]"
+				className="z-30 border-r border-[#171717]/7 bg-[linear-gradient(180deg,rgba(249,247,241,0.94),rgba(244,241,234,0.98))] dark:border-white/7 dark:bg-[linear-gradient(180deg,rgba(16,18,20,0.98),rgba(14,16,18,1))]"
 				collapsible="icon"
 			>
 				<SidebarHeader className="border-b border-[#171717]/6 dark:border-white/7">
 					<SidebarMenu>
 						<TooltipProvider delayDuration={0}>
-						<div className="flex flex-col gap-2 px-3 py-4">
+						<div className="flex flex-col gap-2 px-3 py-3.5">
 							{/* Toggle + Title Row */}
-							<div className={cn("flex items-center mb-2", isSidebarOpen ? "justify-between" : "justify-center")}>
+							<div className={cn("mb-1 flex items-center", isSidebarOpen ? "justify-between" : "justify-center")}>
 								{/* App Title - show when open */}
 								{isSidebarOpen && (
 									<Link
@@ -85,7 +85,7 @@ export function AppSidebar({ user }: { user: User | undefined }) {
 										href="/chat"
 										onClick={() => setOpenMobile(false)}
 									>
-										<span className="text-lg font-serif tracking-tight text-[#171717] dark:text-[#f3f4f1]">
+										<span className="text-[1.7rem] font-serif tracking-[-0.04em] text-[#171717] dark:text-[#f3f4f1]">
 											Ultramaxo
 										</span>
 									</Link>
@@ -113,7 +113,7 @@ export function AppSidebar({ user }: { user: User | undefined }) {
 								</Tooltip>
 							</div>
 
-							<div className="flex flex-col gap-1 w-full">
+							<div className="flex w-full flex-col gap-0.5">
 								{/* New Chat Button */}
 								<Tooltip>
 									<TooltipTrigger asChild>
@@ -121,8 +121,8 @@ export function AppSidebar({ user }: { user: User | undefined }) {
 											className={cn(
 												"transition-all font-normal text-[#171717] dark:text-[#f3f4f1] hover:bg-black/4 dark:hover:bg-white/7 cursor-pointer",
 												isSidebarOpen
-													? "h-9 w-full justify-start gap-3 px-2 rounded-md"
-													: "mx-auto h-9 w-9 p-0 rounded-md",
+													? "h-10 w-full justify-start gap-3 rounded-xl px-2.5"
+													: "mx-auto h-9 w-9 rounded-xl p-0",
 											)}
 											onClick={() => {
 												setOpenMobile(false);
@@ -133,7 +133,7 @@ export function AppSidebar({ user }: { user: User | undefined }) {
 											variant="ghost"
 										>
 											<SquarePen className="h-[18px] w-[18px] shrink-0 opacity-80" />
-											{isSidebarOpen && <span className="text-[14px]">New chat</span>}
+											{isSidebarOpen && <span className="text-[14px] font-medium">New chat</span>}
 										</Button>
 									</TooltipTrigger>
 									{!isSidebarOpen && (
@@ -150,14 +150,14 @@ export function AppSidebar({ user }: { user: User | undefined }) {
 											className={cn(
 												"transition-all font-normal text-[#171717] dark:text-[#f3f4f1] hover:bg-black/4 dark:hover:bg-white/7 cursor-pointer",
 												isSidebarOpen
-													? "h-9 w-full justify-start gap-3 px-2 rounded-md"
-													: "mx-auto h-9 w-9 p-0 rounded-md",
+													? "h-9 w-full justify-start gap-3 rounded-xl px-2.5"
+													: "mx-auto h-9 w-9 rounded-xl p-0",
 											)}
 											type="button"
 											variant="ghost"
 										>
 											<Search className="h-[18px] w-[18px] shrink-0 opacity-80" />
-											{isSidebarOpen && <span className="text-[14px]">Search</span>}
+											{isSidebarOpen && <span className="text-[13px] text-[#5f6258] dark:text-[#a6aca6]">Search</span>}
 										</Button>
 									</TooltipTrigger>
 									{!isSidebarOpen && (
@@ -174,8 +174,8 @@ export function AppSidebar({ user }: { user: User | undefined }) {
 											className={cn(
 												"transition-all font-normal text-[#171717] dark:text-[#f3f4f1] hover:bg-black/4 dark:hover:bg-white/7 cursor-pointer",
 												isSidebarOpen
-													? "h-9 w-full justify-start gap-3 px-2 rounded-md"
-													: "mx-auto h-9 w-9 p-0 rounded-md",
+													? "h-9 w-full justify-start gap-3 rounded-xl px-2.5"
+													: "mx-auto h-9 w-9 rounded-xl p-0",
 											)}
 											onClick={() => {
 												setOpenMobile(false);
@@ -185,7 +185,7 @@ export function AppSidebar({ user }: { user: User | undefined }) {
 											variant="ghost"
 										>
 											<Settings className="h-[18px] w-[18px] shrink-0 opacity-80" />
-											{isSidebarOpen && <span className="text-[14px]">Personalization</span>}
+											{isSidebarOpen && <span className="text-[13px] text-[#5f6258] dark:text-[#a6aca6]">Personalization</span>}
 										</Button>
 									</TooltipTrigger>
 									{!isSidebarOpen && (

@@ -2,7 +2,7 @@
 
 import { isToday, isYesterday, subMonths, subWeeks } from "date-fns";
 import { motion } from "framer-motion";
-import { PinIcon, SearchIcon } from "lucide-react";
+import { SearchIcon } from "lucide-react";
 import { usePathname, useRouter } from "next/navigation";
 import type { User } from "next-auth";
 import { useMemo, useState } from "react";
@@ -24,13 +24,6 @@ import {
 	SidebarMenu,
 	useSidebar,
 } from "@/components/ui/sidebar";
-import {
-	Select,
-	SelectContent,
-	SelectItem,
-	SelectTrigger,
-	SelectValue,
-} from "@/components/ui/select";
 import type { Chat } from "@/lib/db/schema";
 import { fetcher } from "@/lib/utils";
 import { LoaderIcon } from "./icons";
@@ -125,10 +118,6 @@ export function SidebarHistory({ user }: { user: User | undefined }) {
 	const [deleteId, setDeleteId] = useState<string | null>(null);
 	const [showDeleteDialog, setShowDeleteDialog] = useState(false);
 	const [searchTerm, setSearchTerm] = useState("");
-	const [visibilityFilter, setVisibilityFilter] = useState<
-		"all" | "private" | "public"
-	>("all");
-	const [pinnedOnly, setPinnedOnly] = useState(false);
 	const [folderFilter, setFolderFilter] = useState("all");
 	const [draggingChatId, setDraggingChatId] = useState<string | null>(null);
 
@@ -144,18 +133,6 @@ export function SidebarHistory({ user }: { user: User | undefined }) {
 		(paginatedChatHistory) => paginatedChatHistory.chats,
 	) || [];
 
-	const availableFolders = useMemo(
-		() =>
-			Array.from(
-				new Set(
-					chatsFromHistory
-						.map((chat) => chat.folder)
-						.filter((folder): folder is string => Boolean(folder?.trim())),
-				),
-			).sort((a, b) => a.localeCompare(b)),
-		[chatsFromHistory],
-	);
-
 	const filteredChats = useMemo(() => {
 		const normalizedSearch = searchTerm.trim().toLowerCase();
 
@@ -166,9 +143,6 @@ export function SidebarHistory({ user }: { user: User | undefined }) {
 				chat.folder?.toLowerCase().includes(normalizedSearch) ||
 				chat.tags?.some((tag) => tag.toLowerCase().includes(normalizedSearch));
 
-			const matchesVisibility =
-				visibilityFilter === "all" || chat.visibility === visibilityFilter;
-			const matchesPinned = !pinnedOnly || chat.isPinned;
 			const matchesFolder =
 				folderFilter === "all"
 					? true
@@ -176,9 +150,9 @@ export function SidebarHistory({ user }: { user: User | undefined }) {
 						? !chat.folder?.trim()
 						: chat.folder === folderFilter;
 
-			return matchesSearch && matchesVisibility && matchesPinned && matchesFolder;
+			return matchesSearch && matchesFolder;
 		});
-	}, [chatsFromHistory, folderFilter, pinnedOnly, searchTerm, visibilityFilter]);
+	}, [chatsFromHistory, folderFilter, searchTerm]);
 
 	const pinnedChats = filteredChats.filter((chat) => chat.isPinned);
 	const groupedChats = groupChatsByDate(filteredChats.filter((chat) => !chat.isPinned));
@@ -351,67 +325,10 @@ export function SidebarHistory({ user }: { user: User | undefined }) {
 							<input
 								className="h-10 w-full rounded-2xl border border-[#171717]/8 bg-white/80 pl-9 pr-3 text-sm text-[#171717] outline-none placeholder:text-[#7a807a] dark:border-white/8 dark:bg-white/6 dark:text-[#f3f4f1]"
 								onChange={(e) => setSearchTerm(e.target.value)}
-								placeholder="Search chats, folders, or tags"
+								placeholder="Search chats"
 								value={searchTerm}
 							/>
 						</div>
-						<div className="flex gap-2">
-							<Select
-								onValueChange={(value) =>
-									setVisibilityFilter(value as "all" | "private" | "public")
-								}
-								value={visibilityFilter}
-							>
-								<SelectTrigger className="h-9 flex-1 rounded-xl border-[#171717]/8 bg-[#111315] text-xs text-[#f3f4f1] shadow-none ring-0 focus:ring-0 dark:border-white/8 dark:bg-[#111315] dark:text-[#f3f4f1]">
-									<SelectValue placeholder="All visibility" />
-								</SelectTrigger>
-								<SelectContent className="rounded-xl border-white/10 bg-[#171b1f] text-[#f3f4f1] shadow-[0_18px_40px_rgba(0,0,0,0.32)] backdrop-blur-xl">
-									<SelectItem className="rounded-lg text-xs focus:bg-white/8 focus:text-white" value="all">
-										All visibility
-									</SelectItem>
-									<SelectItem className="rounded-lg text-xs focus:bg-white/8 focus:text-white" value="private">
-										Private
-									</SelectItem>
-									<SelectItem className="rounded-lg text-xs focus:bg-white/8 focus:text-white" value="public">
-										Public
-									</SelectItem>
-								</SelectContent>
-							</Select>
-							<Select onValueChange={setFolderFilter} value={folderFilter}>
-								<SelectTrigger className="h-9 flex-1 rounded-xl border-[#171717]/8 bg-[#111315] text-xs text-[#f3f4f1] shadow-none ring-0 focus:ring-0 dark:border-white/8 dark:bg-[#111315] dark:text-[#f3f4f1]">
-									<SelectValue placeholder="All folders" />
-								</SelectTrigger>
-								<SelectContent className="rounded-xl border-white/10 bg-[#171b1f] text-[#f3f4f1] shadow-[0_18px_40px_rgba(0,0,0,0.32)] backdrop-blur-xl">
-									<SelectItem className="rounded-lg text-xs focus:bg-white/8 focus:text-white" value="all">
-										All folders
-									</SelectItem>
-									<SelectItem className="rounded-lg text-xs focus:bg-white/8 focus:text-white" value="uncategorized">
-										Uncategorized
-									</SelectItem>
-									{availableFolders.map((folder) => (
-										<SelectItem
-											className="rounded-lg text-xs focus:bg-white/8 focus:text-white"
-											key={folder}
-											value={folder}
-										>
-											{folder}
-										</SelectItem>
-									))}
-								</SelectContent>
-							</Select>
-						</div>
-						<button
-							className={`flex h-9 w-full items-center justify-center gap-2 rounded-xl border text-xs font-medium transition-colors ${
-								pinnedOnly
-									? "border-teal-500/30 bg-teal-500/10 text-teal-700 dark:text-teal-300"
-									: "border-[#171717]/8 bg-white/80 text-[#5f6258] dark:border-white/8 dark:bg-white/6 dark:text-[#a6aca6]"
-							}`}
-							onClick={() => setPinnedOnly((current) => !current)}
-							type="button"
-						>
-							<PinIcon className="h-3.5 w-3.5" />
-							Pinned only
-						</button>
 					</div>
 					<SidebarMenu>
 						<div className="flex flex-col gap-6">

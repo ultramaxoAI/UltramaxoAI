@@ -170,7 +170,7 @@ export function SidebarFolderManager({
 		: "border-[#171717]/8 bg-white/70 dark:border-white/8 dark:bg-white/6";
 
 	return (
-		<div className="mb-4 space-y-2 px-2">
+		<div className="mb-3 space-y-2 px-2">
 			<div className="flex items-center justify-between px-1">
 				<div className="text-[11px] font-medium uppercase tracking-[0.08em] text-[#7a807a] dark:text-[#8f9790]">
 					Folders
@@ -204,7 +204,7 @@ export function SidebarFolderManager({
 			</div>
 
 			<button
-				className={`flex w-full items-center justify-between rounded-2xl border px-3 py-2 text-left text-sm transition-colors ${baseDropClass}`}
+				className={`flex w-full items-center justify-between rounded-xl border px-3 py-2 text-left text-sm transition-colors ${baseDropClass}`}
 				onClick={() => onSelectFolder("all")}
 				onDragOver={(e) => draggingChatId && e.preventDefault()}
 				onDrop={(e) => {
@@ -219,9 +219,9 @@ export function SidebarFolderManager({
 				</span>
 			</button>
 
-			<div className="space-y-2">
+			<div className="space-y-1.5">
 				<button
-					className={`flex w-full items-center justify-between rounded-2xl border px-3 py-2 text-left text-sm transition-colors ${baseDropClass}`}
+					className={`flex w-full items-center justify-between rounded-xl border px-3 py-2 text-left text-sm transition-colors ${baseDropClass}`}
 					onClick={() => onSelectFolder("uncategorized")}
 					onDragOver={(e) => draggingChatId && e.preventDefault()}
 					onDrop={(e) => {
@@ -240,7 +240,7 @@ export function SidebarFolderManager({
 
 				{folders.map((folder) => (
 					<div
-						className={`rounded-2xl border px-3 py-2 transition-colors ${baseDropClass}`}
+						className={`rounded-xl border px-3 py-2 transition-colors ${baseDropClass}`}
 						key={folder.id}
 						onDragOver={(e) => draggingChatId && e.preventDefault()}
 						onDrop={(e) => {

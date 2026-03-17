@@ -26,24 +26,6 @@ import { toast } from "./toast";
 import { Button } from "./ui/button";
 import type { VisibilityType } from "./visibility-selector";
 
-const emptyStatePrompts = [
-	{
-		title: "Mulai build fullstack",
-		description: "Minta agent memecah fitur ke UI, API, database, dan langkah eksekusi.",
-		prompt: "Aktifkan mode fullstack dan bantu saya membangun fitur dari flow, database, API, hingga UI production-ready.",
-	},
-	{
-		title: "Audit codebase aktif",
-		description: "Minta AI membaca struktur project, cari bottleneck, dan urutkan perbaikannya.",
-		prompt: "Audit codebase saya, cari masalah paling penting, lalu buat urutan perbaikan yang paling efisien.",
-	},
-	{
-		title: "Buat workspace web",
-		description: "Susun halaman, komponen, state, dan detail implementasi untuk app web modern.",
-		prompt: "Saya mau bikin app web modern. Tolong rancang halaman, komponen inti, state, dan urutan implementasinya.",
-	},
-];
-
 export function Chat({
 	id,
 	initialMessages,
@@ -318,24 +300,6 @@ export function Chat({
 	// Count user messages for contextual upgrade banner
 	const userMessageCount = messages.filter((m) => m.role === "user").length;
 
-	const handleStarterPrompt = (prompt: string) => {
-		setInput(prompt);
-		requestAnimationFrame(() => {
-			const textarea = document.querySelector("textarea");
-			if (textarea instanceof HTMLTextAreaElement) {
-				textarea.focus();
-				textarea.setSelectionRange(textarea.value.length, textarea.value.length);
-			}
-		});
-	};
-
-	const activeModes = [
-		fullstackModeEnabled ? "fullstack" : null,
-		mobileModeEnabled ? "mobile" : null,
-		deepThinkingEnabled ? "deep think" : null,
-		webSearchEnabled ? "web" : null,
-	].filter(Boolean) as string[];
-
 	useAutoResume({
 		autoResume,
 		initialMessages,
@@ -355,10 +319,6 @@ export function Chat({
 						: "w-full",
 				)}
 			>
-				<div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(20,184,166,0.08),transparent_30%),radial-gradient(circle_at_82%_14%,rgba(45,212,191,0.06),transparent_20%)] dark:bg-[radial-gradient(circle_at_top,rgba(20,184,166,0.12),transparent_28%),radial-gradient(circle_at_82%_14%,rgba(45,212,191,0.08),transparent_20%)]" />
-				<div className="pointer-events-none absolute inset-0 bg-[radial-gradient(#111315_0.7px,transparent_0.7px)] bg-size-[14px_14px] opacity-[0.04] dark:bg-[radial-gradient(#f3f4f1_0.6px,transparent_0.6px)] dark:opacity-[0.05]" />
-				<div className="pointer-events-none absolute inset-x-0 top-0 h-32 bg-[linear-gradient(180deg,rgba(17,19,21,0.04),transparent)] dark:bg-[linear-gradient(180deg,rgba(255,255,255,0.025),transparent)]" />
-
 				<div className="pointer-events-none absolute left-0 right-0 top-0 z-20 px-3 pt-2 sm:px-4 sm:pt-2.5">
 					<div className="pointer-events-auto mx-auto max-w-4xl">
 						<ChatContextHeader
@@ -396,48 +356,15 @@ export function Chat({
 
 					{messages.length === 0 && (
 						<div className="flex w-full flex-1 items-center justify-center px-4 pb-4">
-							<div className="mx-auto w-full max-w-4xl space-y-4">
-								<div className="rounded-[36px] border border-[#171717]/7 bg-white/42 px-4 py-8 shadow-[0_20px_70px_rgba(23,23,23,0.05)] backdrop-blur-xl dark:border-white/7 dark:bg-[#171b1f]/70 dark:shadow-[0_28px_90px_rgba(0,0,0,0.32)] sm:px-8 sm:py-10">
-									<div className="mx-auto max-w-2xl text-center">
-										<h1 className="mt-5 text-balance text-3xl font-semibold tracking-[-0.05em] text-[#171717] sm:text-4xl dark:text-[#f3f4f1]">
-											Bangun, audit, atau lanjutkan flow fullstack
-										</h1>
-										<p className="mt-4 text-sm leading-7 text-[#5f6258] dark:text-[#a6aca6] sm:text-base">
-											Mulai dari brief singkat, lalu lanjutkan ke implementasi, audit code, atau workflow workspace yang lebih teknis tanpa memecah konteks kerja.
-										</p>
-										{activeModes.length > 0 && (
-											<div className="mt-5 flex flex-wrap justify-center gap-2">
-												{activeModes.map((mode) => (
-													<span
-														className="rounded-full border border-[#171717]/8 bg-white/45 px-3 py-1 text-xs text-[#5f6258] dark:border-white/10 dark:bg-white/4 dark:text-[#a6aca6]"
-														key={mode}
-													>
-														{mode}
-													</span>
-												))}
-											</div>
-										)}
-									</div>
-
-									<div className="mt-8 grid gap-3 sm:grid-cols-3">
-										{emptyStatePrompts.map((item) => (
-											<button
-												className="rounded-[28px] border border-[#171717]/7 bg-[linear-gradient(180deg,rgba(255,255,255,0.84),rgba(244,241,234,0.96))] p-4 text-left shadow-[0_12px_30px_rgba(23,23,23,0.04)] transition-all hover:-translate-y-0.5 hover:bg-[#f5f2ea] dark:border-white/7 dark:bg-[linear-gradient(180deg,rgba(28,31,35,0.9),rgba(17,19,21,0.96))] dark:shadow-none dark:hover:bg-[linear-gradient(180deg,rgba(31,35,39,0.94),rgba(18,21,24,0.98))]"
-												key={item.title}
-												onClick={() => handleStarterPrompt(item.prompt)}
-												type="button"
-											>
-												<div className="text-sm font-semibold text-[#171717] dark:text-[#f3f4f1]">
-													{item.title}
-												</div>
-												<p className="mt-2 text-sm leading-6 text-[#5f6258] dark:text-[#a6aca6]">
-													{item.description}
-												</p>
-											</button>
-										))}
-									</div>
-
-						</div>
+							<div className="mx-auto w-full max-w-3xl space-y-4 text-center">
+								<div className="mx-auto max-w-2xl">
+									<h1 className="text-balance text-[2.1rem] font-semibold tracking-[-0.05em] text-[#171717] sm:text-[2.6rem] dark:text-[#f3f4f1]">
+										Apa yang ingin Anda buat?
+									</h1>
+									<p className="mt-3 text-sm leading-7 text-[#5f6258] dark:text-[#a6aca6] sm:text-[15px]">
+										Mulai dari satu prompt.
+									</p>
+								</div>
 
 								{isReadonly ? (
 									<div className="rounded-[28px] border border-dashed border-[#171717]/8 bg-white/42 px-6 py-5 text-center backdrop-blur-xl dark:border-white/10 dark:bg-white/4">
