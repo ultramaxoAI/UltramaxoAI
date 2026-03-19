@@ -393,8 +393,31 @@ function PureMultimodalInput({
 
 	// Check if model supports vision (images)
 	const modelSupportsVision = useCallback((modelId: string): boolean => {
-		const nonVisionModels: string[] = [];
-		return !nonVisionModels.some(m => modelId.toLowerCase().includes(m.toLowerCase()));
+		const nonVisionModels: string[] = [
+			"grok-4-1-fast-reasoning",
+			"grok-4-1-reasoning",
+			"grok-3",
+			"grok-2",
+			"grok-1",
+			"reasoning",
+			"thinking",
+			"o1",
+			"o3",
+			"o4",
+			"gemini-2.0-flash",
+			"gemini-2.5-flash",
+		];
+		const normalizedId = modelId.toLowerCase();
+		// Allow vision for maia/gemini models and vision-specific models
+		if (normalizedId.includes("maia/gemini") || 
+			normalizedId.includes("google/gemini-1.5") ||
+			normalizedId.includes("google/gemini-pro") ||
+			normalizedId.includes("vision") ||
+			normalizedId.includes("claude")) {
+			return true;
+		}
+		// Block for reasoning/thinking models and grok models
+		return !nonVisionModels.some(m => normalizedId.includes(m.toLowerCase()));
 	}, []);
 
 	const handleFileChange = useCallback(
