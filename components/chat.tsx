@@ -320,7 +320,7 @@ export function Chat({
 				)}
 			>
 				<div className="pointer-events-none absolute left-0 right-0 top-0 z-20 px-3 pt-2 sm:px-4 sm:pt-2.5">
-					<div className="pointer-events-auto mx-auto max-w-4xl">
+					<div className="pointer-events-auto mx-auto w-full max-w-5xl">
 						<ChatContextHeader
 							chatId={id}
 							isReadonly={isReadonly}
@@ -337,7 +337,7 @@ export function Chat({
 				>
 					{messages.length > 0 && (
 						<div className="flex flex-1 flex-col overflow-hidden px-3 pb-3 sm:px-4 sm:pb-4">
-							<div className="mx-auto flex h-full w-full max-w-4xl flex-1 flex-col overflow-hidden bg-transparent">
+							<div className="mx-auto flex h-full w-full max-w-5xl flex-1 flex-col overflow-hidden bg-transparent">
 								<Messages
 									addToolApprovalResponse={addToolApprovalResponse}
 									chatId={id}
@@ -476,7 +476,7 @@ export function Chat({
 								</div>
 							) : (
 								<div className="relative flex flex-col gap-2">
-									<div className="mx-auto w-full max-w-3xl">
+									<div className="mx-auto w-full max-w-5xl">
 										<MultimodalInput
 											attachments={attachments}
 											chatId={id}

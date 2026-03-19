@@ -108,12 +108,12 @@ export function SidebarUserNav({
 	return (
 		<>
 			<SidebarMenu>
-				<SidebarMenuItem className="flex flex-row items-center border-t border-zinc-200 dark:border-white/10 w-full relative group">
+				<SidebarMenuItem className="relative flex w-full flex-row items-center border-t border-black/6 dark:border-white/10 group">
 					<DropdownMenu>
 						<DropdownMenuTrigger asChild>
 							{status === "loading" ? (
 								<div
-									className={`flex items-center gap-3 p-4 border-t border-zinc-200 dark:border-white/10 hover:bg-zinc-200 dark:hover:bg-zinc-800/50 transition-colors cursor-pointer rounded-lg mx-2 ${isCollapsed ? "justify-center" : ""}`}
+									className={`mx-2 flex items-center gap-3 rounded-2xl border-t border-black/6 p-4 transition-colors cursor-pointer hover:bg-black/4 dark:border-white/10 dark:hover:bg-white/6 ${isCollapsed ? "justify-center" : ""}`}
 								>
 									<div className="size-10 animate-pulse rounded-full bg-zinc-200 dark:bg-zinc-500/30 shrink-0" />
 									{!isCollapsed && (
@@ -132,7 +132,7 @@ export function SidebarUserNav({
 								<Tooltip>
 									<TooltipTrigger asChild>
 										<button
-											className="flex items-center justify-center w-full p-2 border-t border-zinc-200 dark:border-white/10 hover:bg-zinc-200 dark:hover:bg-zinc-800/50 transition-colors cursor-pointer group"
+											className="flex w-full items-center justify-center border-t border-black/6 p-2 transition-colors cursor-pointer group hover:bg-black/4 dark:border-white/10 dark:hover:bg-white/6"
 											data-testid="user-nav-button"
 											type="button"
 										>
@@ -164,7 +164,7 @@ export function SidebarUserNav({
 								</Tooltip>
 							) : (
 								<button
-									className="flex-1 flex items-center gap-3 p-4 hover:bg-zinc-200 dark:hover:bg-zinc-800/50 transition-colors cursor-pointer group"
+									className="flex flex-1 items-center gap-3 rounded-2xl p-4 transition-colors cursor-pointer group hover:bg-black/4 dark:hover:bg-white/6"
 									data-testid="user-nav-button"
 									type="button"
 								>
@@ -179,7 +179,7 @@ export function SidebarUserNav({
 									</div>
 									<div className="flex-1 min-w-0 text-left">
 										<div className="flex items-center gap-2 mb-0.5">
-											<div className="font-semibold text-sm text-zinc-900 dark:text-white truncate">
+											<div className="truncate text-sm font-semibold text-[#241a12] dark:text-[#f5efe8]">
 												{isGuest
 													? "Guest User"
 													: data?.user?.name ||
@@ -189,17 +189,17 @@ export function SidebarUserNav({
 											{/* Dynamic Plan Badge */}
 											{!isGuest && (
 												<span
-													className={`px-2 py-0.5 text-[10px] font-bold rounded border shrink-0 ${
+													className={`shrink-0 rounded-full border px-2 py-0.5 text-[10px] font-bold ${
 														user?.type === "pro"
-															? "text-yellow-600 dark:text-yellow-400 bg-yellow-100 dark:bg-yellow-500/10 border-yellow-200 dark:border-yellow-500/30"
-															: "text-zinc-500 dark:text-gray-400 bg-transparent border-zinc-200 dark:border-gray-600/30"
+															? "border-[#d4a06e]/30 bg-[#d4a06e]/12 text-[#9f6440] dark:border-[#d4a06e]/30 dark:bg-[#d4a06e]/12 dark:text-[#f0c499]"
+															: "border-black/8 bg-transparent text-[#8a7869] dark:border-white/10 dark:text-[#9a8979]"
 													}`}
 												>
 													{user?.type === "pro" ? "PRO" : "FREE"}
 												</span>
 											)}
 										</div>
-								<div className="text-xs text-zinc-500 dark:text-zinc-400 truncate">
+								<div className="truncate text-xs text-[#8a7869] dark:text-[#9a8979]">
 									{isGuest ? "Not logged in" : user?.email}
 								</div>
 								{!isGuest ? (
@@ -208,7 +208,7 @@ export function SidebarUserNav({
 									</div>
 								) : null}
 							</div>
-									<MoreVertical className="h-5 w-5 text-zinc-400 group-hover:text-zinc-600 dark:group-hover:text-zinc-200 transition-colors shrink-0" />
+									<MoreVertical className="h-5 w-5 shrink-0 text-[#8a7869] transition-colors group-hover:text-[#241a12] dark:text-[#9a8979] dark:group-hover:text-[#f5efe8]" />
 								</button>
 							)}
 						</DropdownMenuTrigger>

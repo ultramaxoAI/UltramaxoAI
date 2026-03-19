@@ -166,18 +166,18 @@ export function SidebarFolderManager({
 	};
 
 	const baseDropClass = draggingChatId
-		? "border-teal-500/40 bg-teal-500/8"
-		: "border-[#171717]/8 bg-white/70 dark:border-white/8 dark:bg-white/6";
+		? "border-[#d97757]/40 bg-[#d97757]/10"
+		: "border-black/6 bg-black/[0.03] dark:border-white/6 dark:bg-white/[0.03]";
 
 	return (
 		<div className="mb-3 space-y-2 px-2">
 			<div className="flex items-center justify-between px-1">
-				<div className="text-[11px] font-medium uppercase tracking-[0.08em] text-[#7a807a] dark:text-[#8f9790]">
+				<div className="text-[11px] font-medium uppercase tracking-[0.08em] text-[#74675c] dark:text-[#8f857a]">
 					Folders
 				</div>
 				<Dialog onOpenChange={setCreateOpen} open={createOpen}>
 					<DialogTrigger asChild>
-						<Button className="h-7 rounded-full px-2.5 text-xs" size="sm" type="button" variant="ghost">
+						<Button className="h-7 rounded-full px-2.5 text-xs text-[#6f6257] dark:text-[#b9afa3]" size="sm" type="button" variant="ghost">
 							<Plus className="mr-1 h-3.5 w-3.5" />
 							New
 						</Button>
@@ -204,7 +204,7 @@ export function SidebarFolderManager({
 			</div>
 
 			<button
-				className={`flex w-full items-center justify-between rounded-xl border px-3 py-2 text-left text-sm transition-colors ${baseDropClass}`}
+				className={`flex w-full items-center justify-between rounded-xl border px-3 py-2 text-left text-sm transition-colors hover:bg-black/[0.04] dark:hover:bg-white/[0.05] ${baseDropClass}`}
 				onClick={() => onSelectFolder("all")}
 				onDragOver={(e) => draggingChatId && e.preventDefault()}
 				onDrop={(e) => {
@@ -214,14 +214,14 @@ export function SidebarFolderManager({
 				type="button"
 			>
 				<span className={activeFolder === "all" ? "font-semibold" : ""}>All chats</span>
-				<span className="text-xs text-[#7a807a] dark:text-[#8f9790]">
+				<span className="text-xs text-[#7a807a] dark:text-[#988d81]">
 					{Object.values(chatCounts).reduce((sum, current) => sum + current, 0)}
 				</span>
 			</button>
 
 			<div className="space-y-1.5">
 				<button
-					className={`flex w-full items-center justify-between rounded-xl border px-3 py-2 text-left text-sm transition-colors ${baseDropClass}`}
+					className={`flex w-full items-center justify-between rounded-xl border px-3 py-2 text-left text-sm transition-colors hover:bg-black/[0.04] dark:hover:bg-white/[0.05] ${baseDropClass}`}
 					onClick={() => onSelectFolder("uncategorized")}
 					onDragOver={(e) => draggingChatId && e.preventDefault()}
 					onDrop={(e) => {
@@ -233,14 +233,14 @@ export function SidebarFolderManager({
 					<span className={activeFolder === "uncategorized" ? "font-semibold" : ""}>
 						Uncategorized
 					</span>
-					<span className="text-xs text-[#7a807a] dark:text-[#8f9790]">
+					<span className="text-xs text-[#7a807a] dark:text-[#988d81]">
 						{chatCounts.uncategorized ?? 0}
 					</span>
 				</button>
 
 				{folders.map((folder) => (
 					<div
-						className={`rounded-xl border px-3 py-2 transition-colors ${baseDropClass}`}
+						className={`rounded-xl border px-3 py-2 transition-colors hover:bg-black/[0.04] dark:hover:bg-white/[0.05] ${baseDropClass}`}
 						key={folder.id}
 						onDragOver={(e) => draggingChatId && e.preventDefault()}
 						onDrop={(e) => {
@@ -254,11 +254,11 @@ export function SidebarFolderManager({
 								onClick={() => onSelectFolder(folder.name)}
 								type="button"
 							>
-								<FolderOpen className="h-4 w-4 shrink-0 text-[#7a807a] dark:text-[#8f9790]" />
+								<FolderOpen className="h-4 w-4 shrink-0 text-[#7a807a] dark:text-[#988d81]" />
 								<span className={`truncate ${activeFolder === folder.name ? "font-semibold" : ""}`}>
 									{folder.name}
 								</span>
-								<span className="ml-auto text-xs text-[#7a807a] dark:text-[#8f9790]">
+								<span className="ml-auto text-xs text-[#7a807a] dark:text-[#988d81]">
 									{chatCounts[folder.name] ?? 0}
 								</span>
 							</button>

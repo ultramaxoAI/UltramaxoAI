@@ -53,7 +53,7 @@ function PureMessages({
 						className="absolute inset-0 touch-pan-y overflow-y-auto"
 						ref={messagesContainerRef}
 					>
-						<div className="mx-auto flex min-w-0 max-w-3xl flex-col gap-5 px-4 py-5 md:gap-7 md:px-6">
+						<div className="mx-auto flex min-w-0 w-full max-w-5xl flex-col gap-5 px-4 py-5 md:gap-7 md:px-6">
 							{messages.map((message, index) => (
 								<PreviewMessage
 									addToolApprovalResponse={addToolApprovalResponse}

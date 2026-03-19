@@ -10,8 +10,8 @@ const maiaApiKey = (process.env.OPENROUTER_API_KEY_1 || "").trim();
 // ============================================================
 // Model IDs
 // ============================================================
-const DEFAULT_MODEL = "xai/grok-4-1-fast-reasoning";
-const PRO_MODEL = "xai/grok-4-1-fast-reasoning";
+const DEFAULT_MODEL = "maia/gemini-2.5-flash-lite";
+const PRO_MODEL = "maia/gemini-2.5-flash-lite";
 
 export interface CustomKeyConfig {
 	provider: string;

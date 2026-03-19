@@ -108,7 +108,7 @@ function PureChatContextHeader({
 	};
 
 	return (
-		<div className="flex items-center justify-between gap-3 rounded-2xl border border-[#171717]/6 bg-[#f4f1ea]/28 px-2 py-1.5 shadow-[0_6px_16px_rgba(23,23,23,0.025)] backdrop-blur-xl dark:border-white/6 dark:bg-[#14181c]/44 dark:shadow-[0_8px_20px_rgba(0,0,0,0.16)]">
+		<div className="flex items-center justify-between gap-3 rounded-xl border border-[#171717]/5 bg-[#ffffff]/80 px-2 py-1.5 shadow-sm backdrop-blur-md dark:border-white/5 dark:bg-[#1e1e1e]/60">
 			<div className="flex items-center gap-2">
 				{isMobile && (
 					<Button

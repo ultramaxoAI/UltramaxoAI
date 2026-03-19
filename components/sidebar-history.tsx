@@ -232,7 +232,7 @@ export function SidebarHistory({ user }: { user: User | undefined }) {
 
 		return (
 			<div>
-				<div className="px-2 py-1 text-[11px] font-medium tracking-[0.08em] uppercase text-[#7a807a] dark:text-[#8f9790]">
+				<div className="px-2 py-1 text-[11px] font-medium tracking-[0.08em] uppercase text-[#74675c] dark:text-[#8f857a]">
 					{label}
 				</div>
 				{chats.map((chat) => (
@@ -321,9 +321,9 @@ export function SidebarHistory({ user }: { user: User | undefined }) {
 					/>
 					<div className="mb-4 space-y-2 px-2">
 						<div className="relative">
-							<SearchIcon className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#7a807a] dark:text-[#8f9790]" />
+							<SearchIcon className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#7a807a] dark:text-[#988d81]" />
 							<input
-								className="h-10 w-full rounded-2xl border border-[#171717]/8 bg-white/80 pl-9 pr-3 text-sm text-[#171717] outline-none placeholder:text-[#7a807a] dark:border-white/8 dark:bg-white/6 dark:text-[#f3f4f1]"
+								className="h-10 w-full rounded-xl border border-black/6 bg-black/[0.03] pl-9 pr-3 text-sm text-[#221c17] outline-none placeholder:text-[#7a807a] dark:border-white/6 dark:bg-white/[0.03] dark:text-[#ece4d8] dark:placeholder:text-[#988d81]"
 								onChange={(e) => setSearchTerm(e.target.value)}
 								placeholder="Search chats"
 								value={searchTerm}
@@ -339,7 +339,7 @@ export function SidebarHistory({ user }: { user: User | undefined }) {
 							{renderChatSection("Last 30 days", groupedChats.lastMonth)}
 							{renderChatSection("Older than last month", groupedChats.older)}
 							{filteredChats.length === 0 ? (
-								<div className="px-2 py-4 text-sm text-[#6f746f] dark:text-[#9ca39d]">
+								<div className="px-2 py-4 text-sm text-[#6f746f] dark:text-[#9d9388]">
 									No chats match the current filters.
 								</div>
 							) : null}
