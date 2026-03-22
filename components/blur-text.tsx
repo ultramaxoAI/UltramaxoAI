@@ -27,15 +27,14 @@ export function BlurText({
 				<motion.span
 					key={`${word}-${i}`}
 					className="inline-block"
-					initial={{ filter: "blur(10px)", opacity: 0, y: 50 }}
+					initial={{ opacity: 0, y: 30 }}
 					animate={
 						isInView
 							? {
-									filter: "blur(0px)",
 									opacity: 1,
 									y: 0,
 								}
-							: { filter: "blur(10px)", opacity: 0, y: 50 }
+							: { opacity: 0, y: 30 }
 					}
 					transition={{
 						duration: 0.35,

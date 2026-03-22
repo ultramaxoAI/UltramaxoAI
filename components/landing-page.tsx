@@ -236,6 +236,17 @@ export default function LandingPage() {
 	);
 	const [heroTilt, setHeroTilt] = useState({ x: 0, y: 0 });
 
+	const [mounted, setMounted] = useState(false);
+	const [isMobile, setIsMobile] = useState(true);
+
+	useEffect(() => {
+		setMounted(true);
+		const checkMobile = () => setIsMobile(window.innerWidth < 768);
+		checkMobile();
+		window.addEventListener("resize", checkMobile);
+		return () => window.removeEventListener("resize", checkMobile);
+	}, []);
+
 	const scrollToSection = (href: string) => {
 		if (href.startsWith("http")) {
 			window.open(href, "_blank");
@@ -388,20 +399,22 @@ export default function LandingPage() {
 				id="home"
 				className="relative min-h-screen flex items-center justify-center pt-32 pb-20 px-6"
 			>
-				{/* Background Video */}
-				<video
-					className="absolute w-full h-[120%] object-cover opacity-40 mix-blend-screen pointer-events-none"
-					autoPlay
-					loop
-					muted
-					playsInline
-					poster="/images/hero_bg.jpeg"
-				>
-					<source
-						src="https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260307_083826_e938b29f-a43a-41ec-a153-3d4730578ab8.mp4"
-						type="video/mp4"
-					/>
-				</video>
+				{/* Background Video - Disabled on Mobile */}
+				{mounted && !isMobile && (
+					<video
+						className="absolute w-full h-[120%] object-cover opacity-40 mix-blend-screen pointer-events-none"
+						autoPlay
+						loop
+						muted
+						playsInline
+						poster="/images/hero_bg.jpeg"
+					>
+						<source
+							src="https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260307_083826_e938b29f-a43a-41ec-a153-3d4730578ab8.mp4"
+							type="video/mp4"
+						/>
+					</video>
+				)}
 
 				<div className="absolute inset-0 bg-gradient-to-b from-transparent via-black/50 to-black z-0" />
 
@@ -432,8 +445,8 @@ export default function LandingPage() {
 
 						<motion.p
 							className="mt-8 text-white/60 font-body font-light text-base md:text-lg leading-relaxed max-w-xl"
-							initial={{ opacity: 0, filter: "blur(8px)" }}
-							animate={{ opacity: 1, filter: "blur(0px)" }}
+							initial={{ opacity: 0, y: 15 }}
+							animate={{ opacity: 1, y: 0 }}
 							transition={{ duration: 0.6, delay: 0.5 }}
 						>
 							Ultramaxo brings UltraAgent chat, code and document artifacts, file uploads, workspace modes, and reusable history into one elegant product. Built for real work.
@@ -634,10 +647,12 @@ export default function LandingPage() {
 			{/* ══════ 4. HLS VIDEO BREAK ══════ */}
 			<section className="relative h-[600px] flex items-center justify-center">
 				<div className="absolute inset-0 z-0 overflow-hidden">
-					<HlsVideo
-						src="https://stream.mux.com/9JXDljEVWYwWu01PUkAemafDugK89o01BR6zqJ3aS9u00A.m3u8"
-						className="absolute inset-0 w-full h-full object-cover opacity-60 mix-blend-screen"
-					/>
+					{mounted && !isMobile && (
+						<HlsVideo
+							src="https://stream.mux.com/9JXDljEVWYwWu01PUkAemafDugK89o01BR6zqJ3aS9u00A.m3u8"
+							className="absolute inset-0 w-full h-full object-cover opacity-60 mix-blend-screen"
+						/>
+					)}
 					<div className="absolute top-0 inset-x-0 h-40 bg-gradient-to-b from-black to-transparent" />
 					<div className="absolute bottom-0 inset-x-0 h-40 bg-gradient-to-t from-black to-transparent" />
 				</div>
@@ -910,10 +925,12 @@ export default function LandingPage() {
 			{/* ══════ 9. CTA FOOTER ══════ */}
 			<section className="relative py-32 px-6 md:px-16 lg:px-24 border-t border-white/10">
 				<div className="absolute inset-0 z-0 overflow-hidden">
-					<HlsVideo
-						src="https://stream.mux.com/8wrHPCX2dC3msyYU9ObwqNdm00u3ViXvOSHUMRYSEe5Q.m3u8"
-						className="absolute inset-0 w-full h-full object-cover opacity-50 mix-blend-screen"
-					/>
+					{mounted && !isMobile && (
+						<HlsVideo
+							src="https://stream.mux.com/8wrHPCX2dC3msyYU9ObwqNdm00u3ViXvOSHUMRYSEe5Q.m3u8"
+							className="absolute inset-0 w-full h-full object-cover opacity-50 mix-blend-screen"
+						/>
+					)}
 					<div className="absolute top-0 inset-x-0 h-40 bg-gradient-to-b from-black to-transparent" />
 					<div className="absolute bottom-0 inset-x-0 h-40 bg-gradient-to-t from-black to-transparent" />
 				</div>

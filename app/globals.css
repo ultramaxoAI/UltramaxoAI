@@ -1185,6 +1185,18 @@ pre:has(code) button {
 	overflow: hidden;
 }
 
+@media (max-width: 768px) {
+	.liquid-glass {
+		backdrop-filter: blur(8px);
+		background: rgba(20, 20, 20, 0.85);
+	}
+	.liquid-glass-strong {
+		backdrop-filter: blur(12px);
+		background: rgba(20, 20, 20, 0.9);
+		box-shadow: none;
+	}
+}
+
 .liquid-glass-strong::before {
 	content: '';
 	position: absolute;
