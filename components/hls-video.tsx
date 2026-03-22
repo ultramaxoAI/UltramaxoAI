@@ -1,6 +1,5 @@
 "use client";
 
-import Hls from "hls.js";
 import { useEffect, useRef } from "react";
 
 interface HlsVideoProps {
@@ -16,26 +15,36 @@ export function HlsVideo({ src, className = "", style }: HlsVideoProps) {
 		const video = videoRef.current;
 		if (!video) return;
 
-		let hls: Hls | null = null;
+		let hls: any = null;
 
-		if (Hls.isSupported()) {
-			hls = new Hls({ enableWorker: true, lowLatencyMode: true });
-			hls.loadSource(src);
-			hls.attachMedia(video);
-			hls.on(Hls.Events.MANIFEST_PARSED, () => {
-				video.play().catch(() => {});
-			});
-		} else if (video.canPlayType("application/vnd.apple.mpegurl")) {
-			// Safari native HLS
-			video.src = src;
-			video.addEventListener("loadedmetadata", () => {
-				video.play().catch(() => {});
-			});
-		}
+		const initHls = async () => {
+			try {
+				const HlsModule = (await import("hls.js")).default;
+
+				if (HlsModule.isSupported()) {
+					hls = new HlsModule({ enableWorker: true, lowLatencyMode: true });
+					hls.loadSource(src);
+					hls.attachMedia(video);
+					hls.on(HlsModule.Events.MANIFEST_PARSED, () => {
+						video.play().catch(() => {});
+					});
+				} else if (video.canPlayType("application/vnd.apple.mpegurl")) {
+					// Safari native HLS
+					video.src = src;
+					video.addEventListener("loadedmetadata", () => {
+						video.play().catch(() => {});
+					});
+				}
+			} catch {
+				// Silently fail -- video is decorative, not critical
+			}
+		};
+
+		initHls();
 
 		return () => {
 			if (hls) {
-				hls.destroy();
+				try { hls.destroy(); } catch {}
 			}
 		};
 	}, [src]);
@@ -52,3 +61,4 @@ export function HlsVideo({ src, className = "", style }: HlsVideoProps) {
 		/>
 	);
 }
+

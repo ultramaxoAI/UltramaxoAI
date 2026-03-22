@@ -274,7 +274,7 @@ export default function LandingPage() {
 	const resetHeroPointer = () => setHeroTilt({ x: 0, y: 0 });
 
 	return (
-		<div className="bg-black overflow-hidden text-white selection:bg-white/20">
+		<div className="bg-black overflow-hidden text-white selection:bg-white/20" style={{ backgroundColor: '#000', color: '#fff', minHeight: '100vh' }}>
 			{/* ══════ 1. NAVBAR & SIDEBAR ══════ */}
 			<header className="fixed top-4 left-0 right-0 z-50 flex justify-center px-4">
 				<nav className="liquid-glass-strong rounded-full px-4 py-2.5 flex items-center justify-between gap-6 max-w-4xl w-full">
