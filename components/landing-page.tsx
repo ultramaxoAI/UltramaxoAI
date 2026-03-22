@@ -814,7 +814,7 @@ export default function LandingPage() {
 										: "liquid-glass border border-white/5"
 								}`}
 								initial={{ opacity: 0, y: 30 }}
-								whileInView={{ opacity: 1, y: plan.featured ? (window.innerWidth > 1024 ? -32 : 0) : 0 }}
+								whileInView={{ opacity: 1, y: plan.featured ? (typeof window !== "undefined" && window.innerWidth > 1024 ? -32 : 0) : 0 }}
 								viewport={{ once: true, amount: 0.2 }}
 								transition={{ duration: 0.6, delay: i * 0.15 }}
 							>
