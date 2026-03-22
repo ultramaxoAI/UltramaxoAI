@@ -7,7 +7,6 @@ import remarkMath from "remark-math";
 import { Streamdown } from "streamdown";
 import { cn } from "@/lib/utils";
 import { CodeBlock } from "./code-block";
-import "katex/dist/katex.min.css";
 
 type ResponseProps = ComponentProps<typeof Streamdown>;
 

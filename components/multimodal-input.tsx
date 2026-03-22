@@ -27,9 +27,7 @@ import {
 } from "react";
 import { toast } from "sonner";
 import { useLocalStorage, useWindowSize } from "usehooks-ts";
-import {
-	ModelSelectorLogo,
-} from "@/components/ai-elements/model-selector";
+import { ModelSelectorLogo } from "@/components/ai-elements/model-selector";
 import {
 	DropdownMenu,
 	DropdownMenuContent,
@@ -61,7 +59,7 @@ import { PreviewAttachment } from "./preview-attachment";
 import { Button } from "./ui/button";
 import type { VisibilityType } from "./visibility-selector";
 
-	function setCookie(name: string, value: string) {
+function setCookie(name: string, value: string) {
 	const maxAge = 60 * 60 * 24 * 365; // 1 year
 	// biome-ignore lint/suspicious/noDocumentCookie: needed for client-side cookie setting
 	document.cookie = `${name}=${encodeURIComponent(value)}; path=/; max-age=${maxAge}`;
@@ -286,16 +284,15 @@ function PureMultimodalInput({
 							? {
 									...m,
 									role: assistantMessage?.role ?? m.role,
-									parts:
-										assistantMessage?.parts ?? [
-											{
-												type: "file",
-												url: data.imageUrl,
-												mediaType: "image/png",
-												filename: `generated-image-${loadingMessageId}.png`,
-											},
-											{ type: "text", text: "Generated image" },
-										],
+									parts: assistantMessage?.parts ?? [
+										{
+											type: "file",
+											url: data.imageUrl,
+											mediaType: "image/png",
+											filename: `generated-image-${loadingMessageId}.png`,
+										},
+										{ type: "text", text: "Generated image" },
+									],
 								}
 							: m,
 					),
@@ -409,22 +406,26 @@ function PureMultimodalInput({
 		];
 		const normalizedId = modelId.toLowerCase();
 		// Allow vision for maia/gemini models and vision-specific models
-		if (normalizedId.includes("maia/gemini") || 
+		if (
+			normalizedId.includes("maia/gemini") ||
 			normalizedId.includes("google/gemini-1.5") ||
 			normalizedId.includes("google/gemini-pro") ||
 			normalizedId.includes("vision") ||
-			normalizedId.includes("claude")) {
+			normalizedId.includes("claude")
+		) {
 			return true;
 		}
 		// Block for reasoning/thinking models and grok models
-		return !nonVisionModels.some(m => normalizedId.includes(m.toLowerCase()));
+		return !nonVisionModels.some((m) => normalizedId.includes(m.toLowerCase()));
 	}, []);
 
 	const handleFileChange = useCallback(
 		async (event: ChangeEvent<HTMLInputElement>) => {
 			// Check if model supports vision
 			if (!modelSupportsVision(selectedModelId)) {
-				toast.error("Model ini tidak mendukung input gambar. Silakan pilih model lain atau kirim tanpa gambar.");
+				toast.error(
+					"Model ini tidak mendukung input gambar. Silakan pilih model lain atau kirim tanpa gambar.",
+				);
 				return;
 			}
 
@@ -456,7 +457,9 @@ function PureMultimodalInput({
 		async (event: ClipboardEvent) => {
 			// Check if model supports vision
 			if (!modelSupportsVision(selectedModelId)) {
-				toast.error("Model ini tidak mendukung input gambar. Silakan pilih model lain.");
+				toast.error(
+					"Model ini tidak mendukung input gambar. Silakan pilih model lain.",
+				);
 				return;
 			}
 
@@ -529,7 +532,7 @@ function PureMultimodalInput({
 			/>
 
 			<PromptInput
-				className="mx-auto w-full max-w-3xl rounded-[30px] border border-[#171717]/8 bg-white/78 p-0.5 text-[#171717] outline-none ring-0 shadow-[0_10px_28px_rgba(0,0,0,0.05)] backdrop-blur-xl transition-all dark:border-white/8 dark:bg-[#181a1c]/92 dark:text-[#f3f4f1] dark:shadow-[0_12px_30px_rgba(0,0,0,0.22)]"
+				className="mx-auto w-full max-w-3xl rounded-2xl border border-zinc-200 bg-white p-0.5 text-[#171717] outline-none shadow-sm transition-all focus-within:ring-1 focus-within:ring-zinc-400 dark:border-white/10 dark:bg-[#2f2f2f] dark:text-[#f3f4f1] dark:shadow-none dark:focus-within:ring-white/20"
 				onSubmit={(event) => {
 					event.preventDefault();
 					if (!input.trim() && attachments.length === 0) {
@@ -604,7 +607,12 @@ function PureMultimodalInput({
 						) : null}
 					</div>
 				) : null}
-				<div className={cn("flex flex-row items-start px-2.5 pb-0 pt-1", status !== "ready" && "pointer-events-none opacity-50")}>
+				<div
+					className={cn(
+						"flex flex-row items-start px-2.5 pb-0 pt-1",
+						status !== "ready" && "pointer-events-none opacity-50",
+					)}
+				>
 					<PromptInputTextarea
 						className="grow resize-none border-0! bg-transparent px-1 py-2 text-[15px] leading-7 text-[#171717] dark:text-[#f3f4f1] outline-none ring-0 [-ms-overflow-style:none] [scrollbar-width:none] placeholder:text-[#5f6258] dark:placeholder:text-[#8f9790] focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 [&::-webkit-scrollbar]:hidden"
 						data-testid="multimodal-input"
@@ -613,7 +621,11 @@ function PureMultimodalInput({
 						maxHeight={208}
 						minHeight={44}
 						onChange={handleInput}
-						placeholder={status !== "ready" ? "Wait for AI to finish..." : "Message UltraAgent"}
+						placeholder={
+							status !== "ready"
+								? "Wait for AI to finish..."
+								: "Message UltraAgent"
+						}
 						ref={textareaRef}
 						rows={1}
 						value={input}
@@ -635,7 +647,7 @@ function PureMultimodalInput({
 							</DropdownMenuTrigger>
 							<DropdownMenuContent
 								align="start"
-								className="w-56 rounded-2xl border-[#171717]/8 bg-white/96 text-[#171717] shadow-[0_18px_40px_rgba(0,0,0,0.12)] backdrop-blur-xl dark:border-white/10 dark:bg-[#171b1f]/96 dark:text-[#cfd4cf] dark:shadow-[0_18px_40px_rgba(0,0,0,0.32)]"
+								className="w-56 rounded-xl border-zinc-200 bg-white text-[#171717] shadow-lg dark:border-white/10 dark:bg-[#2f2f2f] dark:text-[#cfd4cf]"
 							>
 								{/* File Upload Options */}
 								<DropdownMenuItem
@@ -753,12 +765,12 @@ function PureMultimodalInput({
 						) : (
 							<PromptInputSubmit
 								className={cn(
-									"flex size-9 rounded-full items-center justify-center transition-all duration-200",
+									"flex size-8 rounded-full items-center justify-center transition-all duration-200",
 									!input.trim() &&
 										uploadQueue.length === 0 &&
 										attachments.length === 0
-										? "bg-[#e5e7eb] text-[#9ca3af] dark:bg-[#34383d] dark:text-[#68706a]"
-										: "bg-[#171717] text-white shadow-[0_10px_24px_rgba(0,0,0,0.18)] hover:bg-[#2d2d2d] dark:bg-[#f3f4f1] dark:text-[#111315] dark:hover:bg-white",
+										? "bg-zinc-100 text-zinc-400 dark:bg-white/5 dark:text-zinc-600"
+										: "bg-black text-white hover:bg-zinc-800 dark:bg-white dark:text-black dark:hover:bg-zinc-200",
 								)}
 								data-testid="send-button"
 								disabled={
@@ -853,8 +865,7 @@ function PureModelSelectorCompact({
 		fallbackModel;
 
 	const selectedModel =
-		!isPro &&
-		isProRestrictedModel(rawSelectedModel.id, rawSelectedModel.name)
+		!isPro && isProRestrictedModel(rawSelectedModel.id, rawSelectedModel.name)
 			? fallbackModel
 			: rawSelectedModel;
 
@@ -890,7 +901,13 @@ function PureModelSelectorCompact({
 			onModelChange?.(fallbackModel.id);
 			setCookie("chat-model", fallbackModel.id);
 		}
-	}, [fallbackModel.id, isPro, isProRestrictedModel, onModelChange, rawSelectedModel]);
+	}, [
+		fallbackModel.id,
+		isPro,
+		isProRestrictedModel,
+		onModelChange,
+		rawSelectedModel,
+	]);
 
 	return (
 		<DropdownMenu onOpenChange={setOpen} open={open}>
@@ -947,14 +964,23 @@ function PureModelSelectorCompact({
 							>
 								<div className="flex min-w-0 flex-1 items-center gap-3">
 									<div className="flex size-7 items-center justify-center rounded-full bg-black/5 ring-1 ring-black/10 dark:bg-white/5 dark:ring-white/8">
-										<ModelSelectorLogo className="size-3.5 dark:invert-0" provider={model.provider} />
+										<ModelSelectorLogo
+											className="size-3.5 dark:invert-0"
+											provider={model.provider}
+										/>
 									</div>
 									<div className="min-w-0">
-										<div className="truncate text-[13px] font-medium">{model.name}</div>
-										<div className="truncate text-[11px] text-[#5f6258] dark:text-[#7f8781]">Custom</div>
+										<div className="truncate text-[13px] font-medium">
+											{model.name}
+										</div>
+										<div className="truncate text-[11px] text-[#5f6258] dark:text-[#7f8781]">
+											Custom
+										</div>
 									</div>
 								</div>
-								{model.id === selectedModelId && <CheckIcon className="ml-3 size-4 text-[#171717] dark:text-[#f3f4f1]" />}
+								{model.id === selectedModelId && (
+									<CheckIcon className="ml-3 size-4 text-[#171717] dark:text-[#f3f4f1]" />
+								)}
 							</DropdownMenuItem>
 						))}
 						<DropdownMenuSeparator className="my-1 bg-black/5 dark:bg-white/8" />
@@ -962,55 +988,62 @@ function PureModelSelectorCompact({
 				)}
 
 				<div className="max-h-88 overflow-y-auto pr-1">
-					{Object.entries(modelsByProvider).map(([providerKey, providerModels]) => (
-						<div key={providerKey}>
-							<div className="px-3 pb-1 pt-2 text-[10px] font-semibold uppercase tracking-[0.18em] text-[#5f6258] dark:text-[#6f7671]">
-								{providerNames[providerKey] ?? providerKey}
-							</div>
-							{providerModels.map((model) => {
-								const logoProvider = model.id.split("/")[0];
-								const isProModel = isProRestrictedModel(model.id, model.name);
-								const isLocked = isProModel && !isPro;
+					{Object.entries(modelsByProvider).map(
+						([providerKey, providerModels]) => (
+							<div key={providerKey}>
+								<div className="px-3 pb-1 pt-2 text-[10px] font-semibold uppercase tracking-[0.18em] text-[#5f6258] dark:text-[#6f7671]">
+									{providerNames[providerKey] ?? providerKey}
+								</div>
+								{providerModels.map((model) => {
+									const logoProvider = model.id.split("/")[0];
+									const isProModel = isProRestrictedModel(model.id, model.name);
+									const isLocked = isProModel && !isPro;
 
-								return (
-									<DropdownMenuItem
-										className={cn(
-											"min-h-11 rounded-xl px-3 py-2 text-[#171717] hover:bg-black/5 focus:bg-black/5 dark:text-[#e6e9e3] dark:hover:bg-white/6 dark:focus:bg-white/6",
-											isLocked && "opacity-60",
-										)}
-										key={model.id}
-										onSelect={() => selectModel(model.id, isLocked)}
-									>
-										<div className="flex min-w-0 flex-1 items-center gap-3">
-											<div className="flex size-7 items-center justify-center rounded-full bg-black/5 ring-1 ring-black/10 dark:bg-white/5 dark:ring-white/8">
-												<ModelSelectorLogo className="size-3.5 dark:invert-0" provider={logoProvider} />
-											</div>
-											<div className="min-w-0">
-												<div className="flex items-center gap-2">
-													<span className="truncate text-[13px] font-medium">{model.name}</span>
-													{isProModel && (
-														<span className="rounded-full bg-black/5 px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-[0.14em] text-[#5f6258] dark:bg-white/7 dark:text-[#d8dcd5]">
-															Pro
+									return (
+										<DropdownMenuItem
+											className={cn(
+												"min-h-11 rounded-xl px-3 py-2 text-[#171717] hover:bg-black/5 focus:bg-black/5 dark:text-[#e6e9e3] dark:hover:bg-white/6 dark:focus:bg-white/6",
+												isLocked && "opacity-60",
+											)}
+											key={model.id}
+											onSelect={() => selectModel(model.id, isLocked)}
+										>
+											<div className="flex min-w-0 flex-1 items-center gap-3">
+												<div className="flex size-7 items-center justify-center rounded-full bg-black/5 ring-1 ring-black/10 dark:bg-white/5 dark:ring-white/8">
+													<ModelSelectorLogo
+														className="size-3.5 dark:invert-0"
+														provider={logoProvider}
+													/>
+												</div>
+												<div className="min-w-0">
+													<div className="flex items-center gap-2">
+														<span className="truncate text-[13px] font-medium">
+															{model.name}
 														</span>
-													)}
-												</div>
-												<div className="truncate text-[11px] text-[#5f6258] dark:text-[#7f8781]">
-													{providerNames[providerKey] ?? providerKey}
+														{isProModel && (
+															<span className="rounded-full bg-black/5 px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-[0.14em] text-[#5f6258] dark:bg-white/7 dark:text-[#d8dcd5]">
+																Pro
+															</span>
+														)}
+													</div>
+													<div className="truncate text-[11px] text-[#5f6258] dark:text-[#7f8781]">
+														{providerNames[providerKey] ?? providerKey}
+													</div>
 												</div>
 											</div>
-										</div>
-										{isLocked ? (
-											<span className="ml-3 text-[10px] font-medium uppercase tracking-[0.16em] text-[#8d7462]">
-												Locked
-											</span>
-										) : model.id === selectedModelId ? (
-											<CheckIcon className="ml-3 size-4 text-[#171717] dark:text-[#f3f4f1]" />
-										) : null}
-									</DropdownMenuItem>
-								);
-							})}
-						</div>
-					))}
+											{isLocked ? (
+												<span className="ml-3 text-[10px] font-medium uppercase tracking-[0.16em] text-[#8d7462]">
+													Locked
+												</span>
+											) : model.id === selectedModelId ? (
+												<CheckIcon className="ml-3 size-4 text-[#171717] dark:text-[#f3f4f1]" />
+											) : null}
+										</DropdownMenuItem>
+									);
+								})}
+							</div>
+						),
+					)}
 				</div>
 			</DropdownMenuContent>
 		</DropdownMenu>

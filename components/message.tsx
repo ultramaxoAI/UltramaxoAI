@@ -89,7 +89,7 @@ function MessageTextPart({
 		<div>
 			<MessageContent
 				className={cn("w-full", {
-					"wrap-break-word ml-auto w-fit max-w-full rounded-[18px] rounded-tr-md border border-[#171717]/5 bg-[#171717]/5 px-3 py-2 text-left text-[#171717] shadow-none backdrop-blur-sm dark:border-white/6 dark:bg-white/8 dark:text-[#f3f4f1]":
+					"wrap-break-word ml-auto w-fit max-w-[85%] sm:max-w-[70%] rounded-3xl rounded-br-lg md:rounded-br-xl bg-[#f4f4f4] px-4 py-2.5 text-left text-[#171717] shadow-none dark:bg-[#2f2f2f] dark:text-white":
 						messageRole === "user",
 					"w-full bg-transparent px-0 py-1 text-left prose-zinc dark:prose-invert prose-p:leading-7":
 						messageRole === "assistant",
@@ -178,10 +178,10 @@ const PurePreviewMessage = ({
 			data-testid={`message-${message.role}`}
 		>
 			<div
-				className={cn("flex w-full items-start gap-2 md:gap-2.5", {
-					"justify-end": message.role === "user" && mode !== "edit",
-					"justify-start": message.role === "assistant",
-				})}
+				className={cn(
+					"mx-auto flex w-full max-w-3xl flex-col gap-4",
+					message.role === "user" ? "" : "group-data-[top=true]:mt-[6vh]",
+				)}
 			>
 				{message.role === "assistant" && (
 					<div className="mt-0.5 flex size-6 shrink-0 items-center justify-center rounded-full text-[#6f746f] dark:text-[#8f9790]">

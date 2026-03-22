@@ -1,8 +1,6 @@
 import { createHmac } from "node:crypto";
-import { eq } from "drizzle-orm";
 import { NextResponse } from "next/server";
-import { db } from "@/lib/db/queries";
-import { purchaseRequest, user } from "@/lib/db/schema";
+import { updatePurchaseRequestStatus } from "@/lib/db/queries";
 
 const DOMPETX_API_KEY = process.env.DOMPETX_API_KEY ?? "";
 
@@ -74,50 +72,34 @@ export async function POST(request: Request) {
 			);
 		}
 
-		// Status sukses: PAID, SUCCESS, SETTLED, COMPLETED
+		const normalizedStatus = String(status || "").toUpperCase();
 		const isSuccess = ["PAID", "SUCCESS", "SETTLED", "COMPLETED"].includes(
-			String(status).toUpperCase(),
+			normalizedStatus,
+		);
+		const isFailure = ["EXPIRED", "FAILED", "CANCELLED", "CANCELED"].includes(
+			normalizedStatus,
 		);
 
 		if (isSuccess) {
-			// Cari purchase request berdasarkan ID kita (dikirim sebagai reference)
-			const [requestRec] = await db
-				.select()
-				.from(purchaseRequest)
-				.where(eq(purchaseRequest.id, referenceId));
-
-			if (requestRec && requestRec.status !== "approved") {
-				// Update status jadi approved
-				await db
-					.update(purchaseRequest)
-					.set({ status: "approved", updatedAt: new Date() })
-					.where(eq(purchaseRequest.id, referenceId));
-
-				// Aktifkan status PRO untuk user
-				if (requestRec.userId) {
-					const now = new Date();
-					const expiresAt = new Date(now);
-					expiresAt.setMonth(expiresAt.getMonth() + (requestRec.months || 1));
-
-					await db
-						.update(user)
-						.set({
-							isPro: true,
-							proExpiresAt: expiresAt,
-							limitCount: 99_999,
-						})
-						.where(eq(user.id, requestRec.userId));
-
-					console.log(
-						`[Webhook DompetX] ✅ PRO activated for userId: ${requestRec.userId}`,
-					);
-				}
-			}
+			await updatePurchaseRequestStatus({
+				id: referenceId,
+				status: "approved",
+			});
 
 			return NextResponse.json({ success: true, message: "Payment processed" });
 		}
 
-		// Status lainnya (PENDING, EXPIRED, FAILED, dll)
+		if (isFailure) {
+			await updatePurchaseRequestStatus({
+				id: referenceId,
+				status: "rejected",
+			});
+			return NextResponse.json({
+				success: true,
+				message: `Payment marked failed: ${status}`,
+			});
+		}
+
 		console.log(`[Webhook DompetX] Status non-success: ${status}`);
 		return NextResponse.json({
 			success: true,

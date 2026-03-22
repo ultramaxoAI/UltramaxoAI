@@ -1,8 +1,8 @@
-import { desc, eq } from "drizzle-orm";
+import { desc } from "drizzle-orm";
 import { NextResponse } from "next/server";
 import { auth } from "@/app/(auth)/auth";
-import { db } from "@/lib/db/queries";
-import { purchaseRequest, user } from "@/lib/db/schema";
+import { db, updatePurchaseRequestStatus } from "@/lib/db/queries";
+import { purchaseRequest } from "@/lib/db/schema";
 
 export async function GET(_request: Request) {
 	try {
@@ -46,37 +46,14 @@ export async function PATCH(request: Request) {
 			);
 		}
 
-		// Update request status
-		await db
-			.update(purchaseRequest)
-			.set({
-				status,
-				updatedAt: new Date(),
-			})
-			.where(eq(purchaseRequest.id, resolvedId));
-
-		// If approved, upgrade the user to pro
-		if (status === "approved") {
-			const [request] = await db
-				.select()
-				.from(purchaseRequest)
-				.where(eq(purchaseRequest.id, resolvedId));
-
-			if (request?.userId) {
-				const now = new Date();
-				const expiresAt = new Date(now);
-				expiresAt.setMonth(expiresAt.getMonth() + (request.months || 1));
-
-				await db
-					.update(user)
-					.set({
-						isPro: true,
-						proExpiresAt: expiresAt,
-						limitCount: 99_999,
-					})
-					.where(eq(user.id, request.userId));
-			}
+		if (!["pending", "paid", "approved", "rejected"].includes(status)) {
+			return NextResponse.json({ error: "Invalid status" }, { status: 400 });
 		}
+
+		await updatePurchaseRequestStatus({
+			id: resolvedId,
+			status,
+		});
 
 		return NextResponse.json({ success: true });
 	} catch (error) {

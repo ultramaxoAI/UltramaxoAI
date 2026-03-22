@@ -3,7 +3,7 @@
 	"version": "3.1.0",
 	"private": true,
 	"scripts": {
-		"dev": "next dev --turbo",
+		"dev": "next dev --webpack",
 		"build": "next build --webpack",
 		"start": "next start",
 		"lint": "ultracite check",
@@ -103,6 +103,7 @@
 		"react": "19.0.1",
 		"react-data-grid": "7.0.0-beta.47",
 		"react-dom": "19.0.1",
+		"react-qr-code": "^2.0.18",
 		"react-resizable-panels": "^2.1.7",
 		"react-syntax-highlighter": "^15.6.6",
 		"redis": "^5.0.0",

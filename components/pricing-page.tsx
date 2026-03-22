@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import type { User } from "next-auth";
 import { useEffect, useState } from "react";
+import QRCode from "react-qr-code";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 
@@ -75,7 +76,8 @@ export function PricingPage({ user }: PricingPageProps) {
 	const router = useRouter();
 	const [selectedPlan, setSelectedPlan] = useState<string | null>(null);
 	const [loading, setLoading] = useState(false);
-	const [hasPendingRequest, setHasPendingRequest] = useState(false);
+	const [qrisData, setQrisData] = useState<{ qris: string, requestId: string, planName: string, price: string } | null>(null);
+	const [checkStatusLoading, setCheckStatusLoading] = useState(false);
 
 	// Auto-redirect if user is already PRO
 	useEffect(() => {
@@ -85,39 +87,46 @@ export function PricingPage({ user }: PricingPageProps) {
 		}
 	}, [user, router]);
 
-	// Poll for upgrade status when there's a pending request
+	// Poll for upgrade status when there's a pending QRIS payment
 	useEffect(() => {
-		if (!hasPendingRequest || !user) {
-			return;
-		}
+		if (!qrisData) return;
 
-		const pollInterval = setInterval(async () => {
+		let currentIntervalMs = 3000;
+		const maxIntervalMs = 15000;
+
+		const pollPayment = async () => {
+			if (!qrisData?.requestId) return;
 			try {
-				const response = await fetch("/api/user/upgrade-status");
+				const response = await fetch(`/api/payment/check-qris?requestId=${qrisData.requestId}`);
 				const data = await response.json();
 
-				if (data.isPro) {
-					// User has been upgraded!
-					clearInterval(pollInterval);
-					setHasPendingRequest(false);
-
-					// Refresh session to get updated user data
+				if (data.paid) {
+					clearInterval(timerId);
+					toast.success("🎉 Pembayaran Berhasil! Selamat datang di PRO!");
 					await fetch("/api/auth/session/refresh", { method: "POST" });
-
-					toast.success("Upgrade berhasil! Selamat datang di PRO!");
-
-					// Redirect to chat
-					setTimeout(() => {
-						window.location.href = "/chat"; // Force reload to ensure session is fresh
-					}, 1500);
+					setTimeout(() => { window.location.href = "/chat"; }, 1500);
+				} else {
+					if (currentIntervalMs < maxIntervalMs) {
+						currentIntervalMs = Math.min(currentIntervalMs + 2000, maxIntervalMs);
+						scheduleNextPoll();
+					}
 				}
 			} catch (error) {
-				console.error("Error polling upgrade status:", error);
+				console.error("Error polling payment status:", error);
+				scheduleNextPoll();
 			}
-		}, 3000); // Poll every 3 seconds
+		};
 
-		return () => clearInterval(pollInterval);
-	}, [hasPendingRequest, user]);
+		let timerId: NodeJS.Timeout;
+		const scheduleNextPoll = () => {
+			timerId = setTimeout(() => {
+				pollPayment();
+			}, currentIntervalMs);
+		};
+
+		scheduleNextPoll();
+		return () => clearTimeout(timerId);
+	}, [qrisData]);
 
 	const handleUpgrade = async (planName: string) => {
 		setSelectedPlan(planName);
@@ -156,16 +165,21 @@ export function PricingPage({ user }: PricingPageProps) {
 				throw new Error(data.error || "Gagal membuat invoice");
 			}
 
-			if (data.checkoutUrl) {
-				toast.success("Mengarahkan ke pembayaran...");
-				window.location.href = data.checkoutUrl;
+			if (data.qris && data.requestId) {
+				setQrisData({
+					qris: data.qris,
+					requestId: data.requestId,
+					planName: planName,
+					price: plan.price,
+				});
+				toast.success("Silakan scan kode QRIS untuk menyelesaikan pembayaran");
 			} else if (data.fallback) {
 				toast.success("Menghubungi Admin via WhatsApp...");
 				const text = `Halo Admin, saya ingin upgrade ke paket *${planName}* seharga ${plan.price} untuk akun saya dengan email *${user.email}*. Mohon panduannya.`;
 				const waUrl = `https://wa.me/6285191689131?text=${encodeURIComponent(text)}`;
 				window.open(waUrl, "_blank");
 			} else {
-				throw new Error("Checkout URL tidak ditemukan");
+				throw new Error("Gagal mengambil QRIS pembayaran");
 			}
 		} catch (error) {
 			console.error("Gagal memproses upgrade:", error);
@@ -173,26 +187,40 @@ export function PricingPage({ user }: PricingPageProps) {
 		} finally {
 			setLoading(false);
 			setTimeout(() => {
-				setSelectedPlan(null);
+				if (!qrisData) setSelectedPlan(null);
 			}, 500);
+		}
+	};
+	
+	const handleManualCheck = async () => {
+		if (!qrisData?.requestId) return;
+		setCheckStatusLoading(true);
+		try {
+			const res = await fetch(`/api/payment/check-qris?requestId=${qrisData.requestId}`);
+			const data = await res.json();
+			if (data.paid) {
+				toast.success("🎉 Pembayaran Berhasil diverifikasi!");
+				await fetch("/api/auth/session/refresh", { method: "POST" });
+				setQrisData(null);
+				setTimeout(() => { window.location.href = "/chat"; }, 1500);
+			} else {
+				toast.error("Pembayaran belum diterima. Pastikan Anda sudah scan dan bayar.", { duration: 4000 });
+			}
+		} catch (error) {
+			toast.error("Gagal mengecek status.");
+		} finally {
+			setCheckStatusLoading(false);
 		}
 	};
 
 	const slotsRemaining = TOTAL_EARLY_ADOPTER_SLOTS - SLOTS_TAKEN;
-	const slotPercentage = (SLOTS_TAKEN / TOTAL_EARLY_ADOPTER_SLOTS) * 100;
 
 	return (
-		<div className="min-h-screen bg-linear-to-b from-zinc-50 via-white to-zinc-100 dark:from-zinc-950 dark:via-zinc-900 dark:to-black">
-			{/* Background Effects */}
-			<div className="fixed inset-0 overflow-hidden pointer-events-none">
-				<div className="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-[600px] bg-indigo-600/5 rounded-full blur-3xl" />
-				<div className="absolute bottom-0 right-0 w-[500px] h-[500px] bg-purple-600/5 rounded-full blur-3xl" />
-			</div>
-
+		<div className="min-h-screen bg-white dark:bg-[#09090b] font-sans selection:bg-indigo-100 dark:selection:bg-indigo-500/20">
 			<div className="relative max-w-7xl mx-auto px-4 py-12 sm:px-6 lg:px-8">
 				{/* Back Button */}
 				<Link
-					className="inline-flex items-center gap-2 text-sm text-zinc-500 dark:text-gray-400 hover:text-zinc-900 dark:hover:text-white transition-colors mb-8"
+					className="inline-flex items-center gap-2 text-sm font-medium text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white transition-colors mb-8"
 					href="/chat"
 				>
 					<ArrowLeft className="h-4 w-4" />
@@ -200,168 +228,198 @@ export function PricingPage({ user }: PricingPageProps) {
 				</Link>
 
 				{/* Header */}
-				<div className="text-center mb-8">
-					<h1 className="text-4xl sm:text-5xl font-bold mb-4 bg-linear-to-r from-zinc-900 via-zinc-700 to-zinc-500 dark:from-white dark:via-gray-200 dark:to-gray-400 bg-clip-text text-transparent">
-						Pilih Paket Anda
+				<div className="text-center mb-12">
+					<h1 className="text-4xl sm:text-5xl font-bold mb-4 text-zinc-900 dark:text-white">
+						{qrisData ? "Checkout Pembayaran" : "Tingkatkan pengalaman Anda"}
 					</h1>
-					<p className="text-zinc-500 dark:text-gray-400 text-lg max-w-2xl mx-auto">
-						Tidak ada biaya tersembunyi. Upgrade kapan saja, downgrade kapan
-						saja.
-					</p>
-					<p className="text-sm text-zinc-400 dark:text-gray-500 mt-2">
-						Pakai gratis selamanya atau upgrade untuk fitur unlimited
-					</p>
+					{!qrisData && (
+						<p className="text-zinc-600 dark:text-zinc-400 text-lg max-w-2xl mx-auto">
+							Pilih paket yang sesuai dengan kebutuhan Anda. Upgrade kapan saja.
+						</p>
+					)}
 				</div>
 
 				{/* FOMO / Scarcity Banner */}
-				<div className="max-w-2xl mx-auto mb-12">
-					<div className="relative overflow-hidden rounded-2xl border border-amber-500/30 dark:border-amber-500/20 bg-amber-50 dark:bg-amber-950/20 p-4 sm:p-5">
+				<div className="max-w-3xl mx-auto mb-12">
+					<div className="rounded-2xl border border-zinc-200 dark:border-white/[0.08] bg-white dark:bg-white/[0.02] backdrop-blur-sm p-4 sm:p-5">
 						<div className="flex items-center justify-center gap-3 flex-wrap">
 							<div className="flex items-center gap-2">
-								<Flame className="w-5 h-5 text-amber-600 dark:text-amber-400 animate-pulse" />
-								<span className="text-sm font-bold text-amber-800 dark:text-amber-300">
+								<Flame className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
+								<span className="text-sm font-bold text-zinc-900 dark:text-white">
 									Promo Early Adopter
 								</span>
 							</div>
-							<div className="h-4 w-px bg-amber-400/50 hidden sm:block" />
+							<div className="h-4 w-px bg-zinc-300 dark:bg-zinc-700 hidden sm:block" />
 							<div className="flex items-center gap-2">
-								<Users className="w-4 h-4 text-amber-600 dark:text-amber-400" />
-								<span className="text-sm text-amber-700 dark:text-amber-200">
-									<span className="font-extrabold text-red-600 dark:text-red-400">{slotsRemaining}</span> dari {TOTAL_EARLY_ADOPTER_SLOTS} slot tersedia
+								<Users className="w-4 h-4 text-zinc-500 dark:text-zinc-400" />
+								<span className="text-sm text-zinc-600 dark:text-zinc-300">
+									<span className="font-bold text-indigo-600 dark:text-indigo-400">{slotsRemaining}</span> dari {TOTAL_EARLY_ADOPTER_SLOTS} slot
 								</span>
 							</div>
-							<div className="h-4 w-px bg-amber-400/50 hidden sm:block" />
-							<span className="text-xs text-amber-600/80 dark:text-amber-400/60 font-medium">
+							<div className="h-4 w-px bg-zinc-300 dark:bg-zinc-700 hidden sm:block" />
+							<span className="text-sm text-zinc-500 dark:text-zinc-400">
 								Harga naik 2x setelah slot habis
 							</span>
 						</div>
-						{/* Progress bar showing slots taken */}
-						<div className="mt-3 h-1.5 rounded-full bg-amber-200 dark:bg-amber-900/50 overflow-hidden">
-							<div
-								className="h-full rounded-full bg-linear-to-r from-amber-500 to-red-500 transition-all duration-1000"
-								style={{ width: `${slotPercentage}%` }}
+					</div>
+				</div>
+
+				{/* Content Switch: QRIS or Plans */}
+				{qrisData ? (
+					<div className="flex flex-col items-center justify-center p-8 text-center max-w-xl mx-auto bg-white dark:bg-white/[0.02] backdrop-blur-sm rounded-3xl border border-zinc-200 dark:border-white/[0.08]">
+						<h2 className="text-2xl font-bold text-zinc-900 dark:text-white mb-2">Checkout {qrisData.planName}</h2>
+						<p className="text-zinc-500 dark:text-zinc-400 mb-8 max-w-sm">Scan kode QRIS di bawah ini dengan aplikasi Bank atau E-Wallet kesayangan Anda untuk membayar <b>{qrisData.price}</b>.</p>
+						
+						<div className="bg-white p-4 rounded-3xl shrink-0 mb-8 flex justify-center items-center w-64 h-64 border border-zinc-200 dark:border-zinc-700 relative mx-auto">
+							<QRCode 
+								value={qrisData.qris} 
+								size={256} 
+								style={{ height: "auto", maxWidth: "100%", width: "100%" }}
+								viewBox={`0 0 256 256`}
 							/>
 						</div>
-					</div>
-				</div>
 
-				{/* Pricing Cards */}
-				<div className="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto">
-					{pricingPlans.map((plan) => (
-						<div
-							className={`relative rounded-3xl p-8 backdrop-blur-sm transition-all duration-300 hover:scale-105 ${
-								plan.popular
-									? "border-2 border-indigo-400/50 dark:border-indigo-500/40 bg-linear-to-b from-indigo-50 via-white to-purple-50 dark:from-indigo-950/50 dark:via-zinc-900/50 dark:to-purple-950/30 shadow-lg shadow-indigo-500/10 dark:shadow-indigo-500/15"
-									: "border border-zinc-200 dark:border-white/10 bg-white dark:bg-zinc-900/50 hover:border-zinc-300 dark:hover:border-white/20 shadow-sm hover:shadow-md"
-							}`}
-							key={plan.name}
-						>
-							{plan.popular && (
-								<div className="absolute -top-4 left-1/2 -translate-x-1/2 px-5 py-1.5 bg-linear-to-r from-indigo-500 to-purple-600 rounded-full text-xs font-semibold shadow-lg shadow-indigo-500/30 text-white flex items-center gap-1.5">
-									<Zap className="w-3 h-3" />
-									Paling Populer
-								</div>
-							)}
-
-							<div className="mb-8">
-								<p className="font-semibold text-zinc-900 dark:text-white text-lg mb-2">
-									{plan.name}
-								</p>
-								<div className="flex items-end gap-2 mb-1">
-									{plan.originalPrice && (
-										<span className="text-lg text-zinc-400 dark:text-gray-500 line-through mb-1">
-											{plan.originalPrice}
-										</span>
-									)}
-									<span className="text-4xl font-extrabold text-zinc-900 dark:text-white">
-										{plan.price}
-									</span>
-									<span className="text-sm text-zinc-400 dark:text-gray-500 mb-2">
-										/ {plan.period}
-									</span>
-								</div>
-								{plan.originalPrice && (
-									<span className="inline-block text-xs font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/30 px-2 py-0.5 rounded-full mb-2">
-										HEMAT 50%
-									</span>
-								)}
-								<p className="text-sm text-zinc-500 dark:text-gray-400 leading-relaxed">
-									{plan.desc}
-								</p>
-							</div>
-
-							<ul className="space-y-4 mb-8">
-								{plan.features.map((feat) => (
-									<li
-										className="flex items-start gap-3 text-sm text-zinc-600 dark:text-gray-300"
-										key={feat}
-									>
-										<Check className="w-5 h-5 text-indigo-500 dark:text-indigo-400 mt-0.5 shrink-0" />
-										<span className="leading-relaxed">{feat}</span>
-									</li>
-								))}
-							</ul>
-
-							<Button
-								className={`w-full justify-center h-11 rounded-2xl font-medium transition-all ${
-									plan.popular
-										? "bg-linear-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white shadow-lg shadow-indigo-500/30"
-										: plan.ctaDisabled
-											? "bg-zinc-100 dark:bg-white/10 text-zinc-400 dark:text-gray-400 cursor-not-allowed"
-											: "bg-zinc-900 dark:bg-white/10 hover:bg-zinc-800 dark:hover:bg-white/20 text-white"
-								}`}
-								disabled={plan.ctaDisabled || loading}
-								onClick={(e) => {
-									e.preventDefault();
-									e.stopPropagation();
-									if (!plan.ctaDisabled) {
-										handleUpgrade(plan.name);
-									}
-								}}
-								type="button"
+						<div className="flex flex-col gap-3 w-full max-w-[280px]">
+							<Button 
+								onClick={handleManualCheck} 
+								disabled={checkStatusLoading}
+								className="w-full bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl h-12 font-medium"
 							>
-								{loading && selectedPlan === plan.name
-									? "Processing..."
-									: plan.ctaText}
+								{checkStatusLoading ? "Mengecek..." : "Saya Sudah Bayar"}
+							</Button>
+							<Button 
+								onClick={() => { setQrisData(null); setSelectedPlan(null); }}
+								variant="ghost"	
+								className="w-full text-zinc-600 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-white/5 rounded-xl h-12"
+							>
+								Pilih Paket Lain
 							</Button>
 						</div>
-					))}
-				</div>
+						<p className="mt-8 text-xs text-zinc-500 animate-pulse">Menunggu pembayaran... (Auto-verify aktif)</p>
+					</div>
+				) : (
+					<>
+						{/* Pricing Cards */}
+						<div className="grid md:grid-cols-3 gap-6 max-w-6xl mx-auto">
+							{pricingPlans.map((plan) => (
+								<div
+									className={`relative rounded-3xl p-8 flex flex-col transition-colors ${
+										plan.popular
+											? "border border-indigo-500/30 bg-white dark:bg-white/[0.02] shadow-[0_0_30px_rgba(99,102,241,0.05)]"
+											: "border border-zinc-200 dark:border-white/[0.08] bg-white dark:bg-white/[0.02] hover:bg-zinc-50 dark:hover:bg-white/[0.04]"
+									}`}
+									key={plan.name}
+								>
+									{plan.popular && (
+										<>
+											<div className="absolute inset-0 rounded-3xl bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-indigo-500/15 via-transparent to-transparent pointer-events-none" />
+											<div className="absolute top-4 right-6 px-3 py-1 bg-indigo-50 dark:bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-500/20 rounded-full text-xs font-bold uppercase tracking-wide">
+												Populer
+											</div>
+										</>
+									)}
 
-				{/* Price Comparison Banner */}
-				<div className="max-w-2xl mx-auto mt-12 mb-8">
-					<div className="rounded-2xl border border-zinc-200 dark:border-white/10 bg-zinc-50 dark:bg-white/5 p-6 text-center">
-						<p className="text-sm text-zinc-500 dark:text-gray-400 mb-2">Perbandingan Harga</p>
-						<div className="flex items-center justify-center gap-4 flex-wrap">
-							<div className="text-center">
-								<p className="text-xs text-zinc-400 dark:text-gray-500">ChatGPT Plus</p>
-								<p className="text-lg font-bold text-zinc-400 dark:text-gray-500 line-through">~Rp 310.000</p>
-							</div>
-							<span className="text-zinc-300 dark:text-gray-600 text-2xl">vs</span>
-							<div className="text-center">
-								<p className="text-xs text-indigo-600 dark:text-indigo-400">Ultramaxo Pro</p>
-								<p className="text-lg font-bold text-indigo-600 dark:text-indigo-400">Rp 15.000</p>
+									<div className="mb-8 relative z-10">
+										<h2 className="text-2xl font-semibold mb-2 text-zinc-900 dark:text-white">
+											{plan.name}
+										</h2>
+										<div className="flex items-end gap-2 mb-2">
+											{plan.originalPrice && (
+												<span className="text-lg line-through mb-1 text-zinc-400 dark:text-zinc-500">
+													{plan.originalPrice}
+												</span>
+											)}
+											<span className="text-4xl font-bold text-zinc-900 dark:text-white">
+												{plan.price}
+											</span>
+											<span className="text-sm mb-1 text-zinc-500 dark:text-zinc-400">
+												/ {plan.period}
+											</span>
+										</div>
+										<p className="text-sm leading-relaxed text-zinc-600 dark:text-zinc-400">
+											{plan.desc}
+										</p>
+									</div>
+
+									<Button
+										className={`w-full justify-center h-12 rounded-xl text-base font-medium mb-8 relative z-10 transition-all ${
+											plan.popular
+												? "bg-indigo-600 hover:bg-indigo-500 text-white shadow-md shadow-indigo-500/20"
+												: plan.ctaDisabled
+													? "bg-zinc-100 dark:bg-white/5 text-zinc-400 dark:text-zinc-500 cursor-not-allowed border border-transparent"
+													: "bg-zinc-900 text-white hover:bg-zinc-800 dark:bg-white dark:text-black dark:hover:bg-zinc-200"
+										}`}
+										disabled={plan.ctaDisabled || loading}
+										onClick={(e) => {
+											e.preventDefault();
+											e.stopPropagation();
+											if (!plan.ctaDisabled) {
+												handleUpgrade(plan.name);
+											}
+										}}
+										type="button"
+									>
+										{loading && selectedPlan === plan.name
+											? "Memproses..."
+											: plan.ctaText}
+									</Button>
+
+									<ul className="space-y-4 flex-1 relative z-10">
+										{plan.features.map((feat) => (
+											<li
+												className="flex items-start gap-3 text-sm text-zinc-700 dark:text-zinc-300"
+												key={feat}
+											>
+												<Check className={`w-5 h-5 mt-0.5 shrink-0 ${plan.popular ? "text-indigo-600 dark:text-indigo-400" : "text-zinc-400 dark:text-zinc-500"}`} />
+												<span className="leading-relaxed">{feat}</span>
+											</li>
+										))}
+									</ul>
+								</div>
+							))}
+						</div>
+
+						{/* Price Comparison Banner */}
+						<div className="max-w-3xl mx-auto mt-12 mb-8">
+							<div className="relative overflow-hidden rounded-3xl border border-zinc-200 dark:border-white/[0.08] bg-white dark:bg-white/[0.02] p-8 sm:p-10 text-center backdrop-blur-md">
+								<div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom,_var(--tw-gradient-stops))] from-zinc-200/50 dark:from-white/5 via-transparent to-transparent pointer-events-none" />
+								<p className="relative z-10 text-sm font-semibold text-zinc-500 dark:text-zinc-400 uppercase mb-8 tracking-wide">Penawaran Terbaik</p>
+								<div className="relative z-10 flex flex-col sm:flex-row items-center justify-center gap-8 sm:gap-16">
+									<div className="text-center">
+										<p className="text-sm font-medium text-zinc-500 dark:text-zinc-400 mb-2">ChatGPT Plus</p>
+										<p className="text-2xl font-bold text-zinc-400 dark:text-zinc-600 line-through">~Rp 310.000</p>
+									</div>
+									<div className="relative z-10 hidden sm:flex text-zinc-300 dark:text-zinc-600 font-medium text-lg">
+										VS
+									</div>
+									<div className="text-center">
+										<p className="text-sm font-medium text-zinc-900 dark:text-white mb-2">Ultramaxo Pro</p>
+										<p className="text-3xl font-bold text-indigo-600 dark:text-indigo-400">Rp 15.000</p>
+									</div>
+								</div>
+								<div className="relative z-10 mt-8 inline-block px-4 py-2 rounded-full border border-zinc-200 dark:border-white/10 bg-zinc-50 dark:bg-white/5">
+									<p className="text-sm text-zinc-700 dark:text-zinc-300 font-medium">Kemampuan Setara, Hemat 20x Lipat</p>
+								</div>
 							</div>
 						</div>
-						<p className="text-xs text-emerald-600 dark:text-emerald-400 font-semibold mt-2">Kemampuan setara, 20x lebih hemat</p>
-					</div>
-				</div>
+					</>
+				)}
 
 				{/* Footer Note */}
-				<div className="text-center mt-8 space-y-4">
-					<p className="text-sm text-zinc-500 dark:text-gray-500">
+				<div className="text-center mt-12 space-y-4">
+					<p className="text-sm text-zinc-500 dark:text-zinc-400">
 						Dengan melanjutkan, Anda menyetujui{" "}
 						<Link
-							className="text-indigo-600 dark:text-indigo-400 hover:text-indigo-500 dark:hover:text-indigo-300 underline"
+							className="text-zinc-900 dark:text-white underline hover:no-underline"
 							href="/terms"
 						>
 							Syarat & Ketentuan
 						</Link>{" "}
 						kami.
 					</p>
-					<div className="flex items-center justify-center gap-6 text-xs text-zinc-400 dark:text-gray-600">
+					<div className="flex flex-wrap items-center justify-center gap-4 sm:gap-6 text-xs text-zinc-400 dark:text-zinc-500">
 						<span>Pembayaran Aman</span>
-						<span>Via DompetX</span>
+						<span>Status: Terverifikasi</span>
 						<span>Aktivasi Instant</span>
 					</div>
 				</div>

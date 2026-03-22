@@ -1,7 +1,7 @@
-import { desc, eq } from "drizzle-orm";
+import { and, desc, eq, lte } from "drizzle-orm";
 import { NextResponse } from "next/server";
 import { auth } from "@/app/(auth)/auth";
-import { db } from "@/lib/db/queries";
+import { db, updatePurchaseRequestStatus } from "@/lib/db/queries";
 import { purchaseRequest, user as userTable } from "@/lib/db/schema";
 
 export const dynamic = "force-dynamic";
@@ -18,13 +18,41 @@ export async function GET() {
 			return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
 		}
 
-		// Get latest upgrade request for this user
-		const [latestRequest] = await db
+		const paymentTimeoutMinutes = Number(
+			process.env.PAYMENT_PENDING_TIMEOUT_MINUTES ?? 30,
+		);
+		const timeoutMs = Math.max(1, paymentTimeoutMinutes) * 60_000;
+		const timeoutThreshold = new Date(Date.now() - timeoutMs);
+
+		await db
+			.update(purchaseRequest)
+			.set({ status: "rejected", updatedAt: new Date() })
+			.where(
+				and(
+					eq(purchaseRequest.userId, session.user.id),
+					eq(purchaseRequest.status, "pending"),
+					lte(purchaseRequest.createdAt, timeoutThreshold),
+				),
+			);
+
+		let [latestRequest] = await db
 			.select()
 			.from(purchaseRequest)
 			.where(eq(purchaseRequest.userId, session.user.id))
 			.orderBy(desc(purchaseRequest.createdAt))
 			.limit(1);
+
+		if (
+			latestRequest &&
+			latestRequest.status === "pending" &&
+			latestRequest.createdAt &&
+			latestRequest.createdAt.getTime() <= timeoutThreshold.getTime()
+		) {
+			latestRequest = await updatePurchaseRequestStatus({
+				id: latestRequest.id,
+				status: "rejected",
+			});
+		}
 
 		// Get fresh user data
 		const [userData] = await db
@@ -35,6 +63,7 @@ export async function GET() {
 
 		return NextResponse.json({
 			isPro: userData?.isPro || false,
+			paymentTimeoutMinutes,
 			latestRequest: latestRequest
 				? {
 						id: latestRequest.id,

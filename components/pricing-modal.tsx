@@ -1,6 +1,6 @@
 "use client";
 
-import { Check, Flame, Users, X, Zap } from "lucide-react";
+import { Check, Flame, X, Zap } from "lucide-react";
 import { useRouter } from "next/navigation";
 import type { User } from "next-auth";
 import { useEffect, useState } from "react";
@@ -13,6 +13,7 @@ import {
 	DialogHeader,
 	DialogTitle,
 } from "@/components/ui/dialog";
+
 
 interface PricingModalProps {
 	open: boolean;
@@ -83,42 +84,61 @@ export function PricingModal({ open, onOpenChange, user }: PricingModalProps) {
 	const router = useRouter();
 	const [selectedPlan, setSelectedPlan] = useState<string | null>(null);
 	const [loading, setLoading] = useState(false);
-	const [hasPendingRequest, setHasPendingRequest] = useState(false);
+	const [qrisData, setQrisData] = useState<{ qris: string, requestId: string, planName: string, price: string } | null>(null);
+	const [checkStatusLoading, setCheckStatusLoading] = useState(false);
 
-	// Poll for upgrade status when there's a pending request
+	// Poll for upgrade status when there's a pending QRIS payment
 	useEffect(() => {
-		if (!hasPendingRequest || !user || !open) {
+		if (!qrisData || !open) {
 			return;
 		}
 
-		const pollInterval = setInterval(async () => {
+		let currentIntervalMs = 3000;
+		const maxIntervalMs = 15000;
+
+		const pollPayment = async () => {
+			if (!qrisData?.requestId) return;
 			try {
-				const response = await fetch("/api/user/upgrade-status");
+				const response = await fetch(`/api/payment/check-qris?requestId=${qrisData.requestId}`);
 				const data = await response.json();
 
-				if (data.isPro) {
+				if (data.paid) {
 					// User has been upgraded!
-					clearInterval(pollInterval);
-					setHasPendingRequest(false);
-
+					toast.success("🎉 Pembayaran Berhasil! Selamat datang di PRO!");
+					
 					// Refresh session
 					await fetch("/api/auth/session/refresh", { method: "POST" });
-
-					toast.success("🎉 Upgrade successful! Welcome to PRO!");
-
+					
 					// Close modal and reload
 					onOpenChange(false);
-					setTimeout(() => {
-						window.location.reload();
-					}, 1500);
+					setQrisData(null);
+					setTimeout(() => window.location.reload(), 1500);
+				} else {
+					// Exponential backoff
+					if (currentIntervalMs < maxIntervalMs) {
+						currentIntervalMs = Math.min(currentIntervalMs + 2000, maxIntervalMs);
+						scheduleNextPoll();
+					}
 				}
 			} catch (error) {
-				console.error("Error polling upgrade status:", error);
+				console.error("Error polling payment status:", error);
+				// Still try to poll again even on error to be safe
+				scheduleNextPoll();
 			}
-		}, 3000);
+		};
 
-		return () => clearInterval(pollInterval);
-	}, [hasPendingRequest, user, open, onOpenChange]);
+		let timerId: NodeJS.Timeout;
+		const scheduleNextPoll = () => {
+			timerId = setTimeout(() => {
+				pollPayment();
+			}, currentIntervalMs);
+		};
+
+		// Start first poll
+		scheduleNextPoll();
+
+		return () => clearTimeout(timerId);
+	}, [qrisData, open, onOpenChange]);
 
 	const handleUpgrade = async (planName: string) => {
 		setSelectedPlan(planName);
@@ -157,9 +177,14 @@ export function PricingModal({ open, onOpenChange, user }: PricingModalProps) {
 				throw new Error(data.error || "Gagal membuat invoice");
 			}
 
-			if (data.checkoutUrl) {
-				toast.success("Mengarahkan ke pembayaran...");
-				window.location.href = data.checkoutUrl;
+			if (data.qris && data.requestId) {
+				setQrisData({
+					qris: data.qris,
+					requestId: data.requestId,
+					planName: planName,
+					price: plan.price,
+				});
+				toast.success("Silakan scan kode QRIS untuk menyelesaikan pembayaran");
 			} else if (data.fallback) {
 				// Fallback if local without API Key, fallback to WhatsApp
 				toast.success("Menghubungi Admin via WhatsApp...");
@@ -167,7 +192,7 @@ export function PricingModal({ open, onOpenChange, user }: PricingModalProps) {
 				const waUrl = `https://wa.me/6285191689131?text=${encodeURIComponent(text)}`;
 				window.open(waUrl, "_blank");
 			} else {
-				throw new Error("Checkout URL tidak ditemukan");
+				throw new Error("Gagal mengambil QRIS pembayaran");
 			}
 		} catch (error) {
 			console.error("Gagal memproses upgrade:", error);
@@ -175,106 +200,173 @@ export function PricingModal({ open, onOpenChange, user }: PricingModalProps) {
 		} finally {
 			setLoading(false);
 			setTimeout(() => {
-				onOpenChange(false);
-				setSelectedPlan(null);
+				// Don't reset selected plan if currently showing QRIS
+				if (!qrisData) setSelectedPlan(null);
 			}, 500);
 		}
 	};
 
+	const handleManualCheck = async () => {
+		if (!qrisData?.requestId) return;
+		setCheckStatusLoading(true);
+		try {
+			const res = await fetch(`/api/payment/check-qris?requestId=${qrisData.requestId}`);
+			const data = await res.json();
+			if (data.paid) {
+				toast.success("🎉 Pembayaran Berhasil diverifikasi!");
+				await fetch("/api/auth/session/refresh", { method: "POST" });
+				onOpenChange(false);
+				setQrisData(null);
+				setTimeout(() => window.location.reload(), 1500);
+			} else {
+				toast.error("Pembayaran belum diterima. Pastikan Anda sudah scan dan bayar.", { duration: 4000 });
+			}
+		} catch (error) {
+			toast.error("Gagal mengecek status.");
+		} finally {
+			setCheckStatusLoading(false);
+		}
+	};
+
+	const handleBack = () => {
+		setQrisData(null);
+		setSelectedPlan(null);
+	};
+
 	return (
-		<Dialog onOpenChange={onOpenChange} open={open}>
-			<DialogContent className="max-w-5xl border-0 bg-[#0a0a0a] p-0 overflow-hidden">
-				<div className="relative border border-white/10 rounded-2xl overflow-hidden">
+		<Dialog onOpenChange={(open) => {
+			if (!open) handleBack();
+			onOpenChange(open);
+		}} open={open}>
+			<DialogContent className="max-w-5xl border-0 bg-white dark:bg-[#09090b] p-0 overflow-hidden shadow-2xl">
+				<div className="relative border border-zinc-200 dark:border-white/[0.08] rounded-2xl overflow-hidden bg-white dark:bg-white/[0.02] backdrop-blur-sm">
+					
 					{/* Close Button */}
 					<button
-						className="absolute top-4 right-4 z-10 p-2 rounded-lg bg-white/5 hover:bg-white/10 transition-colors"
+						type="button"
+						className="absolute top-4 right-4 z-10 p-2 rounded-lg bg-zinc-100 dark:bg-white/5 hover:bg-zinc-200 dark:hover:bg-white/10 transition-colors"
 						onClick={() => onOpenChange(false)}
 					>
-						<X className="h-4 w-4 text-gray-400" />
+						<X className="h-4 w-4 text-zinc-500 dark:text-gray-400" />
 					</button>
 
+					{qrisData ? (
+						<div className="flex flex-col items-center justify-center p-12 text-center">
+							<h2 className="text-2xl font-bold text-zinc-900 dark:text-white mb-2">Checkout {qrisData.planName}</h2>
+							<p className="text-zinc-500 dark:text-zinc-400 mb-8 max-w-sm">Scan kode QRIS di bawah ini dengan aplikasi Bank atau E-Wallet kesayangan Anda untuk membayar <b>{qrisData.price}</b>.</p>
+							
+							<div className="bg-white p-4 rounded-3xl shrink-0 mb-8 flex justify-center items-center overflow-hidden w-64 h-64 border border-zinc-200 dark:border-zinc-700 relative mx-auto shadow-sm">
+								<img 
+									src={`https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${encodeURIComponent(qrisData.qris)}&color=0a0a0a`} 
+									alt="QRIS Payment" 
+									className="w-full h-full object-contain mix-blend-multiply" 
+								/>
+							</div>
+
+							<div className="flex flex-col gap-3 w-full max-w-[280px]">
+								<Button 
+									onClick={handleManualCheck} 
+									disabled={checkStatusLoading}
+									className="w-full bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl h-12 font-medium"
+								>
+									{checkStatusLoading ? "Mengecek..." : "Saya Sudah Bayar"}
+								</Button>
+								<Button 
+									onClick={handleBack}
+									variant="ghost"	
+									className="w-full text-zinc-600 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-white/5 rounded-xl h-12"
+								>
+									Pilih Paket Lain
+								</Button>
+							</div>
+							<p className="mt-8 text-xs text-zinc-500 animate-pulse">Menunggu pembayaran... (Auto-verify aktif)</p>
+						</div>
+					) : (
+						<>
 					{/* Header */}
-					<div className="relative bg-gradient-to-b from-zinc-100 dark:from-zinc-900 to-white dark:to-[#0a0a0a] pt-12 pb-6 px-8 border-b border-zinc-200 dark:border-white/5">
+					<div className="relative pt-12 pb-6 px-8 border-b border-zinc-200 dark:border-white/[0.08] z-10">
 						<DialogHeader className="text-center space-y-2">
-							<DialogTitle className="text-3xl font-bold bg-gradient-to-r from-zinc-900 to-zinc-600 dark:from-white dark:to-gray-400 bg-clip-text text-transparent">
+							<DialogTitle className="text-3xl font-bold text-zinc-900 dark:text-white">
 								Choose Your Plan
 							</DialogTitle>
-							<DialogDescription className="text-zinc-500 dark:text-gray-400 text-base">
+							<DialogDescription className="text-zinc-600 dark:text-zinc-400 text-base">
 								No hidden fees. Upgrade anytime, downgrade anytime.
 							</DialogDescription>
 						</DialogHeader>
 						{/* FOMO Banner */}
-						<div className="mt-4 rounded-xl border border-amber-500/30 dark:border-amber-500/20 bg-amber-50 dark:bg-amber-950/20 p-3">
+						<div className="max-w-md mx-auto mt-6 rounded-2xl border border-zinc-200 dark:border-white/[0.08] bg-white dark:bg-white/[0.02] p-3 backdrop-blur-sm">
 							<div className="flex items-center justify-center gap-2 flex-wrap text-sm">
-								<Flame className="w-4 h-4 text-amber-600 dark:text-amber-400 animate-pulse" />
-								<span className="font-bold text-amber-800 dark:text-amber-300">Early Adopter</span>
-								<span className="text-amber-700 dark:text-amber-200">
-									<span className="font-extrabold text-red-600 dark:text-red-400">{TOTAL_EARLY_ADOPTER_SLOTS - SLOTS_TAKEN}</span>/{TOTAL_EARLY_ADOPTER_SLOTS} slot
+								<Flame className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
+								<span className="font-bold text-zinc-900 dark:text-white">Early Adopter</span>
+								<div className="h-4 w-px bg-zinc-300 dark:bg-zinc-700 hidden sm:block" />
+								<span className="text-zinc-600 dark:text-zinc-300">
+									<span className="font-extrabold text-indigo-600 dark:text-indigo-400">{TOTAL_EARLY_ADOPTER_SLOTS - SLOTS_TAKEN}</span>/{TOTAL_EARLY_ADOPTER_SLOTS} slot
 								</span>
 							</div>
 						</div>
 					</div>
 
 					{/* Pricing Cards */}
-					<div className="grid md:grid-cols-3 gap-6 p-8">
-						{pricingPlans.map((plan, i) => (
+					<div className="grid md:grid-cols-3 gap-6 p-8 relative z-10">
+						{pricingPlans.map((plan) => (
 							<div
-								className={`relative rounded-2xl p-7 border backdrop-blur-sm transition-all duration-300 ${
+								className={`relative rounded-3xl p-7 flex flex-col transition-colors ${
 									plan.popular
-										? "border-indigo-500/40 bg-indigo-950/30 shadow-[0_0_40px_rgba(99,102,241,0.1)]"
-										: "border-white/10 bg-white/5 hover:border-white/20"
+										? "border border-indigo-500/30 bg-white dark:bg-white/[0.02] shadow-[0_0_30px_rgba(99,102,241,0.05)]"
+										: "border border-zinc-200 dark:border-white/[0.08] bg-white dark:bg-white/[0.02] hover:bg-zinc-50 dark:hover:bg-white/[0.04]"
 								}`}
-								key={i}
+								key={plan.name}
 							>
 								{plan.popular && (
-									<div className="absolute -top-3 left-1/2 -translate-x-1/2 px-4 py-1 bg-gradient-to-r from-indigo-500 to-violet-600 rounded-full text-xs font-medium shadow-lg shadow-indigo-500/25 text-white flex items-center gap-1">
-										<Zap className="w-3 h-3" />
-										Most Popular
-									</div>
+									<>
+										<div className="absolute inset-0 rounded-3xl bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-indigo-500/15 via-transparent to-transparent pointer-events-none" />
+										<div className="absolute top-4 right-5 px-3 py-1 bg-indigo-50 dark:bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-500/20 rounded-full text-xs font-bold uppercase tracking-wide">
+											Populer
+										</div>
+									</>
 								)}
 
-								<div className="mb-7">
-									<p className="font-semibold text-zinc-900 dark:text-white mb-1">{plan.name}</p>
-									<div className="flex items-end gap-1.5 mb-1">
+								<div className="mb-7 mt-2 relative z-10">
+									<p className="text-xl font-semibold mb-2 text-zinc-900 dark:text-white">
+										{plan.name}
+									</p>
+									<div className="flex items-end gap-1.5 mb-2">
 										{plan.originalPrice && (
-											<span className="text-base text-zinc-400 dark:text-gray-500 line-through mb-0.5">
+											<span className="text-sm line-through mb-1 text-zinc-400 dark:text-zinc-500">
 												{plan.originalPrice}
 											</span>
 										)}
-										<span className="text-3xl font-extrabold text-zinc-900 dark:text-white">
+										<span className="text-3xl font-bold text-zinc-900 dark:text-white">
 											{plan.price}
 										</span>
-										<span className="text-sm text-zinc-400 dark:text-gray-500 mb-1">
+										<span className="text-xs mb-1 text-zinc-500 dark:text-zinc-400">
 											/ {plan.period}
 										</span>
 									</div>
-									{plan.originalPrice && (
-										<span className="inline-block text-xs font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/30 px-2 py-0.5 rounded-full mb-1">
-											SAVE 50%
-										</span>
-									)}
-									<p className="text-sm text-zinc-500 dark:text-gray-400">{plan.desc}</p>
+									<p className="text-sm text-zinc-600 dark:text-zinc-400">
+										{plan.desc}
+									</p>
 								</div>
 
-								<ul className="space-y-3 mb-8">
+								<ul className="space-y-4 mb-8 flex-1 relative z-10">
 									{plan.features.map((feat, j) => (
 										<li
-											className="flex items-start gap-3 text-sm text-gray-300"
-											key={j}
+											className="flex items-start gap-3 text-sm text-zinc-700 dark:text-zinc-300"
+											key={`${plan.name}-feat-${j}`}
 										>
-											<Check className="w-4 h-4 text-indigo-400 mt-0.5 shrink-0" />
+											<Check className={`w-4 h-4 mt-0.5 shrink-0 ${plan.popular ? "text-indigo-600 dark:text-indigo-400" : "text-zinc-400 dark:text-zinc-500"}`} />
 											{feat}
 										</li>
 									))}
 								</ul>
 
 								<Button
-									className={`w-full justify-center ${
+									className={`w-full justify-center h-12 rounded-xl text-sm font-medium relative z-10 transition-all ${
 										plan.popular
-											? "bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-700 hover:to-violet-700 text-white"
+											? "bg-indigo-600 hover:bg-indigo-500 text-white shadow-md shadow-indigo-500/20"
 											: plan.ctaDisabled
-												? "bg-white/10 text-gray-400 cursor-not-allowed"
-												: "bg-white/10 hover:bg-white/20 text-white"
+												? "bg-zinc-100 dark:bg-white/5 text-zinc-400 dark:text-zinc-500 cursor-not-allowed border border-transparent"
+												: "bg-zinc-900 text-white hover:bg-zinc-800 dark:bg-white dark:text-black dark:hover:bg-zinc-200"
 									}`}
 									disabled={
 										plan.ctaDisabled ||
@@ -291,7 +383,7 @@ export function PricingModal({ open, onOpenChange, user }: PricingModalProps) {
 									type="button"
 								>
 									{loading && selectedPlan === plan.name
-										? "Processing..."
+										? "Memproses..."
 										: plan.ctaText}
 								</Button>
 							</div>
@@ -299,11 +391,11 @@ export function PricingModal({ open, onOpenChange, user }: PricingModalProps) {
 					</div>
 
 					{/* Footer note */}
-					<div className="px-8 pb-8 text-center">
-						<p className="text-xs text-gray-500">
+					<div className="px-8 pb-8 text-center text-zinc-500 dark:text-zinc-400">
+						<p className="text-xs">
 							By continuing, you agree to our{" "}
 							<a
-								className="text-indigo-400 hover:text-indigo-300"
+								className="text-zinc-900 dark:text-white underline hover:no-underline"
 								href="/terms"
 							>
 								Terms & Conditions
@@ -311,6 +403,8 @@ export function PricingModal({ open, onOpenChange, user }: PricingModalProps) {
 							.
 						</p>
 					</div>
+					</>
+					)}
 				</div>
 			</DialogContent>
 		</Dialog>

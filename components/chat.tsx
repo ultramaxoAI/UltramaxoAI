@@ -17,10 +17,10 @@ import { ChatSDKError } from "@/lib/errors";
 import type { Attachment, ChatMessage, CustomUIDataTypes } from "@/lib/types";
 import { cn, fetcher, fetchWithErrorHandlers, generateUUID } from "@/lib/utils";
 import { Artifact } from "./artifact";
+import { ContextualUpgradeBanner } from "./contextual-upgrade-banner";
 import { useDataStream } from "./data-stream-provider";
 import { Messages } from "./messages";
 import { MultimodalInput } from "./multimodal-input";
-import { ContextualUpgradeBanner } from "./contextual-upgrade-banner";
 import { getChatHistoryPaginationKey } from "./sidebar-history";
 import { toast } from "./toast";
 import { Button } from "./ui/button";
@@ -162,7 +162,10 @@ export function Chat({
 					lastMessage?.role !== "user" ||
 					request.messages.some((msg) =>
 						msg.parts?.some((part) => {
-							const state = part && typeof part === "object" ? (part as { state?: string }).state : undefined;
+							const state =
+								part && typeof part === "object"
+									? (part as { state?: string }).state
+									: undefined;
 							return (
 								state === "approval-responded" || state === "output-denied"
 							);
@@ -229,7 +232,10 @@ export function Chat({
 
 			// Detect rate limit errors and trigger upgrade banner instead of just showing a toast
 			const errorMsg = error instanceof Error ? error.message : String(error);
-			const isRateLimitError = errorMsg.includes("rate_limit") || errorMsg.includes("Rate limit") || errorMsg.includes("Too many requests");
+			const isRateLimitError =
+				errorMsg.includes("rate_limit") ||
+				errorMsg.includes("Rate limit") ||
+				errorMsg.includes("Too many requests");
 
 			if (isRateLimitError) {
 				setIsRateLimited(true);
@@ -253,7 +259,10 @@ export function Chat({
 					});
 				}
 			} else {
-				if (error instanceof Error && error.message.includes("IDE Mode Limit!")) {
+				if (
+					error instanceof Error &&
+					error.message.includes("IDE Mode Limit!")
+				) {
 					toast({
 						type: "error",
 						description: error.message,
@@ -311,7 +320,7 @@ export function Chat({
 		<>
 			<div
 				className={cn(
-					"relative flex h-dvh min-w-0 flex-col overflow-hidden bg-[#f3efe6] text-[#171717] transition-all duration-300 ease-in-out dark:bg-[#111315] dark:text-[#f3f4f1]",
+					"relative flex h-dvh min-w-0 flex-col overflow-hidden bg-white text-[#171717] transition-all duration-300 ease-in-out dark:bg-[#171717] md:dark:bg-[#212121] dark:text-[#f3f4f1]",
 					isArtifactVisible
 						? isIdeArtifactLocked
 							? "lg:w-[46%]"
@@ -369,10 +378,16 @@ export function Chat({
 								{isReadonly ? (
 									<div className="rounded-[28px] border border-dashed border-[#171717]/8 bg-white/42 px-6 py-5 text-center backdrop-blur-xl dark:border-white/10 dark:bg-white/4">
 										<p className="text-sm text-[#5f6258] dark:text-[#a6aca6]">
-											Masuk dulu untuk mulai ngobrol dan buka workspace penuh Ultramaxo AI.
+											Masuk dulu untuk mulai ngobrol dan buka workspace penuh
+											Ultramaxo AI.
 										</p>
 										<div className="mt-4 flex justify-center gap-3">
-											<Button asChild className="rounded-full" size="sm" variant="outline">
+											<Button
+												asChild
+												className="rounded-full"
+												size="sm"
+												variant="outline"
+											>
 												<Link href="/login">Sign In</Link>
 											</Button>
 											<Button asChild className="rounded-full" size="sm">
@@ -386,7 +401,8 @@ export function Chat({
 											You have reached your free daily limit of 10 messages.
 										</p>
 										<p className="mt-2 text-xs text-[#5f6258] dark:text-[#a6aca6]">
-											Upgrade to PRO for unlimited messages, or wait until tomorrow.
+											Upgrade to PRO for unlimited messages, or wait until
+											tomorrow.
 										</p>
 										<div className="mt-4 flex justify-center">
 											<Button asChild className="rounded-full" size="sm">
@@ -448,7 +464,12 @@ export function Chat({
 											Please sign in to start chatting with Ultramaxo AI.
 										</p>
 										<div className="mt-2 flex gap-4">
-											<Button asChild className="rounded-full" size="sm" variant="outline">
+											<Button
+												asChild
+												className="rounded-full"
+												size="sm"
+												variant="outline"
+											>
 												<Link href="/login">Sign In</Link>
 											</Button>
 											<Button asChild className="rounded-full" size="sm">
