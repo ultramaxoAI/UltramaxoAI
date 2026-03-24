@@ -22,11 +22,20 @@ export async function POST(request: Request) {
 		const rawBody = await request.text();
 		console.log("[Webhook DompetX] Raw payload:", rawBody);
 
-		// Verifikasi signature (opsional tapi dianjurkan)
+		// FIX #2: Verifikasi signature WAJIB jika API key dikonfigurasi
 		const timestamp = request.headers.get("X-DOMPAY-Timestamp") || "";
 		const receivedSig = request.headers.get("X-DOMPAY-Signature") || "";
 
-		if (DOMPETX_API_KEY && receivedSig && timestamp) {
+		if (DOMPETX_API_KEY) {
+			// Tolak request tanpa signature header
+			if (!receivedSig || !timestamp) {
+				console.warn("[Webhook DompetX] Missing signature/timestamp headers! Rejecting.");
+				return NextResponse.json(
+					{ error: "Missing authentication headers" },
+					{ status: 401 },
+				);
+			}
+
 			const isValid = verifyWebhookSignature(
 				timestamp,
 				rawBody,

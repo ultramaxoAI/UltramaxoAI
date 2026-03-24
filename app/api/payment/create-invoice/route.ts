@@ -4,8 +4,21 @@ import { auth } from "@/app/(auth)/auth";
 import { createPurchaseRequest, db } from "@/lib/db/queries";
 import { user } from "@/lib/db/schema";
 
-const QRIS_CEPAT_API_KEY = process.env.QRIS_CEPAT_API_KEY || "7c3b83283217094ca37e58a57688daa4";
+// FIX #1: Tidak ada hardcoded API key lagi
+const QRIS_CEPAT_API_KEY = process.env.QRIS_CEPAT_API_KEY || "";
 const QRIS_CEPAT_BASE_URL = "https://qriscepat.com/api";
+
+// FIX #6: Tabel harga resmi server-side (harus cocok dengan frontend planId)
+const PRICING_TABLE: Record<string, Record<number, number>> = {
+	"Early Adopter (Pro)": { 1: 15000 },
+	"1 Tahun": { 12: 150000 },
+};
+
+function getValidPrice(planId: string, months: number): number | null {
+	const plan = PRICING_TABLE[planId];
+	if (!plan) return null;
+	return plan[months] ?? null;
+}
 
 export async function POST(request: Request) {
 	try {
@@ -17,6 +30,15 @@ export async function POST(request: Request) {
 			return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 		}
 
+		// FIX #1: Pastikan API key ada
+		if (!QRIS_CEPAT_API_KEY) {
+			console.error("[Payment] QRIS_CEPAT_API_KEY not configured");
+			return NextResponse.json(
+				{ error: "Payment service not configured" },
+				{ status: 503 },
+			);
+		}
+
 		// 2. Parse body
 		const body = await request.json();
 		const { planId, price, months } = body;
@@ -25,6 +47,23 @@ export async function POST(request: Request) {
 		if (!planId || !price) {
 			return NextResponse.json(
 				{ error: "Missing required fields: planId, price" },
+				{ status: 400 },
+			);
+		}
+
+		// FIX #6: Validasi harga server-side
+		const effectiveMonths = months || 1;
+		const validPrice = getValidPrice(planId, effectiveMonths);
+		if (validPrice === null) {
+			return NextResponse.json(
+				{ error: "Plan tidak valid" },
+				{ status: 400 },
+			);
+		}
+		if (Number(price) !== validPrice) {
+			console.warn(`[Payment] Price mismatch! Client sent ${price}, expected ${validPrice} for ${planId}/${effectiveMonths}mo`);
+			return NextResponse.json(
+				{ error: "Harga tidak sesuai dengan plan yang dipilih" },
 				{ status: 400 },
 			);
 		}
@@ -47,8 +86,8 @@ export async function POST(request: Request) {
 
 		// 4. Request QRIS from QRISCepat API
 		try {
-			const qrisUrl = `${QRIS_CEPAT_BASE_URL}/deposit/${price}/${QRIS_CEPAT_API_KEY}`;
-			console.log("[QRISCepat] Generating QRIS for amounts:", price);
+			const qrisUrl = `${QRIS_CEPAT_BASE_URL}/deposit/${validPrice}/${QRIS_CEPAT_API_KEY}`;
+			console.log("[QRISCepat] Generating QRIS for amount:", validPrice);
 			
 			const qrisResponse = await fetch(qrisUrl);
 			const qrisText = await qrisResponse.text();
@@ -67,10 +106,10 @@ export async function POST(request: Request) {
 						username: dbUser?.name ?? undefined,
 						email: dbUser?.email ?? undefined,
 						planId,
-						months: months || 1,
-						price,
+						months: effectiveMonths,
+						price: validPrice,
 						method: "qriscepat",
-						note: trxId, // Store external transaction ID here 
+						note: trxId,
 					});
 
 					const purchaseReq = Array.isArray(purchaseReqRaw)
@@ -84,7 +123,7 @@ export async function POST(request: Request) {
 						qris: qrisData.data.qris,
 					});
 				} else {
-					throw new Error("Invalid response format from QRIS Cepat: " + qrisText);
+					throw new Error("Invalid response format from QRIS Cepat");
 				}
 			} else {
 				throw new Error("QRIS Cepat API rejected request");
@@ -98,8 +137,8 @@ export async function POST(request: Request) {
 				username: dbUser?.name ?? undefined,
 				email: dbUser?.email ?? undefined,
 				planId,
-				months: months || 1,
-				price,
+				months: effectiveMonths,
+				price: validPrice,
 				method: "manual_fallback",
 			});
 			
@@ -115,8 +154,9 @@ export async function POST(request: Request) {
 		}
 	} catch (error) {
 		console.error("[Payment API] FATAL error:", error);
+		// FIX #5: Tidak bocorkan detail error ke client
 		return NextResponse.json(
-			{ error: "Internal Server Error", detail: String(error) },
+			{ error: "Terjadi kesalahan internal" },
 			{ status: 500 },
 		);
 	}

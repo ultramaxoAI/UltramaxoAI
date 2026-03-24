@@ -34,7 +34,7 @@ export async function PATCH(request: Request) {
 
 	try {
 		const body = await request.json();
-		const { id, ...updates } = body;
+		const { id } = body;
 
 		if (!id) {
 			return NextResponse.json(
@@ -43,11 +43,27 @@ export async function PATCH(request: Request) {
 			);
 		}
 
-		if (typeof updates.proExpiresAt === "string") {
-			updates.proExpiresAt = new Date(updates.proExpiresAt);
+		// FIX #3: Whitelist field yang diizinkan (mencegah mass assignment)
+		const ALLOWED_FIELDS = ["isPro", "proExpiresAt", "role", "limitCount", "creditBalance", "name", "email"];
+		const safeUpdates: Record<string, unknown> = {};
+		for (const field of ALLOWED_FIELDS) {
+			if (body[field] !== undefined) {
+				safeUpdates[field] = body[field];
+			}
 		}
 
-		await updateUserAdmin(id, updates);
+		if (typeof safeUpdates.proExpiresAt === "string") {
+			safeUpdates.proExpiresAt = new Date(safeUpdates.proExpiresAt as string);
+		}
+
+		if (Object.keys(safeUpdates).length === 0) {
+			return NextResponse.json(
+				{ error: "No valid fields to update" },
+				{ status: 400 },
+			);
+		}
+
+		await updateUserAdmin(id, safeUpdates);
 		return NextResponse.json({ success: true });
 	} catch (error) {
 		console.error("API Error (admin/users/PATCH):", error);

@@ -82,14 +82,10 @@ export async function POST(request: Request) {
 		});
 
 		return NextResponse.json({ success: true });
-	} catch (error: any) {
-		require("fs").writeFileSync(
-			"api-error.log",
-			String(error) + "\n" + (error.stack || ""),
-		);
+	} catch (error) {
 		console.error("API Error (api-keys/POST):", error);
 		return NextResponse.json(
-			{ error: "Failed to save API key", details: String(error) },
+			{ error: "Failed to save API key" },
 			{ status: 500 },
 		);
 	}
@@ -127,14 +123,10 @@ export async function PATCH(request: Request) {
 		await upsertUserApiKey(session.user.id, provider, updateData);
 
 		return NextResponse.json({ success: true });
-	} catch (error: any) {
-		require("fs").writeFileSync(
-			"api-error.log",
-			String(error) + "\n" + (error.stack || ""),
-		);
+	} catch (error) {
 		console.error("API Error (api-keys/PATCH):", error);
 		return NextResponse.json(
-			{ error: "Failed to update", details: String(error) },
+			{ error: "Failed to update" },
 			{ status: 500 },
 		);
 	}

@@ -62,11 +62,11 @@ const pricingPlans = [
 		ctaDisabled: false,
 	},
 	{
-		name: "1 Year",
+		name: "1 Tahun",
 		price: "Rp 150.000",
 		originalPrice: "Rp 360.000",
-		period: "per year",
-		desc: "Save 58% with annual commitment",
+		period: "per tahun",
+		desc: "Hemat 58% dengan komitmen tahunan",
 		features: [
 			"All Pro features",
 			"Dedicated support",
@@ -158,7 +158,7 @@ export function PricingModal({ open, onOpenChange, user }: PricingModalProps) {
 			// Parsing the price from string like "Rp 30.000" or "Rp 150.000" to Number 30000 / 150000
 			const rawPriceString = plan.price.replace(/[^0-9]/g, "");
 			const priceNumber = parseInt(rawPriceString, 10) || 0;
-			const months = plan.period.includes("year") ? 12 : 1;
+			const months = plan.period.includes("tahun") || plan.period.includes("year") ? 12 : 1;
 
 			// Call internal invoice API
 			const res = await fetch("/api/payment/create-invoice", {
