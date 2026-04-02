@@ -421,15 +421,9 @@ function PureMultimodalInput({
 
 	const handleFileChange = useCallback(
 		async (event: ChangeEvent<HTMLInputElement>) => {
-			// Check if model supports vision
-			if (!modelSupportsVision(selectedModelId)) {
-				toast.error(
-					"Model ini tidak mendukung input gambar. Silakan pilih model lain atau kirim tanpa gambar.",
-				);
-				return;
-			}
-
 			const files = Array.from(event.target.files || []);
+			// Remove the blanket modelSupportsVision check for uploads
+			// as it wrongfully blocks non-image files (PDFs, ZIP, TXT, PHP, etc)
 
 			setUploadQueue(files.map((file) => file.name));
 
@@ -506,7 +500,7 @@ function PureMultimodalInput({
 				setUploadQueue([]);
 			}
 		},
-		[setAttachments, uploadFile],
+		[setAttachments, uploadFile, modelSupportsVision, selectedModelId],
 	);
 
 	// Add paste event listener to textarea
@@ -668,7 +662,7 @@ function PureMultimodalInput({
 											setTimeout(() => {
 												if (fileInputRef.current) {
 													fileInputRef.current.accept =
-														"image/*,text/plain,application/pdf,application/json";
+														"*/*";
 												}
 											}, 100);
 										}
@@ -737,7 +731,7 @@ function PureMultimodalInput({
 						</DropdownMenu>
 
 						<input
-							accept="image/*,text/plain,application/pdf,application/json"
+							accept="*/*"
 							className="pointer-events-none fixed left-0 top-0 size-0.5 opacity-0"
 							data-testid="file-input"
 							multiple

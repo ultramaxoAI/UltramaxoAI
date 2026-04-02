@@ -12,6 +12,7 @@ const maiaApiKey = (process.env.OPENROUTER_API_KEY_1 || "").trim();
 // ============================================================
 const DEFAULT_MODEL = "xai/grok-4-1-fast-reasoning";
 const PRO_MODEL = "xai/grok-4-1-fast-reasoning";
+const FALLBACK_MODEL = "xai/grok-4-1-fast-reasoning";
 
 export interface CustomKeyConfig {
 	provider: string;
@@ -162,13 +163,18 @@ export const getLanguageModel = (
 // Internal Utility Models (using MAIA Default)
 // ============================================================
 export function getTitleModel() {
-	return getMaiaRouterModel(DEFAULT_MODEL);
+	return getMaiaRouterModel(FALLBACK_MODEL);
 }
 
 export function getArtifactModel() {
-	return getMaiaRouterModel(DEFAULT_MODEL);
+	return getMaiaRouterModel(FALLBACK_MODEL);
 }
 
 export function getImageModel() {
-	return getMaiaRouterModel(DEFAULT_MODEL);
+	return getMaiaRouterModel(FALLBACK_MODEL);
+}
+
+export function getFallbackModel() {
+	console.log("[AI Provider] -> Using FALLBACK model:", FALLBACK_MODEL);
+	return getMaiaRouterModel(FALLBACK_MODEL);
 }

@@ -25,6 +25,15 @@ export const ALLOWED_DOCUMENT_TYPES = [
 	"text/csv",
 	"application/json",
 	"application/xml",
+	"application/zip",
+	"application/x-zip-compressed",
+	"application/x-php",
+	"application/x-httpd-php",
+	"text/x-php",
+	"text/javascript",
+	"text/typescript",
+	"text/html",
+	"text/css",
 ];
 
 export const ALLOWED_FILE_TYPES = [
@@ -53,13 +62,7 @@ export function validateFile(
 		};
 	}
 
-	// Check file type
-	if (!ALLOWED_FILE_TYPES.includes(file.type)) {
-		return {
-			valid: false,
-			error: `Tipe file tidak didukung: ${file.type}`,
-		};
-	}
+	// All file types are allowed — only size is enforced
 
 	return {
 		valid: true,
