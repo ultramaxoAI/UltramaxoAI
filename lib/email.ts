@@ -1,12 +1,18 @@
-import { Resend } from "resend";
+import nodemailer from "nodemailer";
 import { getEmailWrapper } from "./email-wrapper";
 
-// Resend Configuration from environment variables
-const resend = new Resend(process.env.RESEND_API_KEY || "re_missing_key");
+// Nodemailer Transport Configuration
+const transporter = nodemailer.createTransport({
+	host: process.env.SMTP_HOST || "smtp.sumopod.com",
+	port: Number(process.env.SMTP_PORT) || 465,
+	secure: true, // SSL: True (Port 465)
+	auth: {
+		user: process.env.SMTP_USER,
+		pass: process.env.SMTP_PASS,
+	},
+});
 
-// Authorized domains should match the ones verified on Resend
 const EMAIL_FROM =
-	process.env.RESEND_FROM ||
 	process.env.EMAIL_FROM ||
 	"Ultramaxo AI <no-reply@ultramaxo.tech>";
 
@@ -14,8 +20,8 @@ const EMAIL_FROM =
 export { getEmailWrapper } from "./email-wrapper";
 
 async function sendEmail(to: string, subject: string, html: string) {
-	if (!process.env.RESEND_API_KEY) {
-		console.warn("[email] RESEND_API_KEY not configured; skipping send.");
+	if (!process.env.SMTP_HOST || !process.env.SMTP_USER || !process.env.SMTP_PASS) {
+		console.warn("[email] SMTP credentials not configured; skipping send.");
 		return false;
 	}
 
@@ -28,27 +34,22 @@ async function sendEmail(to: string, subject: string, html: string) {
 		.trim();
 
 	try {
-		const { data, error } = await resend.emails.send({
+		const info = await transporter.sendMail({
 			from: EMAIL_FROM,
-			to: [to],
-			subject,
-			html,
-			text,
-		});
-
-		if (error) {
-			console.error("[email] Resend API error:", error);
-			return false;
-		}
-
-		console.info("[email] Email sent successfully via Resend:", {
 			to,
 			subject,
-			id: data?.id,
+			text,
+			html,
+		});
+
+		console.info("[email] Email sent successfully via Nodemailer SMTP:", {
+			to,
+			subject,
+			messageId: info.messageId,
 		});
 		return true;
 	} catch (err) {
-		console.error("[email] Unexpected send error:", err);
+		console.error("[email] Unexpected send error via Nodemailer:", err);
 		return false;
 	}
 }
