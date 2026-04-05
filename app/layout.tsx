@@ -139,7 +139,7 @@ export default function RootLayout({
 					disableTransitionOnChange
 					enableSystem
 				>
-					<Toaster position="top-center" />
+					<Toaster position="top-left" richColors />
 					<VisitorTracker />
 					<CookieConsent />
 					<SessionProvider>
