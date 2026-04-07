@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { MailIcon, SendIcon, EyeIcon, SearchIcon, UsersIcon, SparklesIcon, CheckCircle2Icon } from "lucide-react";
+import { MailIcon, SendIcon, EyeIcon, SearchIcon, UsersIcon, SparklesIcon, CheckCircle2Icon, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { EMAIL_TEMPLATES } from "@/lib/email-templates";
 
@@ -222,7 +222,7 @@ export default function AdminEmailsPage() {
 								type="submit"
 								className="inline-flex items-center gap-2 px-8 py-3 bg-zinc-900 dark:bg-white text-white dark:text-black hover:bg-zinc-800 dark:hover:bg-zinc-200 disabled:opacity-50 disabled:cursor-not-allowed text-sm font-semibold rounded-xl transition-all shadow-sm"
 							>
-								{loading ? <Loader2Icon className="animate-spin" size={18} /> : <SendIcon size={18} />} 
+								{loading ? <Loader2 className="animate-spin" size={18} /> : <SendIcon size={18} />} 
 								{loading ? "Dispatching..." : "Send Campaign out"}
 							</button>
 						</div>
