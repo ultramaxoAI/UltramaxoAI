@@ -185,6 +185,13 @@ export const register = async (
 			redirect: false,
 		});
 
+		try {
+			const { sendWelcomeEmail } = require("@/lib/email");
+			await sendWelcomeEmail(normalizedEmail, normalizedUsername || "User");
+		} catch (emailErr) {
+			console.error("Failed to send welcome email:", emailErr);
+		}
+
 		return { status: "success" };
 	} catch (error) {
 		if (error instanceof z.ZodError) {

@@ -12,7 +12,7 @@ export interface EmailTemplate {
 		| "forgot-password";
 }
 
-const TEMPLATE_WRAPPER = (bodyContent: string) => `
+export const TEMPLATE_WRAPPER = (bodyContent: string) => `
 <!DOCTYPE html>
 <html>
 <head>

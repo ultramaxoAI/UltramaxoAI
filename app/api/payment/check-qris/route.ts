@@ -2,7 +2,8 @@ import { eq } from "drizzle-orm";
 import { NextResponse } from "next/server";
 import { auth } from "@/app/(auth)/auth";
 import { db, updatePurchaseRequestStatus } from "@/lib/db/queries";
-import { purchaseRequest } from "@/lib/db/schema";
+import { purchaseRequest, user } from "@/lib/db/schema";
+import { sendProUpgradeEmail } from "@/lib/email";
 
 export const dynamic = "force-dynamic";
 
@@ -79,6 +80,21 @@ export async function GET(request: Request) {
 						id: requestId,
 						status: "approved",
 					});
+					
+					// Trigger Upgrade Email
+					try {
+						const [proUser] = await db
+							.select()
+							.from(user)
+							.where(eq(user.id, reqInfo.userId))
+							.limit(1);
+
+						if (proUser?.email) {
+							await sendProUpgradeEmail(proUser.email, proUser.name || "User");
+						}
+					} catch (emailErr) {
+						console.error("[QRIS Check] Failed to send PRO upgrade email:", emailErr);
+					}
 					
 					return NextResponse.json({ paid: true, status: "approved" });
 				} else if (trxStatus === "failed" || trxStatus === "expired") {
