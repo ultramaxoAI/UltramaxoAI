@@ -5,7 +5,6 @@ import { db } from "@/lib/db/queries";
 import { user } from "@/lib/db/schema";
 import {
 	sendCustomEmail,
-	sendUpgradeReminderEmail,
 	sendVerificationEmail,
 } from "@/lib/email";
 
@@ -39,13 +38,7 @@ export async function POST(request: Request) {
 
 		// Function to send email to a single user
 		const sendToUser = async (targetEmail: string, targetName: string) => {
-			if (type === "upgrade-reminder") {
-				return await sendUpgradeReminderEmail(
-					targetEmail,
-					targetName || "User",
-				);
-			}
-			if (type === "custom") {
+			if (type === "custom" || type === "upgrade-reminder" || type === "announcement" || type === "welcome") {
 				if (!subject || !message) {
 					throw new Error("Subject and message required");
 				}
