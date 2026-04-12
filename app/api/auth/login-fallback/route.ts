@@ -44,7 +44,7 @@ async function handleCredentialsSignIn({
 	password: string;
 }) {
 	if (!username || !password) {
-		return NextResponse.redirect(new URL("/login?error=MissingCredentials", request.url));
+		return NextResponse.redirect(new URL("/login?error=MissingCredentials", request.url), 303);
 	}
 
 	try {
@@ -58,22 +58,24 @@ async function handleCredentialsSignIn({
 		if (result?.error) {
 			const loginUrl = new URL("/login", request.url);
 			loginUrl.searchParams.set("error", result.error);
-			return NextResponse.redirect(loginUrl);
+			return NextResponse.redirect(loginUrl, 303);
 		}
 
 		return NextResponse.redirect(
 			toAbsoluteRedirectUrl(request, result?.url ?? resolveRedirectTo(request)),
+			303,
 		);
 	} catch (error) {
 		if (isNextRedirectError(error)) {
 			return NextResponse.redirect(
 				toAbsoluteRedirectUrl(request, resolveRedirectTo(request)),
+				303,
 			);
 		}
 
 		const loginUrl = new URL("/login", request.url);
 		loginUrl.searchParams.set("error", "CredentialsSignin");
-		return NextResponse.redirect(loginUrl);
+		return NextResponse.redirect(loginUrl, 303);
 	}
 }
 
