@@ -1,13 +1,13 @@
 import { auth } from "@/app/(auth)/auth";
-import { db } from "@/lib/db/queries";
-import { user } from "@/lib/db/schema";
+import { db } from "@backend/db/queries";
+import { user } from "@backend/db/schema";
 import { eq } from "drizzle-orm";
 import { NextResponse } from "next/server";
 
 export async function POST(request: Request) {
 	const session = await auth();
 
-	if (!session?.user?.email) {
+	if (!session?.user?.id) {
 		return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 	}
 
@@ -21,28 +21,24 @@ export async function POST(request: Request) {
 			);
 		}
 
-		const dbUser = await db
-			.select()
-			.from(user)
-			.where(eq(user.email, session.user.email))
-			.then((res) => res[0]);
-
-		if (!dbUser) {
-			return NextResponse.json({ error: "User not found" }, { status: 404 });
-		}
-
 		// Update the user's onboarding reason in the database
-		await db
+		const result = await db
 			.update(user)
 			.set({
 				onboardingReason: reason,
 				updatedAt: new Date(),
 			})
-			.where(eq(user.id, dbUser.id));
+			.where(eq(user.id, session.user.id))
+			.returning({ id: user.id });
+
+		if (result.length === 0) {
+			console.error("[Onboarding] User not found in DB:", session.user.id);
+			return NextResponse.json({ error: "User not found" }, { status: 404 });
+		}
 
 		return NextResponse.json({ success: true, message: "Onboarding completed" });
 	} catch (error) {
-		console.error("Failed to save onboarding reason:", error);
+		console.error("[Onboarding] Failed to save reason:", error);
 		return NextResponse.json(
 			{ error: "Internal Server Error" },
 			{ status: 500 }

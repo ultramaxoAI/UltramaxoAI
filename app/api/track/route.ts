@@ -1,6 +1,6 @@
 import crypto from "node:crypto";
 import { NextResponse } from "next/server";
-import { logPageVisit } from "@/lib/db/queries";
+import { logPageVisit } from "@backend/db/queries";
 
 export async function POST(request: Request) {
 	try {

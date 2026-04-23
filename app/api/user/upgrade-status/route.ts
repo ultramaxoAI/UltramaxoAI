@@ -1,8 +1,8 @@
 import { and, desc, eq, lte } from "drizzle-orm";
 import { NextResponse } from "next/server";
 import { auth } from "@/app/(auth)/auth";
-import { db, updatePurchaseRequestStatus } from "@/lib/db/queries";
-import { purchaseRequest, user as userTable } from "@/lib/db/schema";
+import { db, updatePurchaseRequestStatus } from "@backend/db/queries";
+import { purchaseRequest, user as userTable } from "@backend/db/schema";
 
 export const dynamic = "force-dynamic";
 

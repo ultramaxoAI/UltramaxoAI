@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { MailIcon, SendIcon, EyeIcon, SearchIcon, UsersIcon, LayoutTemplateIcon, CheckCircle2Icon, Loader2 } from "lucide-react";
 import { toast } from "sonner";
-import { TEMPLATE_WRAPPER } from "@/lib/email-templates";
+import { TEMPLATE_WRAPPER } from "@backend/email-templates";
 
 // Simple markdown parsing for admin templates
 function parseMarkdownToHtml(text: string) {

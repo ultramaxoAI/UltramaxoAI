@@ -4,7 +4,7 @@ import {
 	deleteUserMemoryById,
 	getUserMemoryByUserId,
 	updateUserMemoryById,
-} from "@/lib/db/queries";
+} from "@backend/db/queries";
 
 type MemoryCategory = "profile" | "coding" | "product" | "instruction";
 

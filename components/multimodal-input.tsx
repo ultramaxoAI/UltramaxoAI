@@ -39,7 +39,7 @@ import {
 	chatModels,
 	DEFAULT_CHAT_MODEL,
 	modelsByProvider,
-} from "@/lib/ai/models";
+} from "@backend/ai/models";
 import {
 	isFullstackModeInMaintenance,
 	isMobileModeInMaintenance,

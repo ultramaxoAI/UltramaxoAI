@@ -3,12 +3,12 @@ import { Suspense } from "react";
 import { auth } from "@/app/(auth)/auth";
 import { Chat } from "@/components/chat";
 import { DataStreamHandler } from "@/components/data-stream-handler";
-import { DEFAULT_CHAT_MODEL } from "@/lib/ai/models";
+import { DEFAULT_CHAT_MODEL } from "@backend/ai/models";
 import {
 	getTodayMessageCount,
 	getUserApiKeys,
 	getUserById,
-} from "@/lib/db/queries";
+} from "@backend/db/queries";
 import { generateUUID } from "@/lib/utils";
 
 export default function Page() {

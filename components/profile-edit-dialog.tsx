@@ -19,7 +19,7 @@ import {
 	formatFileSize,
 	MAX_IMAGE_SIZE,
 	validateImage,
-} from "@/lib/file-validation";
+} from "@backend/file-validation";
 import { LoaderIcon, PencilIcon } from "./icons";
 
 export function ProfileEditDialog() {

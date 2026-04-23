@@ -177,7 +177,11 @@ export function PricingModal({ open, onOpenChange, user }: PricingModalProps) {
 				throw new Error(data.error || "Gagal membuat invoice");
 			}
 
-			if (data.qris && data.requestId) {
+			if (data.checkoutUrl) {
+				// YoBasePay checkout — redirect user ke halaman pembayaran
+				toast.success("Mengarahkan ke halaman pembayaran...");
+				window.open(data.checkoutUrl, "_blank");
+			} else if (data.qris && data.requestId) {
 				setQrisData({
 					qris: data.qris,
 					requestId: data.requestId,
@@ -192,7 +196,7 @@ export function PricingModal({ open, onOpenChange, user }: PricingModalProps) {
 				const waUrl = `https://wa.me/6285191689131?text=${encodeURIComponent(text)}`;
 				window.open(waUrl, "_blank");
 			} else {
-				throw new Error("Gagal mengambil QRIS pembayaran");
+				throw new Error("Gagal mengambil data pembayaran");
 			}
 		} catch (error) {
 			console.error("Gagal memproses upgrade:", error);

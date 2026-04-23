@@ -8,19 +8,18 @@ export type ChatModel = {
 };
 
 export const chatModels: ChatModel[] = [
-
 	{
 		id: "ultramaxo/ultra-agent",
 		name: "UltraAgent",
 		provider: "ultramaxo",
-		description: "Fast and capable AI assistant powered by Grok",
+		description: "Fast and capable AI assistant powered by Qwen 3.6 Plus",
 	},
 	{
 		id: "ultramaxo/ultra-agent-pro",
 		name: "UltraAgent Pro",
 		provider: "ultramaxo",
 		description:
-			"Advanced AI with superior reasoning, deep thinking, and expert-level coding powered by Grok",
+			"Advanced AI with superior reasoning, deep thinking, and expert-level coding powered by Qwen 3.6 Plus",
 	},
 ];
 

@@ -6,13 +6,14 @@ import { createOpenAI } from "@ai-sdk/openai";
 // Default API Keys Setup
 // ============================================================
 const maiaApiKey = (process.env.OPENROUTER_API_KEY_1 || "").trim();
+const swiftRouterApiKey = (process.env.SWIFTROUTER_API_KEY || "").trim();
 
 // ============================================================
 // Model IDs
 // ============================================================
-const DEFAULT_MODEL = "xai/grok-4-1-fast-reasoning-latest";
-const PRO_MODEL = "xai/grok-4-1-fast-reasoning-latest";
-const FALLBACK_MODEL = "xai/grok-4-1-fast-reasoning-latest";
+const DEFAULT_MODEL = "qwen3.6-plus";
+const PRO_MODEL = "qwen3.6-plus";
+const FALLBACK_MODEL = "qwen3.6-plus";
 
 export interface CustomKeyConfig {
 	provider: string;
@@ -30,6 +31,44 @@ function getMaiaRouterModel(modelId: string, customKey?: string) {
 	}
 	const client = createOpenAI({
 		baseURL: "https://api.maiarouter.ai/v1",
+		apiKey: key,
+		headers: {
+			"HTTP-Referer": "https://ultramaxo.com",
+			"X-Title": "Ultramaxo AI",
+		},
+		fetch: async (url, options) => {
+			// Inject safety_settings into request body for Gemini models
+			if (options?.body && typeof options.body === "string") {
+				try {
+					const body = JSON.parse(options.body);
+					body.safety_settings = [
+						{ category: "HARM_CATEGORY_HARASSMENT", threshold: "BLOCK_NONE" },
+						{ category: "HARM_CATEGORY_HATE_SPEECH", threshold: "BLOCK_NONE" },
+						{ category: "HARM_CATEGORY_SEXUALLY_EXPLICIT", threshold: "BLOCK_NONE" },
+						{ category: "HARM_CATEGORY_DANGEROUS_CONTENT", threshold: "BLOCK_NONE" },
+						{ category: "HARM_CATEGORY_CIVIC_INTEGRITY", threshold: "BLOCK_NONE" },
+					];
+					return fetch(url, {
+						...options,
+						body: JSON.stringify(body),
+					});
+				} catch {
+					// If parsing fails, send as-is
+				}
+			}
+			return fetch(url, options);
+		},
+	});
+	return client.chat(modelId);
+}
+
+function getSwiftRouterModel(modelId: string, customKey?: string) {
+	const key = customKey || swiftRouterApiKey;
+	if (!key) {
+		throw new Error("No SwiftRouter API key configured. Set SWIFTROUTER_API_KEY in .env.local");
+	}
+	const client = createOpenAI({
+		baseURL: "https://api.swiftrouter.com/v1",
 		apiKey: key,
 		headers: {
 			"HTTP-Referer": "https://ultramaxo.com",
@@ -126,6 +165,8 @@ export const getLanguageModel = (
 					return getAnthropicModel(actualModelId, customConfig.apiKey);
 				case "maia":
 					return getMaiaRouterModel(actualModelId, customConfig.apiKey);
+				case "swiftrouter":
+					return getSwiftRouterModel(actualModelId, customConfig.apiKey);
 				default:
 					console.log(
 						`[AI Provider] Unknown custom provider: ${customConfig.provider}, falling back to default`,
@@ -142,39 +183,38 @@ export const getLanguageModel = (
 		normalized.includes("pro") ||
 		normalized.includes("ultramaxo/")
 	) {
-		console.log("[AI Provider] -> UltraAgent:", modelId);
-		// Pass the exact model id or a fallback mapping
+		console.log("[AI Provider] -> UltraAgent (SwiftRouter):", modelId);
 		const targetModel = normalized.includes("ultra-agent-pro")
 			? PRO_MODEL
 			: DEFAULT_MODEL;
-		return getMaiaRouterModel(targetModel);
+		return getSwiftRouterModel(targetModel);
 	}
 
 	if (normalized.startsWith("maia/") || normalized.startsWith("xai/")) {
-		console.log("[AI Provider] -> Passthrough (Default Key):", modelId);
+		console.log("[AI Provider] -> MAIA Passthrough:", modelId);
 		return getMaiaRouterModel(modelId);
 	}
 
-	console.log("[AI Provider] -> Default Fallback:", DEFAULT_MODEL);
-	return getMaiaRouterModel(DEFAULT_MODEL);
+	console.log("[AI Provider] -> Default SwiftRouter Fallback:", DEFAULT_MODEL);
+	return getSwiftRouterModel(DEFAULT_MODEL);
 };
 
 // ============================================================
 // Internal Utility Models (using MAIA Default)
 // ============================================================
 export function getTitleModel() {
-	return getMaiaRouterModel(FALLBACK_MODEL);
+	return getSwiftRouterModel(FALLBACK_MODEL);
 }
 
 export function getArtifactModel() {
-	return getMaiaRouterModel(FALLBACK_MODEL);
+	return getSwiftRouterModel(FALLBACK_MODEL);
 }
 
 export function getImageModel() {
-	return getMaiaRouterModel(FALLBACK_MODEL);
+	return getSwiftRouterModel(FALLBACK_MODEL);
 }
 
 export function getFallbackModel() {
 	console.log("[AI Provider] -> Using FALLBACK model:", FALLBACK_MODEL);
-	return getMaiaRouterModel(FALLBACK_MODEL);
+	return getSwiftRouterModel(FALLBACK_MODEL);
 }

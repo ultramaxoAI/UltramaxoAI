@@ -11,7 +11,7 @@ import {
 	WandSparklesIcon,
 } from "lucide-react";
 import { useState } from "react";
-import type { Vote } from "@/lib/db/schema";
+import type { Vote } from "@backend/db/schema";
 import type { ChatMessage } from "@/lib/types";
 import { cn, sanitizeText } from "@/lib/utils";
 import { useDataStream } from "./data-stream-provider";

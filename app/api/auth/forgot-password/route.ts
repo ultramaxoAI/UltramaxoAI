@@ -3,8 +3,8 @@ import {
 	consumePasswordResetToken,
 	createPasswordResetTokenForEmail,
 	updateUserPassword,
-} from "@/lib/db/queries";
-import { sendPasswordResetEmail } from "@/lib/email";
+} from "@backend/db/queries";
+import { sendPasswordResetEmail } from "@backend/email";
 
 export async function POST(request: Request) {
 	try {

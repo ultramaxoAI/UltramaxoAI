@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/app/(auth)/auth";
-import { createVoucher } from "@/lib/db/queries";
+import { createVoucher } from "@backend/db/queries";
 
 export async function POST(request: Request) {
 	const session = await auth();

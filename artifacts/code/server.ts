@@ -1,7 +1,7 @@
 import { streamText } from "ai";
-import { codePrompt, updateDocumentPrompt } from "@/lib/ai/prompts";
-import { getArtifactModel } from "@/lib/ai/providers";
-import { createDocumentHandler } from "@/lib/artifacts/server";
+import { codePrompt, updateDocumentPrompt } from "@backend/ai/prompts";
+import { getArtifactModel } from "@backend/ai/providers";
+import { createDocumentHandler } from "@backend/artifacts/server";
 
 export const codeDocumentHandler = createDocumentHandler<"code">({
 	kind: "code",

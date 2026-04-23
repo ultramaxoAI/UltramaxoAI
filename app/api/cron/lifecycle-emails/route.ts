@@ -1,8 +1,8 @@
 import { NextResponse } from "next/server";
-import { db } from "@/lib/db/queries";
-import { user } from "@/lib/db/schema";
+import { db } from "@backend/db/queries";
+import { user } from "@backend/db/schema";
 import { eq, and, sql, isNotNull } from "drizzle-orm";
-import { sendProExpiringEmail, sendProExpiredEmail } from "@/lib/email";
+import { sendProExpiringEmail, sendProExpiredEmail } from "@backend/email";
 
 export async function GET(request: Request) {
 	// Verify Vercel Cron authentication (bearer CRON_SECRET)

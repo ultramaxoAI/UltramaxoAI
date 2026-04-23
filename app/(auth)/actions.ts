@@ -6,7 +6,7 @@ import {
 	getUser,
 	getUserByIdentifier,
 	getUserByUsername,
-} from "@/lib/db/queries";
+} from "@backend/db/queries";
 import { signIn } from "./auth";
 
 const authFormSchema = z.object({
@@ -168,10 +168,10 @@ export const register = async (
 			const crypto = require("node:crypto");
 			const token = crypto.randomUUID();
 
-			const { upsertVerificationCode } = require("@/lib/db/queries");
+			const { upsertVerificationCode } = require("@backend/db/queries");
 			await upsertVerificationCode(normalizedEmail, token);
 
-			const { sendVerificationEmail } = require("@/lib/email");
+			const { sendVerificationEmail } = require("@backend/email");
 			await sendVerificationEmail(normalizedEmail, token);
 
 			return { status: "verification_sent" };
@@ -186,7 +186,7 @@ export const register = async (
 		});
 
 		try {
-			const { sendWelcomeEmail } = require("@/lib/email");
+			const { sendWelcomeEmail } = require("@backend/email");
 			await sendWelcomeEmail(normalizedEmail, normalizedUsername || "User");
 		} catch (emailErr) {
 			console.error("Failed to send welcome email:", emailErr);

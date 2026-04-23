@@ -21,8 +21,8 @@ import postgres from "postgres";
 import type { ArtifactKind } from "@/components/artifact";
 import type { VisibilityType } from "@/components/visibility-selector";
 import { getCreditResetWindowDays, getStartingCredits } from "@/lib/credits";
-import { ChatSDKError } from "../errors";
-import { generateUUID } from "../utils";
+import { ChatSDKError } from "@/lib/errors";
+import { generateUUID } from "@/lib/utils";
 import {
 	authenticator,
 	agentRun,
@@ -65,9 +65,17 @@ export { getUserApiKeys } from "./queries-settings";
 // https://authjs.dev/reference/adapter/drizzle
 
 // biome-ignore lint: Forbidden non-null assertion.
-const client = postgres(process.env.POSTGRES_URL!, {
+const url = new URL(process.env.POSTGRES_URL!);
+const originalHost = url.hostname;
+// Hardcode IPv4 to bypass Node.js IPv6 resolution issues on local dev
+url.hostname = '18.215.6.120'; 
+
+const client = postgres(url.toString(), {
 	prepare: false,
-	ssl: "require",
+	ssl: { servername: originalHost, rejectUnauthorized: true },
+	connect_timeout: 30,
+	idle_timeout: 20,
+	max_lifetime: 60 * 5,
 });
 export const db = drizzle(client);
 

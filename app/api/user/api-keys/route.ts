@@ -6,8 +6,8 @@ import {
 	deleteUserApiKey,
 	getUserApiKeys,
 	upsertUserApiKey,
-} from "@/lib/db/queries-settings";
-import { decryptData, encryptData, maskKey } from "@/lib/encryption";
+} from "@backend/db/queries-settings";
+import { decryptData, encryptData, maskKey } from "@backend/encryption";
 
 export async function GET() {
 	const session = await auth();

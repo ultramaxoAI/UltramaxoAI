@@ -13,21 +13,22 @@ export function OnboardingWizard() {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
-    // Only show for authenticated users who haven't completed onboarding yet
-    if (status === "authenticated" && session?.user?.email) {
-      const storageKey = `onboarding_completed_${session.user.email}`;
-      const hasCompleted = localStorage.getItem(storageKey);
-      
-      if (!hasCompleted) {
-        // Slight delay to not interrupt the initial login experience abruptly
-        const timer = setTimeout(() => setIsOpen(true), 1500);
-        return () => clearTimeout(timer);
-      }
+    // Only show for authenticated non-guest users who haven't completed onboarding
+    if (status === "authenticated" && session?.user) {
+      // Don't show for guest users
+      if (session.user.type === "guest") return;
+
+      // If onboardingReason is already set in DB, user has completed onboarding
+      if (session.user.onboardingReason) return;
+
+      // Show onboarding for new users who haven't selected a reason yet
+      const timer = setTimeout(() => setIsOpen(true), 1500);
+      return () => clearTimeout(timer);
     }
   }, [status, session]);
 
   const handleSelectReason = async (reason: string) => {
-    if (!session?.user?.email) return;
+    if (!session?.user?.id) return;
     
     setIsSubmitting(true);
     try {
@@ -50,10 +51,6 @@ export function OnboardingWizard() {
   };
 
   const handleFinish = () => {
-    if (session?.user?.email) {
-      const storageKey = `onboarding_completed_${session.user.email}`;
-      localStorage.setItem(storageKey, "true");
-    }
     setIsOpen(false);
   };
 

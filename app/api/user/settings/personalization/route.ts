@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 export const dynamic = "force-dynamic";
 
 import { auth } from "@/app/(auth)/auth";
-import { getUserSettings, upsertUserSettings } from "@/lib/db/queries-settings";
+import { getUserSettings, upsertUserSettings } from "@backend/db/queries-settings";
 
 export async function GET() {
 	const session = await auth();

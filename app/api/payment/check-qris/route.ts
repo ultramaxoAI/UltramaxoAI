@@ -1,9 +1,9 @@
 import { eq } from "drizzle-orm";
 import { NextResponse } from "next/server";
 import { auth } from "@/app/(auth)/auth";
-import { db, updatePurchaseRequestStatus } from "@/lib/db/queries";
-import { purchaseRequest, user } from "@/lib/db/schema";
-import { sendProUpgradeEmail } from "@/lib/email";
+import { db, updatePurchaseRequestStatus } from "@backend/db/queries";
+import { purchaseRequest, user } from "@backend/db/schema";
+import { sendProUpgradeEmail } from "@backend/email";
 
 export const dynamic = "force-dynamic";
 

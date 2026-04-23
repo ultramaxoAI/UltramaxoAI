@@ -1,12 +1,12 @@
 import { eq } from "drizzle-orm";
 import { NextResponse } from "next/server";
 import { auth } from "@/app/(auth)/auth";
-import { db } from "@/lib/db/queries";
-import { user } from "@/lib/db/schema";
+import { db } from "@backend/db/queries";
+import { user } from "@backend/db/schema";
 import {
 	sendCustomEmail,
 	sendVerificationEmail,
-} from "@/lib/email";
+} from "@backend/email";
 
 export async function POST(request: Request) {
 	try {

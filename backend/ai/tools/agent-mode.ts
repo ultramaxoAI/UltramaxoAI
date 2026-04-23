@@ -5,7 +5,7 @@ import {
 	createAgentRun,
 	spendCreditsForUser,
 	updateAgentRunStatusById,
-} from "@/lib/db/queries";
+} from "@backend/db/queries";
 
 export const startAgentTask = () => {
 	return startAgentTaskWithPersistence({});

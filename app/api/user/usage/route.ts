@@ -1,5 +1,5 @@
 import { auth } from "@/app/(auth)/auth";
-import { getUserUsageOverview } from "@/lib/db/queries";
+import { getUserUsageOverview } from "@backend/db/queries";
 
 export async function GET() {
 	const session = await auth();

@@ -1,6 +1,6 @@
 import type { Session } from "next-auth";
 import { z } from "zod";
-import { getDocumentById, saveDocument } from "@/lib/db/queries";
+import { getDocumentById, saveDocument } from "@backend/db/queries";
 import { ChatSDKError } from "@/lib/errors";
 
 type DocumentStreamChunk =

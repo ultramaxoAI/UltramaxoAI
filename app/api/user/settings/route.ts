@@ -3,7 +3,7 @@ import { NextResponse } from "next/server";
 export const dynamic = "force-dynamic";
 
 import { auth } from "@/app/(auth)/auth";
-import { getUserById, updateUserPassword } from "@/lib/db/queries";
+import { getUserById, updateUserPassword } from "@backend/db/queries";
 
 export async function GET() {
 	const session = await auth();

@@ -3,7 +3,7 @@ import { auth } from "@/app/(auth)/auth";
 import { generateTitleFromUserMessage } from "@/app/(chat)/actions";
 import type { VisibilityType } from "@/components/visibility-selector";
 import { CREDIT_COSTS } from "@/lib/credits";
-import { getChatById, saveChat, saveMessages, spendCreditsForUser } from "@/lib/db/queries";
+import { getChatById, saveChat, saveMessages, spendCreditsForUser } from "@backend/db/queries";
 
 const MAIA_API_URL = "https://api.maiarouter.ai/v1/images/generations";
 const MAIA_API_KEY = (process.env.MAIA_API_KEY || process.env.OPENROUTER_API_KEY_1 || "").trim();

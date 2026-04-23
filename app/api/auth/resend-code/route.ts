@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
-import { upsertVerificationCode } from "@/lib/db/queries";
-import { sendVerificationEmail } from "@/lib/email";
+import { upsertVerificationCode } from "@backend/db/queries";
+import { sendVerificationEmail } from "@backend/email";
 
 export async function POST(request: Request) {
 	try {

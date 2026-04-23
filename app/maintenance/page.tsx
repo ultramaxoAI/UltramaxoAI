@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { getSiteSettings } from "@/lib/db/queries-settings";
+import { getSiteSettings } from "@backend/db/queries-settings";
 import {
 	AuroraTemplate,
 	EmberTemplate,

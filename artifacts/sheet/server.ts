@@ -1,8 +1,8 @@
 import { streamObject } from "ai";
 import { z } from "zod";
-import { sheetPrompt, updateDocumentPrompt } from "@/lib/ai/prompts";
-import { getArtifactModel } from "@/lib/ai/providers";
-import { createDocumentHandler } from "@/lib/artifacts/server";
+import { sheetPrompt, updateDocumentPrompt } from "@backend/ai/prompts";
+import { getArtifactModel } from "@backend/ai/providers";
+import { createDocumentHandler } from "@backend/artifacts/server";
 
 export const sheetDocumentHandler = createDocumentHandler<"sheet">({
 	kind: "sheet",

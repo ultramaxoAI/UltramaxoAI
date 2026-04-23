@@ -4,7 +4,7 @@ import {
 	deleteUserKnowledgeEntryById,
 	getUserKnowledgeEntriesByUserId,
 	updateUserKnowledgeEntryById,
-} from "@/lib/db/queries";
+} from "@backend/db/queries";
 
 type KnowledgeCategory = "project" | "product" | "brand" | "reference";
 

@@ -6,14 +6,14 @@ import { auth } from "@/app/(auth)/auth";
 import { Chat } from "@/components/chat";
 import { ChatRouteLoading } from "@/components/chat-route-loading";
 import { DataStreamHandler } from "@/components/data-stream-handler";
-import { DEFAULT_CHAT_MODEL } from "@/lib/ai/models";
+import { DEFAULT_CHAT_MODEL } from "@backend/ai/models";
 import {
 	getChatById,
 	getMessagesByChatId,
 	getTodayMessageCount,
 	getUserApiKeys,
 	getUserById,
-} from "@/lib/db/queries";
+} from "@backend/db/queries";
 import { convertToUIMessages } from "@/lib/utils";
 
 export default function Page(props: { params: Promise<{ id: string }> }) {

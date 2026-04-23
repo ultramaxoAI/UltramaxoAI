@@ -1,5 +1,5 @@
 import { notFound } from "next/navigation";
-import { getChatById, getMessagesByChatId } from "@/lib/db/queries";
+import { getChatById, getMessagesByChatId } from "@backend/db/queries";
 
 function getPlainText(parts: unknown) {
 	if (!Array.isArray(parts)) {

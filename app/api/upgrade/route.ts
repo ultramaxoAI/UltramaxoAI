@@ -1,5 +1,5 @@
 import { auth } from "@/app/(auth)/auth";
-import { createPurchaseRequest } from "@/lib/db/queries";
+import { createPurchaseRequest } from "@backend/db/queries";
 
 // FIX #6: Tabel harga resmi server-side (harus cocok dengan frontend planId)
 const PRICING_TABLE: Record<string, Record<number, number>> = {

@@ -12,7 +12,7 @@ import { ChatContextHeader } from "@/components/chat-context-header";
 import { useArtifactSelector, useArtifactUiState } from "@/hooks/use-artifact";
 import { useAutoResume } from "@/hooks/use-auto-resume";
 import { useChatVisibility } from "@/hooks/use-chat-visibility";
-import type { Vote } from "@/lib/db/schema";
+import type { Vote } from "@backend/db/schema";
 import { ChatSDKError } from "@/lib/errors";
 import type { Attachment, ChatMessage, CustomUIDataTypes } from "@/lib/types";
 import { cn, fetcher, fetchWithErrorHandlers, generateUUID } from "@/lib/utils";

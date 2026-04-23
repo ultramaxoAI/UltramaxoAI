@@ -3,8 +3,8 @@ import {
 	getUser,
 	setEmailVerified,
 	verifyVerificationCode,
-} from "@/lib/db/queries";
-import { sendWelcomeEmail } from "@/lib/email";
+} from "@backend/db/queries";
+import { sendWelcomeEmail } from "@backend/email";
 
 export async function POST(request: Request) {
 	try {

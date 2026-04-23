@@ -1,8 +1,8 @@
 import { desc } from "drizzle-orm";
 import { NextResponse } from "next/server";
 import { auth } from "@/app/(auth)/auth";
-import { createVoucher, db } from "@/lib/db/queries";
-import { redeemCode } from "@/lib/db/schema";
+import { createVoucher, db } from "@backend/db/queries";
+import { redeemCode } from "@backend/db/schema";
 
 export async function GET() {
 	const session = await auth();

@@ -7,7 +7,7 @@ import { textDocumentHandler } from "@/artifacts/text/server";
 import type { ArtifactKind } from "@/components/artifact";
 import { saveDocument } from "../db/queries";
 import type { Document } from "../db/schema";
-import type { ChatMessage } from "../types";
+import type { ChatMessage } from "@/lib/types";
 
 export type SaveDocumentProps = {
 	id: string;

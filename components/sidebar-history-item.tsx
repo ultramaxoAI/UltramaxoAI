@@ -4,7 +4,7 @@ import { memo, useState } from "react";
 import type { DragEvent } from "react";
 import { toast } from "sonner";
 import { useChatVisibility } from "@/hooks/use-chat-visibility";
-import type { Chat } from "@/lib/db/schema";
+import type { Chat } from "@backend/db/schema";
 import { ChatOrganizationDialog } from "./chat-organization-dialog";
 import {
 	AlertDialog,

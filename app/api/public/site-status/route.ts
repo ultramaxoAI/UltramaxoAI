@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 
-import { getSiteSettings } from "@/lib/db/queries-settings";
+import { getSiteSettings } from "@backend/db/queries-settings";
 
 export const dynamic = "force-dynamic";
 

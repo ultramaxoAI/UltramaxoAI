@@ -5,12 +5,12 @@ import {
 	parseArtifactCodeFiles,
 	serializeArtifactCodeFiles,
 	upsertArtifactCodeFile,
-} from "@/lib/artifacts/code-files";
+} from "@backend/artifacts/code-files";
 import {
 	getDocumentById,
 	resolveExistingUserId,
 	saveDocument,
-} from "@/lib/db/queries";
+} from "@backend/db/queries";
 import { ChatSDKError } from "@/lib/errors";
 
 type WorkspaceStreamChunk =

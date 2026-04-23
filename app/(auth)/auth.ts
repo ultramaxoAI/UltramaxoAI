@@ -14,15 +14,15 @@ import {
 	getUserByIdentifier,
 	setEmailVerified,
 	verifyVerificationCode,
-} from "@/lib/db/queries";
+} from "@backend/db/queries";
 import {
 	account as accountTable,
 	authenticator as authenticatorTable,
 	session as sessionTable,
 	user as userTable,
 	verificationToken as verificationTokenTable,
-} from "@/lib/db/schema";
-import { generateDummyPassword } from "@/lib/db/utils";
+} from "@backend/db/schema";
+import { generateDummyPassword } from "@backend/db/utils";
 import { authConfig } from "./auth.config";
 
 export type UserType = "guest" | "regular" | "pro";
@@ -33,6 +33,7 @@ declare module "next-auth" {
 			id: string;
 			type: UserType;
 			role: "user" | "admin";
+			onboardingReason?: string | null;
 		} & DefaultSession["user"];
 	}
 
@@ -41,6 +42,7 @@ declare module "next-auth" {
 		email?: string | null;
 		type: UserType;
 		role: "user" | "admin";
+		onboardingReason?: string | null;
 	}
 }
 
@@ -49,6 +51,7 @@ declare module "next-auth/jwt" {
 		id: string;
 		type: UserType;
 		role: "user" | "admin";
+		onboardingReason?: string | null;
 	}
 }
 
@@ -56,6 +59,7 @@ declare module "@auth/core/adapters" {
 	interface AdapterUser {
 		type: UserType;
 		role: "user" | "admin";
+		onboardingReason?: string | null;
 	}
 }
 
@@ -364,6 +368,7 @@ export const {
 					...user,
 					type: resolveUserType(user.isPro),
 					role: isAdmin ? "admin" : "user",
+					onboardingReason: user.onboardingReason,
 				};
 			},
 		}),
@@ -385,6 +390,7 @@ export const {
 				token.role = user.role;
 				token.email = user.email ?? token.email;
 				token.name = user.name ?? token.name;
+				token.onboardingReason = user.onboardingReason;
 			}
 
 			// Refresh user data from database on every request to keep it fresh
@@ -417,6 +423,7 @@ export const {
 						token.role = dbUser.role as "user" | "admin";
 						token.email = dbUser.email;
 						token.name = dbUser.name;
+						token.onboardingReason = dbUser.onboardingReason;
 					} else {
 						// SECURITY FIX: User was deleted from the database.
 						// Returning null instantly invalidates the JWT and destroying the session.
@@ -437,6 +444,7 @@ export const {
 				session.user.role = token.role;
 				session.user.email = (token.email as string | undefined) ?? session.user.email;
 				session.user.name = (token.name as string | undefined) ?? session.user.name;
+				session.user.onboardingReason = token.onboardingReason as string | null | undefined;
 			}
 
 			return session;

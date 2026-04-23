@@ -10,14 +10,14 @@ import {
 import { after } from "next/server";
 import { createResumableStreamContext } from "resumable-stream";
 import { auth } from "@/app/(auth)/auth";
-import { type RequestHints, systemPrompt } from "@/lib/ai/prompts";
+import { type RequestHints, systemPrompt } from "@backend/ai/prompts";
 import { getChatCreditCost } from "@/lib/credits";
 
-import { getLanguageModel } from "@/lib/ai/providers";
+import { getLanguageModel } from "@backend/ai/providers";
 import {
 	reportAgentStepWithPersistence,
 	startAgentTaskWithPersistence,
-} from "@/lib/ai/tools/agent-mode";
+} from "@backend/ai/tools/agent-mode";
 import {
 	createCodeFile,
 	deleteCodeFile,
@@ -27,11 +27,11 @@ import {
 	runWorkspaceCommand,
 	startPreviewServer,
 	updateCodeFile,
-} from "@/lib/ai/tools/code-workspace";
-import { createDocument } from "@/lib/ai/tools/create-document";
-import { requestSuggestions } from "@/lib/ai/tools/request-suggestions";
-import { updateDocument } from "@/lib/ai/tools/update-document";
-import { webSearch } from "@/lib/ai/tools/web-search";
+} from "@backend/ai/tools/code-workspace";
+import { createDocument } from "@backend/ai/tools/create-document";
+import { requestSuggestions } from "@backend/ai/tools/request-suggestions";
+import { updateDocument } from "@backend/ai/tools/update-document";
+import { webSearch } from "@backend/ai/tools/web-search";
 import {
 	isFullstackModeInMaintenance,
 	isDevelopmentEnvironment,
@@ -58,18 +58,18 @@ import {
 	updateMessage,
 	getRecentCrossChatMemory,
 	updateUserIdeModeUsage,
-} from "@/lib/db/queries";
+} from "@backend/db/queries";
 import {
 	getEnabledUserApiKey,
 	getUserSettings,
-} from "@/lib/db/queries-settings";
-import type { DBMessage } from "@/lib/db/schema";
-import { decryptData, maskKey } from "@/lib/encryption";
+} from "@backend/db/queries-settings";
+import type { DBMessage } from "@backend/db/schema";
+import { decryptData, maskKey } from "@backend/encryption";
 import { ChatSDKError } from "@/lib/errors";
-import { checkRateLimit, getClientIp } from "@/lib/rateLimiter";
+import { checkRateLimit, getClientIp } from "@backend/rateLimiter";
 import type { ChatMessage } from "@/lib/types";
 import { convertToUIMessages, generateUUID } from "@/lib/utils";
-import { getWeather } from "../../../../lib/ai/tools/get-weather";
+import { getWeather } from "@backend/ai/tools/get-weather";
 import { generateTitleFromUserMessage } from "../../actions";
 import { type PostRequestBody, postRequestBodySchema } from "./schema";
 
@@ -590,7 +590,7 @@ export async function POST(request: Request) {
 							// Determine which model to use
 							let effectiveModel = selectedChatModel;
 							if (deepThinkingEnabled) {
-								effectiveModel = "maia/gemini-2.5-flash";
+								effectiveModel = "qwen3.6-plus";
 							}
 
 							// Intelligent Prompt Jailbreak Injection

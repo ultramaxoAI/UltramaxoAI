@@ -1,6 +1,6 @@
 import { createHmac } from "node:crypto";
 import { NextResponse } from "next/server";
-import { updatePurchaseRequestStatus } from "@/lib/db/queries";
+import { updatePurchaseRequestStatus } from "@backend/db/queries";
 
 const DOMPETX_API_KEY = process.env.DOMPETX_API_KEY ?? "";
 

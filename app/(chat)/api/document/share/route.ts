@@ -1,5 +1,5 @@
 import { auth } from "@/app/(auth)/auth";
-import { getDocumentById, setDocumentSharingById } from "@/lib/db/queries";
+import { getDocumentById, setDocumentSharingById } from "@backend/db/queries";
 import { ChatSDKError } from "@/lib/errors";
 
 export async function POST(request: Request) {

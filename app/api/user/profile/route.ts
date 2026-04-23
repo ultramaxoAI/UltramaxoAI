@@ -2,9 +2,9 @@ import { put } from "@vercel/blob";
 import { eq } from "drizzle-orm";
 import { NextResponse } from "next/server";
 import { auth } from "@/app/(auth)/auth";
-import { db } from "@/lib/db/queries";
-import { user } from "@/lib/db/schema";
-import { logger } from "@/lib/logger";
+import { db } from "@backend/db/queries";
+import { user } from "@backend/db/schema";
+import { logger } from "@backend/logger";
 
 export async function PATCH(request: Request) {
 	try {

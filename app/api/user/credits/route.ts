@@ -1,6 +1,6 @@
 import { auth } from "@/app/(auth)/auth";
 import { CREDIT_COSTS, getCreditResetWindowDays, getStartingCredits } from "@/lib/credits";
-import { getCreditSummaryByUserId } from "@/lib/db/queries";
+import { getCreditSummaryByUserId } from "@backend/db/queries";
 
 export async function GET() {
 	const session = await auth();

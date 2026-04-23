@@ -4,7 +4,7 @@ import {
 	deletePromptPresetById,
 	getPromptPresetsByUserId,
 	updatePromptPresetById,
-} from "@/lib/db/queries";
+} from "@backend/db/queries";
 
 export async function GET() {
 	const session = await auth();

@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/app/(auth)/auth";
-import { getRealtimeVisits, getVisitorInsights } from "@/lib/db/queries";
+import { getRealtimeVisits, getVisitorInsights } from "@backend/db/queries";
 
 export const dynamic = "force-dynamic";
 

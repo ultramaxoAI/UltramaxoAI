@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 
 import { auth } from "@/app/(auth)/auth";
-import { getSiteSettings, upsertSiteSettings } from "@/lib/db/queries-settings";
+import { getSiteSettings, upsertSiteSettings } from "@backend/db/queries-settings";
 
 export const dynamic = "force-dynamic";
 
