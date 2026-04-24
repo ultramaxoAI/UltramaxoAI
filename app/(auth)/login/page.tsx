@@ -100,19 +100,19 @@ export default function Page() {
 	}, []);
 
 	return (
-		<div className="flex min-h-screen w-full">
+		<div className="flex min-h-screen w-full bg-black">
 			{/* Left Panel — Brand */}
-			<div className="hidden lg:flex lg:w-[48%] relative overflow-hidden bg-[#0a0f14] flex-col justify-between p-10 xl:p-14">
+			<div className="hidden lg:flex lg:w-[48%] relative overflow-hidden bg-black flex-col justify-between p-10 xl:p-14">
 				{/* Gradient overlays */}
-				<div className="absolute inset-0 bg-[radial-gradient(ellipse_at_20%_50%,rgba(20,184,166,0.15),transparent_60%)]" />
-				<div className="absolute inset-0 bg-[radial-gradient(ellipse_at_80%_20%,rgba(45,212,191,0.08),transparent_50%)]" />
+				<div className="absolute inset-0 bg-[radial-gradient(ellipse_at_20%_50%,rgba(255,255,255,0.05),transparent_60%)]" />
+				<div className="absolute inset-0 bg-[radial-gradient(ellipse_at_80%_20%,rgba(255,255,255,0.03),transparent_50%)]" />
 				<div className="absolute inset-0 bg-[radial-gradient(#ffffff_0.5px,transparent_0.5px)] bg-size-[20px_20px] opacity-[0.03]" />
 
 				{/* Logo */}
 				<div className="relative z-10">
 					<div className="flex items-center gap-2.5">
-						<div className="w-8 h-8 rounded-lg bg-teal-500/20 flex items-center justify-center">
-							<span className="text-teal-400 font-bold text-sm">U</span>
+						<div className="w-8 h-8 rounded-lg bg-white/10 flex items-center justify-center">
+							<span className="text-white font-bold text-sm">U</span>
 						</div>
 						<span className="text-white font-semibold text-lg tracking-tight">Ultramaxo</span>
 					</div>
@@ -123,7 +123,7 @@ export default function Page() {
 					<h2 className="text-4xl xl:text-5xl font-bold text-white leading-[1.15] tracking-tight">
 						Sign in to continue
 						<br />
-						<span className="text-teal-400">your journey.</span>
+						<span className="text-zinc-300">your journey.</span>
 					</h2>
 					<p className="mt-5 text-zinc-400 text-base leading-relaxed">
 						The most affordable full-featured AI workspace in its class.
@@ -132,24 +132,24 @@ export default function Page() {
 					{/* Feature highlights */}
 					<div className="mt-8 flex flex-col gap-3">
 						<div className="flex items-center gap-3">
-							<div className="w-8 h-8 rounded-lg bg-teal-500/10 flex items-center justify-center shrink-0">
-								<svg className="w-4 h-4 text-teal-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+							<div className="w-8 h-8 rounded-lg bg-white/10 flex items-center justify-center shrink-0">
+								<svg className="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
 									<path strokeLinecap="round" strokeLinejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" />
 								</svg>
 							</div>
 							<span className="text-zinc-300 text-sm">Lightning-fast responses, no queue</span>
 						</div>
 						<div className="flex items-center gap-3">
-							<div className="w-8 h-8 rounded-lg bg-teal-500/10 flex items-center justify-center shrink-0">
-								<svg className="w-4 h-4 text-teal-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+							<div className="w-8 h-8 rounded-lg bg-white/10 flex items-center justify-center shrink-0">
+								<svg className="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
 									<path strokeLinecap="round" strokeLinejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
 								</svg>
 							</div>
 							<span className="text-zinc-300 text-sm">Your data stays private and encrypted</span>
 						</div>
 						<div className="flex items-center gap-3">
-							<div className="w-8 h-8 rounded-lg bg-teal-500/10 flex items-center justify-center shrink-0">
-								<svg className="w-4 h-4 text-teal-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+							<div className="w-8 h-8 rounded-lg bg-white/10 flex items-center justify-center shrink-0">
+								<svg className="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
 									<path strokeLinecap="round" strokeLinejoin="round" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
 								</svg>
 							</div>
@@ -160,9 +160,9 @@ export default function Page() {
 
 				{/* Social Proof Footer */}
 				<div className="relative z-10">
-					<div className="flex items-center gap-3 rounded-2xl border border-white/6 bg-white/3 backdrop-blur-sm px-5 py-4">
-						<div className="w-10 h-10 rounded-full bg-teal-500/15 flex items-center justify-center shrink-0">
-							<svg className="w-5 h-5 text-teal-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+					<div className="flex items-center gap-3 rounded-2xl border border-white/10 bg-white/5 backdrop-blur-sm px-5 py-4">
+						<div className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center shrink-0">
+							<svg className="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
 								<path strokeLinecap="round" strokeLinejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
 							</svg>
 						</div>
@@ -179,15 +179,15 @@ export default function Page() {
 			</div>
 
 			{/* Right Panel — Form */}
-			<div className="flex-1 flex items-center justify-center bg-white p-6 sm:p-10 lg:p-14">
-				<div className="w-full max-w-[420px] animate-in fade-in slide-in-from-right-4 duration-700">
+			<div className="flex-1 flex items-center justify-center bg-black p-6 sm:p-10 lg:p-14 border-l border-white/10">
+				<div className="w-full max-w-[420px] animate-in fade-in slide-in-from-right-4 duration-700 relative z-10">
 					{/* Mobile only: show logo */}
 					<div className="mb-8 lg:hidden">
 						<div className="flex items-center gap-2.5">
-							<div className="w-8 h-8 rounded-lg bg-teal-500/20 flex items-center justify-center">
-								<span className="text-teal-600 font-bold text-sm">U</span>
+							<div className="w-8 h-8 rounded-lg bg-white/10 flex items-center justify-center">
+								<span className="text-white font-bold text-sm">U</span>
 							</div>
-							<span className="text-zinc-900 font-semibold text-lg tracking-tight">Ultramaxo</span>
+							<span className="text-white font-semibold text-lg tracking-tight">Ultramaxo</span>
 						</div>
 					</div>
 
@@ -200,7 +200,7 @@ export default function Page() {
 					<p className="mt-6 text-center text-zinc-500 text-sm">
 						Don't have an account?{" "}
 						<Link
-							className="text-teal-600 hover:text-teal-700 transition-colors font-semibold"
+							className="text-zinc-400 hover:text-white transition-colors font-semibold"
 							href="/register"
 						>
 							Sign up
@@ -208,9 +208,9 @@ export default function Page() {
 					</p>
 
 					{/* Trust signals */}
-					<div className="mt-5 flex items-center justify-center gap-4 text-[11px] text-zinc-400">
+					<div className="mt-5 flex items-center justify-center gap-4 text-[11px] text-zinc-500">
 						<span>Free forever</span>
-						<span className="w-0.5 h-0.5 rounded-full bg-zinc-300" />
+						<span className="w-0.5 h-0.5 rounded-full bg-zinc-600" />
 						<span>No credit card needed</span>
 					</div>
 				</div>

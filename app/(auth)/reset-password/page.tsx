@@ -71,170 +71,111 @@ function ResetPasswordContent() {
 	};
 
 	return (
-		<div className="login-bg text-zinc-100 flex items-center justify-center px-4 py-8 relative min-h-screen">
-			<motion.svg
-				animate={{ opacity: 0.4 }}
-				className="absolute -top-1/4 -right-1/4 w-[800px] h-[800px] text-zinc-800/50 pointer-events-none"
-				fill="none"
-				initial={{ opacity: 0 }}
-				stroke="currentColor"
-				strokeWidth="0.5"
-				transition={{ duration: 2, ease: "easeOut" }}
-				viewBox="0 0 100 100"
-				xmlns="http://www.w3.org/2000/svg"
-				role="img"
-				aria-label="Background Decor"
-			>
-				<title>Background Decor</title>
-				<motion.g
-					animate={{ opacity: 1 }}
-					fill="none"
-					initial={{ opacity: 0 }}
-					stroke="url(#grad)"
-					strokeWidth="0.8"
-					transition={{ duration: 1.2 }}
-				>
-					<motion.path
-						animate={{ pathLength: 1 }}
-						d="M5 120 L140 80 L260 140 L420 100"
-						initial={{ pathLength: 0 }}
-						transition={{
-							duration: 2.5,
-							repeat: Number.POSITIVE_INFINITY,
-							repeatType: "reverse",
-							ease: "easeInOut",
-						}}
-					/>
-					<motion.path
-						animate={{ pathLength: 1 }}
-						d="M60 260 L200 210 L320 260 L480 220"
-						initial={{ pathLength: 0 }}
-						transition={{
-							duration: 3,
-							repeat: Number.POSITIVE_INFINITY,
-							repeatType: "reverse",
-							ease: "easeInOut",
-						}}
-					/>
-					<motion.path
-						animate={{ pathLength: 1 }}
-						d="M40 40 L220 60 L340 40 L520 70"
-						initial={{ pathLength: 0 }}
-						transition={{
-							duration: 2.2,
-							repeat: Number.POSITIVE_INFINITY,
-							repeatType: "reverse",
-							ease: "easeInOut",
-						}}
-					/>
-				</motion.g>
-				<defs>
-					<linearGradient id="grad" x1="0" x2="1" y1="0" y2="1">
-						<stop offset="0%" stopColor="#3b82f6" />
-						<stop offset="100%" stopColor="#8b5cf6" />
-					</linearGradient>
-				</defs>
-			</motion.svg>
+		<div className="min-h-screen flex flex-col items-center justify-center p-4 md:p-6 bg-black text-slate-200 relative overflow-hidden">
+			<div
+				aria-hidden
+				className="absolute inset-0 bg-[radial-gradient(ellipse_at_20%_50%,rgba(255,255,255,0.05),transparent_60%)]"
+			/>
+			<div
+				aria-hidden
+				className="absolute inset-0 bg-[radial-gradient(ellipse_at_80%_20%,rgba(255,255,255,0.03),transparent_50%)]"
+			/>
+			<div
+				aria-hidden
+				className="absolute inset-0 bg-[radial-gradient(#ffffff_0.5px,transparent_0.5px)] bg-size-[20px_20px] opacity-[0.03]"
+			/>
 
 			<motion.div
-				animate={{ opacity: 1, y: 0, scale: 1 }}
-				className="w-full max-w-xl p-[1.5px] rounded-2xl bg-linear-to-r from-white/30 to-white/30 relative"
-				initial={{ opacity: 0, y: 16, scale: 0.98 }}
-				transition={{ type: "spring", stiffness: 320, damping: 28 }}
+				animate={{ opacity: 1, y: 0 }}
+				className="relative w-full max-w-md z-10"
+				initial={{ opacity: 0, y: 20 }}
 			>
-				<div className="rounded-2xl border border-white/10 bg-[#0f0f15]/85 backdrop-blur-xl shadow-[0_30px_60px_-20px_rgba(0,0,0,0.65)] p-6 relative">
-					<div className="flex items-center gap-3 mb-4 relative z-10">
-						<div className="w-9 h-9 rounded-xl bg-white flex items-center justify-center text-black">
-							<Bot size={18} />
-						</div>
-						<div>
-							<p className="text-xs uppercase tracking-[0.2em] text-zinc-500">
-								Ultramaxo
-							</p>
-							<h1 className="text-lg font-semibold text-white">
-								Reset Password
-							</h1>
+				<div className="flex items-center justify-center mb-8">
+					<div className="flex items-center gap-2.5">
+						<div className="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center">
+							<span className="text-white font-bold text-lg">U</span>
 						</div>
 					</div>
+				</div>
+
+				<div className="rounded-3xl border border-white/10 bg-[#0a0f14]/80 backdrop-blur-xl p-7 shadow-2xl">
+					<h1 className="text-2xl font-bold text-white mb-2 text-center tracking-tight">
+						Reset Password
+					</h1>
+					<p className="text-zinc-400 text-[13px] text-center mb-6 leading-relaxed">
+						Enter your new password below.
+					</p>
 
 					{error && (
 						<motion.div
 							animate={{ opacity: 1, y: 0 }}
-							className="mb-4 p-3 rounded-lg bg-red-500/10 border border-red-500/20 text-red-400 text-xs"
-							initial={{ opacity: 0, y: -10 }}
+							className="mb-4 p-3 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 text-xs flex items-center justify-center"
+							initial={{ opacity: 0, y: -5 }}
 						>
-							⚠️ {error}
+							{error}
 						</motion.div>
 					)}
 
 					{message && (
 						<motion.div
 							animate={{ opacity: 1, y: 0 }}
-							className="mb-4 p-3 rounded-lg bg-green-500/10 border border-green-500/20 text-green-400 text-xs"
-							initial={{ opacity: 0, y: -10 }}
+							className="mb-4 p-3 rounded-xl bg-white/10 border border-white/20 text-white text-xs flex items-center justify-center"
+							initial={{ opacity: 0, y: -5 }}
 						>
-							✅ {message}
+							{message}
 						</motion.div>
 					)}
 
 					<form
-						className="space-y-3 relative z-10"
+						className="space-y-4 relative z-10"
 						onSubmit={handleResetPassword}
 					>
-						<p className="text-xs text-zinc-400 mb-4">
-							Masukkan password baru untuk akun kamu.
-						</p>
-
-						<label className="block space-y-1 text-sm text-zinc-300">
-							<span className="text-[11px] uppercase tracking-wide text-zinc-500">
-								Password Baru
-							</span>
+						<div className="flex flex-col gap-1.5">
+							<label className="block text-sm font-semibold text-zinc-300">
+								New Password
+							</label>
 							<input
-								className="w-full rounded-lg border border-zinc-800 bg-[#12121a] px-3 py-2 text-sm text-white placeholder:text-zinc-500 focus:border-green-500 focus:ring-2 focus:ring-green-500/30 focus:outline-none"
+								className="w-full h-10 rounded-xl border border-white/10 bg-white/5 px-4 text-sm text-white placeholder:text-zinc-500 focus:border-white focus:ring-2 focus:ring-white/20 outline-none transition-all"
 								minLength={6}
 								onChange={(e) => setNewPassword(e.target.value)}
-								placeholder="Minimal 6 karakter"
+								placeholder="Minimum 6 characters"
 								required
 								type="password"
 								value={newPassword}
 							/>
-							<span className="text-[10px] text-zinc-500">
-								Password minimal 6 karakter
-							</span>
-						</label>
+						</div>
 
-						<label className="block space-y-1 text-sm text-zinc-300">
-							<span className="text-[11px] uppercase tracking-wide text-zinc-500">
-								Konfirmasi Password
-							</span>
+						<div className="flex flex-col gap-1.5">
+							<label className="block text-sm font-semibold text-zinc-300">
+								Confirm Password
+							</label>
 							<input
-								className="w-full rounded-lg border border-zinc-800 bg-[#12121a] px-3 py-2 text-sm text-white placeholder:text-zinc-500 focus:border-green-500 focus:ring-2 focus:ring-green-500/30 focus:outline-none"
+								className="w-full h-10 rounded-xl border border-white/10 bg-white/5 px-4 text-sm text-white placeholder:text-zinc-500 focus:border-white focus:ring-2 focus:ring-white/20 outline-none transition-all"
 								minLength={6}
 								onChange={(e) => setConfirmPassword(e.target.value)}
-								placeholder="Ketik ulang password"
+								placeholder="Re-enter your password"
 								required
 								type="password"
 								value={confirmPassword}
 							/>
-						</label>
+						</div>
 
-						<motion.button
-							className="w-full rounded-lg bg-white text-black font-semibold text-sm py-2.5 shadow-lg shadow-white/10 hover:bg-zinc-200 disabled:opacity-50 disabled:cursor-not-allowed"
+						<button
+							className="w-full h-10 mt-2 rounded-xl bg-white text-black font-semibold hover:bg-zinc-200 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 text-sm shadow-sm shadow-white/10"
 							disabled={loading || !token}
 							type="submit"
-							whileTap={{ scale: 0.98 }}
 						>
-							{loading ? "Memproses..." : "Reset Password"}
-						</motion.button>
+							{loading ? "Processing..." : "Reset Password"}
+						</button>
 					</form>
 
-					<div className="mt-4 text-[11px]">
+					<div className="text-center mt-6">
 						<button
-							className="text-white/80 hover:text-white font-medium transition-colors"
+							className="text-zinc-500 hover:text-white transition-colors text-sm"
 							onClick={() => router.push("/login")}
 							type="button"
 						>
-							← Kembali ke Login
+							Back to login
 						</button>
 					</div>
 				</div>

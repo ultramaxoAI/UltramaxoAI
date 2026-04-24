@@ -25,7 +25,7 @@ export function SubmitButton({
 		<Button
 			aria-disabled={isPending || isSuccessful}
 			className={cn(
-				"relative w-full rounded-xl h-11 text-sm font-bold bg-teal-600 text-white hover:bg-teal-700 transition-all active:scale-[0.98] disabled:opacity-50 border-0 shadow-md shadow-teal-600/20",
+				"relative w-full rounded-xl h-11 text-sm font-bold bg-white text-black hover:bg-zinc-200 transition-all active:scale-[0.98] disabled:opacity-50 border-0 shadow-md shadow-white/10",
 				className,
 			)}
 			disabled={isPending || isSuccessful}
@@ -34,7 +34,7 @@ export function SubmitButton({
 			{children}
 
 			{(isPending || isSuccessful) && (
-				<span className="absolute right-4 animate-spin text-white/70">
+				<span className="absolute right-4 animate-spin text-black/70">
 					<LoaderIcon />
 				</span>
 			)}

@@ -64,49 +64,55 @@ function ForgotPasswordForm() {
 	};
 
 	return (
-		<div className="min-h-screen flex flex-col items-center justify-center p-4 md:p-6 bg-[#111111] text-slate-200 relative overflow-hidden">
+		<div className="min-h-screen flex flex-col items-center justify-center p-4 md:p-6 bg-[#0a0f14] text-slate-200 relative overflow-hidden">
 			<div
 				aria-hidden
-				className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(56,189,248,0.12),transparent_55%),radial-gradient(circle_at_bottom,rgba(168,85,247,0.16),transparent_60%)]"
+				className="absolute inset-0 bg-[radial-gradient(ellipse_at_20%_50%,rgba(255,255,255,0.05),transparent_60%)]"
 			/>
 			<div
 				aria-hidden
-				className="pointer-events-none absolute inset-0 bg-[linear-gradient(to_bottom,rgba(15,23,42,0.9),rgba(0,0,0,0.96))] mix-blend-normal"
+				className="absolute inset-0 bg-[radial-gradient(ellipse_at_80%_20%,rgba(255,255,255,0.03),transparent_50%)]"
+			/>
+			<div
+				aria-hidden
+				className="absolute inset-0 bg-[radial-gradient(#ffffff_0.5px,transparent_0.5px)] bg-size-[20px_20px] opacity-[0.03]"
 			/>
 			<motion.div
 				animate={{ opacity: 1, y: 0 }}
 				className="relative w-full max-w-md z-10"
 				initial={{ opacity: 0, y: 20 }}
 			>
-				<div className="flex items-center justify-center mb-6">
-					<div className="w-10 h-10 rounded-xl bg-white flex items-center justify-center text-black text-sm font-semibold shadow-lg shadow-emerald-500/20">
-						N
+				<div className="flex items-center justify-center mb-8">
+					<div className="flex items-center gap-2.5">
+						<div className="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center">
+							<span className="text-white font-bold text-lg">U</span>
+						</div>
 					</div>
 				</div>
 
-				<div className="rounded-3xl border border-white/10 bg-[#050509]/90 backdrop-blur-xl p-7 shadow-[0_18px_45px_rgba(0,0,0,0.9)]">
-					<h1 className="text-2xl font-semibold text-white mb-1 text-center tracking-tight">
-						Lupa Password
+				<div className="rounded-3xl border border-white/10 bg-[#0a0f14]/80 backdrop-blur-xl p-7 shadow-2xl">
+					<h1 className="text-2xl font-bold text-white mb-2 text-center tracking-tight">
+						Forgot Password
 					</h1>
-					<p className="text-zinc-400 text-sm text-center mb-6">
-						Masukkan email Anda untuk menerima link reset password
+					<p className="text-zinc-400 text-[13px] text-center mb-6 leading-relaxed">
+						Enter your email address to receive a password reset link
 					</p>
 
 					<form className="space-y-4" onSubmit={handleSendResetLink}>
-						<div>
+						<div className="flex flex-col gap-1.5">
 							<label
-								className="block text-xs font-medium text-zinc-300 mb-2"
+								className="block text-sm font-semibold text-zinc-300"
 								htmlFor="email"
 							>
-								Email
+								Email Address
 							</label>
 							<div className="relative">
-								<Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
+								<Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400" />
 								<input
-									className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-white/10 bg-[#060711] text-sm text-white placeholder:text-zinc-500 focus:border-white/40 focus:ring-1 focus:ring-white/30 outline-none transition-all"
+									className="w-full pl-10 pr-4 h-10 rounded-xl border border-white/10 bg-white/5 text-sm text-white placeholder:text-zinc-500 focus:border-white focus:ring-2 focus:ring-white/20 outline-none transition-all"
 									id="email"
 									onChange={(e) => setEmail(e.target.value)}
-									placeholder="nama@email.com"
+									placeholder="name@example.com"
 									required
 									type="email"
 									value={email}
@@ -117,19 +123,19 @@ function ForgotPasswordForm() {
 						{(error || success) && (
 							<motion.div
 								animate={{ opacity: 1, y: 0 }}
-								className={`p-3 rounded-xl text-xs ${
+								className={`p-3 rounded-xl text-xs flex items-center justify-center ${
 									success
-										? "bg-emerald-500/10 border border-emerald-500/50 text-emerald-300"
-										: "bg-red-500/10 border border-red-500/50 text-red-300"
+										? "bg-white/10 border border-white/20 text-white"
+										: "bg-red-500/10 border border-red-500/20 text-red-400"
 								}`}
-								initial={{ opacity: 0, y: -10 }}
+								initial={{ opacity: 0, y: -5 }}
 							>
 								{error || success}
 							</motion.div>
 						)}
 
 						<button
-							className="w-full py-2.5 rounded-2xl bg-white text-black font-semibold hover:bg-zinc-100 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 text-sm shadow-lg shadow-white/10"
+							className="w-full h-10 mt-2 rounded-xl bg-white text-black font-semibold hover:bg-zinc-200 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 text-sm shadow-sm shadow-white/10"
 							disabled={loading}
 							type="submit"
 						>
@@ -140,11 +146,20 @@ function ForgotPasswordForm() {
 								</>
 							) : (
 								<>
-									Kirim Link Reset
-									<ArrowRight className="w-4 h-4" />
+									Send Reset Link
+									<ArrowRight className="w-4 h-4 ml-1" />
 								</>
 							)}
 						</button>
+						<div className="text-center mt-6">
+							<button 
+								type="button" 
+								onClick={() => router.push('/login')}
+								className="text-zinc-500 hover:text-white transition-colors text-sm"
+							>
+								Back to login
+							</button>
+						</div>
 					</form>
 				</div>
 			</motion.div>
