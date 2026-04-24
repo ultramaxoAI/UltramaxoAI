@@ -21,6 +21,15 @@ function PureCodeBlock({ children, className, language }: CodeBlockProps) {
 	const [copied, setCopied] = useState(false);
 	const [showFull, setShowFull] = useState(false);
 	const { setArtifact } = useArtifact();
+	const [debouncedChildren, setDebouncedChildren] = useState(children);
+
+	// Debounce children to prevent freezing the browser during rapid AI streaming
+	useEffect(() => {
+		const timer = setTimeout(() => {
+			setDebouncedChildren(children);
+		}, 150);
+		return () => clearTimeout(timer);
+	}, [children]);
 
 	// Extract language if not provided, fallback to text
 	const lang =
@@ -29,16 +38,16 @@ function PureCodeBlock({ children, className, language }: CodeBlockProps) {
 		"text";
 
 	// Determine rendering strategy
-	const lineCount = children.split("\n").length;
+	const lineCount = debouncedChildren.split("\n").length;
 	const isTooLargeForHighlight =
-		children.length > MAX_HIGHLIGHT_CHARS || lineCount > MAX_HIGHLIGHT_LINES;
-	const isTooLargeForDisplay = children.length > MAX_DISPLAY_CHARS;
+		debouncedChildren.length > MAX_HIGHLIGHT_CHARS || lineCount > MAX_HIGHLIGHT_LINES;
+	const isTooLargeForDisplay = debouncedChildren.length > MAX_DISPLAY_CHARS;
 
 	// Truncate if necessary
 	const displayContent =
 		isTooLargeForDisplay && !showFull
-			? `${children.slice(0, MAX_DISPLAY_CHARS)}\n\n... (${(children.length / 1000).toFixed(0)}KB total, click "Show All" to expand)`
-			: children;
+			? `${debouncedChildren.slice(0, MAX_DISPLAY_CHARS)}\n\n... (${(debouncedChildren.length / 1000).toFixed(0)}KB total, click "Show All" to expand)`
+			: debouncedChildren;
 
 	const handleCopy = async () => {
 		await navigator.clipboard.writeText(children); // Always copy full content
@@ -164,7 +173,7 @@ function PureCodeBlock({ children, className, language }: CodeBlockProps) {
 						onClick={() => setShowFull(true)}
 						type="button"
 					>
-						Show All ({(children.length / 1000).toFixed(0)}KB)
+						Show All ({(debouncedChildren.length / 1000).toFixed(0)}KB)
 					</button>
 				</div>
 			)}

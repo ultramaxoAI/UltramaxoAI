@@ -36,15 +36,16 @@ export function Response({ className, children, ...props }: ResponseProps) {
 			components={{
 				pre: ({ children }: any) => {
 					// Robustly extract text from children
-					const extractText = (content: any): string => {
-						if (typeof content === "string") {
-							return content;
+					const extractText = (content: any, depth = 0): string => {
+						if (depth > 20) return "";
+						if (typeof content === "string" || typeof content === "number") {
+							return String(content);
 						}
 						if (Array.isArray(content)) {
-							return content.map(extractText).join("");
+							return content.map((c) => extractText(c, depth + 1)).join("");
 						}
 						if (content?.props?.children) {
-							return extractText(content.props.children);
+							return extractText(content.props.children, depth + 1);
 						}
 						return "";
 					};
