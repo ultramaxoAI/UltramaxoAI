@@ -309,12 +309,12 @@ export function Chat({
 	// Count user messages for contextual upgrade banner
 	const userMessageCount = messages.filter((m) => m.role === "user").length;
 
-	useAutoResume({
-		autoResume,
-		initialMessages,
-		resumeStream,
-		setMessages,
-	});
+	// useAutoResume({
+	// 	autoResume,
+	// 	initialMessages,
+	// 	resumeStream,
+	// 	setMessages,
+	// });
 
 	return (
 		<>

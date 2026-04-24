@@ -35,6 +35,37 @@ export function JsonLd() {
 		},
 	};
 
+		const faqStructuredData = {
+			"@context": "https://schema.org",
+			"@type": "FAQPage",
+			mainEntity: [
+				{
+					"@type": "Question",
+					name: "What makes Ultramaxo different from a normal AI chat app?",
+					acceptedAnswer: {
+						"@type": "Answer",
+						text: "The product is designed as a workspace. Chat, artifacts, code, uploads, and iteration all stay inside one shell instead of being split across disposable messages.",
+					},
+				},
+				{
+					"@type": "Question",
+					name: "Can I start for free?",
+					acceptedAnswer: {
+						"@type": "Answer",
+						text: "Yes. The free plan is intended for real product evaluation with chat, basic workspace tools, and limited history. You can move up only when your workload grows.",
+					},
+				},
+				{
+					"@type": "Question",
+					name: "What can I actually do inside the workspace?",
+					acceptedAnswer: {
+						"@type": "Answer",
+						text: "You can chat, upload files, open code or document artifacts, use fullstack or mobile modes, switch models, export chats, and install the app as a PWA for a more native workflow.",
+					},
+				},
+			],
+		};
+
 	return (
 		<>
 			<script
@@ -48,6 +79,10 @@ export function JsonLd() {
 			<script
 				type="application/ld+json"
 				dangerouslySetInnerHTML={{ __html: JSON.stringify(softwareStructuredData) }}
+			/>
+			<script
+				type="application/ld+json"
+				dangerouslySetInnerHTML={{ __html: JSON.stringify(faqStructuredData) }}
 			/>
 		</>
 	);

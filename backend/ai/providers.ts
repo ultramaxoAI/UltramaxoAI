@@ -11,9 +11,9 @@ const swiftRouterApiKey = (process.env.SWIFTROUTER_API_KEY || "").trim();
 // ============================================================
 // Model IDs
 // ============================================================
-const DEFAULT_MODEL = "qwen3.6-plus";
-const PRO_MODEL = "qwen3.6-plus";
-const FALLBACK_MODEL = "qwen3.6-plus";
+const DEFAULT_MODEL = "moonshot/kimi-k2.5";
+const PRO_MODEL = "moonshot/kimi-k2.5";
+const FALLBACK_MODEL = "moonshot/kimi-k2.5";
 
 export interface CustomKeyConfig {
 	provider: string;
@@ -183,11 +183,11 @@ export const getLanguageModel = (
 		normalized.includes("pro") ||
 		normalized.includes("ultramaxo/")
 	) {
-		console.log("[AI Provider] -> UltraAgent (SwiftRouter):", modelId);
+		console.log("[AI Provider] -> UltraAgent (MaiaRouter Fallback):", modelId);
 		const targetModel = normalized.includes("ultra-agent-pro")
 			? PRO_MODEL
 			: DEFAULT_MODEL;
-		return getSwiftRouterModel(targetModel);
+		return getMaiaRouterModel(targetModel);
 	}
 
 	if (normalized.startsWith("maia/") || normalized.startsWith("xai/")) {
@@ -195,26 +195,26 @@ export const getLanguageModel = (
 		return getMaiaRouterModel(modelId);
 	}
 
-	console.log("[AI Provider] -> Default SwiftRouter Fallback:", DEFAULT_MODEL);
-	return getSwiftRouterModel(DEFAULT_MODEL);
+	console.log("[AI Provider] -> Default MaiaRouter Fallback:", DEFAULT_MODEL);
+	return getMaiaRouterModel(DEFAULT_MODEL);
 };
 
 // ============================================================
 // Internal Utility Models (using MAIA Default)
 // ============================================================
 export function getTitleModel() {
-	return getSwiftRouterModel(FALLBACK_MODEL);
+	return getMaiaRouterModel(FALLBACK_MODEL);
 }
 
 export function getArtifactModel() {
-	return getSwiftRouterModel(FALLBACK_MODEL);
+	return getMaiaRouterModel(FALLBACK_MODEL);
 }
 
 export function getImageModel() {
-	return getSwiftRouterModel(FALLBACK_MODEL);
+	return getMaiaRouterModel(FALLBACK_MODEL);
 }
 
 export function getFallbackModel() {
 	console.log("[AI Provider] -> Using FALLBACK model:", FALLBACK_MODEL);
-	return getSwiftRouterModel(FALLBACK_MODEL);
+	return getMaiaRouterModel(FALLBACK_MODEL);
 }

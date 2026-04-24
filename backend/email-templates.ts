@@ -20,33 +20,58 @@ export const TEMPLATE_WRAPPER = (bodyContent: string) => `
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Ultramaxo AI Notification</title>
 </head>
-<body style="margin: 0; padding: 40px 0; background-color: #f6f9fc; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;">
-    <table align="center" border="0" cellpadding="0" cellspacing="0" width="100%" style="max-width: 600px; background-color: #ffffff; border: 1px solid #eaeaea; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);">
-        <!-- Header -->
+<body style="margin: 0; padding: 0; background-color: #f8fafc; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;">
+    <table align="center" border="0" cellpadding="0" cellspacing="0" width="100%" style="margin-top: 40px; margin-bottom: 40px;">
         <tr>
-            <td style="padding: 32px 40px; border-bottom: 1px solid #eaeaea; text-align: center; background-color: #ffffff;">
-                <h1 style="margin: 0; font-size: 28px; font-weight: 800; color: #09090b; letter-spacing: -0.5px;">Ultramaxo<span style="color: #4f46e5;">AI</span></h1>
+            <td align="center">
+                <table border="0" cellpadding="0" cellspacing="0" width="100%" style="max-width: 600px; background-color: #ffffff; border: 1px solid #e2e8f0; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03);">
+                    <!-- Header -->
+                    <tr>
+                        <td style="padding: 32px 40px; border-bottom: 1px solid #f1f5f9; text-align: center; background-color: #ffffff;">
+                            <h1 style="margin: 0; font-size: 24px; font-weight: 800; color: #0f172a; letter-spacing: -0.5px;">Ultramaxo<span style="color: #4f46e5;">AI</span></h1>
+                        </td>
+                    </tr>
+                    
+                    <!-- Content -->
+                    <tr>
+                        <td style="padding: 40px;">
+                            ${bodyContent}
+                        </td>
+                    </tr>
+                </table>
             </td>
         </tr>
-        
-        <!-- Content -->
+    </table>
+
+    <!-- Full Width Footer Section -->
+    <table border="0" cellpadding="0" cellspacing="0" width="100%" style="background-color: #ffffff; border-top: 1px solid #e2e8f0;">
         <tr>
-            <td style="padding: 40px;">
-                ${bodyContent}
-            </td>
-        </tr>
-        
-        <!-- Footer -->
-        <tr>
-            <td style="padding: 32px 40px; background-color: #fafafa; border-top: 1px solid #eaeaea; text-align: center;">
-                <p style="margin: 0; font-size: 13px; color: #71717a; line-height: 1.5;">
-                    © ${new Date().getFullYear()} Ultramaxo AI.<br>All rights reserved.
-                </p>
-                <div style="margin-top: 16px;">
-                    <a href="https://ultramaxo.tech" style="color: #4f46e5; text-decoration: none; font-size: 13px; font-weight: 500;">Visit Website</a>
-                    <span style="color: #d4d4d8; margin: 0 8px;">•</span>
-                    <a href="https://ultramaxo.tech/chat/settings" style="color: #4f46e5; text-decoration: none; font-size: 13px; font-weight: 500;">Account Settings</a>
-                </div>
+            <td align="center" style="padding: 48px 20px;">
+                <table border="0" cellpadding="0" cellspacing="0" width="100%" style="max-width: 600px; text-align: center;">
+                    <tr>
+                        <td>
+                            <h3 style="margin: 0 0 16px; font-size: 16px; font-weight: 700; color: #0f172a;">Ultramaxo AI</h3>
+                            <p style="margin: 0 0 24px; font-size: 14px; color: #64748b; line-height: 1.6;">
+                                The intelligent workspace for chat, artifacts, and high-performance AI execution. Built for real work.
+                            </p>
+                            
+                            <!-- Links Grid -->
+                            <div style="margin-bottom: 32px;">
+                                <a href="https://ultramaxo.tech" style="color: #4f46e5; text-decoration: none; font-size: 13px; font-weight: 600; margin: 0 12px;">Product</a>
+                                <a href="https://ultramaxo.tech/chat/settings" style="color: #4f46e5; text-decoration: none; font-size: 13px; font-weight: 600; margin: 0 12px;">Settings</a>
+                                <a href="https://ultramaxo.tech/privacy" style="color: #4f46e5; text-decoration: none; font-size: 13px; font-weight: 600; margin: 0 12px;">Privacy</a>
+                                <a href="https://ultramaxo.tech/terms" style="color: #4f46e5; text-decoration: none; font-size: 13px; font-weight: 600; margin: 0 12px;">Terms</a>
+                            </div>
+
+                            <hr style="border: 0; border-top: 1px solid #f1f5f9; margin-bottom: 24px;">
+
+                            <p style="margin: 0; font-size: 12px; color: #94a3b8; line-height: 1.5;">
+                                © ${new Date().getFullYear()} Ultramaxo AI. All rights reserved.<br>
+                                You are receiving this because you signed up for Ultramaxo AI.
+                            </p>
+                        </td>
+                    </tr>
+                </table>
             </td>
         </tr>
     </table>

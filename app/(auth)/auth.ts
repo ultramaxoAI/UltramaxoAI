@@ -391,6 +391,8 @@ export const {
 				token.email = user.email ?? token.email;
 				token.name = user.name ?? token.name;
 				token.onboardingReason = user.onboardingReason;
+
+				return token;
 			}
 
 			// Refresh user data from database on every request to keep it fresh
