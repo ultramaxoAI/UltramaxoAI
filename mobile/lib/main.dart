@@ -6,14 +6,6 @@ import 'package:permission_handler/permission_handler.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   
-  // Minta izin notifikasi dan penyimpanan
-  await [
-    Permission.notification,
-    Permission.storage,
-    Permission.camera,
-    Permission.microphone,
-  ].request();
-
   // Kunci orientasi ke portrait
   await SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
   
@@ -51,9 +43,22 @@ class _WebViewScreenState extends State<WebViewScreen> {
   late final WebViewController controller;
   bool isLoading = true;
 
+  Future<void> _requestPermissions() async {
+    await [
+      Permission.notification,
+      Permission.storage,
+      Permission.camera,
+      Permission.microphone,
+    ].request();
+  }
+
   @override
   void initState() {
     super.initState();
+    
+    // Minta izin secara asinkron setelah widget di-mount
+    _requestPermissions();
+
     controller = WebViewController()
       ..setJavaScriptMode(JavaScriptMode.unrestricted)
       ..setBackgroundColor(const Color(0xFF09090b))
