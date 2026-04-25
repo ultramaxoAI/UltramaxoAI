@@ -42,17 +42,19 @@ jobs:
           if os.path.exists(path):
               with open(path, "r") as f:
                   content = f.read()
-              permissions = """    <uses-permission android:name="android.permission.INTERNET" />
-    <uses-permission android:name="android.permission.CAMERA" />
-    <uses-permission android:name="android.permission.RECORD_AUDIO" />
-    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />\n"""
+              permissions = (
+                  "    <uses-permission android:name=\"android.permission.INTERNET\" />\n"
+                  "    <uses-permission android:name=\"android.permission.CAMERA\" />\n"
+                  "    <uses-permission android:name=\"android.permission.RECORD_AUDIO\" />\n"
+                  "    <uses-permission android:name=\"android.permission.POST_NOTIFICATIONS\" />\n"
+              )
               if "android.permission.INTERNET" not in content:
                   content = content.replace("<application", permissions + "    <application")
               with open(path, "w") as f:
                   f.write(content)
           '
           
-          # 2. Update minSdkVersion to 21 (required by webview_flutter and other plugins)
+          # 2. Update minSdkVersion to 21
           python -c '
           import os
           path = "mobile/android/app/build.gradle"
