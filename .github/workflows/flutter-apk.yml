@@ -3,7 +3,7 @@ name: Build Ultramaxo Mobile APK
 on:
   push:
     branches: [ "main" ]
-  workflow_dispatch: # Memungkinkan build manual dari tab Actions di GitHub
+  workflow_dispatch:
 
 jobs:
   build:
@@ -24,15 +24,33 @@ jobs:
         with:
           flutter-version: '3.29.0'
           channel: 'stable'
-          cache: true
+          cache: false
 
       - name: Scaffold Flutter App
         run: |
-          mv mobile /tmp/custom_mobile
-          flutter create --org tech.ultramaxo mobile
-          cp -r /tmp/custom_mobile/* mobile/
-          cd mobile/android/app/src/main
-          sed -i 's/<application/<uses-permission android:name="android.permission.INTERNET" \/>\n    <uses-permission android:name="android.permission.CAMERA" \/>\n    <uses-permission android:name="android.permission.RECORD_AUDIO" \/>\n    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" \/>\n\n    <application/' AndroidManifest.xml
+          # Generate a new flutter project to get the platform folders
+          flutter create --org tech.ultramaxo /tmp/scaffold
+          
+          # Copy the generated platform folders to our mobile directory
+          cp -R /tmp/scaffold/android mobile/
+          cp -R /tmp/scaffold/ios mobile/ || true
+          
+          # Safely update AndroidManifest.xml using Python
+          python -c '
+          import os
+          path = "mobile/android/app/src/main/AndroidManifest.xml"
+          if os.path.exists(path):
+              with open(path, "r") as f:
+                  content = f.read()
+              permissions = """<uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.CAMERA" />
+    <uses-permission android:name="android.permission.RECORD_AUDIO" />
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />\n"""
+              if "android.permission.INTERNET" not in content:
+                  content = content.replace("<application", permissions + "\n    <application")
+              with open(path, "w") as f:
+                  f.write(content)
+          '
 
       - name: Install Dependencies
         working-directory: ./mobile
