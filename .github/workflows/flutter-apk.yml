@@ -28,26 +28,40 @@ jobs:
 
       - name: Scaffold Flutter App
         run: |
-          # Generate a new flutter project to get the platform folders
-          flutter create --org tech.ultramaxo /tmp/scaffold
+          # Create a temporary scaffold with the correct project name
+          flutter create --org tech.ultramaxo --project-name ultramaxo_mobile /tmp/scaffold
           
-          # Copy the generated platform folders to our mobile directory
+          # Move generated platform folders into our existing mobile directory
           cp -R /tmp/scaffold/android mobile/
           cp -R /tmp/scaffold/ios mobile/ || true
           
-          # Safely update AndroidManifest.xml using Python
+          # 1. Update AndroidManifest.xml for permissions
           python -c '
           import os
           path = "mobile/android/app/src/main/AndroidManifest.xml"
           if os.path.exists(path):
               with open(path, "r") as f:
                   content = f.read()
-              permissions = """<uses-permission android:name="android.permission.INTERNET" />
+              permissions = """    <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.CAMERA" />
     <uses-permission android:name="android.permission.RECORD_AUDIO" />
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />\n"""
               if "android.permission.INTERNET" not in content:
-                  content = content.replace("<application", permissions + "\n    <application")
+                  content = content.replace("<application", permissions + "    <application")
+              with open(path, "w") as f:
+                  f.write(content)
+          '
+          
+          # 2. Update minSdkVersion to 21 (required by webview_flutter and other plugins)
+          python -c '
+          import os
+          path = "mobile/android/app/build.gradle"
+          if os.path.exists(path):
+              with open(path, "r") as f:
+                  content = f.read()
+              content = content.replace("minSdkVersion flutter.minSdkVersion", "minSdkVersion 21")
+              content = content.replace("minSdkVersion 16", "minSdkVersion 21")
+              content = content.replace("minSdkVersion 19", "minSdkVersion 21")
               with open(path, "w") as f:
                   f.write(content)
           '
