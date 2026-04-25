@@ -1,0 +1,50 @@
+name: Build Ultramaxo Mobile APK
+
+on:
+  push:
+    branches: [ "main" ]
+  workflow_dispatch: # Memungkinkan build manual dari tab Actions di GitHub
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Setup Java
+        uses: actions/setup-java@v3
+        with:
+          distribution: 'zulu'
+          java-version: '17'
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.29.0'
+          channel: 'stable'
+          cache: true
+
+      - name: Scaffold Flutter App
+        run: |
+          mv mobile /tmp/custom_mobile
+          flutter create --org tech.ultramaxo mobile
+          cp -r /tmp/custom_mobile/* mobile/
+          cd mobile/android/app/src/main
+          sed -i 's/<application/<uses-permission android:name="android.permission.INTERNET" \/>\n    <uses-permission android:name="android.permission.CAMERA" \/>\n    <uses-permission android:name="android.permission.RECORD_AUDIO" \/>\n    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" \/>\n\n    <application/' AndroidManifest.xml
+
+      - name: Install Dependencies
+        working-directory: ./mobile
+        run: flutter pub get
+
+      - name: Build APK
+        working-directory: ./mobile
+        run: flutter build apk --release
+
+      - name: Upload APK Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: Ultramaxo-Mobile-Release-APK
+          path: mobile/build/app/outputs/flutter-apk/app-release.apk
+          retention-days: 7
