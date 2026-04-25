@@ -15,9 +15,10 @@ interface CodeBlockProps {
 	children: string;
 	className?: string;
 	language?: string;
+	isLoading?: boolean;
 }
 
-function PureCodeBlock({ children, className, language }: CodeBlockProps) {
+function PureCodeBlock({ children, className, language, isLoading }: CodeBlockProps) {
 	const [copied, setCopied] = useState(false);
 	const [showFull, setShowFull] = useState(false);
 	const { setArtifact } = useArtifact();
@@ -126,8 +127,8 @@ function PureCodeBlock({ children, className, language }: CodeBlockProps) {
 				</div>
 			</div>
 			<div className="overflow-x-auto overflow-y-auto max-h-[500px]">
-				{isTooLargeForHighlight ? (
-					/* Plain text fallback for large code - no Prism = no OOM */
+				{isTooLargeForHighlight || isLoading ? (
+					/* Plain text fallback for large code or when streaming - no Prism = no OOM/Freeze */
 					<pre
 						className="p-5 text-[0.8rem] leading-[1.6] text-zinc-300 whitespace-pre"
 						style={{ minWidth: "fit-content" }}

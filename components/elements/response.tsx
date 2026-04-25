@@ -10,7 +10,7 @@ import { CodeBlock } from "./code-block";
 
 type ResponseProps = ComponentProps<typeof Streamdown>;
 
-export function Response({ className, children, ...props }: ResponseProps) {
+export function Response({ className, children, isLoading, ...props }: ResponseProps & { isLoading?: boolean }) {
 	return (
 		<Streamdown
 			className={cn(
@@ -78,7 +78,7 @@ export function Response({ className, children, ...props }: ResponseProps) {
 					}
 
 					return (
-						<CodeBlock className={`language-${language}`} language={language}>
+						<CodeBlock className={`language-${language}`} language={language} isLoading={isLoading}>
 							{codeContent}
 						</CodeBlock>
 					);

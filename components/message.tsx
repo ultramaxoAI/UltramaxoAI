@@ -101,6 +101,7 @@ function MessageTextPart({
 						className={isLoading ? "streaming-cursor" : ""}
 						hideCodeBlocks={hasAnyArtifact}
 						text={displayText}
+						isLoading={isLoading}
 					/>
 				) : (
 					<Response className="text-[14px] leading-relaxed">
