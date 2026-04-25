@@ -32,7 +32,7 @@ export async function GET(
 		return NextResponse.json({ error: "Unsupported provider" }, { status: 400 });
 	}
 
-	await signIn(provider, {
+	return await signIn(provider, {
 		redirect: true,
 		redirectTo: resolveRedirectTo(request),
 	});

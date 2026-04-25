@@ -64,10 +64,12 @@ declare module "@auth/core/adapters" {
 }
 
 const isProduction = process.env.NODE_ENV === "production";
-const cookieDomain = isProduction ? ".ultramaxo.tech" : undefined;
+// Only enforce cross-subdomain cookies & proxy if deployed to the actual production domain
+const isRealProduction = isProduction && (process.env.VERCEL_ENV === "production" || process.env.AUTH_URL?.includes("ultramaxo.tech"));
+const cookieDomain = isRealProduction ? ".ultramaxo.tech" : undefined;
 const redirectProxyUrl =
 	process.env.AUTH_REDIRECT_PROXY_URL ||
-	(isProduction ? "https://ultramaxo.tech/api/auth" : undefined);
+	(isRealProduction ? "https://ultramaxo.tech/api/auth" : undefined);
 const cookiePrefix = isProduction ? "__Secure-" : "";
 const baseAdapter = DrizzleAdapter(db, {
 	usersTable: userTable,

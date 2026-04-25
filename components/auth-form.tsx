@@ -5,14 +5,10 @@ import { GitIcon, LogoGoogle } from "./icons";
 import { Input } from "./ui/input";
 import { Label } from "./ui/label";
 
-const CHAT_CALLBACK_URL =
-	process.env.NODE_ENV === "production"
-		? "https://chat.ultramaxo.tech/chat"
-		: "/chat";
-const GOOGLE_OAUTH_HREF = `/oauth/google?callbackUrl=${encodeURIComponent(CHAT_CALLBACK_URL)}`;
-const GITHUB_OAUTH_HREF = `/oauth/github?callbackUrl=${encodeURIComponent(CHAT_CALLBACK_URL)}`;
+const GOOGLE_OAUTH_HREF = `/oauth/google?callbackUrl=${encodeURIComponent("/chat")}`;
+const GITHUB_OAUTH_HREF = `/oauth/github?callbackUrl=${encodeURIComponent("/chat")}`;
 const LOGIN_FALLBACK_ACTION = `/api/auth/login-fallback?redirectTo=${encodeURIComponent(
-	CHAT_CALLBACK_URL,
+	"/chat",
 )}`;
 
 export function AuthForm({
