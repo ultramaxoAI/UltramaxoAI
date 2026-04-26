@@ -84,6 +84,13 @@ jobs:
                       "android:usesCleartextTraffic=\"true\"\n        android:hardwareAccelerated=\"true\"\n        android:label="
                   )
               
+              # Disable Impeller (Fix crash di Android 8 & Waydroid)
+              if "EnableImpeller" not in content:
+                  content = content.replace(
+                      "<activity",
+                      "<meta-data android:name=\"io.flutter.app.android.EnableImpeller\" android:value=\"false\" />\n        <activity"
+                  )
+              
               # Add <queries> for url_launcher (required for Android 11+ / API 30+)
               if "<queries>" not in content:
                   queries_block = (
@@ -247,9 +254,9 @@ jobs:
         working-directory: ./mobile
         run: flutter pub get -v
 
-      - name: Build APK
+      - name: Build APK (Impeller Disabled)
         working-directory: ./mobile
-        run: flutter build apk --release
+        run: flutter build apk --release --no-enable-impeller
 
       - name: Upload APK Artifact
         uses: actions/upload-artifact@v4
