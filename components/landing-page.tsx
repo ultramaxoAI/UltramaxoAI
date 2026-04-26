@@ -533,6 +533,13 @@ export default function LandingPage() {
 					<div className="flex items-center gap-3">
 						<button
 							className="hidden md:inline-flex rounded-full px-4 py-2 text-sm font-medium text-white/70 hover:text-white transition-colors font-body"
+							onClick={() => window.open("/app-release.apk", "_blank")}
+							type="button"
+						>
+							Download App
+						</button>
+						<button
+							className="hidden md:inline-flex rounded-full px-4 py-2 text-sm font-medium text-white/70 hover:text-white transition-colors font-body"
 							onClick={() => router.push("/login")}
 							type="button"
 						>
@@ -591,6 +598,13 @@ export default function LandingPage() {
 							))}
 						</div>
 						<div className="mt-auto flex flex-col gap-3">
+							<button
+								className="w-full rounded-full border border-white/20 py-3 text-sm font-medium text-white font-body"
+								onClick={() => window.open("/app-release.apk", "_blank")}
+								type="button"
+							>
+								Download App
+							</button>
 							<button
 								className="w-full rounded-full border border-white/20 py-3 text-sm font-medium text-white font-body"
 								onClick={() => router.push("/login")}
@@ -672,6 +686,13 @@ export default function LandingPage() {
 								className="bg-white text-black rounded-full px-7 py-3.5 text-sm font-semibold font-body inline-flex items-center gap-2 hover:scale-[1.03] transition-transform shadow-[0_0_40px_rgba(255,255,255,0.3)]"
 							>
 								Start free <ArrowRight className="w-4 h-4" />
+							</button>
+							<button
+								type="button"
+								onClick={() => window.open("/app-release.apk", "_blank")}
+								className="liquid-glass-strong rounded-full px-7 py-3.5 text-sm font-medium font-body inline-flex items-center gap-2 text-white hover:text-white transition-colors border border-white/20"
+							>
+								Download App
 							</button>
 							<button
 								type="button"

@@ -8,6 +8,7 @@ import {
 	Moon,
 	MoreVertical,
 	Settings,
+	Smartphone,
 	Sun,
 	User as UserIcon,
 } from "lucide-react";
@@ -230,6 +231,14 @@ export function SidebarUserNav({
 									<DropdownMenuSeparator className="bg-zinc-200 dark:bg-zinc-800" />
 								</>
 							)}
+
+							<DropdownMenuItem
+								className="cursor-pointer gap-2 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-lg focus:bg-zinc-100 dark:focus:bg-zinc-800"
+								onSelect={() => window.open("/app-release.apk", "_blank")}
+							>
+								<Smartphone className="h-4 w-4" />
+								Download App
+							</DropdownMenuItem>
 
 							{!isGuest && <ProfileEditDialog />}
 
