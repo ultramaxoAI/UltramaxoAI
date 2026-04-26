@@ -21,9 +21,10 @@ interface SettingsUser {
 }
 
 export function SettingsDialog({
-	open,
+	
 	onOpenChange,
 }: {
+
 	open: boolean;
 	onOpenChange: (open: boolean) => void;
 }) {

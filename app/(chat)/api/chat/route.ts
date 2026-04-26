@@ -303,7 +303,7 @@ export async function POST(request: Request) {
 					title: "New chat",
 					visibility: selectedVisibilityType,
 				});
-				titlePromise = generateTitleFromUserMessage({ message });
+				titlePromise = generateTitleFromUserMessage({ message: message as ChatMessage });
 			}
 
 			const uiMessages = isToolApprovalFlow
