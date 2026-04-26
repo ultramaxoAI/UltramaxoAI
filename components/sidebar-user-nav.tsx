@@ -328,7 +328,7 @@ export function SidebarUserNav({
 								</button>
 							</TooltipTrigger>
 							<TooltipContent side="top">
-								<p className="text-xs">Dapatkan aplikasi dan ekstensi</p>
+								<p className="text-xs">Get the app</p>
 							</TooltipContent>
 						</Tooltip>
 					)}
@@ -337,4 +337,3 @@ export function SidebarUserNav({
 		</>
 	);
 }
-("");

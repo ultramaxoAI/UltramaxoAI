@@ -358,7 +358,7 @@ export async function POST(request: Request) {
 					hasFileAttachment,
 				});
 				return new Response(
-					"Model yang dipilih tidak mendukung input gambar. Silakan:\n1. Pilih model lain\n2. Atau mulai chat baru tanpa gambar",
+					"The selected model does not support image input. Please select a different model or start a new chat without images.",
 					{ status: 400 }
 				);
 			}
@@ -770,7 +770,7 @@ export async function POST(request: Request) {
 
 							if (isImageError) {
 								throw new Error(
-									"Maaf, model yang dipilih tidak mendukung input gambar. Silakan:\n1. Pilih model lain yang mendukung gambar\n2. Atau kirim pesan tanpa lampiran gambar",
+									"The selected model does not support image input. Please select a different model or send a message without image attachments.",
 								);
 							}
 
@@ -819,7 +819,7 @@ export async function POST(request: Request) {
 								// markKeyFailed("primary"); // Function removed
 								// setTimeout(() => resetFailureTracking(), 30_000); // Function removed
 								throw new Error(
-									"Invalid API Key. Silakan hubungi administrator untuk mengecek konfigurasi API key.",
+									"Invalid API Key. Please contact the administrator to check the API key configuration.",
 								);
 							}
 

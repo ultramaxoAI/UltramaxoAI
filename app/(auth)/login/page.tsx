@@ -71,7 +71,7 @@ export default function Page() {
 		if (error === "OAuthCallback") {
 			toast({
 				type: "error",
-				description: "Sesi login tidak terbentuk. Coba login lagi setelah refresh sekali.",
+				description: "Login session could not be established. Please try again.",
 			});
 			return;
 		}
@@ -79,7 +79,7 @@ export default function Page() {
 		if (error === "CredentialsSignin") {
 			toast({
 				type: "error",
-				description: "Username atau password salah.",
+				description: "Invalid username or password.",
 			});
 			return;
 		}
@@ -88,14 +88,14 @@ export default function Page() {
 			toast({
 				type: "error",
 				description:
-					"Email ini sudah terdaftar. Coba login dengan metode yang sama seperti sebelumnya atau hapus akun lama dulu.",
+					"This email is already registered. Try signing in with the same method you used before.",
 			});
 			return;
 		}
 
 		toast({
 			type: "error",
-			description: `Login gagal: ${error}`,
+			description: `Sign in failed: ${error}`,
 		});
 	}, []);
 

@@ -1,19 +1,38 @@
-import { Loader2Icon } from "lucide-react";
-
 export function ChatRouteLoading({
-	label = "Loading workspace...",
+	label = "Loading...",
 }: {
 	label?: string;
 }) {
 	return (
-		<div className="flex h-dvh w-full items-center justify-center bg-[#f3efe6] text-[#171717] dark:bg-[#111315] dark:text-[#f3f4f1]">
-			<div className="flex flex-col items-center gap-4 rounded-[28px] border border-[#171717]/8 bg-white/70 px-8 py-7 shadow-[0_18px_50px_rgba(23,23,23,0.08)] backdrop-blur-xl dark:border-white/10 dark:bg-[#181a1c]/90 dark:shadow-[0_18px_50px_rgba(0,0,0,0.28)]">
-				<Loader2Icon className="h-7 w-7 animate-spin text-teal-600 dark:text-teal-300" />
-				<div className="text-sm font-medium">{label}</div>
-				<p className="max-w-sm text-center text-xs text-[#5f6258] dark:text-[#8f9790]">
-					Halaman chat sedang menyiapkan sidebar, riwayat pesan, dan context
-					workspace.
-				</p>
+		<div className="flex h-dvh w-full items-center justify-center bg-[#f3efe6] dark:bg-[#111315]">
+			<div className="flex flex-col items-center gap-5">
+				{/* Minimal logo mark */}
+				<div className="flex items-center gap-2.5">
+					<span className="text-2xl font-serif tracking-[-0.04em] text-[#171717] dark:text-[#f3f4f1]">
+						Ultramaxo
+					</span>
+				</div>
+
+				{/* Subtle animated dots */}
+				<div className="flex items-center gap-1.5">
+					<span
+						className="h-1.5 w-1.5 rounded-full bg-[#171717]/30 dark:bg-white/30 animate-pulse"
+						style={{ animationDelay: "0ms" }}
+					/>
+					<span
+						className="h-1.5 w-1.5 rounded-full bg-[#171717]/30 dark:bg-white/30 animate-pulse"
+						style={{ animationDelay: "300ms" }}
+					/>
+					<span
+						className="h-1.5 w-1.5 rounded-full bg-[#171717]/30 dark:bg-white/30 animate-pulse"
+						style={{ animationDelay: "600ms" }}
+					/>
+				</div>
+
+				{/* Minimal label */}
+				<span className="text-xs font-medium text-[#5f6258]/60 dark:text-[#8f9790]/60 tracking-wide uppercase">
+					{label}
+				</span>
 			</div>
 		</div>
 	);

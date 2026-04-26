@@ -91,7 +91,7 @@ export function Response({ className, children, isLoading, ...props }: ResponseP
 								className={cn(
 									"bg-muted px-1.5 py-0.5 rounded-md font-mono text-sm",
 									className,
-								)}
+								)}		
 								{...props}
 							>
 								{children}
