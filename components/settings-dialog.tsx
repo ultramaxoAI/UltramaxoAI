@@ -21,7 +21,7 @@ interface SettingsUser {
 }
 
 export function SettingsDialog({
-	
+	open,
 	onOpenChange,
 }: {
 
