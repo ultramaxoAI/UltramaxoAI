@@ -191,6 +191,7 @@ class MainScreen extends StatefulWidget {
 class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
   late final WebViewController _mainController;
   bool _isLoading = true;
+  String? _initError;
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
 
   @override
@@ -208,11 +209,15 @@ class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
   }
 
   Future<void> _requestPermissions() async {
-    await [
-      Permission.notification,
-      Permission.camera,
-      Permission.microphone,
-    ].request();
+    try {
+      await [
+        Permission.notification,
+        Permission.camera,
+        Permission.microphone,
+      ].request();
+    } catch (e) {
+      debugPrint('[UltramaxoAI] Failed to request permissions: $e');
+    }
   }
 
   /// Open any external URL in browser
@@ -224,32 +229,33 @@ class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
   }
 
   void _initMainController() {
-    _mainController = WebViewController()
-      ..setJavaScriptMode(JavaScriptMode.unrestricted)
-      ..setBackgroundColor(_bgDark)
-      // Clean Chrome UA — NO `wv` marker so Google doesn't block OAuth.
-      ..setUserAgent(_chromeUserAgent)
-      ..setNavigationDelegate(
-        NavigationDelegate(
-          onProgress: (int progress) {
-            if (progress == 100 && mounted) {
+    try {
+      _mainController = WebViewController()
+        ..setJavaScriptMode(JavaScriptMode.unrestricted)
+        ..setBackgroundColor(_bgDark)
+        // Clean Chrome UA — NO `wv` marker so Google doesn't block OAuth.
+        ..setUserAgent(_chromeUserAgent)
+        ..setNavigationDelegate(
+          NavigationDelegate(
+            onProgress: (int progress) {
+              if (progress == 100 && mounted) {
+                setState(() => _isLoading = false);
+              }
+            },
+            onPageStarted: (String url) {
+              if (mounted) {
+                setState(() => _isLoading = true);
+              }
+            },
+            onPageFinished: (String url) async {
+              if (!mounted) return;
               setState(() => _isLoading = false);
-            }
-          },
-          onPageStarted: (String url) {
-            if (mounted) {
-              setState(() => _isLoading = true);
-            }
-          },
-          onPageFinished: (String url) async {
-            if (!mounted) return;
-            setState(() => _isLoading = false);
-            // Inject mobile-optimized CSS
-            _injectMobileCSS();
-          },
-          onWebResourceError: (WebResourceError error) {
-            debugPrint('[UltramaxoAI] WebView error: ${error.description}');
-          },
+              // Inject mobile-optimized CSS
+              _injectMobileCSS();
+            },
+            onWebResourceError: (WebResourceError error) {
+              debugPrint('[UltramaxoAI] WebView error: ${error.description}');
+            },
           onNavigationRequest: (NavigationRequest request) {
             final url = request.url;
 
@@ -287,6 +293,14 @@ class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
         ),
       )
       ..loadRequest(Uri.parse('$_baseUrl/login'));
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _initError = e.toString();
+          _isLoading = false;
+        });
+      }
+    }
   }
 
   void _injectMobileCSS() {
@@ -326,6 +340,22 @@ class _MainScreenState extends State<MainScreen> with WidgetsBindingObserver {
 
   @override
   Widget build(BuildContext context) {
+    if (_initError != null) {
+      return Scaffold(
+        backgroundColor: _bgDark,
+        body: Center(
+          child: Padding(
+            padding: const EdgeInsets.all(24.0),
+            child: Text(
+              'Failed to start WebView:\n$_initError\n\nPlease update your Android System WebView from Play Store.',
+              style: const TextStyle(color: Colors.redAccent),
+              textAlign: TextAlign.center,
+            ),
+          ),
+        ),
+      );
+    }
+
     return Scaffold(
       key: _scaffoldKey,
       backgroundColor: _bgDark,
