@@ -254,9 +254,9 @@ jobs:
         working-directory: ./mobile
         run: flutter pub get -v
 
-      - name: Build APK (Impeller Disabled)
+      - name: Build APK
         working-directory: ./mobile
-        run: flutter build apk --release --no-enable-impeller
+        run: flutter build apk --release
 
       - name: Upload APK Artifact
         uses: actions/upload-artifact@v4
