@@ -4,6 +4,7 @@ import type { UseChatHelpers } from "@ai-sdk/react";
 import { useEffect } from "react";
 import { useDataStream } from "@/components/data-stream-provider";
 import type { ChatMessage } from "@/lib/types";
+import { sanitizeChatMessage, sanitizeChatMessages } from "@/lib/utils";
 
 export type UseAutoResumeParams = {
 	autoResume: boolean;
@@ -19,15 +20,19 @@ export function useAutoResume({
 	setMessages,
 }: UseAutoResumeParams) {
 	const { dataStream } = useDataStream();
+	const safeInitialMessages = sanitizeChatMessages(initialMessages);
 
 	useEffect(() => {
 		if (!autoResume) {
 			return;
 		}
 
-		const mostRecentMessage = initialMessages.at(-1);
+		const mostRecentMessage = safeInitialMessages.at(-1);
+		const hasInvalidParts = safeInitialMessages.some(
+			(msg) => (msg.parts?.length ?? 0) !== (msg.parts ?? []).filter(Boolean).length,
+		);
 
-		if (mostRecentMessage?.role === "user") {
+		if (mostRecentMessage?.role === "user" && !hasInvalidParts) {
 			// Wrap in try-catch to handle TypeValidationError from old chats
 			// that have message_annotation format which no longer matches current schema
 			Promise.resolve()
@@ -44,7 +49,7 @@ export function useAutoResume({
 
 		// we intentionally run this once
 		// eslint-disable-next-line react-hooks/exhaustive-deps
-	}, [autoResume, initialMessages.at, resumeStream]);
+	}, [autoResume, resumeStream]);
 
 	useEffect(() => {
 		if (!dataStream) {
@@ -57,8 +62,14 @@ export function useAutoResume({
 		const dataPart = dataStream[0];
 
 		if (dataPart.type === "data-appendMessage") {
-			const message = JSON.parse(dataPart.data);
-			setMessages([...initialMessages, message]);
+			try {
+				const message = sanitizeChatMessage(
+					JSON.parse(dataPart.data) as ChatMessage,
+				);
+				setMessages([...safeInitialMessages, message]);
+			} catch (err) {
+				console.warn("[AutoResume] Failed to append streamed message:", err);
+			}
 		}
-	}, [dataStream, initialMessages, setMessages]);
+	}, [dataStream, safeInitialMessages, setMessages]);
 }

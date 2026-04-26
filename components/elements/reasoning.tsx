@@ -1,9 +1,9 @@
 "use client";
 
 import { useControllableState } from "@radix-ui/react-use-controllable-state";
-import { BrainIcon, ChevronDownIcon } from "lucide-react";
+import { BrainIcon, CheckIcon, ChevronDownIcon, LoaderIcon } from "lucide-react";
 import type { ComponentProps } from "react";
-import { createContext, memo, useContext, useEffect, useState } from "react";
+import { createContext, memo, useCallback, useContext, useEffect, useRef, useState } from "react";
 import {
 	Collapsible,
 	CollapsibleContent,
@@ -16,7 +16,10 @@ type ReasoningContextValue = {
 	isStreaming: boolean;
 	isOpen: boolean;
 	setIsOpen: (open: boolean) => void;
+	/** Final duration in seconds (set after streaming ends). */
 	duration: number;
+	/** Live elapsed seconds that tick every second during streaming. */
+	elapsedSeconds: number;
 };
 
 const ReasoningContext = createContext<ReasoningContextValue | null>(null);
@@ -63,18 +66,46 @@ export const Reasoning = memo(
 
 		const [hasAutoClosedRef, setHasAutoClosedRef] = useState(false);
 		const [startTime, setStartTime] = useState<number | null>(null);
+		const [elapsedSeconds, setElapsedSeconds] = useState(0);
+		const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
 		// Track duration when streaming starts and ends
 		useEffect(() => {
 			if (isStreaming) {
 				if (startTime === null) {
-					setStartTime(Date.now());
+					const now = Date.now();
+					setStartTime(now);
+					setElapsedSeconds(0);
 				}
 			} else if (startTime !== null) {
 				setDuration(Math.round((Date.now() - startTime) / MS_IN_S));
 				setStartTime(null);
 			}
 		}, [isStreaming, startTime, setDuration]);
+
+		// Live elapsed timer — ticks every second while streaming
+		useEffect(() => {
+			if (isStreaming && startTime !== null) {
+				// Tick immediately then every second
+				const tick = () => {
+					setElapsedSeconds(Math.round((Date.now() - startTime) / MS_IN_S));
+				};
+				tick();
+				intervalRef.current = setInterval(tick, MS_IN_S);
+
+				return () => {
+					if (intervalRef.current) {
+						clearInterval(intervalRef.current);
+						intervalRef.current = null;
+					}
+				};
+			}
+			// Clear interval when not streaming
+			if (intervalRef.current) {
+				clearInterval(intervalRef.current);
+				intervalRef.current = null;
+			}
+		}, [isStreaming, startTime]);
 
 		// Auto-open when streaming starts, auto-close when streaming ends (once only)
 		useEffect(() => {
@@ -89,13 +120,13 @@ export const Reasoning = memo(
 			}
 		}, [isStreaming, isOpen, defaultOpen, setIsOpen, hasAutoClosedRef]);
 
-		const handleOpenChange = (newOpen: boolean) => {
+		const handleOpenChange = useCallback((newOpen: boolean) => {
 			setIsOpen(newOpen);
-		};
+		}, [setIsOpen]);
 
 		return (
 			<ReasoningContext.Provider
-				value={{ isStreaming, isOpen, setIsOpen, duration }}
+				value={{ isStreaming, isOpen, setIsOpen, duration, elapsedSeconds }}
 			>
 				<Collapsible
 					className={cn("not-prose", className)}
@@ -114,27 +145,33 @@ export type ReasoningTriggerProps = ComponentProps<typeof CollapsibleTrigger>;
 
 export const ReasoningTrigger = memo(
 	({ className, children, ...props }: ReasoningTriggerProps) => {
-		const { isStreaming, isOpen, duration } = useReasoning();
+		const { isStreaming, isOpen, duration, elapsedSeconds } = useReasoning();
+
+		const displaySeconds = isStreaming ? elapsedSeconds : duration;
 
 		return (
 			<CollapsibleTrigger
 				className={cn(
-					"flex items-center gap-1 rounded-md px-1.5 py-0.5 text-[11px] text-muted-foreground transition-colors hover:bg-muted hover:text-foreground",
+					"flex items-center gap-1.5 rounded-md px-2 py-1 text-xs text-muted-foreground transition-colors hover:bg-muted hover:text-foreground",
 					className,
 				)}
 				{...props}
 			>
 				{children ?? (
 					<>
-						<BrainIcon className="size-3" />
-						{isStreaming || duration === 0 ? (
-							<span>Thinking</span>
+						{isStreaming ? (
+							<LoaderIcon className="size-3.5 animate-spin" />
 						) : (
-							<span>{duration}s</span>
+							<CheckIcon className="size-3.5 text-emerald-500 dark:text-emerald-400" />
 						)}
+						<span className="font-medium">
+							{isStreaming
+								? `Thinking for ${displaySeconds}s`
+								: `Worked for ${displaySeconds}s`}
+						</span>
 						<ChevronDownIcon
 							className={cn(
-								"size-2.5 transition-transform",
+								"size-3 transition-transform duration-200",
 								isOpen ? "rotate-180" : "rotate-0",
 							)}
 						/>
@@ -152,22 +189,37 @@ export type ReasoningContentProps = ComponentProps<
 };
 
 export const ReasoningContent = memo(
-	({ className, children, ...props }: ReasoningContentProps) => (
-		<CollapsibleContent
-			className={cn(
-				"mt-1.5 text-[11px] text-muted-foreground leading-relaxed",
-				"data-[state=closed]:fade-out-0 data-[state=closed]:slide-out-to-top-2 data-[state=open]:slide-in-from-top-2 outline-hidden data-[state=closed]:animate-out data-[state=open]:animate-in",
-				className,
-			)}
-			{...props}
-		>
-			<div className="max-h-48 overflow-y-auto rounded-md border border-border/50 bg-muted/30 p-2.5">
-				<Response className="grid gap-1 text-[11px] **:text-[11px] [&_li]:my-0 [&_ol]:my-1 [&_p]:my-0 [&_ul]:my-1">
-					{children}
-				</Response>
-			</div>
-		</CollapsibleContent>
-	),
+	({ className, children, ...props }: ReasoningContentProps) => {
+		const { isStreaming } = useReasoning();
+		const scrollRef = useRef<HTMLDivElement>(null);
+
+		// Auto-scroll to bottom while streaming
+		useEffect(() => {
+			if (isStreaming && scrollRef.current) {
+				scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+			}
+		}, [isStreaming, children]);
+
+		return (
+			<CollapsibleContent
+				className={cn(
+					"mt-1.5 text-[11px] text-muted-foreground leading-relaxed",
+					"data-[state=closed]:fade-out-0 data-[state=closed]:slide-out-to-top-2 data-[state=open]:slide-in-from-top-2 outline-hidden data-[state=closed]:animate-out data-[state=open]:animate-in",
+					className,
+				)}
+				{...props}
+			>
+				<div
+					className="max-h-48 overflow-y-auto rounded-md border border-border/50 bg-muted/30 p-2.5"
+					ref={scrollRef}
+				>
+					<Response className="grid gap-1 text-[11px] **:text-[11px] [&_li]:my-0 [&_ol]:my-1 [&_p]:my-0 [&_ul]:my-1">
+						{children}
+					</Response>
+				</div>
+			</CollapsibleContent>
+		);
+	},
 );
 
 Reasoning.displayName = "Reasoning";

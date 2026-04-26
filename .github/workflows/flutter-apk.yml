@@ -38,8 +38,28 @@ jobs:
           cp -R /tmp/scaffold/android mobile/
           cp -R /tmp/scaffold/ios mobile/ || true
           cp /tmp/scaffold/.metadata mobile/
-          
-          # 1. Update AndroidManifest.xml for permissions
+
+          # ── 1. Create asset directories ────────────────────────────────
+          mkdir -p mobile/assets/icon
+          mkdir -p mobile/assets/images
+
+          # Generate a minimal placeholder icon if none exists
+          python3 -c '
+          import os
+          icon_path = "mobile/assets/icon/app_icon.png"
+          fg_path = "mobile/assets/icon/app_icon_foreground.png"
+          # Minimal 1x1 transparent PNG (valid)
+          import base64
+          pixel = base64.b64decode(
+              "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg=="
+          )
+          for p in [icon_path, fg_path]:
+              if not os.path.exists(p):
+                  with open(p, "wb") as f:
+                      f.write(pixel)
+          '
+
+          # ── 2. Update AndroidManifest.xml ──────────────────────────────
           python3 -c '
           import os
           path = "mobile/android/app/src/main/AndroidManifest.xml"
@@ -51,26 +71,177 @@ jobs:
                   "    <uses-permission android:name=\"android.permission.CAMERA\" />\n"
                   "    <uses-permission android:name=\"android.permission.RECORD_AUDIO\" />\n"
                   "    <uses-permission android:name=\"android.permission.POST_NOTIFICATIONS\" />\n"
+                  "    <uses-permission android:name=\"android.permission.WRITE_EXTERNAL_STORAGE\" />\n"
+                  "    <uses-permission android:name=\"android.permission.READ_EXTERNAL_STORAGE\" />\n"
               )
               if "android.permission.INTERNET" not in content:
                   content = content.replace("<application", permissions + "    <application")
+              
+              # Add usesCleartextTraffic for dev & hardwareAccelerated for WebView
+              if "usesCleartextTraffic" not in content:
+                  content = content.replace(
+                      "android:label=",
+                      "android:usesCleartextTraffic=\"true\"\n        android:hardwareAccelerated=\"true\"\n        android:label="
+                  )
+              
+              # Add <queries> for url_launcher (required for Android 11+ / API 30+)
+              if "<queries>" not in content:
+                  queries_block = (
+                      "\n    <queries>\n"
+                      "        <intent>\n"
+                      "            <action android:name=\"android.intent.action.VIEW\" />\n"
+                      "            <data android:scheme=\"https\" />\n"
+                      "        </intent>\n"
+                      "        <intent>\n"
+                      "            <action android:name=\"android.intent.action.VIEW\" />\n"
+                      "            <data android:scheme=\"http\" />\n"
+                      "        </intent>\n"
+                      "    </queries>\n"
+                  )
+                  content = content.replace("</manifest>", queries_block + "</manifest>")
+              
               with open(path, "w") as f:
                   f.write(content)
           '
-          
-          # 2. Update minSdkVersion to 21
+
+          # ── 3. Update build.gradle ─────────────────────────────────────
           python3 -c '
-          import os
+          import os, re
           path = "mobile/android/app/build.gradle"
           if os.path.exists(path):
               with open(path, "r") as f:
                   content = f.read()
-              content = content.replace("minSdkVersion flutter.minSdkVersion", "minSdkVersion 21")
-              content = content.replace("minSdkVersion 16", "minSdkVersion 21")
-              content = content.replace("minSdkVersion 19", "minSdkVersion 21")
+              # Set minimum SDK to 21 (Android 5.0)
+              content = re.sub(r"minSdkVersion\s+\S+", "minSdkVersion 21", content)
+              # Set target SDK to 34 (required by Play Store)
+              content = re.sub(r"targetSdkVersion\s+\S+", "targetSdkVersion 34", content)
+              # Set compile SDK to 34
+              content = re.sub(r"compileSdkVersion\s+\S+", "compileSdkVersion 34", content)
+              # Enable multidex
+              if "multiDexEnabled" not in content:
+                  content = content.replace(
+                      "minSdkVersion 21",
+                      "minSdkVersion 21\n        multiDexEnabled true"
+                  )
               with open(path, "w") as f:
                   f.write(content)
           '
+
+          # ── 4. Build Gradle KTS compatibility check ────────────────────
+          python3 -c '
+          import os, re
+          # Check for Kotlin DSL build file
+          path_kts = "mobile/android/app/build.gradle.kts"
+          if os.path.exists(path_kts):
+              with open(path_kts, "r") as f:
+                  content = f.read()
+              content = re.sub(r"minSdk\s*=\s*\S+", "minSdk = 21", content)
+              content = re.sub(r"targetSdk\s*=\s*\S+", "targetSdk = 34", content)
+              content = re.sub(r"compileSdk\s*=\s*\S+", "compileSdk = 34", content)
+              if "multiDexEnabled" not in content:
+                  content = content.replace(
+                      "minSdk = 21",
+                      "minSdk = 21\n        multiDexEnabled = true"
+                  )
+              with open(path_kts, "w") as f:
+                  f.write(content)
+          '
+
+      # ── Release Signing ────────────────────────────────────────────────
+      - name: Setup Release Keystore
+        env:
+          KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
+          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+          STORE_PASSWORD: ${{ secrets.STORE_PASSWORD }}
+        run: |
+          # If signing secrets are available, create keystore
+          if [ -n "$KEYSTORE_BASE64" ]; then
+            echo "$KEYSTORE_BASE64" | base64 --decode > mobile/android/app/keystore.jks
+            
+            # Create key.properties
+            cat > mobile/android/key.properties << EOF
+          storePassword=$STORE_PASSWORD
+          keyPassword=$KEY_PASSWORD
+          keyAlias=$KEY_ALIAS
+          storeFile=keystore.jks
+          EOF
+            
+            # Inject signing config into build.gradle
+            python3 -c '
+          import os
+          
+          # Try Groovy DSL first
+          for path in ["mobile/android/app/build.gradle", "mobile/android/app/build.gradle.kts"]:
+              if not os.path.exists(path):
+                  continue
+              with open(path, "r") as f:
+                  content = f.read()
+              
+              is_kts = path.endswith(".kts")
+              
+              if "signingConfigs" not in content:
+                  if is_kts:
+                      signing_block = """
+          val keystorePropertiesFile = rootProject.file("app/key.properties")
+          val keystoreProperties = java.util.Properties()
+          if (keystorePropertiesFile.exists()) {
+              keystoreProperties.load(java.io.FileInputStream(keystorePropertiesFile))
+          }
+          
+          android {
+              signingConfigs {
+                  create("release") {
+                      keyAlias = keystoreProperties["keyAlias"] as String
+                      keyPassword = keystoreProperties["keyPassword"] as String
+                      storeFile = file(keystoreProperties["storeFile"] as String)
+                      storePassword = keystoreProperties["storePassword"] as String
+                  }
+              }
+          """
+                      content = content.replace("android {", signing_block, 1)
+                      content = content.replace(
+                          "buildTypes {",
+                          """buildTypes {
+              release {
+                  signingConfig = signingConfigs.getByName("release")
+              }"""
+                      )
+                  else:
+                      signing_block = """
+          def keystorePropertiesFile = rootProject.file("app/key.properties")
+          def keystoreProperties = new Properties()
+          if (keystorePropertiesFile.exists()) {
+              keystoreProperties.load(new FileInputStream(keystorePropertiesFile))
+          }
+          
+          android {
+              signingConfigs {
+                  release {
+                      keyAlias keystoreProperties["keyAlias"]
+                      keyPassword keystoreProperties["keyPassword"]
+                      storeFile file(keystoreProperties["storeFile"])
+                      storePassword keystoreProperties["storePassword"]
+                  }
+              }
+          """
+                      content = content.replace("android {", signing_block, 1)
+                      content = content.replace(
+                          "buildTypes {",
+                          """buildTypes {
+              release {
+                  signingConfig signingConfigs.release
+              }"""
+                      )
+              
+              with open(path, "w") as f:
+                  f.write(content)
+              break
+          '
+            echo "✅ Release signing configured"
+          else
+            echo "⚠️ No signing secrets found — building with debug key"
+          fi
 
       - name: Install Dependencies
         working-directory: ./mobile
@@ -85,4 +256,4 @@ jobs:
         with:
           name: Ultramaxo-Mobile-Release-APK
           path: mobile/build/app/outputs/flutter-apk/app-release.apk
-          retention-days: 7
+          retention-days: 30

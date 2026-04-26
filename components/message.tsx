@@ -4,11 +4,20 @@ import {
 	CheckCircle2Icon,
 	Clock3Icon,
 	SparklesIcon as LucideSparklesIcon,
+	LoaderIcon,
 	MonitorSmartphoneIcon,
 	PackageIcon,
 	PlayIcon,
 	SmartphoneIcon,
 	WandSparklesIcon,
+	BotIcon,
+	CloudRainIcon,
+	FileTextIcon,
+	FileEditIcon,
+	FileCodeIcon,
+	TerminalIcon,
+	TrashIcon,
+	LightbulbIcon,
 } from "lucide-react";
 import { useState } from "react";
 import type { Vote } from "@backend/db/schema";
@@ -60,6 +69,15 @@ function getStringArray(value: unknown) {
 	}
 
 	return value.filter((item): item is string => typeof item === "string");
+}
+
+function isValidMessagePart(part: unknown): part is ChatMessage["parts"][number] {
+	return Boolean(
+		part &&
+			typeof part === "object" &&
+			"type" in part &&
+			typeof (part as { type?: unknown }).type === "string",
+	);
 }
 
 // ============================================================
@@ -147,13 +165,16 @@ const PurePreviewMessage = ({
 	requiresScrollPadding: boolean;
 }) => {
 	const [mode, setMode] = useState<"view" | "edit">("view");
+	const messageParts = Array.isArray(message.parts)
+		? message.parts.filter(isValidMessagePart)
+		: [];
 
-	const attachmentsFromMessage = message.parts.filter(
+	const attachmentsFromMessage = messageParts.filter(
 		(part) => part.type === "file",
 	);
 
 	const hasAnyArtifact =
-		message.parts?.some(
+		messageParts.some(
 			(part) =>
 				part.type === "tool-createDocument" ||
 				part.type === "tool-updateDocument",
@@ -185,22 +206,34 @@ const PurePreviewMessage = ({
 				)}
 			>
 				{message.role === "assistant" && (
-					<div className="mt-0.5 flex size-6 shrink-0 items-center justify-center rounded-full text-[#6f746f] dark:text-[#8f9790]">
-						<SparklesIcon size={14} />
+					<div className={cn(
+						"mt-0.5 flex size-6 shrink-0 items-center justify-center rounded-full transition-colors duration-300",
+						isLoading
+							? "text-violet-500 dark:text-violet-400"
+							: "text-[#6f746f] dark:text-[#8f9790]",
+					)}>
+						{isLoading ? (
+							<div className="relative flex items-center justify-center">
+								<span className="absolute inline-flex size-4 animate-ping rounded-full bg-violet-400/25 dark:bg-violet-500/15" />
+								<SparklesIcon size={14} className="relative animate-spin" style={{ animationDuration: "3s" }} />
+							</div>
+						) : (
+							<SparklesIcon size={14} />
+						)}
 					</div>
 				)}
 
 				<div
 					className={cn("flex flex-col min-w-0", {
-						"gap-1 md:gap-2": message.parts?.some(
+						"gap-1 md:gap-2": messageParts.some(
 							(p) => p.type === "text" && p.text?.trim(),
 						),
 						"w-full":
 							(message.role === "assistant" &&
-								(message.parts?.some(
+								(messageParts.some(
 									(p) => p.type === "text" && p.text?.trim(),
 								) ||
-									message.parts?.some((p) => p.type.startsWith("tool-")))) ||
+									messageParts.some((p) => p.type.startsWith("tool-")))) ||
 							mode === "edit",
 						"max-w-[calc(100%-1.75rem)] sm:max-w-[min(fit-content,68%)]":
 							message.role === "user" && mode !== "edit",
@@ -225,7 +258,7 @@ const PurePreviewMessage = ({
 					)}
 
 					{/* Render message parts */}
-					{message.parts?.map((part, index) => {
+					{messageParts.map((part, index) => {
 						const { type } = part;
 						const key = `message-${message.id}-part-${index}`;
 
@@ -311,6 +344,8 @@ const PurePreviewMessage = ({
 											<ToolHeader
 												state="output-denied"
 												type="tool-getWeather"
+												title="Memeriksa cuaca (Ditolak)"
+												icon={<CloudRainIcon className="size-4 shrink-0 text-muted-foreground" />}
 											/>
 											<ToolContent>
 												<div className="px-4 py-3 text-muted-foreground text-sm">
@@ -326,7 +361,7 @@ const PurePreviewMessage = ({
 								return (
 									<div className={widthClass} key={toolCallId}>
 										<Tool className="w-full" defaultOpen={true}>
-											<ToolHeader state={state} type="tool-getWeather" />
+											<ToolHeader state={state} type="tool-getWeather" title="Memeriksa cuaca..." icon={<CloudRainIcon className="size-4 shrink-0 text-muted-foreground" />} />
 											<ToolContent>
 												<ToolInput input={part.input} />
 											</ToolContent>
@@ -338,7 +373,7 @@ const PurePreviewMessage = ({
 							return (
 								<div className={widthClass} key={toolCallId}>
 									<Tool className="w-full" defaultOpen={true}>
-										<ToolHeader state={state} type="tool-getWeather" />
+										<ToolHeader state={state} type="tool-getWeather" title="Memeriksa cuaca..." icon={<CloudRainIcon className="size-4 shrink-0 text-muted-foreground" />} />
 										<ToolContent>
 											{(state === "input-available" ||
 												state === "approval-requested") && (
@@ -386,10 +421,12 @@ const PurePreviewMessage = ({
 							const { toolCallId, state } = part;
 							const toolType =
 								type === "tool-createDocument" ? "create" : "update";
+							const args = part.input as DocumentToolCallArgs;
+							const title = args && 'title' in args ? args.title : 'dokumen';
 
 							return (
 								<Tool defaultOpen={true} key={toolCallId}>
-									<ToolHeader state={state} type={type} />
+									<ToolHeader state={state} type={type} title={type === "tool-createDocument" ? `Membuat dokumen: ${title}` : `Memperbarui dokumen: ${title}`} icon={type === "tool-createDocument" ? <FileTextIcon className="size-4 shrink-0 text-muted-foreground" /> : <FileEditIcon className="size-4 shrink-0 text-muted-foreground" />} />
 									<ToolContent>
 										{(state === "input-streaming" ||
 											state === "input-available") && (
@@ -429,7 +466,7 @@ const PurePreviewMessage = ({
 
 							return (
 								<Tool defaultOpen={true} key={toolCallId}>
-									<ToolHeader state={state} type="tool-startAgentTask" />
+									<ToolHeader state={state} type="tool-startAgentTask" title={`Menjalankan tugas agen: ${getStringValue(agentTask.goal, "Analisis")}`} icon={<BotIcon className="size-4 shrink-0 text-muted-foreground" />} />
 									<ToolContent>
 										<div className="space-y-4 px-4 py-4">
 											<div className="flex items-center gap-2 text-sm font-medium text-foreground">
@@ -503,7 +540,7 @@ const PurePreviewMessage = ({
 
 							return (
 								<Tool defaultOpen={true} key={toolCallId}>
-									<ToolHeader state={state} type="tool-reportAgentStep" />
+									<ToolHeader state={state} type="tool-reportAgentStep" title={`Langkah agen: ${getStringValue(step.title, "Proses")}`} icon={<PlayIcon className="size-4 shrink-0 text-muted-foreground" />} />
 									<ToolContent>
 										<div className="space-y-3 px-4 py-4">
 											<div className="flex items-start justify-between gap-3 rounded-xl border bg-background p-3">
@@ -601,7 +638,7 @@ const PurePreviewMessage = ({
 
 								return (
 									<Tool defaultOpen={true} key={toolCallId}>
-										<ToolHeader state={state} type={type} />
+										<ToolHeader state={state} type={type} title={`Menjalankan perintah: ${getStringValue(commandResult.command, "Virtual Command")}`} icon={<TerminalIcon className="size-4 shrink-0 text-muted-foreground" />} />
 										<ToolContent>
 											<div className="space-y-3 px-4 py-4">
 												<div className="rounded-xl border bg-zinc-950 px-3 py-3 font-mono text-xs text-zinc-100 dark:bg-zinc-900">
@@ -646,15 +683,22 @@ const PurePreviewMessage = ({
 							const workspaceFiles = getStringArray(workspacePayload.files);
 
 							const titleMap: Record<string, string> = {
-								"tool-listCodeFiles": "Workspace Files",
-								"tool-createCodeFile": "Create File",
-								"tool-updateCodeFile": "Update File",
-								"tool-deleteCodeFile": "Delete File",
+								"tool-listCodeFiles": "Membaca file workspace",
+								"tool-createCodeFile": "Membuat file baru",
+								"tool-updateCodeFile": "Memperbarui file",
+								"tool-deleteCodeFile": "Menghapus file",
+							};
+							
+							const iconMap: Record<string, React.ReactNode> = {
+								"tool-listCodeFiles": <FileCodeIcon className="size-4 shrink-0 text-muted-foreground" />,
+								"tool-createCodeFile": <FileTextIcon className="size-4 shrink-0 text-muted-foreground" />,
+								"tool-updateCodeFile": <FileEditIcon className="size-4 shrink-0 text-muted-foreground" />,
+								"tool-deleteCodeFile": <TrashIcon className="size-4 shrink-0 text-muted-foreground" />,
 							};
 
 							return (
 								<Tool defaultOpen={true} key={toolCallId}>
-									<ToolHeader state={state} type={type} />
+									<ToolHeader state={state} type={type} title={titleMap[type] ?? "Aksi Workspace"} icon={iconMap[type]} />
 									<ToolContent>
 										<div className="space-y-3 px-4 py-4">
 											<div className="flex items-center gap-2 text-sm font-medium text-foreground">
@@ -708,7 +752,7 @@ const PurePreviewMessage = ({
 
 							return (
 								<Tool defaultOpen={true} key={toolCallId}>
-									<ToolHeader state={state} type="tool-requestSuggestions" />
+									<ToolHeader state={state} type="tool-requestSuggestions" title="Mencari saran perbaikan..." icon={<LightbulbIcon className="size-4 shrink-0 text-muted-foreground" />} />
 									<ToolContent>
 										{state === "input-available" && (
 											<ToolInput input={part.input} />
@@ -777,6 +821,8 @@ const PurePreviewMessage = ({
 									<ToolHeader
 										state="input-available"
 										type={`tool-${parsed.type === "create-document" ? "createDocument" : "updateDocument"}`}
+										title={parsed.type === "create-document" ? `Membuat dokumen: ${parsedTitle}` : `Memperbarui dokumen: ${parsedTitle}`}
+										icon={parsed.type === "create-document" ? <FileTextIcon className="size-4 shrink-0 text-muted-foreground" /> : <FileEditIcon className="size-4 shrink-0 text-muted-foreground" />}
 									/>
 									<ToolContent>
 										<DocumentToolCall
@@ -820,22 +866,17 @@ export const ThinkingMessage = () => {
 			data-role="assistant"
 			data-testid="message-assistant-loading"
 		>
-			<div className="flex items-start justify-start gap-3">
-				<div className="-mt-0.5 flex size-7 shrink-0 items-center justify-center text-[#6f746f] dark:text-[#8f9790]">
-					<div className="animate-pulse">
-						<SparklesIcon size={14} />
+			<div className="mx-auto flex w-full max-w-3xl flex-col gap-4">
+				<div className="mt-0.5 flex size-6 shrink-0 items-center justify-center rounded-full text-violet-500 dark:text-violet-400">
+					<div className="relative flex items-center justify-center">
+						<span className="absolute inline-flex size-4 animate-ping rounded-full bg-violet-400/25 dark:bg-violet-500/15" />
+						<SparklesIcon size={14} className="relative animate-spin" style={{ animationDuration: "3s" }} />
 					</div>
 				</div>
 
-				<div className="flex w-full flex-col gap-2 md:gap-4">
-					<div className="flex items-center gap-1 p-0 text-[#6f746f] text-sm dark:text-[#8f9790]">
-						<span className="animate-pulse">Thinking</span>
-						<span className="inline-flex">
-							<span className="animate-bounce [animation-delay:0ms]">.</span>
-							<span className="animate-bounce [animation-delay:150ms]">.</span>
-							<span className="animate-bounce [animation-delay:300ms]">.</span>
-						</span>
-					</div>
+				<div className="flex items-center gap-2 text-xs text-muted-foreground">
+					<LoaderIcon className="size-3.5 animate-spin" />
+					<span className="font-medium">Thinking...</span>
 				</div>
 			</div>
 		</div>

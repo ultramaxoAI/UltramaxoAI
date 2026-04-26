@@ -75,6 +75,12 @@ import { type PostRequestBody, postRequestBodySchema } from "./schema";
 
 export const maxDuration = 60;
 
+const MOBILE_MODE_INTENT_REGEX =
+	/\b(mobile app|aplikasi mobile|flutter|react native)\b/i;
+
+const IDE_MODE_INTENT_REGEX =
+	/\b(fullstack|workspace|landing page|web app|website|aplikasi lengkap|project lengkap|proyek lengkap|buatkan (website|web|app|aplikasi)|build (website|web|app|aplikasi)|create (website|web|app|application)|coding|koding|kode|source code|kalkulator|calculator)\b/i;
+
 type StreamErrorDetails = Error & {
 	type?: string;
 	statusCode?: number;
@@ -122,6 +128,23 @@ export async function POST(request: Request) {
 				Boolean(fullstackModeEnabled) && !isFullstackModeInMaintenance;
 			const effectiveMobileModeEnabled =
 				Boolean(mobileModeEnabled) && !isMobileModeInMaintenance;
+			const latestUserText = Array.isArray(message?.parts)
+				? message.parts
+						.filter((part: any) => part?.type === "text")
+						.map((part: any) => part?.text ?? "")
+						.join(" ")
+				: "";
+			const requestedMobileModeByText = MOBILE_MODE_INTENT_REGEX.test(
+				latestUserText,
+			);
+			const requestedIdeModeByText =
+				requestedMobileModeByText || IDE_MODE_INTENT_REGEX.test(latestUserText);
+			const inferredMobileModeEnabled =
+				effectiveMobileModeEnabled ||
+				(!effectiveFullstackModeEnabled && requestedMobileModeByText);
+			const inferredFullstackModeEnabled =
+				effectiveFullstackModeEnabled ||
+				(requestedIdeModeByText && !inferredMobileModeEnabled);
 
 			const session = await auth();
 
@@ -135,8 +158,8 @@ export async function POST(request: Request) {
 				wormgptEnabled,
 				deepThinkingEnabled,
 				webSearchEnabled,
-				fullstackModeEnabled: effectiveFullstackModeEnabled,
-				mobileModeEnabled: effectiveMobileModeEnabled,
+				fullstackModeEnabled: inferredFullstackModeEnabled,
+				mobileModeEnabled: inferredMobileModeEnabled,
 			});
 
 			// Per-account rate limiting: 10 chat requests per minute per user
@@ -206,7 +229,7 @@ export async function POST(request: Request) {
 
 			// Daily IDE Mode Limit Check for Free Users (1x per day)
 			const isIdeAgentModeRequested =
-				effectiveFullstackModeEnabled || effectiveMobileModeEnabled;
+				inferredFullstackModeEnabled || inferredMobileModeEnabled;
 			if (isIdeAgentModeRequested && !customConfig && !currentUser?.isPro && currentUser?.role !== "admin") {
 				const lastIdeUsageDate = currentUser?.freeIdeModeUsedAt;
 				const today = new Date();
@@ -346,7 +369,7 @@ export async function POST(request: Request) {
 				selectedChatModel.includes("deepseek-r1") ||
 				deepThinkingEnabled;
 			const isIdeAgentMode =
-				Boolean(fullstackModeEnabled) || Boolean(mobileModeEnabled);
+				inferredFullstackModeEnabled || inferredMobileModeEnabled;
 			const maxContextMessages = isIdeAgentMode ? 10 : 18;
 			const recentUiMessages = uiMessages.slice(-maxContextMessages);
 
@@ -356,8 +379,8 @@ export async function POST(request: Request) {
 				wormgptEnabled,
 				deepThinkingEnabled,
 				webSearchEnabled,
-				fullstackModeEnabled: effectiveFullstackModeEnabled,
-				mobileModeEnabled: effectiveMobileModeEnabled,
+				fullstackModeEnabled: inferredFullstackModeEnabled,
+				mobileModeEnabled: inferredMobileModeEnabled,
 			});
 
 			// Fetch CROSS-CHAT MEMORY based on Pro status
@@ -519,12 +542,6 @@ export async function POST(request: Request) {
 
 					while (retryCount <= maxRetries) {
 						try {
-							const latestUserText = Array.isArray(message?.parts)
-								? message.parts
-										.filter((part: any) => part?.type === "text")
-										.map((part: any) => part?.text ?? "")
-										.join(" ")
-								: "";
 							const wantsArtifact =
 								/\b(artifact|dokumen|document|aplikasi lengkap|project lengkap|proyek lengkap)\b/i.test(
 									latestUserText,
@@ -549,8 +566,8 @@ export async function POST(request: Request) {
 								wormgptEnabled,
 								deepThinkingEnabled,
 								webSearchEnabled,
-								fullstackModeEnabled,
-								mobileModeEnabled,
+								fullstackModeEnabled: inferredFullstackModeEnabled,
+								mobileModeEnabled: inferredMobileModeEnabled,
 							});
 
 							// Append cross-chat memory to the system prompt
@@ -856,16 +873,32 @@ export async function POST(request: Request) {
 							}
 						}
 					} else if (finishedMessages.length > 0) {
-						await saveMessages({
-							messages: finishedMessages.map((currentMessage) => ({
-								id: currentMessage.id,
-								role: currentMessage.role,
-								parts: currentMessage.parts,
-								createdAt: new Date(),
-								attachments: [],
-								chatId: id,
-							})),
-						});
+						// Filter out messages already saved (e.g. the user message saved earlier)
+						// to avoid duplicate key errors that would drop the entire batch
+						const existingMessageIds = new Set(
+							messagesFromDb.map((m) => m.id),
+						);
+						// Also exclude the user message we just saved above
+						if (message?.id) {
+							existingMessageIds.add(message.id);
+						}
+
+						const newMessages = finishedMessages.filter(
+							(m) => !existingMessageIds.has(m.id),
+						);
+
+						if (newMessages.length > 0) {
+							await saveMessages({
+								messages: newMessages.map((currentMessage) => ({
+									id: currentMessage.id,
+									role: currentMessage.role,
+									parts: currentMessage.parts,
+									createdAt: new Date(),
+									attachments: [],
+									chatId: id,
+								})),
+							});
+						}
 					}
 				},
 				onError: (error) => {

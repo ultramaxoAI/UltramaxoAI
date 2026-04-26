@@ -1233,3 +1233,145 @@ body { top: 0 !important; }
 .goog-te-gadget .goog-te-combo:focus { outline: none; }
 .dark .goog-te-combo { background: #18181b; color: #fff; }
 .dark .goog-te-combo option { background: #18181b; color: #fff; }
+
+/* ===== Mobile Responsiveness System ===== */
+
+/* Mobile-first touch targets — minimum 44px per Apple HIG */
+@media (max-width: 767px) {
+  /* Larger tap targets on mobile */
+  button:not([data-sidebar="menu-button"]),
+  a:not(.prose a),
+  [role="button"] {
+    min-height: 40px;
+  }
+
+  /* Mobile sidebar sheet improvements */
+  [data-sidebar="sidebar"][data-mobile="true"] {
+    border-right: none !important;
+  }
+
+  /* Chat input area — more breathing room on mobile */
+  [data-testid="multimodal-input"] {
+    font-size: 16px !important; /* Prevents iOS zoom on focus */
+  }
+
+  /* Prompt input — full width on mobile */
+  .mx-auto.max-w-3xl {
+    max-width: 100% !important;
+    margin-left: 8px !important;
+    margin-right: 8px !important;
+  }
+
+  /* Message bubbles — tighter padding on mobile */
+  .mx-auto.w-full.max-w-3xl {
+    padding-left: 12px !important;
+    padding-right: 12px !important;
+  }
+
+  /* Code blocks — horizontal scroll on mobile */
+  pre {
+    max-width: calc(100vw - 48px) !important;
+    overflow-x: auto !important;
+  }
+
+  pre code {
+    font-size: 0.8rem !important;
+  }
+
+  /* Header — compact on mobile */
+  header {
+    padding-left: 8px !important;
+    padding-right: 8px !important;
+  }
+
+  /* Dropdown menus — full width on small screens */
+  [data-radix-popper-content-wrapper] {
+    max-width: calc(100vw - 24px) !important;
+  }
+
+  /* Model selector — compact */
+  [data-testid="model-selector"] {
+    max-width: 140px;
+  }
+
+  /* Hide sidebar rail on mobile */
+  [data-sidebar="rail"] {
+    display: none !important;
+  }
+
+  /* Scrollbar hidden on mobile */
+  ::-webkit-scrollbar {
+    display: none !important;
+  }
+  * {
+    scrollbar-width: none !important;
+  }
+
+  /* Better text rendering on mobile */
+  body {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+  }
+
+  /* Prevent horizontal overflow */
+  html, body {
+    overflow-x: hidden !important;
+    max-width: 100vw !important;
+  }
+  
+  /* Fix table overflow on mobile */
+  table {
+    display: block;
+    max-width: 100%;
+    overflow-x: auto;
+  }
+
+  /* Improve image display on mobile */
+  .prose img,
+  [data-testid="message-content"] img {
+    max-width: 100% !important;
+    height: auto !important;
+    border-radius: 8px;
+  }
+}
+
+/* Small mobile devices (< 375px) */
+@media (max-width: 374px) {
+  .mx-auto.max-w-3xl {
+    margin-left: 4px !important;
+    margin-right: 4px !important;
+  }
+
+  [data-testid="multimodal-input"] {
+    font-size: 15px !important;
+  }
+}
+
+/* Tablet tweaks (768px - 1024px) */
+@media (min-width: 768px) and (max-width: 1024px) {
+  /* Sidebar width slightly narrower on tablet */
+  [data-sidebar="sidebar"] {
+    --sidebar-width: 14rem;
+  }
+}
+
+/* Safe area support for notched devices */
+@supports (padding: env(safe-area-inset-top)) {
+  @media (max-width: 767px) {
+    body {
+      padding-top: env(safe-area-inset-top) !important;
+      padding-bottom: env(safe-area-inset-bottom) !important;
+      padding-left: env(safe-area-inset-left) !important;
+      padding-right: env(safe-area-inset-right) !important;
+    }
+  }
+}
+
+/* Prevent pull-to-refresh interference in WebView */
+@media (max-width: 767px) {
+  html {
+    overscroll-behavior-y: contain;
+  }
+}
+

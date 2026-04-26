@@ -80,7 +80,11 @@ export const metadata: Metadata = {
 };
 
 export const viewport = {
+	width: "device-width",
+	initialScale: 1,
 	maximumScale: 1, // Disable auto-zoom on mobile Safari
+	userScalable: false,
+	interactiveWidget: "resizes-content", // Better keyboard handling on mobile
 };
 
 const geist = GeistSans;

@@ -196,3 +196,30 @@ export function getTextFromMessage(message: ChatMessage | UIMessage): string {
 		.map((part) => (part as { type: "text"; text: string }).text)
 		.join("");
 }
+
+export function sanitizeChatMessage(message: ChatMessage): ChatMessage {
+	const safeParts = Array.isArray(message.parts)
+		? message.parts.filter(
+			(part): part is ChatMessage["parts"][number] =>
+				Boolean(
+					part &&
+						typeof part === "object" &&
+						"type" in part &&
+						typeof (part as { type?: unknown }).type === "string",
+				),
+		)
+		: [];
+
+	return {
+		...message,
+		parts: safeParts,
+	};
+}
+
+export function sanitizeChatMessages(messages: ChatMessage[]): ChatMessage[] {
+	if (!Array.isArray(messages)) {
+		return [];
+	}
+
+	return messages.map(sanitizeChatMessage);
+}

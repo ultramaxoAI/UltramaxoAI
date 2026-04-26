@@ -40,6 +40,33 @@ function PureArtifactMessages({
 		status,
 	});
 
+	const lastMessage = messages.at(-1);
+	const lastAssistantHasContent =
+		lastMessage?.role === "assistant" &&
+		(lastMessage.parts ?? []).some((part) => {
+			if (!part || typeof part !== "object" || !("type" in part)) {
+				return false;
+			}
+
+			const typedPart = part as { type?: string; text?: string };
+			return (
+				(typedPart.type === "text" && Boolean(typedPart.text?.trim())) ||
+				(typedPart.type === "reasoning" && Boolean(typedPart.text?.trim()))
+			);
+		});
+
+	const hasApprovalResponse = messages.some((msg) =>
+		(msg.parts ?? []).some((part) => {
+			if (!part || typeof part !== "object" || !("state" in part)) {
+				return false;
+			}
+
+			return (
+				(part as { state?: string }).state === "approval-responded"
+			);
+		}),
+	);
+
 	return (
 		<div
 			className="flex h-full flex-col items-center gap-4 overflow-y-scroll px-4 pt-20"
@@ -70,17 +97,9 @@ function PureArtifactMessages({
 				{(status === "submitted" ||
 					(status === "streaming" &&
 						messages.length > 0 &&
-						messages.at(-1)?.role === "assistant" &&
-						!messages
-							.at(-1)
-							?.parts.some(
-								(p) => p.type === "text" && p.text.trim().length > 0,
-							))) &&
-					!messages.some((msg) =>
-						msg.parts?.some(
-							(part) => "state" in part && part.state === "approval-responded",
-						),
-					) && <ThinkingMessage key="thinking" />}
+						lastMessage?.role === "assistant" &&
+						!lastAssistantHasContent)) &&
+					hasApprovalResponse === false && <ThinkingMessage key="thinking" />}
 			</AnimatePresence>
 
 			<motion.div

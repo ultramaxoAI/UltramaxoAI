@@ -2,22 +2,23 @@ import { z } from "zod";
 
 const textPartSchema = z.object({
 	type: z.enum(["text"]),
-	text: z.string().min(1).max(100_000),
+	text: z.string().max(100_000),
 });
 
 const filePartSchema = z.object({
-	type: z.enum(["file"]),
-	mediaType: z.string(),
-	name: z.string().min(1).max(255),
-	url: z.string().url(),
+	type: z.enum(["file", "image"]),
+	mediaType: z.string().optional(),
+	name: z.string().min(1).max(255).optional(),
+	filename: z.string().min(1).max(255).optional(),
+	url: z.string(),
 });
 
 const partSchema = z.union([textPartSchema, filePartSchema]);
 
 const userMessageSchema = z.object({
-	id: z.string().uuid(),
+	id: z.string().min(1),
 	role: z.enum(["user"]),
-	parts: z.array(partSchema),
+	parts: z.array(partSchema).min(1),
 });
 
 // For tool approval flows, we accept all messages (more permissive schema)

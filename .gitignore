@@ -57,3 +57,14 @@ build_output*.log
 tsc-error.txt
 typescript_errors.log
 temp_migration.log
+
+# Mobile / Flutter
+mobile/android/
+mobile/ios/
+mobile/build/
+mobile/.metadata
+mobile/ultramaxo-release.jks
+mobile/keystore-base64.txt
+mobile/*.jks
+mobile/key.properties
+*.keystore

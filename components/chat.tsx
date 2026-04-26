@@ -5,7 +5,7 @@ import { type DataUIPart, DefaultChatTransport } from "ai";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import type { User } from "next-auth";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import useSWR, { useSWRConfig } from "swr";
 import { unstable_serialize } from "swr/infinite";
 import { ChatContextHeader } from "@/components/chat-context-header";
@@ -15,7 +15,13 @@ import { useChatVisibility } from "@/hooks/use-chat-visibility";
 import type { Vote } from "@backend/db/schema";
 import { ChatSDKError } from "@/lib/errors";
 import type { Attachment, ChatMessage, CustomUIDataTypes } from "@/lib/types";
-import { cn, fetcher, fetchWithErrorHandlers, generateUUID } from "@/lib/utils";
+import {
+	cn,
+	fetcher,
+	fetchWithErrorHandlers,
+	generateUUID,
+	sanitizeChatMessages,
+} from "@/lib/utils";
 import { Artifact } from "./artifact";
 import { ContextualUpgradeBanner } from "./contextual-upgrade-banner";
 import { useDataStream } from "./data-stream-provider";
@@ -126,6 +132,11 @@ export function Chat({
 		});
 	}, [fullstackModeEnabled, mobileModeEnabled, setArtifactUiState]);
 
+	const safeInitialMessages = useMemo(
+		() => sanitizeChatMessages(initialMessages),
+		[initialMessages],
+	);
+
 	const {
 		messages,
 		setMessages,
@@ -137,7 +148,7 @@ export function Chat({
 		addToolApprovalResponse,
 	} = useChat<ChatMessage>({
 		id,
-		messages: initialMessages,
+		messages: safeInitialMessages,
 		generateId: generateUUID,
 		sendAutomaticallyWhen: ({ messages: currentMessages }) => {
 			const lastMessage = currentMessages.at(-1);
@@ -309,12 +320,12 @@ export function Chat({
 	// Count user messages for contextual upgrade banner
 	const userMessageCount = messages.filter((m) => m.role === "user").length;
 
-	// useAutoResume({
-	// 	autoResume,
-	// 	initialMessages,
-	// 	resumeStream,
-	// 	setMessages,
-	// });
+	useAutoResume({
+		autoResume,
+		initialMessages: safeInitialMessages,
+		resumeStream,
+		setMessages,
+	});
 
 	return (
 		<>

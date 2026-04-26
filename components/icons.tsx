@@ -956,11 +956,16 @@ export const ChevronDownIcon = ({ size = 16 }: { size?: number }) => (
 	</svg>
 );
 
-export const SparklesIcon = ({ size = 16 }: { size?: number }) => (
+export const SparklesIcon = ({
+	size = 16,
+	className,
+	style,
+}: { size?: number; className?: string; style?: React.CSSProperties }) => (
 	<svg
+		className={className}
 		height={size}
 		strokeLinejoin="round"
-		style={{ color: "currentcolor" }}
+		style={{ color: "currentcolor", ...style }}
 		viewBox="0 0 16 16"
 		width={size}
 	>

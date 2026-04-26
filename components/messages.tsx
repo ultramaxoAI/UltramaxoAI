@@ -43,6 +43,33 @@ function PureMessages({
 
 	useDataStream();
 
+	const lastMessage = messages.at(-1);
+	const lastAssistantHasContent =
+		lastMessage?.role === "assistant" &&
+		(lastMessage.parts ?? []).some((part) => {
+			if (!part || typeof part !== "object" || !("type" in part)) {
+				return false;
+			}
+
+			const typedPart = part as { type?: string; text?: string };
+			return (
+				(typedPart.type === "text" && Boolean(typedPart.text?.trim())) ||
+				(typedPart.type === "reasoning" && Boolean(typedPart.text?.trim()))
+			);
+		});
+
+	const hasApprovalResponse = messages.some((msg) =>
+		(msg.parts ?? []).some((part) => {
+			if (!part || typeof part !== "object" || !("state" in part)) {
+				return false;
+			}
+
+			return (
+				(part as { state?: string }).state === "approval-responded"
+			);
+		}),
+	);
+
 	return (
 		<>
 			{messages.length === 0 ? (
@@ -77,22 +104,13 @@ function PureMessages({
 								/>
 							))}
 
-							{/* Render ThinkingMessage if submitted or streaming with an empty last assistant message */}
+							{/* Show ThinkingMessage only before any content (text or reasoning) arrives */}
 							{(status === "submitted" ||
 								(status === "streaming" &&
 									messages.length > 0 &&
-									messages.at(-1)?.role === "assistant" &&
-									!messages
-										.at(-1)
-										?.parts.some(
-											(p) => p.type === "text" && p.text.trim().length > 0,
-										))) &&
-								!messages.some((msg) =>
-									msg.parts?.some(
-										(part) =>
-											"state" in part && part.state === "approval-responded",
-									),
-								) && <ThinkingMessage />}
+									lastMessage?.role === "assistant" &&
+									!lastAssistantHasContent)) &&
+								!hasApprovalResponse && <ThinkingMessage />}
 
 							<div className="min-h-6 min-w-6 shrink-0" ref={messagesEndRef} />
 						</div>

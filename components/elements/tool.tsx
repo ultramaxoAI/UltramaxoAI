@@ -6,6 +6,7 @@ import {
 	ChevronDownIcon,
 	CircleIcon,
 	ClockIcon,
+	Loader2Icon,
 	WrenchIcon,
 	XCircleIcon,
 } from "lucide-react";
@@ -31,6 +32,8 @@ export type ToolHeaderProps = {
 	type: ToolUIPart["type"];
 	state: ToolUIPart["state"];
 	className?: string;
+	title?: ReactNode;
+	icon?: ReactNode;
 };
 
 const getStatusBadge = (status: ToolUIPart["state"]) => {
@@ -45,8 +48,8 @@ const getStatusBadge = (status: ToolUIPart["state"]) => {
 	};
 
 	const icons: Record<ToolUIPart["state"], ReactNode> = {
-		"input-streaming": <CircleIcon className="size-4" />,
-		"input-available": <ClockIcon className="size-4 animate-pulse" />,
+		"input-streaming": <Loader2Icon className="size-4 animate-spin text-muted-foreground" />,
+		"input-available": <Loader2Icon className="size-4 animate-spin text-primary" />,
 		"approval-requested": <ClockIcon className="size-4 text-yellow-600" />,
 		"approval-responded": <CheckCircleIcon className="size-4 text-blue-600" />,
 		"output-available": <CheckCircleIcon className="size-4 text-green-600" />,
@@ -69,18 +72,20 @@ export const ToolHeader = ({
 	className,
 	type,
 	state,
+	title,
+	icon,
 	...props
 }: ToolHeaderProps) => (
 	<CollapsibleTrigger
 		className={cn(
-			"flex w-full min-w-0 items-center justify-between gap-2 p-3",
+			"flex w-full min-w-0 items-center justify-between gap-2 p-3 hover:bg-muted/50 transition-colors",
 			className,
 		)}
 		{...props}
 	>
 		<div className="flex min-w-0 flex-1 items-center gap-2">
-			<WrenchIcon className="size-4 shrink-0 text-muted-foreground" />
-			<span className="truncate font-medium text-sm">{type}</span>
+			{icon || <WrenchIcon className="size-4 shrink-0 text-muted-foreground" />}
+			<span className="truncate font-medium text-sm text-foreground">{title || type}</span>
 		</div>
 		<div className="flex shrink-0 items-center gap-2">
 			{getStatusBadge(state)}
