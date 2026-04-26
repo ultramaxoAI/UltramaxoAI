@@ -840,6 +840,22 @@ export async function POST(request: Request) {
 								// setTimeout(() => resetFailureTracking(), 60_000); // Function removed
 							}
 
+							// Check if error is a content/safety refusal from the model
+							const isContentRefusal =
+								(error instanceof Error && error.message.includes("content management policy")) ||
+								(error instanceof Error && error.message.includes("content_filter")) ||
+								(error instanceof Error && error.message.includes("content_policy")) ||
+								(error instanceof Error && error.message.includes("safety")) ||
+								(error instanceof Error && error.message.includes("blocked")) ||
+								(error instanceof Error && error.message.includes("harmful")) ||
+								(error instanceof Error && error.message.includes("sensitive_content"));
+
+							if (isContentRefusal) {
+								throw new Error(
+									"Model AI nolak request karena content policy. Coba ulangi dengan cara berbeda atau ganti model.",
+								);
+							}
+
 							// If we've exhausted retries or hit non-retryable error, throw
 							throw error;
 						}

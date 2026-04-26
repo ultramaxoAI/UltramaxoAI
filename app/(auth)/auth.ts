@@ -453,11 +453,84 @@ export const {
 
 			return session;
 		},
-		async signIn({ account }) {
+		async signIn({ user, account, profile }) {
 			// Allow credentials sign in
 			if (account?.provider === "credentials") {
 				return true;
 			}
+
+			// For OAuth providers (Google, GitHub), auto-link if email already exists
+			if (account && (account.provider === "google" || account.provider === "github")) {
+				const oauthEmail = normalizeEmail(profile?.email ?? user?.email);
+				if (!oauthEmail) {
+					return true;
+				}
+
+				// Check if user already exists with this email
+				const [existingUser] = await db
+					.select()
+					.from(userTable)
+					.where(sql`lower(${userTable.email}) = ${oauthEmail}`)
+					.limit(1);
+
+				if (existingUser) {
+					// Check if this OAuth account is already linked
+					const [existingAccount] = await db
+						.select()
+						.from(accountTable)
+						.where(
+							and(
+								eq(accountTable.provider, account.provider),
+								eq(accountTable.providerAccountId, account.providerAccountId),
+							),
+						)
+						.limit(1);
+
+					if (!existingAccount) {
+						// Auto-link: insert the OAuth account for the existing user
+						try {
+							await db
+								.insert(accountTable)
+								.values({
+									userId: existingUser.id,
+									type: account.type,
+									provider: account.provider,
+									providerAccountId: account.providerAccountId,
+									refresh_token: account.refresh_token ?? null,
+									access_token: account.access_token ?? null,
+									expires_at: account.expires_at ?? null,
+									token_type: account.token_type ?? null,
+									scope: account.scope ?? null,
+									id_token: account.id_token ?? null,
+									session_state:
+										typeof account.session_state === "string"
+											? account.session_state
+											: null,
+								})
+								.onConflictDoNothing();
+
+							// Also mark email as verified since OAuth provider verified it
+							if (!existingUser.emailVerified) {
+								await setEmailVerified(existingUser.id);
+							}
+
+							// Sync name from OAuth profile if user doesn't have one
+							const displayName = (profile as { name?: string; login?: string })?.name
+								?? (profile as { login?: string })?.login;
+							if (displayName && !existingUser.name) {
+								await db
+									.update(userTable)
+									.set({ name: displayName })
+									.where(eq(userTable.id, existingUser.id));
+							}
+						} catch (linkError) {
+							console.error("[Auth.js] Auto-link failed:", linkError);
+							// Still allow sign in even if linking fails
+						}
+					}
+				}
+			}
+
 			return true;
 		},
 	},
