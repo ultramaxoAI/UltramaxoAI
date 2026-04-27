@@ -88,7 +88,7 @@ jobs:
               if "EnableImpeller" not in content:
                   content = content.replace(
                       "<activity",
-                      "<meta-data android:name=\"io.flutter.app.android.EnableImpeller\" android:value=\"false\" />\n        <activity"
+                      "<meta-data android:name=\"io.flutter.embedding.android.EnableImpeller\" android:value=\"false\" />\n        <activity"
                   )
               
               # Add <queries> for url_launcher (required for Android 11+ / API 30+)
