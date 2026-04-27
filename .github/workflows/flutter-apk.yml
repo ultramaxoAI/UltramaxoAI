@@ -81,7 +81,7 @@ jobs:
               if "usesCleartextTraffic" not in content:
                   content = content.replace(
                       "android:label=",
-                      "android:usesCleartextTraffic=\"true\"\n        android:hardwareAccelerated=\"true\"\n        android:label="
+                      "android:usesCleartextTraffic=\"true\"\n        android:hardwareAccelerated=\"false\"\n        android:label="
                   )
               
               # Force Impeller to use OpenGL ES instead of Vulkan (Fix crash di Waydroid Intel)
