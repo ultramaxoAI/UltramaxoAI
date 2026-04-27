@@ -84,11 +84,11 @@ jobs:
                       "android:usesCleartextTraffic=\"true\"\n        android:hardwareAccelerated=\"true\"\n        android:label="
                   )
               
-              # Disable Impeller (Fix crash di Android 8 & Waydroid)
-              if "EnableImpeller" not in content:
+              # Force Impeller to use OpenGL ES instead of Vulkan (Fix crash di Waydroid Intel)
+              if "ImpellerBackend" not in content:
                   content = content.replace(
                       "</application>",
-                      "    <meta-data android:name=\"io.flutter.embedding.android.EnableImpeller\" android:value=\"false\" />\n    </application>"
+                      "    <meta-data android:name=\"io.flutter.embedding.android.EnableImpeller\" android:value=\"true\" />\n        <meta-data android:name=\"io.flutter.embedding.android.ImpellerBackend\" android:value=\"opengles\" />\n    </application>"
                   )
               
               # Add <queries> for url_launcher (required for Android 11+ / API 30+)
