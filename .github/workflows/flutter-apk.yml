@@ -240,7 +240,7 @@ jobs:
                   signingConfig signingConfigs.release
               }"""
                       )
-              
+                
               with open(path, "w") as f:
                   f.write(content)
               break

@@ -24,10 +24,12 @@ import { getCreditResetWindowDays, getStartingCredits } from "@/lib/credits";
 import { ChatSDKError } from "@/lib/errors";
 import { generateUUID } from "@/lib/utils";
 import {
-	authenticator,
+	account,
+	apiCreditAccount,
+	apiCreditTransaction,
 	agentRun,
 	agentStep,
-	account,
+	authenticator,
 	type Chat,
 	chat,
 	chatFolder,
@@ -39,18 +41,19 @@ import {
 	messageDeprecated,
 	pageVisit,
 	passwordResetToken,
+	platformApiKey,
 	promptPreset,
 	purchaseRequest,
 	redeemCode,
+	type Suggestion,
 	session,
 	stream,
 	suggestion,
-	type Suggestion,
 	type User,
-	userMemory,
-	userKnowledgeEntry,
 	user,
 	userApiKeys,
+	userKnowledgeEntry,
+	userMemory,
 	userSettings,
 	verificationToken,
 	vote,
@@ -68,14 +71,16 @@ export { getUserApiKeys } from "./queries-settings";
 const url = new URL(process.env.POSTGRES_URL!);
 const originalHost = url.hostname;
 // Hardcode IPv4 to bypass Node.js IPv6 resolution issues on local dev
-url.hostname = '18.215.6.120'; 
+url.hostname = "18.215.6.120";
 
 const client = postgres(url.toString(), {
 	prepare: false,
 	ssl: { servername: originalHost, rejectUnauthorized: true },
-	connect_timeout: 30,
-	idle_timeout: 20,
-	max_lifetime: 60 * 5,
+	connect_timeout: 10,
+	idle_timeout: 60,
+	max_lifetime: 60 * 10,
+	max: 10,
+	keep_alive: 30,
 });
 export const db = drizzle(client);
 
@@ -291,7 +296,9 @@ export async function getChatsByUserId({
 
 		if (folder && folder !== "all") {
 			if (folder === "uncategorized") {
-				baseConditions.push(sql`(${chat.folder} IS NULL OR ${chat.folder} = '')`);
+				baseConditions.push(
+					sql`(${chat.folder} IS NULL OR ${chat.folder} = '')`,
+				);
 			} else {
 				baseConditions.push(eq(chat.folder, folder));
 			}
@@ -316,8 +323,14 @@ export async function getChatsByUserId({
 			db
 				.select()
 				.from(chat)
-				.where(and(...baseConditions, ...(whereCondition ? [whereCondition] : [])))
-				.orderBy(desc(chat.isPinned), desc(chat.updatedAt), desc(chat.createdAt))
+				.where(
+					and(...baseConditions, ...(whereCondition ? [whereCondition] : [])),
+				)
+				.orderBy(
+					desc(chat.isPinned),
+					desc(chat.updatedAt),
+					desc(chat.createdAt),
+				)
 				.limit(extendedLimit);
 
 		let filteredChats: Chat[] = [];
@@ -854,7 +867,9 @@ export async function createChatFolder({
 		const [existingFolder] = await db
 			.select()
 			.from(chatFolder)
-			.where(and(eq(chatFolder.userId, userId), eq(chatFolder.name, normalizedName)))
+			.where(
+				and(eq(chatFolder.userId, userId), eq(chatFolder.name, normalizedName)),
+			)
 			.limit(1);
 
 		if (existingFolder) {
@@ -933,7 +948,9 @@ export async function deleteChatFolder({
 
 		const [folder] = await db
 			.delete(chatFolder)
-			.where(and(eq(chatFolder.userId, userId), eq(chatFolder.name, normalizedName)))
+			.where(
+				and(eq(chatFolder.userId, userId), eq(chatFolder.name, normalizedName)),
+			)
 			.returning();
 
 		return folder;
@@ -1170,7 +1187,9 @@ export async function getUserUsageOverview({ userId }: { userId: string }) {
 		const [providerStats] = await db
 			.select({ connectedProviders: count(userApiKeys.id) })
 			.from(userApiKeys)
-			.where(and(eq(userApiKeys.userId, userId), eq(userApiKeys.isEnabled, true)));
+			.where(
+				and(eq(userApiKeys.userId, userId), eq(userApiKeys.isEnabled, true)),
+			);
 
 		return {
 			totalChats: Number(chatStats?.totalChats ?? 0),
@@ -1332,7 +1351,10 @@ export async function redeemVoucher({
 			await db.update(user).set(updates).where(eq(user.id, userId));
 
 			if (voucher.type === "PRO") {
-				const proAllowance = getStartingCredits({ isPro: true, role: currentUser.role });
+				const proAllowance = getStartingCredits({
+					isPro: true,
+					role: currentUser.role,
+				});
 				const currentAccount = await ensureCreditAccountForUser({ userId });
 
 				if (currentAccount.balance < proAllowance) {
@@ -1464,7 +1486,11 @@ export async function resolveExistingUserId({
 	return null;
 }
 
-export async function ensureCreditAccountForUser({ userId }: { userId: string }) {
+export async function ensureCreditAccountForUser({
+	userId,
+}: {
+	userId: string;
+}) {
 	try {
 		const [currentUser] = await db
 			.select()
@@ -1550,7 +1576,8 @@ export async function ensureCreditAccountForUser({ userId }: { userId: string })
 			amount: startingCredits,
 			balanceAfter: startingCredits,
 			type: "grant",
-			reason: currentUser.role === "admin" ? "admin bootstrap" : "initial allocation",
+			reason:
+				currentUser.role === "admin" ? "admin bootstrap" : "initial allocation",
 			metadata: { isPro: currentUser.isPro },
 		});
 
@@ -1591,6 +1618,142 @@ export async function getCreditSummaryByUserId({
 			"Failed to get credit summary",
 		);
 	}
+}
+
+export async function ensureApiCreditAccountForUser({
+	userId,
+}: {
+	userId: string;
+}) {
+	try {
+		const [existing] = await db
+			.select()
+			.from(apiCreditAccount)
+			.where(eq(apiCreditAccount.userId, userId))
+			.limit(1);
+
+		if (existing) {
+			return existing;
+		}
+
+		const [created] = await db
+			.insert(apiCreditAccount)
+			.values({
+				userId,
+				balanceCents: 0,
+				lifetimeGrantedCents: 0,
+				lifetimeSpentCents: 0,
+				createdAt: new Date(),
+				updatedAt: new Date(),
+			})
+			.returning();
+
+		return created;
+	} catch (error) {
+		console.error("Database Error (ensureApiCreditAccountForUser):", error);
+		throw new ChatSDKError(
+			"bad_request:database",
+			"Failed to ensure API credit account",
+		);
+	}
+}
+
+export async function getApiCreditSummaryByUserId({
+	userId,
+	limit = 20,
+}: {
+	userId: string;
+	limit?: number;
+}) {
+	try {
+		const account = await ensureApiCreditAccountForUser({ userId });
+		const transactions = await db
+			.select()
+			.from(apiCreditTransaction)
+			.where(eq(apiCreditTransaction.userId, userId))
+			.orderBy(desc(apiCreditTransaction.createdAt))
+			.limit(limit);
+
+		return { account, transactions };
+	} catch (error) {
+		console.error("Database Error (getApiCreditSummaryByUserId):", error);
+		throw new ChatSDKError(
+			"bad_request:database",
+			"Failed to get API credit summary",
+		);
+	}
+}
+
+export async function grantApiCredits({
+	userId,
+	amountCents,
+	reason,
+	metadata,
+}: {
+	userId: string;
+	amountCents: number;
+	reason: string;
+	metadata?: Record<string, unknown>;
+}) {
+	const account = await ensureApiCreditAccountForUser({ userId });
+	const nextBalance = account.balanceCents + amountCents;
+
+	const [updated] = await db
+		.update(apiCreditAccount)
+		.set({
+			balanceCents: nextBalance,
+			lifetimeGrantedCents: account.lifetimeGrantedCents + amountCents,
+			updatedAt: new Date(),
+		})
+		.where(eq(apiCreditAccount.userId, userId))
+		.returning();
+
+	await db.insert(apiCreditTransaction).values({
+		userId,
+		amountCents,
+		balanceAfterCents: nextBalance,
+		type: "grant",
+		reason,
+		metadata,
+	});
+
+	return updated;
+}
+
+export async function spendApiCredits({
+	userId,
+	amountCents,
+	reason,
+	metadata,
+}: {
+	userId: string;
+	amountCents: number;
+	reason: string;
+	metadata?: Record<string, unknown>;
+}) {
+	const account = await ensureApiCreditAccountForUser({ userId });
+	const nextBalance = account.balanceCents - amountCents;
+
+	const [updated] = await db
+		.update(apiCreditAccount)
+		.set({
+			balanceCents: nextBalance,
+			lifetimeSpentCents: account.lifetimeSpentCents + amountCents,
+			updatedAt: new Date(),
+		})
+		.where(eq(apiCreditAccount.userId, userId))
+		.returning();
+
+	await db.insert(apiCreditTransaction).values({
+		userId,
+		amountCents: Math.abs(amountCents),
+		balanceAfterCents: nextBalance,
+		type: "spend",
+		reason,
+		metadata,
+	});
+
+	return updated;
 }
 
 export async function getUserMemoryByUserId({ userId }: { userId: string }) {
@@ -1996,7 +2159,10 @@ export async function createAgentRun({
 		return run;
 	} catch (error) {
 		console.error("Database Error (createAgentRun):", error);
-		throw new ChatSDKError("bad_request:database", "Failed to create agent run");
+		throw new ChatSDKError(
+			"bad_request:database",
+			"Failed to create agent run",
+		);
 	}
 }
 
@@ -2109,10 +2275,10 @@ export async function getAgentRunsByUserId({ userId }: { userId: string }) {
 		const steps =
 			runIds.length > 0
 				? await db
-					.select()
-					.from(agentStep)
-					.where(inArray(agentStep.runId, runIds))
-					.orderBy(desc(agentStep.createdAt))
+						.select()
+						.from(agentStep)
+						.where(inArray(agentStep.runId, runIds))
+						.orderBy(desc(agentStep.createdAt))
 				: [];
 
 		return runs.map((run) => ({
@@ -2139,7 +2305,10 @@ export async function grantCreditsToUser({
 	metadata?: Record<string, unknown>;
 }) {
 	if (amount <= 0) {
-		throw new ChatSDKError("bad_request:database", "Credit amount must be positive");
+		throw new ChatSDKError(
+			"bad_request:database",
+			"Credit amount must be positive",
+		);
 	}
 
 	try {
@@ -2192,7 +2361,10 @@ export async function spendCreditsForUser({
 	metadata?: Record<string, unknown>;
 }) {
 	if (amount <= 0) {
-		throw new ChatSDKError("bad_request:database", "Credit amount must be positive");
+		throw new ChatSDKError(
+			"bad_request:database",
+			"Credit amount must be positive",
+		);
 	}
 
 	try {
@@ -2542,7 +2714,41 @@ export async function updatePurchaseRequestStatus({
 			);
 		}
 
+		// Idempotency: skip if already in the target state (prevents double-crediting from webhook retries)
+		if (requestRow.status === status) {
+			console.log(
+				`[updatePurchaseRequestStatus] Already ${status} for ${id}, skipping.`,
+			);
+			return requestRow;
+		}
+
+		// Prevent re-approving a previously approved request
+		if (requestRow.status === "approved" && status === "approved") {
+			console.warn(
+				`[updatePurchaseRequestStatus] Double-approval blocked for ${id}`,
+			);
+			return requestRow;
+		}
+
 		if (status === "approved") {
+			if (requestRow.planId === "API_TOPUP_USD") {
+				let usdCents = 0;
+				try {
+					const parsed = requestRow.note ? JSON.parse(requestRow.note) : null;
+					usdCents = Number(parsed?.usdCents || 0);
+				} catch {
+					usdCents = 0;
+				}
+
+				if (usdCents > 0) {
+					await grantApiCredits({
+						userId: requestRow.userId,
+						amountCents: usdCents,
+						reason: "api topup",
+						metadata: { purchaseRequestId: requestRow.id },
+					});
+				}
+			} else {
 			const [currentUser] = await db
 				.select()
 				.from(user)
@@ -2563,7 +2769,10 @@ export async function updatePurchaseRequestStatus({
 					})
 					.where(eq(user.id, currentUser.id));
 
-				const proAllowance = getStartingCredits({ isPro: true, role: currentUser.role });
+				const proAllowance = getStartingCredits({
+					isPro: true,
+					role: currentUser.role,
+				});
 				const currentAccount = await ensureCreditAccountForUser({
 					userId: currentUser.id,
 				});
@@ -2578,6 +2787,7 @@ export async function updatePurchaseRequestStatus({
 					});
 				}
 			}
+		}
 		}
 
 		const [updated] = await db
@@ -2634,10 +2844,7 @@ export async function deleteUserById(id: string) {
 	try {
 		return await db.transaction(async (tx) => {
 			// Load user once so we can also clean up by email if needed
-			const [targetUser] = await tx
-				.select()
-				.from(user)
-				.where(eq(user.id, id));
+			const [targetUser] = await tx.select().from(user).where(eq(user.id, id));
 
 			if (!targetUser) {
 				return;
@@ -2802,22 +3009,24 @@ export async function getRecentCrossChatMemory({
 			.limit(limit);
 
 		// Extract text content from parts
-		return recentMessagesRaw.map((msg) => {
-			let textContent = "";
-			if (Array.isArray(msg.parts)) {
-				for (const part of msg.parts) {
-					if (part.type === "text" && typeof part.text === "string") {
-						textContent += part.text + " ";
+		return recentMessagesRaw
+			.map((msg) => {
+				let textContent = "";
+				if (Array.isArray(msg.parts)) {
+					for (const part of msg.parts) {
+						if (part.type === "text" && typeof part.text === "string") {
+							textContent += `${part.text} `;
+						}
 					}
 				}
-			}
-			return {
-				content: textContent.trim(),
-				createdAt: msg.createdAt,
-				chatId: msg.chatId,
-				title: msg.title,
-			};
-		}).filter(m => m.content.length > 0);
+				return {
+					content: textContent.trim(),
+					createdAt: msg.createdAt,
+					chatId: msg.chatId,
+					title: msg.title,
+				};
+			})
+			.filter((m) => m.content.length > 0);
 	} catch (error) {
 		console.error("Database Error (getRecentCrossChatMemory):", error);
 		return []; // Fail gracefully, return empty context
@@ -2834,5 +3043,58 @@ export async function updateUserIdeModeUsage(userId: string) {
 	} catch (error) {
 		console.error("Database Error (updateUserIdeModeUsage):", error);
 		return false;
+	}
+}
+
+export async function getPlatformApiKeysByUserId(userId: string) {
+	try {
+		return await db
+			.select()
+			.from(platformApiKey)
+			.where(eq(platformApiKey.userId, userId))
+			.orderBy(desc(platformApiKey.createdAt));
+	} catch (error) {
+		console.error("Database Error (getPlatformApiKeysByUserId):", error);
+		throw new ChatSDKError("bad_request:database", "Failed to fetch API keys");
+	}
+}
+
+export async function createPlatformApiKey({
+	userId,
+	name,
+	key,
+}: {
+	userId: string;
+	name: string;
+	key: string;
+}) {
+	try {
+		const [newKey] = await db
+			.insert(platformApiKey)
+			.values({
+				userId,
+				name,
+				key,
+				status: "active",
+			})
+			.returning();
+		return newKey;
+	} catch (error) {
+		console.error("Database Error (createPlatformApiKey):", error);
+		throw new ChatSDKError("bad_request:database", "Failed to create API key");
+	}
+}
+
+export async function revokePlatformApiKey(id: string, userId: string) {
+	try {
+		const [revoked] = await db
+			.update(platformApiKey)
+			.set({ status: "revoked" })
+			.where(and(eq(platformApiKey.id, id), eq(platformApiKey.userId, userId)))
+			.returning();
+		return revoked;
+	} catch (error) {
+		console.error("Database Error (revokePlatformApiKey):", error);
+		throw new ChatSDKError("bad_request:database", "Failed to revoke API key");
 	}
 }

@@ -1,49 +1,8 @@
 import "server-only";
 
-import { and, eq, sql } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 import { db } from "./queries";
 import { siteSettings, userApiKeys, userSettings } from "./schema";
-
-// ============================================================
-// Auto-create tables if missing
-// ============================================================
-
-async function ensureUserSettingsTable() {
-	try {
-		await db.execute(sql`
-			CREATE TABLE IF NOT EXISTS "user_settings" (
-				"id" uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-				"userId" uuid NOT NULL REFERENCES "user"("id") ON DELETE CASCADE,
-				"displayName" text,
-				"customInstructions" text,
-				"language" varchar(10) DEFAULT 'en',
-				"createdAt" timestamp NOT NULL DEFAULT now(),
-				"updatedAt" timestamp NOT NULL DEFAULT now()
-			)
-		`);
-	} catch (error) {
-		console.warn("Could not ensure user_settings table:", error);
-	}
-}
-
-async function ensureUserApiKeysTable() {
-	try {
-		await db.execute(sql`
-			CREATE TABLE IF NOT EXISTS "user_api_keys" (
-				"id" uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-				"userId" uuid NOT NULL REFERENCES "user"("id") ON DELETE CASCADE,
-				"provider" varchar(50) NOT NULL,
-				"keysEncrypted" text,
-				"isEnabled" boolean NOT NULL DEFAULT false,
-				"customModels" json DEFAULT '[]',
-				"createdAt" timestamp NOT NULL DEFAULT now(),
-				"updatedAt" timestamp NOT NULL DEFAULT now()
-			)
-		`);
-	} catch (error) {
-		console.warn("Could not ensure user_api_keys table:", error);
-	}
-}
 
 // ============================================================
 // User Settings (Personalization)
@@ -51,7 +10,6 @@ async function ensureUserApiKeysTable() {
 
 export async function getUserSettings(userId: string) {
 	try {
-		await ensureUserSettingsTable();
 		const result = await db
 			.select()
 			.from(userSettings)
@@ -89,42 +47,18 @@ export async function upsertUserSettings(
 // Site Settings (Global)
 // ============================================================
 
-async function ensureSiteSettingsTable() {
-	await db.execute(sql`
-		CREATE TABLE IF NOT EXISTS "site_settings" (
-			"key" varchar(50) PRIMARY KEY DEFAULT 'global',
-			"maintenanceEnabled" boolean NOT NULL DEFAULT false,
-			"maintenanceTemplate" varchar(30) NOT NULL DEFAULT 'midnight',
-			"maintenanceTitle" text NOT NULL DEFAULT 'We''ll be right back.',
-			"maintenanceMessage" text NOT NULL DEFAULT 'Lagi ada update kecil. Sebentar lagi balik.',
-			"updatedBy" uuid,
-			"createdAt" timestamp NOT NULL DEFAULT now(),
-			"updatedAt" timestamp NOT NULL DEFAULT now()
-		)
-	`);
-
-	// Add column if missing (existing tables)
-	await db.execute(sql`
-		ALTER TABLE "site_settings"
-		ADD COLUMN IF NOT EXISTS "maintenanceTemplate" varchar(30) NOT NULL DEFAULT 'midnight'
-	`);
-
-	await db.execute(sql`
-		INSERT INTO "site_settings" ("key")
-		VALUES ('global')
-		ON CONFLICT ("key") DO NOTHING
-	`);
-}
-
 export async function getSiteSettings() {
-	await ensureSiteSettingsTable();
+	try {
+		const result = await db
+			.select()
+			.from(siteSettings)
+			.where(eq(siteSettings.key, "global"));
 
-	const result = await db
-		.select()
-		.from(siteSettings)
-		.where(eq(siteSettings.key, "global"));
-
-	return result[0] || null;
+		return result[0] || null;
+	} catch (error) {
+		console.error("Database Error (getSiteSettings):", error);
+		return null;
+	}
 }
 
 export async function upsertSiteSettings(data: {
@@ -134,8 +68,6 @@ export async function upsertSiteSettings(data: {
 	maintenanceMessage?: string;
 	updatedBy?: string | null;
 }) {
-	await ensureSiteSettingsTable();
-
 	const existing = await getSiteSettings();
 	const normalizedData = {
 		...data,
@@ -162,7 +94,6 @@ export async function upsertSiteSettings(data: {
 
 export async function getUserApiKeys(userId: string) {
 	try {
-		await ensureUserApiKeysTable();
 		return await db.select().from(userApiKeys).where(eq(userApiKeys.userId, userId));
 	} catch (error) {
 		console.error("Database Error (getUserApiKeys):", error);

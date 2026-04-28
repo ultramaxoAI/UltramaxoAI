@@ -2,6 +2,7 @@
 
 import {
 	Download,
+	KeyRound,
 	LayoutDashboard,
 	LogOut,
 	MessageCircle,
@@ -105,6 +106,10 @@ export function SidebarUserNav({
 
 	const isGuest = guestRegex.test(data?.user?.email ?? "");
 	const isAdmin = data?.user?.role === "admin";
+	const apiConsoleUrl =
+		typeof window !== "undefined" && window.location.hostname.endsWith("ultramaxo.tech")
+			? "https://app.ultramaxo.tech"
+			: "/api-console";
 
 	return (
 		<>
@@ -238,6 +243,14 @@ export function SidebarUserNav({
 							>
 								<Smartphone className="h-4 w-4" />
 								Download App
+							</DropdownMenuItem>
+
+							<DropdownMenuItem
+								className="cursor-pointer gap-2 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-lg focus:bg-zinc-100 dark:focus:bg-zinc-800"
+								onSelect={() => window.open(apiConsoleUrl, "_blank")}
+							>
+								<KeyRound className="h-4 w-4" />
+								API Console
 							</DropdownMenuItem>
 
 							{!isGuest && <ProfileEditDialog />}

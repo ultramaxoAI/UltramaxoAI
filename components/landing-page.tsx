@@ -75,6 +75,17 @@ const narrativeBlocks = [
 	},
 ];
 
+type ApiModel = {
+	modelId: string;
+	name: string;
+	type: string;
+	provider: string;
+	context: string;
+	price: string;
+	badge: string;
+	capabilities: string[];
+};
+
 const useCases = [
 	{
 		title: "Developers",
@@ -91,6 +102,29 @@ const useCases = [
 	{
 		title: "Power users",
 		text: "Choose models, bring your own keys, install the app, and keep using a workspace that still feels clear.",
+	},
+];
+
+const defaultApiModels: ApiModel[] = [
+	{
+		modelId: "gpt-5.3",
+		name: "GPT-5.3",
+		type: "Chat",
+		provider: "OpenAI",
+		context: "128K",
+		price: "Free",
+		badge: "Free",
+		capabilities: ["text"],
+	},
+	{
+		modelId: "deepseek-v4-flash",
+		name: "DeepSeek V4 Flash",
+		type: "Chat & Code",
+		provider: "DeepSeek",
+		context: "1.0M",
+		price: "$0.14 / 1M",
+		badge: "New",
+		capabilities: ["text"],
 	},
 ];
 
@@ -287,6 +321,7 @@ export default function LandingPage() {
 	const [heroTilt, setHeroTilt] = useState({ x: 0, y: 0 });
 	const [mounted, setMounted] = useState(false);
 	const [isMobile, setIsMobile] = useState(true);
+	const [apiModels, setApiModels] = useState<ApiModel[]>(defaultApiModels);
 
 	const mainRef = useRef<HTMLDivElement>(null);
 	const navRef = useRef<HTMLElement>(null);
@@ -297,6 +332,7 @@ export default function LandingPage() {
 	const videoRef = useRef<HTMLDivElement>(null);
 	const showcaseRef = useRef<HTMLDivElement>(null);
 	const useCasesRef = useRef<HTMLDivElement>(null);
+	const apiPlatformRef = useRef<HTMLDivElement>(null);
 	const pricingRef = useRef<HTMLDivElement>(null);
 	const faqRef = useRef<HTMLDivElement>(null);
 	const ctaRef = useRef<HTMLDivElement>(null);
@@ -309,6 +345,38 @@ export default function LandingPage() {
 		checkMobile();
 		window.addEventListener("resize", checkMobile);
 		return () => window.removeEventListener("resize", checkMobile);
+	}, []);
+
+	useEffect(() => {
+		const loadModels = async () => {
+			try {
+				const res = await fetch("/api/v1/models?limit=5");
+				if (!res.ok) return;
+				const payload = await res.json();
+				const items = Array.isArray(payload?.data) ? payload.data : [];
+				if (!items.length) return;
+				setApiModels(
+					items.map((model: any) => ({
+						modelId: model.modelId || model.name,
+						name: model.name || model.modelId,
+						type: model.capabilities?.includes("code")
+							? "Chat & Code"
+							: "Chat",
+						provider: model.provider || "Unknown",
+						context: model.context || "-",
+						price: model.isFree
+							? "Free"
+							: `$${model.priceIn ?? "-"} / $${model.priceOut ?? "-"} / 1M`,
+						badge: model.isFree ? "Free" : "",
+						capabilities: model.capabilities ?? ["text"],
+					})),
+				);
+			} catch {
+				return;
+			}
+		};
+
+		loadModels();
 	}, []);
 
 	const scrollToSection = (href: string) => {
@@ -428,6 +496,10 @@ export default function LandingPage() {
 
 			gsap.fromTo(".usecase-card", { y: 30, opacity: 0 }, { y: 0, opacity: 1, duration: 0.5, stagger: 0.1, ease: "power2.out",
 				scrollTrigger: { trigger: useCasesRef.current, start: "top 80%", toggleActions: "play none none reverse" }
+			});
+
+			gsap.fromTo(".api-element", { y: 30, opacity: 0 }, { y: 0, opacity: 1, duration: 0.5, stagger: 0.1, ease: "power2.out",
+				scrollTrigger: { trigger: apiPlatformRef.current, start: "top 80%", toggleActions: "play none none reverse" }
 			});
 
 			gsap.fromTo(".pricing-card", { y: 30, opacity: 0, scale: 0.95 }, { y: 0, opacity: 1, scale: 1, duration: 0.5, stagger: 0.1, ease: "power2.out",
@@ -1079,7 +1151,116 @@ export default function LandingPage() {
 				</div>
 			</section>
 
-			{/* ══════ 7. PRICING ══════ */}
+			{/* ══════ 7. API PLATFORM ══════ */}
+			<section
+				id="api"
+				ref={apiPlatformRef}
+				className="relative py-32 px-6 md:px-16 lg:px-24 bg-[#050505] border-t border-white/5"
+			>
+				<div className="max-w-7xl mx-auto">
+					<div className="text-center mb-16 api-element">
+						<Badge>API Platform</Badge>
+						<SectionHeading>One API. Every Premium Model.</SectionHeading>
+						<p className="mt-6 text-white/50 font-body text-base max-w-2xl mx-auto">
+							Access GPT-5.5, DeepSeek V4 Flash, Claude, and 50+ models through a single OpenAI-compatible endpoint. Switch base URL and start building.
+						</p>
+					</div>
+
+					<div className="grid lg:grid-cols-3 gap-8 items-start">
+						{/* Code Snippet Side */}
+						<div className="lg:col-span-1 space-y-6 api-element">
+							<div className="liquid-glass-strong rounded-[32px] p-6 md:p-8 border border-white/20 shadow-[0_0_40px_rgba(255,255,255,0.05)]">
+								<h3 className="text-2xl font-heading italic text-white mb-4">Zero Hassle Integration</h3>
+								<p className="text-white/60 font-body text-sm leading-relaxed mb-6">
+									Works natively with Claude Code, Cursor, Opencode, and any OpenAI SDK. Just change your base URL.
+								</p>
+								<div className="bg-[#020202] rounded-xl p-4 border border-white/10 font-mono text-xs text-white/70 overflow-x-auto">
+									<div className="text-white/40 mb-2"># 1. Set Environment Variables</div>
+									<div className="mb-1"><span className="text-rose-400">export</span> OPENAI_BASE_URL=<span className="text-emerald-300">&quot;https://api.ultramaxo.tech/v1&quot;</span></div>
+									<div className="mb-4"><span className="text-rose-400">export</span> OPENAI_API_KEY=<span className="text-emerald-300">&quot;ux_sk_...&quot;</span></div>
+									
+									<div className="text-white/40 mb-2"># 2. Use Claude Code or standard SDK</div>
+									<div><span className="text-rose-400">claude</span> <span className="text-white/80">--model</span> deepseek-v4-flash</div>
+								</div>
+								
+								<button
+										type="button"
+									onClick={() =>
+										window.open("https://app.ultramaxo.tech", "_blank")
+									}
+										className="mt-8 w-full bg-white text-black rounded-full py-3.5 text-sm font-semibold font-body inline-flex items-center justify-center gap-2 hover:scale-[1.02] transition-transform"
+								>
+										Generate API Key <ArrowRight className="w-4 h-4" />
+								</button>
+
+							</div>
+						</div>
+
+						{/* Models Table Side */}
+						<div className="lg:col-span-2 liquid-glass rounded-[32px] overflow-hidden border border-white/10 api-element">
+							<div className="overflow-x-auto">
+								<table className="w-full text-left font-body whitespace-nowrap">
+									<thead className="bg-white/5 border-b border-white/10">
+										<tr>
+											<th className="px-6 py-4 text-xs font-semibold uppercase tracking-wider text-white/50">Model</th>
+											<th className="px-6 py-4 text-xs font-semibold uppercase tracking-wider text-white/50">Model ID</th>
+											<th className="px-6 py-4 text-xs font-semibold uppercase tracking-wider text-white/50">Provider</th>
+											<th className="px-6 py-4 text-xs font-semibold uppercase tracking-wider text-white/50">Context</th>
+											<th className="px-6 py-4 text-xs font-semibold uppercase tracking-wider text-white/50">Price (I/O)</th>
+										</tr>
+									</thead>
+									<tbody className="divide-y divide-white/5">
+										{apiModels.map((model, i) => (
+											<tr key={i} className="hover:bg-white/[0.02] transition-colors">
+												<td className="px-6 py-5">
+													<div className="flex items-center gap-3">
+														<span className="text-sm font-medium text-white">{model.name}</span>
+														{model.badge && (
+															<span className={`text-[10px] uppercase tracking-widest font-bold px-2 py-0.5 rounded-full ${model.badge === 'Free' ? 'bg-emerald-500/20 text-emerald-300' : 'bg-rose-500/20 text-rose-300'}`}>
+																{model.badge}
+															</span>
+														)}
+													</div>
+													<div className="text-xs text-white/40 mt-1">{model.type}</div>
+													<div className="mt-2 flex flex-wrap gap-2">
+														{model.capabilities?.includes("vision") && (
+															<span className="rounded-full border border-white/10 px-2 py-0.5 text-[10px] uppercase tracking-[0.2em] text-white/60">
+																Vision
+															</span>
+														)}
+														{model.capabilities?.includes("logo") && (
+															<span className="rounded-full border border-white/10 px-2 py-0.5 text-[10px] uppercase tracking-[0.2em] text-white/60">
+																Logo
+															</span>
+														)}
+														{model.capabilities?.includes("audio") && (
+															<span className="rounded-full border border-white/10 px-2 py-0.5 text-[10px] uppercase tracking-[0.2em] text-white/60">
+																Audio
+															</span>
+														)}
+													</div>
+												</td>
+												<td className="px-6 py-5"><code className="text-xs text-cyan-300/80 font-mono bg-white/5 px-2 py-1 rounded">{model.modelId}</code></td>
+												<td className="px-6 py-5 text-sm text-white/60">{model.provider}</td>
+												<td className="px-6 py-5 text-sm text-white/60">{model.context}</td>
+												<td className="px-6 py-5 text-sm text-white/80 font-medium">
+													{model.price}
+												</td>
+											</tr>
+										))}
+									</tbody>
+								</table>
+							</div>
+							<div className="p-4 border-t border-white/5 bg-white/[0.02] flex items-center justify-between">
+								<span className="text-xs text-white/50 font-body">Top 5 of 50+ supported models</span>
+								<button type="button" onClick={() => router.push("/docs")} className="text-xs text-white/70 hover:text-white font-body font-medium transition-colors">View all models →</button>
+							</div>
+						</div>
+					</div>
+				</div>
+			</section>
+
+			{/* ══════ 8. PRICING ══════ */}
 			<section
 				id="pricing"
 				ref={pricingRef}

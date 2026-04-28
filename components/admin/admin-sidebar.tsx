@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Settings2, Users, Receipt, Mail, BarChart3, ChevronLeft } from "lucide-react";
+import { Settings2, Users, Receipt, Mail, BarChart3, ChevronLeft, CreditCard } from "lucide-react";
 
 export function AdminSidebar() {
 	const pathname = usePathname();
@@ -13,6 +13,7 @@ export function AdminSidebar() {
 		{ name: "Overview", href: "/admin", icon: BarChart3 },
 		{ name: "Users", href: "/admin/users", icon: Users },
 		{ name: "Vouchers", href: "/admin/vouchers", icon: Receipt },
+		{ name: "API Billing", href: "/admin/api-billing", icon: CreditCard },
 		{ name: "Email Studio", href: "/admin/emails", icon: Mail },
 		{ name: "Settings", href: "/admin/settings", icon: Settings2 },
 	];

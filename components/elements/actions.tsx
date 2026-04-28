@@ -8,13 +8,13 @@ import {
 	TooltipProvider,
 	TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { cn } from "@/lib/utils";
+import { cn } from "@/lib/utils"; 
 
 export type ActionsProps = ComponentProps<"div">;
 
 export const Actions = ({ className, children, ...props }: ActionsProps) => (
 	<div className={cn("flex items-center gap-0.5", className)} {...props}>
-		{children}
+		{children} 
 	</div>
 );
 

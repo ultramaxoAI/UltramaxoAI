@@ -8,8 +8,12 @@ const WWW_URL =
 		: undefined;
 const CHAT_URL =
 	process.env.NODE_ENV === "production"
-		? "https://chat.ultramaxo.tech/chat"
+		? "https://ultramaxo.tech/chat"
 		: "/chat";
+const APP_URL =
+	process.env.NODE_ENV === "production"
+		? "https://app.ultramaxo.tech"
+		: undefined;
 
 export const authConfig = {
 	pages: {
@@ -30,6 +34,11 @@ export const authConfig = {
 				rootOrigins.add(MAIN_URL);
 			}
 
+			if (APP_URL) {
+				allowedOrigins.add(APP_URL);
+				rootOrigins.add(APP_URL);
+			}
+
 			if (WWW_URL) {
 				allowedOrigins.add(WWW_URL);
 				rootOrigins.add(WWW_URL);
@@ -43,8 +52,11 @@ export const authConfig = {
 				? CHAT_URL
 				: `${baseUrl}${CHAT_URL}`;
 
-			// After sign in, send to chat subdomain (production) or /chat (dev)
+			// After sign in, stay in app subdomain if login happens there.
 			if (url === baseUrl || url === `${baseUrl}/`) {
+				if (APP_URL && baseUrl.startsWith(APP_URL)) {
+					return `${baseUrl}/`;
+				}
 				return resolvedChatUrl;
 			}
 			// Allow relative callbacks within the app
@@ -66,6 +78,9 @@ export const authConfig = {
 
 			// Never leave authenticated users on the marketing root in production.
 			if (rootOrigins.has(parsedUrl.origin) && parsedUrl.pathname === "/") {
+				if (APP_URL && parsedUrl.origin === APP_URL) {
+					return `${APP_URL}/`;
+				}
 				return resolvedChatUrl;
 			}
 

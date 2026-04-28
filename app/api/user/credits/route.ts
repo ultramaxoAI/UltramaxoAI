@@ -1,32 +1,17 @@
 import { auth } from "@/app/(auth)/auth";
-import { CREDIT_COSTS, getCreditResetWindowDays, getStartingCredits } from "@/lib/credits";
 import { getCreditSummaryByUserId } from "@backend/db/queries";
+import { NextResponse } from "next/server";
 
 export async function GET() {
 	const session = await auth();
-
 	if (!session?.user?.id) {
-		return Response.json({ error: "Unauthorized" }, { status: 401 });
+		return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 	}
 
-	const summary = await getCreditSummaryByUserId({ userId: session.user.id, limit: 20 });
-
-	return Response.json(
-		{
-			account: summary.account,
-			transactions: summary.transactions,
-			costs: CREDIT_COSTS,
-			policy: {
-				allowance: getStartingCredits({
-					isPro: session.user.type === "pro",
-					role: session.user.role,
-				}),
-				resetWindowDays: getCreditResetWindowDays({
-					isPro: session.user.type === "pro",
-					role: session.user.role,
-				}),
-			},
-		},
-		{ status: 200 },
-	);
+	try {
+		const summary = await getCreditSummaryByUserId({ userId: session.user.id });
+		return NextResponse.json(summary);
+	} catch (error) {
+		return NextResponse.json({ error: "Failed to fetch credits" }, { status: 500 });
+	}
 }
