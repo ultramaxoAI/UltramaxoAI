@@ -10,11 +10,13 @@ Status: Draft (direvisi berdasarkan arahan terbaru)
 - Memperbaiki billing agar per token (per 1 juta token) dan konsisten untuk streaming maupun non-streaming.
 - Menambahkan rate limit dan enforcement kuota per API key.
 - Semua fitur berjalan end-to-end tanpa bug fungsional.
+- Memisahkan produk Chat dan API (pay-as-you-go) pada subdomain yang berbeda.
 
 ## Bukan Tujuan
 - Mengganti SwiftRouter atau menambah provider upstream lain.
 - Membuat UI billing baru di luar alur kredit/top-up yang sudah ada.
 - Redesain besar untuk pricing/landing (hanya menambah info model dan badge capability).
+- Menggabungkan Chat Pro dan API Pay-as-you-go dalam satu plan.
 
 ## Masalah Saat Ini
 - [app/api/v1/chat/completions/route.ts](app/api/v1/chat/completions/route.ts) masih punya fallback hardcoded API key.
@@ -36,6 +38,10 @@ Hybrid cache + override (SwiftRouter sebagai source of truth):
    - `/api/v1/models` baca dari katalog.
    - Docs publik dan tab API Platform baca dari katalog.
    - Landing page menampilkan badge capability dari katalog.
+5) Pemisahan produk dan akses:
+  - Chat tetap di `ultramaxo.tech/chat`.
+  - API Console ada di `app.ultramaxo.tech`.
+  - SSO satu akun (session dibagi antar subdomain).
 
 ## Data Model
 ### Tabel: model_catalog
@@ -75,6 +81,8 @@ Indeks yang dibutuhkan: `modelId` (unique), `provider`, `isFree`, `status`.
 - Model selain GPT-5.3 dianggap berbayar.
 - Untuk memakai model berbayar, user harus memiliki saldo minimal **USD 2**.
 - Kredit dihitung dalam **USD**.
+- API bersifat pay-as-you-go tanpa Pro/Non-Pro.
+- Chat Pro tetap terpisah dari API Pay-as-you-go.
 
 ## Endpoint API
 ### Publik
@@ -99,10 +107,19 @@ Indeks yang dibutuhkan: `modelId` (unique), `provider`, `isFree`, `status`.
   - Capability (text/vision/logo/audio/image)
   - Contoh request/response
   - Ketersediaan (free/paid)
+  - Limitasi rate dan syarat saldo minimal
 
-### Tab API Platform
+### App API Console (app.ultramaxo.tech)
+- Label menu: **API Console**.
+- Struktur menu:
+  - Dashboard (default)
+  - API Keys
+  - Billing & Topup
+  - Playground
+  - Docs
 - Tabel model dan detail yang sama dengan docs publik.
 - Menampilkan saldo kredit dan syarat topup minimal USD 2.
+- Satu akun login (SSO) dengan aplikasi chat.
 
 ### Landing Page
 - Badge capability untuk tiap model.
