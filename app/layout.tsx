@@ -10,6 +10,7 @@ import { VisitorTracker } from "@/components/visitor-tracker";
 import { CookieConsent } from "@/components/cookie-consent";
 import { OnboardingWizard } from "@/components/onboarding-wizard";
 import { JsonLd } from "@/components/json-ld";
+import { Analytics } from "@vercel/analytics/next";
 
 export const metadata: Metadata = {
 	metadataBase: new URL("https://ultramaxo.tech"),
@@ -151,6 +152,7 @@ export default function RootLayout({
 						{children}
 						<JsonLd />
 					</SessionProvider>
+					<Analytics />
 				</ThemeProvider>
 			</body>
 		</html>
