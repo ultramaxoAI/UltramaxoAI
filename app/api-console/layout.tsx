@@ -1,15 +1,66 @@
+import type { Metadata } from "next";
 import Link from "next/link";
-import { redirect } from "next/navigation";
-import { auth } from "@/app/(auth)/auth";
 import { ApiConsoleSidebarNav } from "@/components/api-console/sidebar-nav";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { GoogleTranslate } from "@/components/google-translate";
+
+export const metadata: Metadata = {
+	metadataBase: new URL("https://app.ultramaxo.tech"),
+	title: {
+		default: "Ultramaxo API Console",
+		template: "%s | Ultramaxo API",
+	},
+	description:
+		"Ultramaxo API Console — Akses 46+ model AI (GPT-5, Claude, Gemini, DeepSeek) melalui satu API key. Dashboard developer, dokumentasi, dan playground.",
+	keywords: [
+		"Ultramaxo API",
+		"AI API Gateway",
+		"GPT-5 API",
+		"Claude API",
+		"Gemini API",
+		"DeepSeek API",
+		"OpenAI compatible API",
+		"AI model API",
+		"unified AI API",
+		"API Console",
+		"AI playground",
+	],
+	openGraph: {
+		type: "website",
+		siteName: "Ultramaxo API",
+		locale: "id_ID",
+		url: "https://app.ultramaxo.tech",
+		title: "Ultramaxo API Console — 46+ AI Models, One API Key",
+		description:
+			"Akses GPT-5, Claude, Gemini, DeepSeek, dan 40+ model AI lainnya melalui satu endpoint OpenAI-compatible.",
+		images: [
+			{
+				url: "https://ultramaxo.tech/og-image.jpg",
+				width: 1200,
+				height: 630,
+				alt: "Ultramaxo API Console",
+			},
+		],
+	},
+	twitter: {
+		card: "summary_large_image",
+		title: "Ultramaxo API — 46+ AI Models, One API Key",
+		description:
+			"Akses GPT-5, Claude, Gemini, DeepSeek melalui satu endpoint OpenAI-compatible.",
+		images: ["https://ultramaxo.tech/og-image.jpg"],
+		creator: "@ultramaxo",
+	},
+	alternates: {
+		canonical: "https://app.ultramaxo.tech",
+	},
+};
 
 const navItems = [
 	{ href: "/api-console", label: "Overview", icon: "◈" },
 	{ href: "/api-console/keys", label: "API Keys", icon: "⚿" },
 	{ href: "/api-console/billing", label: "Billing", icon: "⊡" },
 	{ href: "/api-console/models", label: "Models", icon: "◎" },
+	{ href: "/api-console/pricing", label: "Pricing", icon: "$" },
 	{ href: "/api-console/playground", label: "Playground", icon: "▷" },
 	{
 		href: "/api-console/docs",
@@ -32,11 +83,6 @@ export default async function ApiConsoleLayout({
 }: {
 	children: React.ReactNode;
 }) {
-	const session = await auth();
-	if (!session?.user?.id) {
-		redirect("/login?callbackUrl=/api-console");
-	}
-
 	return (
 		<div className="apic">
 			<aside className="apic-sidebar">

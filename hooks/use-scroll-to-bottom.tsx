@@ -75,7 +75,7 @@ export function useScrollToBottom() {
 				requestAnimationFrame(() => {
 					container.scrollTo({
 						top: container.scrollHeight,
-						behavior: "instant",
+						behavior: "auto",
 					});
 					setIsAtBottom(true);
 					isAtBottomRef.current = true;

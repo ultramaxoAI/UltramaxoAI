@@ -26,6 +26,12 @@ export function useMessages({
 		}
 	}, [scrollToBottom, status]);
 
+	useEffect(() => {
+		if (status === "streaming" && isAtBottom) {
+			scrollToBottom("auto");
+		}
+	}, [isAtBottom, scrollToBottom, status]);
+
 	return {
 		containerRef,
 		endRef,

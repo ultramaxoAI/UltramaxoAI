@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { auth } from "@/app/(auth)/auth";
 import {
@@ -5,6 +6,18 @@ import {
 	getPlatformApiKeysByUserId,
 } from "@backend/db/queries";
 import { UsageChart } from "@/components/api-console/usage-chart";
+
+export const metadata: Metadata = {
+	title: "API Console — Dashboard",
+	description:
+		"Ultramaxo API Console — Monitor penggunaan API, kelola API key, dan pantau saldo kredit Anda secara real-time. Akses 46+ model AI dalam satu dashboard.",
+	openGraph: {
+		title: "Ultramaxo API Console — Dashboard",
+		description:
+			"Monitor penggunaan API, kelola API key, dan pantau saldo kredit secara real-time.",
+		url: "https://app.ultramaxo.tech",
+	},
+};
 
 export default async function ApiConsoleDashboard() {
 	const session = await auth();

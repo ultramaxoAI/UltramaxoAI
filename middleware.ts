@@ -60,7 +60,9 @@ function handleRouting(
 			pathname.startsWith("/login") ||
 			pathname.startsWith("/register") ||
 			pathname.startsWith("/auth") ||
-			pathname.startsWith("/docs")
+			pathname.startsWith("/docs") ||
+			pathname === "/robots.txt" ||
+			pathname === "/sitemap.xml"
 		) {
 			return NextResponse.next();
 		}
