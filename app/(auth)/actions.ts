@@ -95,11 +95,29 @@ export const login = async (
 
 		return { status: "success" };
 	} catch (error) {
-		console.error("Unexpected login error:", error);
+		if (
+			error instanceof Error &&
+			((error as any).digest?.startsWith("NEXT_REDIRECT") ||
+				error.message.includes("NEXT_REDIRECT"))
+		) {
+			throw error;
+		}
+
 		if (error instanceof z.ZodError) {
 			return { status: "invalid_data" };
 		}
 
+		if (error instanceof Error && error.name === "CredentialsSignin") {
+			return { status: "failed" };
+		}
+
+		// Also check AuthError specifically if available, though checking name is safe
+		const isAuthError = typeof error === 'object' && error !== null && 'type' in error;
+		if (isAuthError && (error as any).type === "CredentialsSignin") {
+			return { status: "failed" };
+		}
+
+		console.error("Unexpected login error:", error);
 		return { status: "failed" };
 	}
 };

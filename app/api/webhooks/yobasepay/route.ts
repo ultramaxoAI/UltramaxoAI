@@ -133,10 +133,30 @@ export async function POST(request: Request) {
 		);
 
 		if (isSuccess) {
-			await updatePurchaseRequestStatus({
+			const updatedRequest = await updatePurchaseRequestStatus({
 				id: referenceId,
 				status: "approved",
 			});
+
+			if (updatedRequest && updatedRequest.planId !== "API_TOPUP_USD") {
+				try {
+					const { db } = await import("@backend/db/queries");
+					const { user } = await import("@backend/db/schema");
+					const { eq } = await import("drizzle-orm");
+					const [proUser] = await db
+						.select()
+						.from(user)
+						.where(eq(user.id, updatedRequest.userId))
+						.limit(1);
+
+					if (proUser?.email) {
+						const { sendProUpgradeEmail } = await import("@backend/email");
+						await sendProUpgradeEmail(proUser.email, proUser.name || "User");
+					}
+				} catch (emailErr) {
+					console.error("[Webhook YoBasePay] Failed to send PRO upgrade email:", emailErr);
+				}
+			}
 
 			console.log(
 				`[Webhook YoBasePay] Payment APPROVED for ${referenceId}`,

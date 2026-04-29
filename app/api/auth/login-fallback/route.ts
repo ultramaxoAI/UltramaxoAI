@@ -56,8 +56,11 @@ async function handleCredentialsSignIn({
 		});
 
 		if (result?.error) {
+			const errorParam = result.error === "unverified"
+				? "Unverified"
+				: result.error;
 			const loginUrl = new URL("/login", request.url);
-			loginUrl.searchParams.set("error", result.error);
+			loginUrl.searchParams.set("error", errorParam);
 			return NextResponse.redirect(loginUrl, 303);
 		}
 

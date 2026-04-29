@@ -1,5 +1,6 @@
 "use client";
 
+import { PanelLeftClose, PanelLeftOpen } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -39,6 +40,7 @@ export default function PublicDocsLayout({
 	const [lang, setLang] = useState<Lang>("en");
 	const [theme, setTheme] = useState<Theme>("dark");
 	const [mobileNav, setMobileNav] = useState(false);
+	const [sidebarOpen, setSidebarOpen] = useState(true);
 
 	useEffect(() => {
 		const saved = localStorage.getItem("docs-lang");
@@ -60,13 +62,23 @@ export default function PublicDocsLayout({
 		<DocsContext.Provider value={{ lang, setLang, theme, setTheme }}>
 			<div className={`docs ${isDark ? "docs--dark" : "docs--light"}`}>
 				{/* Sidebar */}
-				<aside className="docs-sidebar">
-					<div className="docs-sidebar-head">
-						<Link href="/" className="docs-logo">
-							<span className="docs-logo-mark">U</span>
-							<span className="docs-logo-text">Ultramaxo</span>
-						</Link>
-						<span className="docs-badge">Docs</span>
+				<aside className={`docs-sidebar ${!sidebarOpen ? "docs-sidebar--collapsed" : ""}`}>
+					<div className="docs-sidebar-head flex items-center justify-between w-full">
+						<div className="flex items-center gap-2">
+							<Link href="/" className="docs-logo">
+								<span className="docs-logo-mark">U</span>
+								<span className="docs-logo-text">Ultramaxo</span>
+							</Link>
+							<span className="docs-badge">Docs</span>
+						</div>
+						<button
+							type="button"
+							className="docs-sidebar-toggle-btn hidden md:flex"
+							onClick={() => setSidebarOpen(false)}
+							title="Close sidebar"
+						>
+							<PanelLeftClose size={18} />
+						</button>
 					</div>
 
 					<nav className="docs-nav">
@@ -115,6 +127,18 @@ export default function PublicDocsLayout({
 					</div>
 				</aside>
 
+				{/* Floating open button */}
+				{!sidebarOpen && (
+					<button
+						type="button"
+						className="docs-floating-toggle hidden md:flex"
+						onClick={() => setSidebarOpen(true)}
+						title="Open sidebar"
+					>
+						<PanelLeftOpen size={18} />
+					</button>
+				)}
+
 				{/* Mobile header */}
 				<div className="docs-mobile-header">
 					<Link href="/docs" className="docs-logo">
@@ -161,7 +185,9 @@ export default function PublicDocsLayout({
 					</div>
 				)}
 
-				<main className="docs-main">{children}</main>
+				<main className={`docs-main ${!sidebarOpen ? "docs-main--expanded" : ""}`}>
+					{children}
+				</main>
 			</div>
 		</DocsContext.Provider>
 	);

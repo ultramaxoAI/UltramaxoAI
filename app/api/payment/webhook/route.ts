@@ -166,12 +166,10 @@ export async function POST(request: Request) {
 			}
 		}
 
-		// Update order status to paid
+		// Update note with webhook metadata first
 		await db
 			.update(purchaseRequest)
 			.set({
-				status: "paid",
-				updatedAt: new Date(),
 				note: JSON.stringify({
 					...JSON.parse(order.note || "{}"),
 					webhookTrxId: String(trxid || "").slice(0, 128),
@@ -181,27 +179,30 @@ export async function POST(request: Request) {
 			})
 			.where(eq(purchaseRequest.id, reff_id));
 
-		// Credit the user's API balance
-		try {
-			const noteData = JSON.parse(order.note || "{}");
-			const usdCents = Number(noteData.usdCents) || 0;
+		// Use the central function to upgrade the user / grant credits
+		const { updatePurchaseRequestStatus } = await import("@backend/db/queries");
+		await updatePurchaseRequestStatus({
+			id: reff_id,
+			status: "approved",
+		});
 
-			// Security: Validate credit amount is reasonable (max $100)
-			if (usdCents > 0 && usdCents <= 10000) {
-				const { grantApiCredits } = await import("@backend/db/queries");
-				await grantApiCredits({
-					userId: order.userId,
-					amountCents: usdCents,
-					reason: `Top-up via QRIS (${String(trxid || reff_id).slice(0, 64)})`,
-				});
-				console.log(
-					`[Webhook] Credited ${usdCents} cents to user ${order.userId}`,
-				);
-			} else if (usdCents > 10000) {
-				console.error("[Webhook] Suspiciously large credit amount:", usdCents);
+		// Try to send email
+		try {
+			if (order.planId !== "API_TOPUP_USD") {
+				const { user } = await import("@backend/db/schema");
+				const [proUser] = await db
+					.select()
+					.from(user)
+					.where(eq(user.id, order.userId))
+					.limit(1);
+
+				if (proUser?.email) {
+					const { sendProUpgradeEmail } = await import("@backend/email");
+					await sendProUpgradeEmail(proUser.email, proUser.name || "User");
+				}
 			}
-		} catch (creditError) {
-			console.error("[Webhook] Credit failed:", creditError);
+		} catch (emailErr) {
+			console.error("[Webhook] Failed to send PRO upgrade email:", emailErr);
 		}
 
 		console.log("[Webhook] Payment confirmed:", reff_id);

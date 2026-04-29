@@ -1,3 +1,11 @@
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+	title: "API Documentation — SDKs & Libraries",
+	description: "SDK dan library untuk integrasi Ultramaxo API. Contoh kode Python, Node.js, Go, cURL dan OpenAI-compatible SDK.",
+	openGraph: { title: "Ultramaxo API — SDKs & Libraries", description: "SDK dan contoh kode integrasi API.", url: "https://app.ultramaxo.tech/docs/sdks" },
+};
+
 import Link from "next/link";
 
 export default function DocsSDKsPage() {

@@ -60,6 +60,9 @@ function handleRouting(
 			pathname.startsWith("/login") ||
 			pathname.startsWith("/register") ||
 			pathname.startsWith("/auth") ||
+			pathname.startsWith("/verify") ||
+			pathname.startsWith("/forgot-password") ||
+			pathname.startsWith("/reset-password") ||
 			pathname.startsWith("/docs") ||
 			pathname === "/robots.txt" ||
 			pathname === "/sitemap.xml"

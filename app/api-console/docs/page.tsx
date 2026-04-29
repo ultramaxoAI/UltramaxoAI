@@ -1,4 +1,17 @@
+import type { Metadata } from "next";
 import Link from "next/link";
+
+export const metadata: Metadata = {
+	title: "API Documentation — Introduction",
+	description:
+		"Ultramaxo API Documentation — Panduan lengkap integrasi API untuk akses 46+ model AI (GPT-5, Claude, Gemini, DeepSeek) melalui endpoint OpenAI-compatible.",
+	openGraph: {
+		title: "Ultramaxo API Documentation",
+		description:
+			"Panduan lengkap integrasi API untuk akses 46+ model AI melalui endpoint OpenAI-compatible.",
+		url: "https://app.ultramaxo.tech/docs",
+	},
+};
 
 export default function DocsIntroPage() {
 	return (

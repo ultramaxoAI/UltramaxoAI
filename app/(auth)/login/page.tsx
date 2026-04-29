@@ -1,33 +1,35 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { Suspense, useActionState, useEffect, useState } from "react";
 
 import { AuthForm } from "@/components/auth-form";
 import { SubmitButton } from "@/components/submit-button";
 import { toast } from "@/components/toast";
+import { useSession } from "next-auth/react";
+import { type LoginActionState, login } from "../actions";
 
 const CHAT_COOKIE_RESET_URL =
 	process.env.NODE_ENV === "production"
 		? "https://chat.ultramaxo.tech/api/auth/clear-stale-cookies"
 		: undefined;
-const COOKIE_RESET_FLAG = "auth-cookie-reset-v2";
 
-export default function Page() {
+function LoginContent() {
 	const [isSuccessful, setIsSuccessful] = useState(false);
+	const router = useRouter();
+	const searchParams = useSearchParams();
+	const { update: updateSession } = useSession();
+
+	const [state, formAction] = useActionState<LoginActionState, FormData>(
+		login,
+		{
+			status: "idle",
+		},
+	);
 
 	useEffect(() => {
 		const resetCookies = async () => {
-			if (typeof window === "undefined") {
-				return;
-			}
-
-			if (window.sessionStorage.getItem(COOKIE_RESET_FLAG) === "1") {
-				return;
-			}
-
-			window.sessionStorage.setItem(COOKIE_RESET_FLAG, "1");
-
 			try {
 				await fetch("/api/auth/clear-stale-cookies", {
 					method: "GET",
@@ -55,12 +57,7 @@ export default function Page() {
 	}, []);
 
 	useEffect(() => {
-		if (typeof window === "undefined") {
-			return;
-		}
-
-		const searchParams = new URLSearchParams(window.location.search);
-		const error = searchParams.get("error");
+		const error = searchParams?.get("error");
 
 		if (!error) {
 			return;
@@ -76,28 +73,61 @@ export default function Page() {
 			return;
 		}
 
-		if (error === "CredentialsSignin") {
-			toast({
-				type: "error",
-				description: "Invalid username or password.",
-			});
-			return;
-		}
-
-		if (error === "OAuthAccountNotLinked") {
-			toast({
-				type: "error",
-				description:
-					"This email is already registered. Try signing in with the same method you used before.",
-			});
-			return;
-		}
+		const errorMessage = (() => {
+			switch (error) {
+				case "CredentialsSignin":
+					return "Invalid username or password.";
+				case "OAuthAccountNotLinked":
+					return "This email is already registered. Try signing in with the same method you used before.";
+				case "OAuthCallback":
+					return "Login session could not be established. Please try again.";
+				case "MissingCredentials":
+					return "Please enter your email/username and password.";
+				case "Unverified":
+					return "Email not verified. Check your inbox and verify first.";
+				default:
+					return `Sign in failed: ${error}`;
+			}
+		})();
 
 		toast({
 			type: "error",
-			description: `Sign in failed: ${error}`,
+			description: errorMessage,
 		});
-	}, []);
+	}, [searchParams]);
+
+	useEffect(() => {
+		if (state.status === "failed") {
+			toast({
+				type: "error",
+				description: "Login gagal. Coba lagi.",
+			});
+			return;
+		}
+
+		if (state.status === "invalid_data") {
+			toast({
+				type: "error",
+				description: "Data login tidak valid.",
+			});
+			return;
+		}
+
+		if (state.status === "unverified") {
+			toast({
+				type: "error",
+				description: "Email belum terverifikasi. Cek inbox dulu.",
+			});
+			return;
+		}
+
+		if (state.status === "success") {
+			setIsSuccessful(true);
+			updateSession();
+			router.refresh();
+			router.push("/chat");
+		}
+	}, [router, state.status, updateSession]);
 
 	return (
 		<div className="flex min-h-screen w-full bg-black">
@@ -191,7 +221,7 @@ export default function Page() {
 						</div>
 					</div>
 
-					<AuthForm defaultEmail="" type="login">
+					<AuthForm action={formAction} defaultEmail="" type="login">
 						<SubmitButton isSuccessful={isSuccessful}>
 							Sign in
 						</SubmitButton>
@@ -216,5 +246,13 @@ export default function Page() {
 				</div>
 			</div>
 		</div>
+	);
+}
+
+export default function Page() {
+	return (
+		<Suspense fallback={<div className="flex min-h-screen w-full bg-black" />}>
+			<LoginContent />
+		</Suspense>
 	);
 }

@@ -1,3 +1,11 @@
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+	title: "API Documentation — Chat Completions",
+	description: "Panduan endpoint Chat Completions API Ultramaxo. Compatible dengan OpenAI SDK untuk akses GPT-5, Claude, Gemini, dan 40+ model AI.",
+	openGraph: { title: "Ultramaxo API — Chat Completions", description: "Endpoint Chat Completions compatible dengan OpenAI SDK.", url: "https://app.ultramaxo.tech/docs/chat-completions" },
+};
+
 export default function DocsChatCompletionsPage() {
 	return (
 		<div className="apic-stack apic-stack--32">

@@ -1,8 +1,5 @@
 import type { Metadata } from "next";
-import Link from "next/link";
-import { ApiConsoleSidebarNav } from "@/components/api-console/sidebar-nav";
-import { ThemeToggle } from "@/components/theme-toggle";
-import { GoogleTranslate } from "@/components/google-translate";
+import { ApiConsoleClientLayout } from "@/components/api-console/client-layout";
 
 export const metadata: Metadata = {
 	metadataBase: new URL("https://app.ultramaxo.tech"),
@@ -84,46 +81,8 @@ export default async function ApiConsoleLayout({
 	children: React.ReactNode;
 }) {
 	return (
-		<div className="apic">
-			<aside className="apic-sidebar">
-				<div className="apic-sidebar-head">
-					<Link href="/api-console" className="apic-logo">
-						<span className="apic-logo-mark">U</span>
-						<span className="apic-logo-text">Ultramaxo</span>
-					</Link>
-					<span className="apic-badge">API</span>
-				</div>
-
-				<ApiConsoleSidebarNav items={navItems} />
-
-				<div className="apic-sidebar-foot flex flex-col gap-3">
-					<div className="flex items-center gap-2 px-2">
-						<GoogleTranslate />
-						<ThemeToggle />
-					</div>
-					<Link href="/chat" className="apic-nav-link apic-nav-link--muted">
-						<span className="apic-nav-icon">←</span>
-						Back to Chat
-					</Link>
-				</div>
-			</aside>
-
-			{/* Mobile header */}
-			<div className="apic-mobile-header flex items-center justify-between p-4 md:hidden" style={{ borderBottom: "1px solid var(--apic-border)", background: "var(--apic-sidebar-bg)" }}>
-				<div className="flex items-center gap-2">
-					<Link href="/api-console" className="apic-logo flex items-center gap-2">
-						<span className="apic-logo-mark flex items-center justify-center w-7 h-7 rounded-md font-bold text-sm">U</span>
-						<span className="apic-logo-text font-semibold">Ultramaxo</span>
-					</Link>
-					<span className="apic-badge">API</span>
-				</div>
-				<div className="flex items-center gap-2">
-					<GoogleTranslate />
-					<ThemeToggle />
-				</div>
-			</div>
-
-			<main className="apic-main">{children}</main>
-		</div>
+		<ApiConsoleClientLayout navItems={navItems}>
+			{children}
+		</ApiConsoleClientLayout>
 	);
 }
