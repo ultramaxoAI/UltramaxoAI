@@ -137,7 +137,7 @@ export default function ApiConsoleKeysPage() {
 									fontFamily: "'JetBrains Mono', monospace",
 									fontSize: 13,
 									color: "#22c55e",
-									background: "#0a0a0a",
+									background: "var(--apic-bg)",
 									padding: "8px 12px",
 									borderRadius: 6,
 									flex: 1,
@@ -173,7 +173,7 @@ export default function ApiConsoleKeysPage() {
 			{showCreate && (
 				<div className="apic-card apic-stack apic-stack--12">
 					<div className="apic-h3">Create a new key</div>
-					<p style={{ fontSize: 12, color: "#888", margin: 0 }}>
+					<p style={{ fontSize: 12, color: "var(--apic-text-muted)", margin: 0 }}>
 						Give your key a descriptive name so you can identify it later.
 					</p>
 					<div className="apic-row apic-row--8">
@@ -221,7 +221,7 @@ export default function ApiConsoleKeysPage() {
 						<p
 							style={{
 								fontSize: 12,
-								color: "#555",
+								color: "var(--apic-text-dim)",
 								margin: "2px 0 0",
 							}}
 						>
@@ -254,7 +254,7 @@ export default function ApiConsoleKeysPage() {
 									colSpan={6}
 									style={{
 										textAlign: "center",
-										color: "#555",
+										color: "var(--apic-text-dim)",
 										padding: 40,
 									}}
 								>
@@ -265,8 +265,8 @@ export default function ApiConsoleKeysPage() {
 						) : (
 							keys.map((key, i) => (
 								<tr key={key.id}>
-									<td style={{ color: "#555" }}>{i + 1}</td>
-									<td style={{ color: "#e5e5e5", fontWeight: 500 }}>
+									<td style={{ color: "var(--apic-text-dim)" }}>{i + 1}</td>
+									<td style={{ color: "var(--apic-text)", fontWeight: 500 }}>
 										{key.name}
 									</td>
 									<td>
@@ -291,7 +291,7 @@ export default function ApiConsoleKeysPage() {
 											{key.status}
 										</span>
 									</td>
-									<td style={{ fontSize: 12, color: "#666" }}>
+									<td style={{ fontSize: 12, color: "var(--apic-text-muted)" }}>
 										{fmtDate(key.createdAt)}
 									</td>
 									<td>
@@ -318,7 +318,7 @@ export default function ApiConsoleKeysPage() {
 							padding: "8px 16px",
 							borderTop: "1px solid #111",
 							fontSize: 12,
-							color: "#555",
+							color: "var(--apic-text-dim)",
 						}}
 					>
 						Showing {keys.length} key{keys.length !== 1 ? "s" : ""} ·{" "}

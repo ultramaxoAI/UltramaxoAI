@@ -92,7 +92,7 @@ export default function PaymentPage() {
 					minHeight: "60vh",
 				}}
 			>
-				<p style={{ color: "#555" }}>Loading payment...</p>
+				<p style={{ color: "var(--apic-text-dim)" }}>Loading payment...</p>
 			</div>
 		);
 	}
@@ -115,7 +115,7 @@ export default function PaymentPage() {
 							? "Payment Cancelled"
 							: "Complete Payment"}
 				</h1>
-				<p style={{ fontSize: 13, color: "#666", marginTop: 4 }}>
+				<p style={{ fontSize: 13, color: "var(--apic-text-muted)", marginTop: 4 }}>
 					Transaction {data.trxId || data.refId}
 				</p>
 			</div>
@@ -140,7 +140,7 @@ export default function PaymentPage() {
 				<div className="apic-stat-value" style={{ fontSize: 32, marginTop: 8 }}>
 					Rp {data.amountToPay?.toLocaleString("id-ID") || "—"}
 				</div>
-				<p style={{ fontSize: 12, color: "#555", marginTop: 4 }}>
+				<p style={{ fontSize: 12, color: "var(--apic-text-dim)", marginTop: 4 }}>
 					≈ ${(data.amountUsd || 0).toFixed(2)} USD
 				</p>
 			</div>
@@ -221,7 +221,7 @@ export default function PaymentPage() {
 			<div style={{ textAlign: "center" }}>
 				<Link
 					href="/api-console/billing"
-					style={{ color: "#888", fontSize: 13, textDecoration: "none" }}
+					style={{ color: "var(--apic-text-muted)", fontSize: 13, textDecoration: "none" }}
 				>
 					← Back to Billing
 				</Link>

@@ -92,10 +92,10 @@ export default function DocsModelsPage() {
 				</h2>
 
 				{loading ? (
-					<p style={{ color: "#555", fontSize: 13 }}>Loading models...</p>
+					<p style={{ color: "var(--apic-text-dim)", fontSize: 13 }}>Loading models...</p>
 				) : models.length === 0 ? (
 					<div className="apic-card">
-						<p style={{ color: "#555", fontSize: 13 }}>
+						<p style={{ color: "var(--apic-text-dim)", fontSize: 13 }}>
 							No models in the catalog yet. An admin needs to trigger a model
 							sync via{" "}
 							<code className="apic-code--inline">
@@ -125,7 +125,7 @@ export default function DocsModelsPage() {
 											style={{
 												fontFamily: "monospace",
 												fontSize: 12,
-												color: "#e5e5e5",
+												color: "var(--apic-text)",
 											}}
 										>
 											{m.modelId}
@@ -141,7 +141,7 @@ export default function DocsModelsPage() {
 															padding: "1px 6px",
 															borderRadius: 4,
 															border: "1px solid #222",
-															color: "#666",
+															color: "var(--apic-text-muted)",
 															textTransform: "uppercase",
 															letterSpacing: "0.05em",
 														}}

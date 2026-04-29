@@ -140,7 +140,7 @@ export default function ApiConsoleModelsPage() {
 									colSpan={5}
 									style={{
 										textAlign: "center",
-										color: "#555",
+										color: "var(--apic-text-dim)",
 										padding: 40,
 									}}
 								>
@@ -157,7 +157,7 @@ export default function ApiConsoleModelsPage() {
 									<td>
 										<div
 											style={{
-												color: "#e5e5e5",
+												color: "var(--apic-text)",
 												fontWeight: 500,
 												fontSize: 13,
 											}}
@@ -176,7 +176,7 @@ export default function ApiConsoleModelsPage() {
 														padding: "1px 6px",
 														borderRadius: 4,
 														border: "1px solid #222",
-														color: "#666",
+														color: "var(--apic-text-muted)",
 														textTransform: "uppercase",
 														letterSpacing: "0.05em",
 													}}
@@ -193,7 +193,7 @@ export default function ApiConsoleModelsPage() {
 													fontFamily: "'JetBrains Mono', monospace",
 													fontSize: 12,
 													color: "#a5f3fc",
-													background: "#0a0a0a",
+													background: "var(--apic-bg)",
 													padding: "2px 8px",
 													borderRadius: 4,
 												}}
@@ -213,8 +213,8 @@ export default function ApiConsoleModelsPage() {
 											</button>
 										</div>
 									</td>
-									<td style={{ fontSize: 13, color: "#888" }}>{m.provider}</td>
-									<td style={{ fontSize: 13, color: "#888" }}>
+									<td style={{ fontSize: 13, color: "var(--apic-text-muted)" }}>{m.provider}</td>
+									<td style={{ fontSize: 13, color: "var(--apic-text-muted)" }}>
 										{m.context ? Number(m.context).toLocaleString() : "—"}
 									</td>
 									<td>
@@ -224,14 +224,14 @@ export default function ApiConsoleModelsPage() {
 											<span
 												style={{
 													fontSize: 12,
-													color: "#888",
+													color: "var(--apic-text-muted)",
 													fontFamily: "monospace",
 												}}
 											>
 												${Number(m.priceIn || 0).toFixed(2)} / ${Number(m.priceOut || 0).toFixed(2)}
 											</span>
 										) : (
-											<span style={{ fontSize: 12, color: "#555" }}>—</span>
+											<span style={{ fontSize: 12, color: "var(--apic-text-dim)" }}>—</span>
 										)}
 									</td>
 								</tr>
@@ -245,7 +245,7 @@ export default function ApiConsoleModelsPage() {
 							padding: "8px 16px",
 							borderTop: "1px solid #111",
 							fontSize: 12,
-							color: "#555",
+							color: "var(--apic-text-dim)",
 						}}
 					>
 						Showing {filtered.length} of {models.length} models

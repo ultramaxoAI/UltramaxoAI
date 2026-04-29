@@ -1,7 +1,34 @@
 import { auth } from "@/app/(auth)/auth";
-import { getPlatformApiKeysByUserId, createPlatformApiKey } from "@backend/db/queries";
+import {
+	getPlatformApiKeysByUserId,
+	createPlatformApiKey,
+} from "@backend/db/queries";
 import { NextResponse } from "next/server";
-import { nanoid } from "nanoid";
+import crypto from "node:crypto";
+
+// Security: Generate cryptographically secure API keys
+function generateSecureApiKey(): string {
+	const randomBytes = crypto.randomBytes(32).toString("hex");
+	return `ux_sk_${randomBytes}`;
+}
+
+// Security: Hash API key for storage (store hash, not plaintext)
+function hashApiKey(key: string): string {
+	return crypto.createHash("sha256").update(key).digest("hex");
+}
+
+// Security: Input validation
+function sanitizeName(name: unknown): string | null {
+	if (typeof name !== "string") return null;
+	const trimmed = name.trim();
+	if (trimmed.length === 0 || trimmed.length > 64) return null;
+	// Allow alphanumeric, spaces, hyphens, underscores only
+	if (!/^[a-zA-Z0-9\s\-_]+$/.test(trimmed)) return null;
+	return trimmed;
+}
+
+// Security: Rate limit key creation (max 10 keys per user)
+const MAX_KEYS_PER_USER = 10;
 
 export async function GET() {
 	const session = await auth();
@@ -11,9 +38,19 @@ export async function GET() {
 
 	try {
 		const keys = await getPlatformApiKeysByUserId(session.user.id);
-		return NextResponse.json(keys);
-	} catch (error) {
-		return NextResponse.json({ error: "Failed to fetch keys" }, { status: 500 });
+		// Security: Never return full key in list — only masked prefix
+		const maskedKeys = keys.map((k: any) => ({
+			...k,
+			key: k.key
+				? `${k.key.slice(0, 8)}${"•".repeat(24)}${k.key.slice(-4)}`
+				: "•".repeat(36),
+		}));
+		return NextResponse.json(maskedKeys);
+	} catch {
+		return NextResponse.json(
+			{ error: "Failed to fetch keys" },
+			{ status: 500 },
+		);
 	}
 }
 
@@ -24,17 +61,63 @@ export async function POST(req: Request) {
 	}
 
 	try {
-		const { name } = await req.json();
-		const key = `ux_sk_${nanoid(32)}`;
-		
+		// Security: Validate Content-Type
+		const contentType = req.headers.get("content-type");
+		if (!contentType?.includes("application/json")) {
+			return NextResponse.json(
+				{ error: "Invalid content type" },
+				{ status: 400 },
+			);
+		}
+
+		const body = await req.json();
+
+		// Security: Validate name input
+		const name = sanitizeName(body.name);
+		if (!name) {
+			return NextResponse.json(
+				{
+					error: "Key name is required. Use 1-64 alphanumeric characters, hyphens, or underscores.",
+				},
+				{ status: 400 },
+			);
+		}
+
+		// Security: Enforce max keys per user
+		const existingKeys = await getPlatformApiKeysByUserId(session.user.id);
+		const activeKeys = existingKeys.filter(
+			(k: any) => k.status === "active",
+		);
+		if (activeKeys.length >= MAX_KEYS_PER_USER) {
+			return NextResponse.json(
+				{
+					error: `Maximum ${MAX_KEYS_PER_USER} active API keys allowed. Revoke an existing key first.`,
+				},
+				{ status: 429 },
+			);
+		}
+
+		// Security: Generate cryptographically secure key
+		const plainKey = generateSecureApiKey();
+
 		const newKey = await createPlatformApiKey({
 			userId: session.user.id,
-			name: name || "Default Key",
-			key,
+			name,
+			key: plainKey,
 		});
 
-		return NextResponse.json(newKey);
-	} catch (error) {
-		return NextResponse.json({ error: "Failed to create key" }, { status: 500 });
+		// Security: Return the full key ONLY on creation (show-once)
+		return NextResponse.json({
+			id: newKey.id,
+			name: newKey.name,
+			key: plainKey,
+			status: newKey.status,
+			createdAt: newKey.createdAt,
+		});
+	} catch {
+		return NextResponse.json(
+			{ error: "Failed to create key" },
+			{ status: 500 },
+		);
 	}
 }

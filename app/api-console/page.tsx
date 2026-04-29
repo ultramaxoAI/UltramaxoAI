@@ -52,48 +52,48 @@ export default async function ApiConsoleDashboard() {
 				<div className="apic-card apic-card--stat apic-card--glow-green">
 					<div className="apic-row apic-row--between">
 						<div className="apic-stat-label">Total Spend</div>
-						<span style={{ color: "#555", fontSize: 14 }}>$</span>
+						<span style={{ color: "var(--apic-text-dim)", fontSize: 14 }}>$</span>
 					</div>
 					<div className="apic-stat-value" style={{ marginTop: 8 }}>
 						${spent}
 					</div>
-					<p style={{ fontSize: 11, color: "#555", marginTop: 4 }}>
+					<p style={{ fontSize: 11, color: "var(--apic-text-dim)", marginTop: 4 }}>
 						Lifetime
 					</p>
 				</div>
 				<div className="apic-card apic-card--stat">
 					<div className="apic-row apic-row--between">
 						<div className="apic-stat-label">API Requests</div>
-						<span style={{ color: "#555", fontSize: 14 }}>↗</span>
+						<span style={{ color: "var(--apic-text-dim)", fontSize: 14 }}>↗</span>
 					</div>
 					<div className="apic-stat-value" style={{ marginTop: 8 }}>
 						{totalRequests}
 					</div>
-					<p style={{ fontSize: 11, color: "#555", marginTop: 4 }}>
+					<p style={{ fontSize: 11, color: "var(--apic-text-dim)", marginTop: 4 }}>
 						{totalRequests} successful, 0 failed
 					</p>
 				</div>
 				<div className="apic-card apic-card--stat">
 					<div className="apic-row apic-row--between">
 						<div className="apic-stat-label">Total Tokens</div>
-						<span style={{ color: "#555", fontSize: 14 }}>⟡</span>
+						<span style={{ color: "var(--apic-text-dim)", fontSize: 14 }}>⟡</span>
 					</div>
 					<div className="apic-stat-value" style={{ marginTop: 8 }}>
 						{totalTokens.toLocaleString()}
 					</div>
-					<p style={{ fontSize: 11, color: "#555", marginTop: 4 }}>
+					<p style={{ fontSize: 11, color: "var(--apic-text-dim)", marginTop: 4 }}>
 						Input + output tokens
 					</p>
 				</div>
 				<div className="apic-card apic-card--stat">
 					<div className="apic-row apic-row--between">
 						<div className="apic-stat-label">Success Rate</div>
-						<span style={{ color: "#555", fontSize: 14 }}>↗</span>
+						<span style={{ color: "var(--apic-text-dim)", fontSize: 14 }}>↗</span>
 					</div>
 					<div className="apic-stat-value" style={{ marginTop: 8 }}>
 						{successRate}%
 					</div>
-					<p style={{ fontSize: 11, color: "#555", marginTop: 4 }}>
+					<p style={{ fontSize: 11, color: "var(--apic-text-dim)", marginTop: 4 }}>
 						Request success rate
 					</p>
 				</div>
@@ -114,7 +114,7 @@ export default async function ApiConsoleDashboard() {
 					>
 						{activeKeys}
 					</div>
-					<p style={{ fontSize: 12, color: "#555", marginTop: 4 }}>
+					<p style={{ fontSize: 12, color: "var(--apic-text-dim)", marginTop: 4 }}>
 						{activeKeys} active · {keys.length} total
 					</p>
 				</Link>
@@ -130,7 +130,7 @@ export default async function ApiConsoleDashboard() {
 					>
 						${bal}
 					</div>
-					<p style={{ fontSize: 12, color: "#555", marginTop: 4 }}>
+					<p style={{ fontSize: 12, color: "var(--apic-text-dim)", marginTop: 4 }}>
 						{Number(bal) >= 2 ? (
 							<span style={{ color: "#4ade80" }}>
 								Ready for paid models
@@ -151,7 +151,7 @@ export default async function ApiConsoleDashboard() {
 					<p
 						style={{
 							fontSize: 13,
-							color: "#888",
+							color: "var(--apic-text-muted)",
 							marginTop: 8,
 							lineHeight: 1.5,
 						}}
