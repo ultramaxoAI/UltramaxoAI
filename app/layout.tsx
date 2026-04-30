@@ -1,8 +1,12 @@
 import { GeistMono } from "geist/font/mono";
 import { GeistSans } from "geist/font/sans";
 import type { Metadata } from "next";
+import { headers } from "next/headers";
+import { redirect } from "next/navigation";
 import { Toaster } from "sonner";
 import { ThemeProvider } from "@/components/theme-provider";
+import { auth } from "@/app/(auth)/auth";
+import { getSiteSettings } from "@backend/db/queries-settings";
 
 import "./globals.css";
 import { SessionProvider } from "next-auth/react";
@@ -92,6 +96,23 @@ const geistMono = GeistMono;
 
 const LIGHT_THEME_COLOR = "hsl(0 0% 100%)";
 const DARK_THEME_COLOR = "#18181b";
+const API_SUBDOMAIN = "api.";
+const MAINTENANCE_BYPASS_PATHS = [
+	"/maintenance",
+	"/login",
+	"/register",
+	"/oauth",
+	"/verify",
+	"/forgot-password",
+	"/reset-password",
+	"/api",
+];
+const STATIC_PATH_PREFIXES = ["/_next", "/favicon"];
+const STATIC_PATHNAMES = new Set([
+	"/robots.txt",
+	"/sitemap.xml",
+	"/manifest.webmanifest",
+]);
 const THEME_COLOR_SCRIPT = `\
 (function() {
   var html = document.documentElement;
@@ -110,11 +131,57 @@ const THEME_COLOR_SCRIPT = `\
   updateThemeColor();
 })();`;
 
-export default function RootLayout({
+function isStaticRequest(pathname: string) {
+	return (
+		STATIC_PATH_PREFIXES.some((prefix) => pathname.startsWith(prefix)) ||
+		STATIC_PATHNAMES.has(pathname) ||
+		/\.[a-zA-Z0-9]+$/.test(pathname)
+	);
+}
+
+function isMaintenanceBypassPath(pathname: string) {
+	if (pathname.startsWith("/admin")) {
+		return true;
+	}
+
+	return MAINTENANCE_BYPASS_PATHS.some(
+		(prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`),
+	);
+}
+
+async function shouldRedirectToMaintenance() {
+	const headerStore = await headers();
+	const pathname = headerStore.get("x-pathname") || "/";
+	const host =
+		headerStore.get("x-request-host") ||
+		headerStore.get("x-forwarded-host") ||
+		headerStore.get("host") ||
+		"";
+
+	if (
+		host.startsWith(API_SUBDOMAIN) ||
+		isStaticRequest(pathname) ||
+		isMaintenanceBypassPath(pathname)
+	) {
+		return false;
+	}
+
+	const [session, settings] = await Promise.all([auth(), getSiteSettings()]);
+
+	return (
+		settings?.maintenanceEnabled === true && session?.user?.role !== "admin"
+	);
+}
+
+export default async function RootLayout({
 	children,
 }: Readonly<{
 	children: React.ReactNode;
 }>) {
+	if (await shouldRedirectToMaintenance()) {
+		redirect("/maintenance");
+	}
+
 	return (
 		<html
 			className={`${geist.variable} ${geistMono.variable}`}

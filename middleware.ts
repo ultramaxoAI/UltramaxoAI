@@ -3,22 +3,6 @@ import { getToken } from "next-auth/jwt";
 
 const APP_SUBDOMAIN = "app.";
 const API_SUBDOMAIN = "api.";
-const MAINTENANCE_BYPASS_PATHS = [
-	"/maintenance",
-	"/login",
-	"/register",
-	"/oauth",
-	"/verify",
-	"/forgot-password",
-	"/reset-password",
-	"/api",
-];
-const STATIC_PATH_PREFIXES = ["/_next", "/favicon"];
-const STATIC_PATHNAMES = new Set([
-	"/robots.txt",
-	"/sitemap.xml",
-	"/manifest.webmanifest",
-]);
 
 // Security headers applied to all responses
 const SECURITY_HEADERS: Record<string, string> = {
@@ -51,54 +35,13 @@ async function isAdminRequest(request: NextRequest): Promise<boolean> {
 	}
 }
 
-function isStaticRequest(pathname: string) {
-	return (
-		STATIC_PATH_PREFIXES.some((prefix) => pathname.startsWith(prefix)) ||
-		STATIC_PATHNAMES.has(pathname) ||
-		/\.[a-zA-Z0-9]+$/.test(pathname)
-	);
-}
-
-function isMaintenanceBypassPath(pathname: string) {
-	return MAINTENANCE_BYPASS_PATHS.some(
-		(prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`),
-	);
-}
-
-async function isMaintenanceEnabled(request: NextRequest) {
-	try {
-		const url = new URL("/api/public/site-status", request.url);
-		const response = await fetch(url, {
-			headers: {
-				"x-maintenance-check": "1",
-			},
-			cache: "no-store",
-		});
-
-		if (!response.ok) {
-			return false;
-		}
-
-		const data = (await response.json()) as { maintenanceEnabled?: boolean };
-		return data.maintenanceEnabled === true;
-	} catch {
-		return false;
-	}
-}
-
 export async function middleware(request: NextRequest) {
 	const host = request.headers.get("host") || "";
 	const { pathname } = request.nextUrl;
 	const isAdmin = await isAdminRequest(request);
-
-	if (
-		!isAdmin &&
-		!isStaticRequest(pathname) &&
-		!isMaintenanceBypassPath(pathname) &&
-		(await isMaintenanceEnabled(request))
-	) {
-		return NextResponse.rewrite(new URL("/maintenance", request.url));
-	}
+	const requestHeaders = new Headers(request.headers);
+	requestHeaders.set("x-pathname", pathname);
+	requestHeaders.set("x-request-host", host);
 
 	// --- Admin route protection (runs before everything else) ---
 	if (pathname.startsWith("/admin")) {
@@ -119,7 +62,7 @@ export async function middleware(request: NextRequest) {
 	}
 
 	// Apply security headers to all responses
-	const response = handleRouting(request, host, pathname);
+	const response = handleRouting(request, host, pathname, requestHeaders);
 	for (const [key, value] of Object.entries(SECURITY_HEADERS)) {
 		response.headers.set(key, value);
 	}
@@ -131,11 +74,14 @@ function handleRouting(
 	request: NextRequest,
 	host: string,
 	pathname: string,
+	requestHeaders: Headers,
 ): NextResponse {
 	// API subdomain: restrict to /api routes only
 	if (host.startsWith(API_SUBDOMAIN)) {
 		if (pathname === "/v1" || pathname.startsWith("/v1/")) {
-			return NextResponse.rewrite(new URL(`/api${pathname}`, request.url));
+			return NextResponse.rewrite(new URL(`/api${pathname}`, request.url), {
+				request: { headers: requestHeaders },
+			});
 		}
 
 		if (
@@ -143,7 +89,9 @@ function handleRouting(
 			pathname.startsWith("/_next") ||
 			pathname.startsWith("/favicon")
 		) {
-			return NextResponse.next();
+			return NextResponse.next({
+				request: { headers: requestHeaders },
+			});
 		}
 		// Block non-API access on api subdomain
 		return NextResponse.json(
@@ -173,26 +121,37 @@ function handleRouting(
 			pathname === "/robots.txt" ||
 			pathname === "/sitemap.xml"
 		) {
-			return NextResponse.next();
+			return NextResponse.next({
+				request: { headers: requestHeaders },
+			});
 		}
 
 		// Already on /api-console path
 		if (pathname.startsWith("/api-console")) {
-			return NextResponse.next();
+			return NextResponse.next({
+				request: { headers: requestHeaders },
+			});
 		}
 
 		// Root → dashboard
 		if (pathname === "/") {
-			return NextResponse.rewrite(new URL("/api-console", request.url));
+			return NextResponse.rewrite(new URL("/api-console", request.url), {
+				request: { headers: requestHeaders },
+			});
 		}
 
 		// Everything else → rewrite to /api-console/<path>
 		return NextResponse.rewrite(
 			new URL(`/api-console${pathname}`, request.url),
+			{
+				request: { headers: requestHeaders },
+			},
 		);
 	}
 
-	return NextResponse.next();
+	return NextResponse.next({
+		request: { headers: requestHeaders },
+	});
 }
 
 export const config = {
