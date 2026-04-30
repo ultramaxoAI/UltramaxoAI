@@ -8,6 +8,10 @@ const withSerwist = withSerwistInit({
 });
 
 const nextConfig: NextConfig = {
+	// ── Production: strip ALL console.* from client & server bundles ──
+	compiler: {
+		removeConsole: process.env.NODE_ENV === "production" ? true : false,
+	},
 	// Disable cacheComponents to allow dynamic route segments
 	cacheComponents: false,
 	// Cross-Origin headers required by WebContainers API

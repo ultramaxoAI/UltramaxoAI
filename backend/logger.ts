@@ -1,25 +1,32 @@
 /**
- * Centralized logging service with log levels
- * Prevents sensitive data exposure in production logs
+ * Centralized logging service with log levels.
+ *
+ * Production behaviour:
+ *   1. The Next.js SWC compiler strips every `console.*` call from the bundle
+ *      at build-time via `compiler.removeConsole`.
+ *   2. As a **double safety-net**, this logger is a complete no-op when
+ *      `NODE_ENV === "production"` — nothing is emitted, period.
+ *
+ * Development behaviour:
+ *   All levels (debug / info / warn / error) are printed with sensitive
+ *   data automatically masked.
  */
 
 type LogLevel = "debug" | "info" | "warn" | "error";
 
-const isDevelopment = process.env.NODE_ENV === "development";
-const isProduction = process.env.NODE_ENV === "production";
+const isDevelopment = process.env.NODE_ENV !== "production";
 
 class Logger {
-	private shouldLog(level: LogLevel): boolean {
-		if (isDevelopment) {
-			return true;
-		}
-		// In production, only log warnings and errors
-		return level === "warn" || level === "error";
+	/**
+	 * In production every method is a no-op.
+	 * In development all levels pass through.
+	 */
+	private shouldLog(_level: LogLevel): boolean {
+		return isDevelopment;
 	}
 
 	private sanitize(data: unknown): unknown {
 		if (typeof data === "string") {
-			// Mask sensitive patterns
 			return data
 				.replace(/password[=:]\s*\S+/gi, "password=***")
 				.replace(/token[=:]\s*\S+/gi, "token=***")
@@ -72,10 +79,7 @@ class Logger {
 		if (this.shouldLog("error")) {
 			const sanitizedError =
 				error instanceof Error
-					? {
-							message: error.message,
-							stack: isProduction ? undefined : error.stack,
-						}
+					? { message: error.message, stack: error.stack }
 					: this.sanitize(error);
 
 			console.error(
