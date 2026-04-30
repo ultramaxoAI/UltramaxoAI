@@ -2737,15 +2737,18 @@ export async function updatePurchaseRequestStatus({
 			return requestRow;
 		}
 
-		// Prevent re-approving a previously approved request
-		if (requestRow.status === "approved" && status === "approved") {
+		// Prevent re-approving a previously approved/paid request
+		const isCurrentlySuccess = requestRow.status === "approved" || requestRow.status === "paid";
+		const isTargetSuccess = status === "approved" || status === "paid";
+
+		if (isCurrentlySuccess && isTargetSuccess) {
 			console.warn(
 				`[updatePurchaseRequestStatus] Double-approval blocked for ${id}`,
 			);
 			return requestRow;
 		}
 
-		if (status === "approved") {
+		if (isTargetSuccess) {
 			if (requestRow.planId === "API_TOPUP_USD") {
 				let usdCents = 0;
 				try {
