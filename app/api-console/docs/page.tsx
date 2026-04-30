@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 
+const DEFAULT_FREE_MODEL_ID = "gpt-5.3-codex";
+
 export const metadata: Metadata = {
 	title: "API Documentation — Introduction",
 	description:
@@ -52,7 +54,7 @@ export default function DocsIntroPage() {
 				<h3>2. Top Up Your Balance</h3>
 				<p>
 					Paid models require a minimum balance of <strong>$2 USD</strong>. Free
-					models (like GPT-5.3) work without any balance. Visit{" "}
+					models (like {DEFAULT_FREE_MODEL_ID}) work without any balance. Visit{" "}
 					<Link href="/api-console/billing" style={{ color: "#818cf8" }}>
 						Billing
 					</Link>{" "}
@@ -64,7 +66,7 @@ export default function DocsIntroPage() {
   -H "Authorization: Bearer ux_sk_YOUR_KEY" \\
   -H "Content-Type: application/json" \\
   -d '{
-    "model": "gpt-5.3",
+    "model": "${DEFAULT_FREE_MODEL_ID}",
     "messages": [
       {"role": "user", "content": "Hello!"}
     ]
@@ -153,7 +155,7 @@ export default function DocsIntroPage() {
 						single endpoint.
 					</li>
 					<li>
-						<strong>Free tier</strong> — GPT-5.3 is available at no cost.
+						<strong>Free tier</strong> — {DEFAULT_FREE_MODEL_ID} is available at no cost.
 					</li>
 					<li>
 						<strong>Balance & usage APIs</strong> — check balance and query

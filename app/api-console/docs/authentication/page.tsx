@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
 
+const DEFAULT_FREE_MODEL_ID = "gpt-5.3-codex";
+
 export const metadata: Metadata = {
 	title: "API Documentation — Authentication",
 	description: "Pelajari cara autentikasi API Ultramaxo menggunakan API key. Panduan Bearer token dan keamanan API key.",
@@ -52,7 +54,7 @@ const client = new OpenAI({
 });
 
 const response = await client.chat.completions.create({
-  model: "gpt-5.3",
+  model: "${DEFAULT_FREE_MODEL_ID}",
   messages: [{ role: "user", content: "Hello!" }],
 });
 

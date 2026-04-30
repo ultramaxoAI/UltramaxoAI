@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
 
+const DEFAULT_FREE_MODEL_ID = "gpt-5.3-codex";
+
 export const metadata: Metadata = {
 	title: "API Documentation — SDKs & Libraries",
 	description: "SDK dan library untuk integrasi Ultramaxo API. Contoh kode Python, Node.js, Go, cURL dan OpenAI-compatible SDK.",
@@ -51,7 +53,7 @@ client = OpenAI(
 
 # Non-streaming
 response = client.chat.completions.create(
-    model="gpt-5.3",
+    model="${DEFAULT_FREE_MODEL_ID}",
     messages=[
         {"role": "system", "content": "You are a helpful assistant."},
         {"role": "user", "content": "Explain quantum computing."}
@@ -63,7 +65,7 @@ print(response.choices[0].message.content)
 
 # Streaming
 stream = client.chat.completions.create(
-    model="gpt-5.3",
+    model="${DEFAULT_FREE_MODEL_ID}",
     messages=[{"role": "user", "content": "Write a poem about AI."}],
     stream=True
 )
@@ -81,7 +83,7 @@ response = requests.post(
         "Content-Type": "application/json"
     },
     json={
-        "model": "gpt-5.3",
+        "model": "${DEFAULT_FREE_MODEL_ID}",
         "messages": [{"role": "user", "content": "Hello!"}]
     }
 )
@@ -101,14 +103,14 @@ const client = new OpenAI({
 
 // Non-streaming
 const response = await client.chat.completions.create({
-  model: "gpt-5.3",
+  model: "${DEFAULT_FREE_MODEL_ID}",
   messages: [{ role: "user", content: "Hello!" }],
 });
 console.log(response.choices[0].message.content);
 
 // Streaming
 const stream = await client.chat.completions.create({
-  model: "gpt-5.3",
+  model: "${DEFAULT_FREE_MODEL_ID}",
   messages: [{ role: "user", content: "Tell me a story." }],
   stream: true,
 });
@@ -124,7 +126,7 @@ for await (const chunk of stream) {
     "Content-Type": "application/json",
   },
   body: JSON.stringify({
-    model: "gpt-5.3",
+    model: "${DEFAULT_FREE_MODEL_ID}",
     messages: [{ role: "user", content: "Hello!" }],
   }),
 });
@@ -138,7 +140,7 @@ console.log(data.choices[0].message.content);`}</pre>
   -H "Authorization: Bearer ux_sk_YOUR_KEY" \\
   -H "Content-Type: application/json" \\
   -d '{
-    "model": "gpt-5.3",
+    "model": "${DEFAULT_FREE_MODEL_ID}",
     "messages": [{"role": "user", "content": "Hello!"}]
   }'`}</pre>
 
@@ -148,7 +150,7 @@ console.log(data.choices[0].message.content);`}</pre>
   -H "Content-Type: application/json" \\
   --no-buffer \\
   -d '{
-    "model": "gpt-5.3",
+    "model": "${DEFAULT_FREE_MODEL_ID}",
     "messages": [{"role": "user", "content": "Hello!"}],
     "stream": true
   }'`}</pre>
@@ -166,7 +168,7 @@ import (
 
 func main() {
     body := map[string]interface{}{
-        "model": "gpt-5.3",
+        "model": "${DEFAULT_FREE_MODEL_ID}",
         "messages": []map[string]string{
             {"role": "user", "content": "Hello!"},
         },
@@ -202,7 +204,7 @@ curl_setopt_array($ch, [
         "Content-Type: application/json",
     ],
     CURLOPT_POSTFIELDS => json_encode([
-        "model" => "gpt-5.3",
+        "model" => "${DEFAULT_FREE_MODEL_ID}",
         "messages" => [
             ["role" => "user", "content" => "Hello!"]
         ]
@@ -224,7 +226,7 @@ curl https://api.ultramaxo.tech/v1/models
 curl "https://api.ultramaxo.tech/v1/models?capability=text&free=true"
 
 # Get specific model
-curl https://api.ultramaxo.tech/v1/models/gpt-5.3`}</pre>
+curl https://api.ultramaxo.tech/v1/models/${DEFAULT_FREE_MODEL_ID}`}</pre>
 
 				<h3>Check Balance</h3>
 				<pre className="apic-code">{`curl https://api.ultramaxo.tech/v1/balance \\
@@ -276,7 +278,7 @@ const ultramaxo = createOpenAI({
 });
 
 const { text } = await generateText({
-  model: ultramaxo("gpt-5.3"),
+  model: ultramaxo("${DEFAULT_FREE_MODEL_ID}"),
   prompt: "Explain the theory of relativity.",
 });
 
@@ -286,7 +288,7 @@ console.log(text);`}</pre>
 				<pre className="apic-code">{`from langchain_openai import ChatOpenAI
 
 llm = ChatOpenAI(
-    model="gpt-5.3",
+    model="${DEFAULT_FREE_MODEL_ID}",
     openai_api_key="ux_sk_YOUR_KEY",
     openai_api_base="https://api.ultramaxo.tech/v1",
 )

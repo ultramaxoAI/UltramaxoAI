@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
 
+const DEFAULT_FREE_MODEL_ID = "gpt-5.3-codex";
+
 export const metadata: Metadata = {
 	title: "API Documentation — Chat Completions",
 	description: "Panduan endpoint Chat Completions API Ultramaxo. Compatible dengan OpenAI SDK untuk akses GPT-5, Claude, Gemini, dan 40+ model AI.",
@@ -29,8 +31,9 @@ export default function DocsChatCompletionsPage() {
 						<div className="apic-params-meta">
 							<div className="apic-params-type">string</div>
 							<div className="apic-params-desc">
-								The model ID to use (e.g. &quot;gpt-5.3&quot;). See the Models
-								page for available options.
+								The model ID to use (e.g.{" "}
+								<code className="apic-code--inline">{DEFAULT_FREE_MODEL_ID}</code>
+								). See the Models page for available options.
 							</div>
 						</div>
 					</div>
@@ -89,7 +92,7 @@ export default function DocsChatCompletionsPage() {
   -H "Authorization: Bearer ux_sk_YOUR_KEY" \\
   -H "Content-Type: application/json" \\
   -d '{
-    "model": "gpt-5.3",
+    "model": "${DEFAULT_FREE_MODEL_ID}",
     "messages": [
       {"role": "system", "content": "You are a helpful assistant."},
       {"role": "user", "content": "Explain quantum computing in simple terms."}
@@ -102,7 +105,7 @@ export default function DocsChatCompletionsPage() {
 				<pre className="apic-code">{`{
   "id": "chatcmpl-abc123",
   "object": "chat.completion",
-  "model": "gpt-5.3",
+  "model": "${DEFAULT_FREE_MODEL_ID}",
   "choices": [
     {
       "index": 0,
@@ -152,7 +155,7 @@ client = OpenAI(
 )
 
 response = client.chat.completions.create(
-    model="gpt-5.3",
+    model="${DEFAULT_FREE_MODEL_ID}",
     messages=[{"role": "user", "content": "Hello!"}]
 )
 
@@ -167,7 +170,7 @@ const client = new OpenAI({
 });
 
 const completion = await client.chat.completions.create({
-  model: "gpt-5.3",
+  model: "${DEFAULT_FREE_MODEL_ID}",
   messages: [{ role: "user", content: "Hello!" }],
 });
 

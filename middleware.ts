@@ -35,10 +35,16 @@ function handleRouting(
 	pathname: string,
 	requestHeaders: Headers,
 ): NextResponse {
+	const withPath = (targetPath: string) => {
+		const targetUrl = request.nextUrl.clone();
+		targetUrl.pathname = targetPath;
+		return targetUrl;
+	};
+
 	// API subdomain: restrict to /api routes only
 	if (host.startsWith(API_SUBDOMAIN)) {
 		if (pathname === "/v1" || pathname.startsWith("/v1/")) {
-			return NextResponse.rewrite(new URL(`/api${pathname}`, request.url), {
+			return NextResponse.rewrite(withPath(`/api${pathname}`), {
 				request: { headers: requestHeaders },
 			});
 		}
@@ -94,18 +100,15 @@ function handleRouting(
 
 		// Root → dashboard
 		if (pathname === "/") {
-			return NextResponse.rewrite(new URL("/api-console", request.url), {
+			return NextResponse.rewrite(withPath("/api-console"), {
 				request: { headers: requestHeaders },
 			});
 		}
 
 		// Everything else → rewrite to /api-console/<path>
-		return NextResponse.rewrite(
-			new URL(`/api-console${pathname}`, request.url),
-			{
-				request: { headers: requestHeaders },
-			},
-		);
+		return NextResponse.rewrite(withPath(`/api-console${pathname}`), {
+			request: { headers: requestHeaders },
+		});
 	}
 
 	return NextResponse.next({

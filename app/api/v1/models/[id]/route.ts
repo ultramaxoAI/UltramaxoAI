@@ -1,6 +1,10 @@
 import { getModelCatalogById } from "@backend/models/model-catalog";
 import { NextResponse } from "next/server";
 
+const MODEL_ID_ALIASES: Record<string, string> = {
+	"gpt-5.3": "gpt-5.3-codex",
+};
+
 const CORS_HEADERS = {
 	"Access-Control-Allow-Origin": "*",
 	"Access-Control-Allow-Methods": "GET, OPTIONS",
@@ -13,7 +17,8 @@ export async function GET(
 ) {
 	try {
 		const { id } = await params;
-		const model = await getModelCatalogById(id);
+		const resolvedId = MODEL_ID_ALIASES[id] ?? id;
+		const model = await getModelCatalogById(resolvedId);
 
 		if (!model) {
 			return NextResponse.json(

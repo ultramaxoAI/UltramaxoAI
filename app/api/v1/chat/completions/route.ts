@@ -15,6 +15,9 @@ const MIN_BALANCE_CENTS = 200;
 const FREE_RPM_LIMIT = 5;
 const PAID_RPM_LIMIT = 60;
 const WINDOW_MS = 60_000;
+const MODEL_ID_ALIASES: Record<string, string> = {
+	"gpt-5.3": "gpt-5.3-codex",
+};
 
 // Security: Max body size (256KB)
 const MAX_BODY_SIZE = 256 * 1024;
@@ -217,7 +220,7 @@ export async function POST(req: NextRequest) {
 		}
 
 		const body = validation.body;
-		const requestedModel = body.model;
+		const requestedModel = MODEL_ID_ALIASES[body.model] ?? body.model;
 		const modelInfo = await getModelCatalogById(requestedModel);
 		if (!modelInfo) {
 			return NextResponse.json(
@@ -286,7 +289,7 @@ export async function POST(req: NextRequest) {
 
 		// Security: Strip any sensitive fields before forwarding
 		const sanitizedBody = {
-			model: body.model,
+			model: requestedModel,
 			messages: body.messages,
 			...(body.stream !== undefined && { stream: Boolean(body.stream) }),
 			...(body.temperature !== undefined && {

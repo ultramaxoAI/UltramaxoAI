@@ -9,9 +9,11 @@ type Model = {
 	isFree: boolean;
 };
 
+const DEFAULT_MODEL_ID = "gpt-5.3-codex";
+
 export default function ApiConsolePlaygroundPage() {
 	const [apiKey, setApiKey] = useState("");
-	const [model, setModel] = useState("gpt-5.3");
+	const [model, setModel] = useState(DEFAULT_MODEL_ID);
 	const [systemPrompt, setSystemPrompt] = useState("");
 	const [prompt, setPrompt] = useState("");
 	const [temperature, setTemperature] = useState("0.7");
@@ -214,7 +216,9 @@ ${
 									</option>
 								))
 							) : (
-								<option value="gpt-5.3">gpt-5.3 (Free)</option>
+								<option value={DEFAULT_MODEL_ID}>
+									{DEFAULT_MODEL_ID} (Free)
+								</option>
 							)}
 						</select>
 					</div>
