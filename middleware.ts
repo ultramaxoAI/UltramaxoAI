@@ -3,6 +3,22 @@ import { getToken } from "next-auth/jwt";
 
 const APP_SUBDOMAIN = "app.";
 const API_SUBDOMAIN = "api.";
+const MAINTENANCE_BYPASS_PATHS = [
+	"/maintenance",
+	"/login",
+	"/register",
+	"/oauth",
+	"/verify",
+	"/forgot-password",
+	"/reset-password",
+	"/api",
+];
+const STATIC_PATH_PREFIXES = ["/_next", "/favicon"];
+const STATIC_PATHNAMES = new Set([
+	"/robots.txt",
+	"/sitemap.xml",
+	"/manifest.webmanifest",
+]);
 
 // Security headers applied to all responses
 const SECURITY_HEADERS: Record<string, string> = {
@@ -35,13 +51,57 @@ async function isAdminRequest(request: NextRequest): Promise<boolean> {
 	}
 }
 
+function isStaticRequest(pathname: string) {
+	return (
+		STATIC_PATH_PREFIXES.some((prefix) => pathname.startsWith(prefix)) ||
+		STATIC_PATHNAMES.has(pathname) ||
+		/\.[a-zA-Z0-9]+$/.test(pathname)
+	);
+}
+
+function isMaintenanceBypassPath(pathname: string) {
+	return MAINTENANCE_BYPASS_PATHS.some(
+		(prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`),
+	);
+}
+
+async function isMaintenanceEnabled(request: NextRequest) {
+	try {
+		const url = new URL("/api/public/site-status", request.url);
+		const response = await fetch(url, {
+			headers: {
+				"x-maintenance-check": "1",
+			},
+			cache: "no-store",
+		});
+
+		if (!response.ok) {
+			return false;
+		}
+
+		const data = (await response.json()) as { maintenanceEnabled?: boolean };
+		return data.maintenanceEnabled === true;
+	} catch {
+		return false;
+	}
+}
+
 export async function middleware(request: NextRequest) {
 	const host = request.headers.get("host") || "";
 	const { pathname } = request.nextUrl;
+	const isAdmin = await isAdminRequest(request);
+
+	if (
+		!isAdmin &&
+		!isStaticRequest(pathname) &&
+		!isMaintenanceBypassPath(pathname) &&
+		(await isMaintenanceEnabled(request))
+	) {
+		return NextResponse.rewrite(new URL("/maintenance", request.url));
+	}
 
 	// --- Admin route protection (runs before everything else) ---
 	if (pathname.startsWith("/admin")) {
-		const isAdmin = await isAdminRequest(request);
 		if (!isAdmin) {
 			// Non-admin users get a 404 (same as the layout behavior)
 			return new NextResponse("Not Found", { status: 404 });
@@ -50,7 +110,6 @@ export async function middleware(request: NextRequest) {
 
 	// --- Admin API route protection ---
 	if (pathname.startsWith("/api/admin")) {
-		const isAdmin = await isAdminRequest(request);
 		if (!isAdmin) {
 			return NextResponse.json(
 				{ error: "Forbidden", message: "Admin access required." },

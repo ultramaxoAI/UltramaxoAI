@@ -6,7 +6,7 @@ import { toast } from "sonner";
 const TEMPLATE_OPTIONS = [
 	{ value: "midnight", label: "Midnight", desc: "Dark glass panel" },
 	{ value: "aurora", label: "Aurora", desc: "Northern lights gradient" },
-	{ value: "minimal", label: "Minimal", desc: "Clean white with subtle text" },
+	{ value: "minimal", label: "Minimal", desc: "Clean editorial layout" },
 	{ value: "ember", label: "Ember", desc: "Warm orange accents" },
 ];
 
@@ -22,7 +22,7 @@ export default function AdminSettingsPage() {
 	const [saving, setSaving] = useState(false);
 	const [settings, setSettings] = useState<SiteSettingsData>({
 		maintenanceEnabled: false,
-		maintenanceTemplate: "midnight",
+		maintenanceTemplate: "minimal",
 		maintenanceTitle: "We will be right back.",
 		maintenanceMessage: "Lagi ada update kecil. Sebentar lagi balik.",
 	});
@@ -35,7 +35,7 @@ export default function AdminSettingsPage() {
 				if (data.settings) {
 					setSettings({
 						maintenanceEnabled: data.settings.maintenanceEnabled ?? false,
-						maintenanceTemplate: data.settings.maintenanceTemplate ?? "midnight",
+						maintenanceTemplate: data.settings.maintenanceTemplate ?? "minimal",
 						maintenanceTitle: data.settings.maintenanceTitle ?? "",
 						maintenanceMessage: data.settings.maintenanceMessage ?? "",
 					});

@@ -138,30 +138,50 @@ export function AuroraTemplate({ title, message }: TemplateProps) {
    ─────────────────────────────────────────── */
 export function MinimalTemplate({ title, message }: TemplateProps) {
 	return (
-		<main className="relative flex min-h-[100dvh] flex-col bg-white text-zinc-900 selection:bg-zinc-900/10 dark:bg-[#0a0a0a] dark:text-white">
-			<div className="relative z-10 mx-auto flex min-h-[100dvh] w-full max-w-2xl flex-col px-6 sm:px-10">
+		<main className="relative flex min-h-[100dvh] flex-col bg-[#f7f7f5] text-zinc-950 selection:bg-zinc-900/10 dark:bg-[#0b0b0a] dark:text-white">
+			<div className="pointer-events-none absolute inset-0 bg-[linear-gradient(to_bottom,rgba(255,255,255,0.55),transparent_28%)] dark:bg-[linear-gradient(to_bottom,rgba(255,255,255,0.03),transparent_24%)]" />
+			<div className="relative z-10 mx-auto flex min-h-[100dvh] w-full max-w-4xl flex-col px-6 sm:px-10">
 				<header className="flex items-center justify-between pt-10">
-					<Link href="/login" className="text-zinc-400 transition-colors hover:text-zinc-600 dark:text-white/30 dark:hover:text-white/60" title="UltramaxoAI">
-						<span className="text-xs font-medium uppercase tracking-[0.25em]">UltramaxoAI</span>
-					</Link>
-					<span className="size-2 rounded-full bg-amber-400" />
+					<div
+						className="text-zinc-400 dark:text-white/30"
+						title="UltramaxoAI"
+					>
+						<span className="text-[11px] font-medium uppercase tracking-[0.28em]">
+							UltramaxoAI
+						</span>
+					</div>
+					<div className="flex items-center gap-2 text-zinc-400 dark:text-white/30">
+						<span className="size-2 rounded-full bg-amber-400" />
+						<span className="text-[11px] uppercase tracking-[0.22em]">
+							Maintenance
+						</span>
+					</div>
 				</header>
 
 				<section className="flex flex-1 flex-col justify-center pb-24">
-					<div className="mb-6 h-px w-10 bg-zinc-200 dark:bg-white/10" />
-					<h1 className="max-w-xl text-balance text-3xl font-medium leading-[1.15] tracking-[-0.02em] text-zinc-900 sm:text-4xl lg:text-5xl dark:text-white">
+					<div className="mb-10 flex items-center gap-4">
+						<div className="h-px w-12 bg-zinc-300 dark:bg-white/10" />
+						<span className="text-[11px] uppercase tracking-[0.24em] text-zinc-400 dark:text-white/30">
+							Temporary downtime
+						</span>
+					</div>
+					<h1 className="max-w-2xl text-balance text-4xl font-medium leading-[1.02] tracking-[-0.035em] text-zinc-950 sm:text-5xl lg:text-6xl dark:text-white">
 						{title}
 					</h1>
-					<p className="mt-5 max-w-md text-pretty text-base leading-7 text-zinc-500 sm:text-lg sm:leading-8 dark:text-white/40">{message}</p>
-					<div className="mt-10 h-px w-10 bg-zinc-200 dark:bg-white/10" />
+					<p className="mt-6 max-w-xl text-pretty text-base leading-7 text-zinc-600 sm:text-lg sm:leading-8 dark:text-white/42">
+						{message}
+					</p>
+					<div className="mt-12 flex items-center gap-5 text-zinc-400 dark:text-white/26">
+						<div className="h-px w-12 bg-zinc-300 dark:bg-white/10" />
+						<p className="text-[13px]">
+							We’re applying updates and will be back shortly.
+						</p>
+					</div>
 				</section>
 
-				<footer className="flex items-center justify-between border-t border-zinc-100 py-6 text-xs text-zinc-400 dark:border-white/[0.06] dark:text-white/20">
+				<footer className="flex items-center justify-between border-t border-zinc-200/80 py-6 text-xs text-zinc-400 dark:border-white/[0.06] dark:text-white/20">
 					<span>&copy; {new Date().getFullYear()} UltramaxoAI</span>
-					<div className="flex items-center gap-5">
-						<Link href="/privacy" className="transition-colors hover:text-zinc-700 dark:hover:text-white/50">Privacy</Link>
-						<Link href="/terms" className="transition-colors hover:text-zinc-700 dark:hover:text-white/50">Terms</Link>
-					</div>
+					<span>Service temporarily unavailable</span>
 				</footer>
 			</div>
 		</main>

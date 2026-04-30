@@ -62,7 +62,13 @@ async function handleCredentialsSignIn({
 
 		if (result?.error) {
 			const errorParam =
-				result.error === "unverified" ? "Unverified" : result.error;
+				result.error === "unverified"
+					? "Unverified"
+					: result.error === "OAuthAccountNotLinked" ||
+						  result.error === "OAuthCallback" ||
+						  result.error === "Configuration"
+						? "CredentialsSignin"
+						: result.error;
 			const loginUrl = new URL("/login", request.url);
 			loginUrl.searchParams.set("error", errorParam);
 			return NextResponse.redirect(loginUrl, 303);

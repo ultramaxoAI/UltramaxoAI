@@ -20,7 +20,7 @@ export const metadata: Metadata = {
 
 export default async function MaintenancePage() {
 	const settings = await getSiteSettings();
-	const template = settings?.maintenanceTemplate ?? "midnight";
+	const template = settings?.maintenanceTemplate ?? "minimal";
 	const title = settings?.maintenanceTitle ?? "We'll be right back.";
 	const message =
 		settings?.maintenanceMessage ??
