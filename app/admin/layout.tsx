@@ -2,6 +2,8 @@ import { notFound } from "next/navigation";
 import { auth } from "@/app/(auth)/auth";
 import { AdminSidebar } from "@/components/admin/admin-sidebar";
 
+export const dynamic = "force-dynamic";
+
 export default async function AdminLayout({
 	children,
 }: {
