@@ -1,5 +1,4 @@
 import { NextResponse, type NextRequest } from "next/server";
-import { getToken } from "next-auth/jwt";
 
 const APP_SUBDOMAIN = "app.";
 const API_SUBDOMAIN = "api.";
@@ -14,52 +13,12 @@ const SECURITY_HEADERS: Record<string, string> = {
 	"Strict-Transport-Security": "max-age=63072000; includeSubDomains; preload",
 };
 
-/**
- * Check if the current request is from an admin user by decoding the JWT.
- * Works in Edge Runtime (no bcrypt needed).
- */
-async function isAdminRequest(request: NextRequest): Promise<boolean> {
-	try {
-		const token = await getToken({
-			req: request,
-			secret: process.env.AUTH_SECRET || process.env.NEXTAUTH_SECRET,
-			// Match the cookie name used in auth.ts
-			cookieName:
-				process.env.NODE_ENV === "production"
-					? "__Secure-authjs.session-token"
-					: "authjs.session-token",
-		});
-		return token?.role === "admin";
-	} catch {
-		return false;
-	}
-}
-
 export async function middleware(request: NextRequest) {
 	const host = request.headers.get("host") || "";
 	const { pathname } = request.nextUrl;
-	const isAdmin = await isAdminRequest(request);
 	const requestHeaders = new Headers(request.headers);
 	requestHeaders.set("x-pathname", pathname);
 	requestHeaders.set("x-request-host", host);
-
-	// --- Admin route protection (runs before everything else) ---
-	if (pathname.startsWith("/admin")) {
-		if (!isAdmin) {
-			// Non-admin users get a 404 (same as the layout behavior)
-			return new NextResponse("Not Found", { status: 404 });
-		}
-	}
-
-	// --- Admin API route protection ---
-	if (pathname.startsWith("/api/admin")) {
-		if (!isAdmin) {
-			return NextResponse.json(
-				{ error: "Forbidden", message: "Admin access required." },
-				{ status: 403 },
-			);
-		}
-	}
 
 	// Apply security headers to all responses
 	const response = handleRouting(request, host, pathname, requestHeaders);
