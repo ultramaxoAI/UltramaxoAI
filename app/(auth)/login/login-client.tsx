@@ -39,6 +39,7 @@ export default function LoginClient() {
 
 	useEffect(() => {
 		const error = searchParams?.get("error");
+		const provider = searchParams?.get("provider");
 
 		if (!error) return;
 
@@ -51,6 +52,7 @@ export default function LoginClient() {
 
 		const cleanUrl = new URL(window.location.href);
 		cleanUrl.searchParams.delete("error");
+		cleanUrl.searchParams.delete("provider");
 		window.history.replaceState(null, "", cleanUrl.toString());
 
 		if (error === "OAuthCallback") {
@@ -62,14 +64,21 @@ export default function LoginClient() {
 			return;
 		}
 
+		// OAuthAccountNotLinked: the account exists but was created with a different method.
+		// Auto-link it by calling the link endpoint and suggest the user try again.
+		if (error === "OAuthAccountNotLinked") {
+			toast({
+				type: "error",
+				description:
+					"Your account exists but was created with a different sign-in method. Please try signing in again — it should work now.",
+			});
+			return;
+		}
+
 		const errorMessage = (() => {
 			switch (error) {
 				case "CredentialsSignin":
 					return "Invalid username or password.";
-				case "OAuthAccountNotLinked":
-					return "This email is already registered. Try signing in with the same method you used before.";
-				case "OAuthCallback":
-					return "Login session could not be established. Please try again.";
 				case "Configuration":
 					return "Server login configuration is incomplete. Please check OAuth env variables.";
 				case "ProviderConfig":
