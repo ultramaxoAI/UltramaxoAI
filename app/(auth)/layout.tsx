@@ -5,7 +5,8 @@ export const metadata: Metadata = {
 		default: "Authentication",
 		template: "%s | UltramaxoAI",
 	},
-	description: "Sign in or create an account for UltramaxoAI, the uncensored workspace.",
+	description:
+		"Sign in or create an account for UltramaxoAI, the uncensored workspace.",
 	robots: {
 		index: false,
 		follow: false,

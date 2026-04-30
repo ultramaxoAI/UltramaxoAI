@@ -112,6 +112,7 @@ export default function Page() {
 									stroke="currentColor"
 									strokeWidth={2}
 								>
+									<title>Instant access</title>
 									<path
 										strokeLinecap="round"
 										strokeLinejoin="round"
@@ -132,6 +133,7 @@ export default function Page() {
 									stroke="currentColor"
 									strokeWidth={2}
 								>
+									<title>AI workspace</title>
 									<path
 										strokeLinecap="round"
 										strokeLinejoin="round"
@@ -152,6 +154,7 @@ export default function Page() {
 									stroke="currentColor"
 									strokeWidth={2}
 								>
+									<title>No credit card required</title>
 									<path
 										strokeLinecap="round"
 										strokeLinejoin="round"
@@ -177,6 +180,7 @@ export default function Page() {
 								stroke="currentColor"
 								strokeWidth={2}
 							>
+								<title>Ready instantly</title>
 								<path
 									strokeLinecap="round"
 									strokeLinejoin="round"
@@ -221,6 +225,7 @@ export default function Page() {
 									stroke="currentColor"
 									strokeWidth={2}
 								>
+									<title>Email verification</title>
 									<path
 										strokeLinecap="round"
 										strokeLinejoin="round"

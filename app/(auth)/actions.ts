@@ -1,12 +1,12 @@
 "use server";
 
-import { z } from "zod";
 import {
 	createUser,
 	getUser,
 	getUserByIdentifier,
 	getUserByUsername,
 } from "@backend/db/queries";
+import { z } from "zod";
 import { signIn } from "./auth";
 
 const authFormSchema = z.object({
@@ -27,24 +27,39 @@ export type LoginActionState = {
 		| "unverified";
 };
 
+function isNextRedirectError(
+	error: unknown,
+): error is Error & { digest: string } {
+	return (
+		error instanceof Error &&
+		"digest" in error &&
+		typeof (error as { digest?: unknown }).digest === "string" &&
+		(error as { digest: string }).digest.startsWith("NEXT_REDIRECT")
+	);
+}
+
+function isCredentialsSigninError(
+	error: unknown,
+): error is { type: "CredentialsSignin" } {
+	return (
+		typeof error === "object" &&
+		error !== null &&
+		"type" in error &&
+		(error as { type?: unknown }).type === "CredentialsSignin"
+	);
+}
+
 function isAdminCandidate({
-	identifier,
 	email,
 	role,
 }: {
-	identifier?: string | null;
 	email?: string | null;
 	role?: string | null;
 }) {
-	const normalizedIdentifier = identifier?.trim().toLowerCase();
 	const normalizedEmail = email?.trim().toLowerCase();
 	const adminEmail = process.env.ADMIN_EMAIL?.trim().toLowerCase();
 
-	return (
-		role === "admin" ||
-		normalizedIdentifier === "admin" ||
-		Boolean(adminEmail && normalizedEmail === adminEmail)
-	);
+	return role === "admin" || Boolean(adminEmail && normalizedEmail === adminEmail);
 }
 
 export const login = async (
@@ -68,16 +83,11 @@ export const login = async (
 		if (emailVerificationEnabled) {
 			const [candidateUser] = await getUserByIdentifier(identifier);
 			const candidateIsAdmin = isAdminCandidate({
-				identifier,
 				email: candidateUser?.email,
 				role: candidateUser?.role,
 			});
 
-			if (
-				candidateUser &&
-				!candidateUser.emailVerified &&
-				!candidateIsAdmin
-			) {
+			if (candidateUser && !candidateUser.emailVerified && !candidateIsAdmin) {
 				return { status: "unverified" };
 			}
 		}
@@ -97,9 +107,8 @@ export const login = async (
 		return { status: "success" };
 	} catch (error) {
 		if (
-			error instanceof Error &&
-			((error as any).digest?.startsWith("NEXT_REDIRECT") ||
-				error.message.includes("NEXT_REDIRECT"))
+			isNextRedirectError(error) ||
+			(error instanceof Error && error.message.includes("NEXT_REDIRECT"))
 		) {
 			throw error;
 		}
@@ -112,9 +121,7 @@ export const login = async (
 			return { status: "failed" };
 		}
 
-		// Also check AuthError specifically if available, though checking name is safe
-		const isAuthError = typeof error === 'object' && error !== null && 'type' in error;
-		if (isAuthError && (error as any).type === "CredentialsSignin") {
+		if (isCredentialsSigninError(error)) {
 			return { status: "failed" };
 		}
 
@@ -150,7 +157,8 @@ export const register = async (
 		});
 		const normalizedEmail = validatedData.email?.trim().toLowerCase();
 		// Username is optional -- generate from email prefix if not provided
-		const normalizedUsername = validatedData.username?.trim() || normalizedEmail?.split("@")[0] || "";
+		const normalizedUsername =
+			validatedData.username?.trim() || normalizedEmail?.split("@")[0] || "";
 
 		if (!normalizedEmail) {
 			return { status: "invalid_data" };
@@ -168,7 +176,10 @@ export const register = async (
 		}
 
 		// Only check password match if confirmPassword was provided
-		if (validatedData.confirmPassword && validatedData.password !== validatedData.confirmPassword) {
+		if (
+			validatedData.confirmPassword &&
+			validatedData.password !== validatedData.confirmPassword
+		) {
 			return { status: "password_mismatch" };
 		}
 

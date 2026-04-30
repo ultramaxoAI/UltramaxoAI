@@ -75,6 +75,10 @@ function handleRouting(
 ): NextResponse {
 	// API subdomain: restrict to /api routes only
 	if (host.startsWith(API_SUBDOMAIN)) {
+		if (pathname === "/v1" || pathname.startsWith("/v1/")) {
+			return NextResponse.rewrite(new URL(`/api${pathname}`, request.url));
+		}
+
 		if (
 			pathname.startsWith("/api/") ||
 			pathname.startsWith("/_next") ||

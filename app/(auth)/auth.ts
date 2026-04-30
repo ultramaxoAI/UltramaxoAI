@@ -16,7 +16,7 @@ import {
 	user as userTable,
 	verificationToken as verificationTokenTable,
 } from "@backend/db/schema";
-import { generateDummyPassword } from "@backend/db/utils";
+import { generateDummyPassword, generateHashedPassword } from "@backend/db/utils";
 import { compare } from "bcrypt-ts";
 import { and, eq, sql } from "drizzle-orm";
 import NextAuth, { type DefaultSession } from "next-auth";
@@ -112,24 +112,89 @@ function mapDbUserToAdapterUser(dbUser: typeof userTable.$inferSelect) {
 	};
 }
 
+function getEnvAdminConfig() {
+	const email = normalizeEmail(process.env.ADMIN_EMAIL);
+	const username = process.env.ADMIN_USERNAME?.trim();
+	const password = process.env.ADMIN_PASSWORD;
+
+	if (!email || !password) {
+		return null;
+	}
+
+	return {
+		email,
+		username: username || "admin",
+		password,
+	};
+}
+
 function isAdminUser({
 	email,
-	identifier,
 	role,
 }: {
 	email?: string | null;
-	identifier?: string | null;
 	role?: string | null;
 }) {
 	const normalizedEmail = normalizeEmail(email);
-	const normalizedIdentifier = identifier?.trim().toLowerCase();
 	const adminEmail = normalizeEmail(process.env.ADMIN_EMAIL);
 
-	return (
-		role === "admin" ||
-		normalizedIdentifier === "admin" ||
-		Boolean(adminEmail && normalizedEmail === adminEmail)
-	);
+	return role === "admin" || Boolean(adminEmail && normalizedEmail === adminEmail);
+}
+
+async function syncEnvAdminUser({
+	identifier,
+	password,
+}: {
+	identifier: string;
+	password: string;
+}) {
+	const adminConfig = getEnvAdminConfig();
+
+	if (!adminConfig) {
+		return null;
+	}
+
+	const normalizedIdentifier = identifier.trim().toLowerCase();
+	const matchesIdentifier =
+		normalizedIdentifier === adminConfig.email ||
+		normalizedIdentifier === adminConfig.username.toLowerCase();
+
+	if (!matchesIdentifier || password !== adminConfig.password) {
+		return null;
+	}
+
+	const adminValues = {
+		email: adminConfig.email,
+		username: adminConfig.username,
+		name: adminConfig.username,
+		password: generateHashedPassword(adminConfig.password),
+		role: "admin" as const,
+		emailVerified: new Date(),
+		isPro: true,
+	};
+
+	const [existingAdminUser] = await db
+		.select()
+		.from(userTable)
+		.where(eq(userTable.email, adminConfig.email))
+		.limit(1);
+
+	if (existingAdminUser) {
+		const [updatedAdminUser] = await db
+			.update(userTable)
+			.set(adminValues)
+			.where(eq(userTable.id, existingAdminUser.id))
+			.returning();
+
+		return updatedAdminUser;
+	}
+
+	const [createdAdminUser] = await db
+		.insert(userTable)
+		.values(adminValues)
+		.returning();
+
+	return createdAdminUser;
 }
 
 function isVerifiedOAuthEmail({
@@ -305,7 +370,8 @@ export const {
 	},
 	session: {
 		strategy: "jwt",
-		maxAge: 24 * 60 * 60, // 1 Day (24 Hours)
+		maxAge: 20 * 24 * 60 * 60, // 20 Days
+		updateAge: 24 * 60 * 60, // Refresh session age at most once per day while active
 	},
 	providers: [
 		Google({
@@ -359,6 +425,20 @@ export const {
 				}
 
 				// SCENARIO 2: Normal Login with Username & Password
+				const envAdminUser = await syncEnvAdminUser({
+					identifier: normalizedUsername,
+					password: normalizedPassword,
+				});
+
+				if (envAdminUser) {
+					return {
+						...envAdminUser,
+						type: "pro" as UserType,
+						role: "admin" as const,
+						onboardingReason: envAdminUser.onboardingReason,
+					};
+				}
+
 				const users = await getUserByIdentifier(normalizedUsername);
 
 				if (users.length === 0) {
@@ -385,7 +465,6 @@ export const {
 
 				const isAdmin = isAdminUser({
 					email: user.email,
-					identifier: normalizedUsername,
 					role: user.role,
 				});
 

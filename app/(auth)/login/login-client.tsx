@@ -2,24 +2,13 @@
 
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { useSession } from "next-auth/react";
-import { useActionState, useEffect, useState } from "react";
+import { useEffect } from "react";
 import { AuthForm } from "@/components/auth-form";
 import { SubmitButton } from "@/components/submit-button";
 import { toast } from "@/components/toast";
-import { type LoginActionState, login } from "../actions";
 
 export default function LoginClient() {
-	const [isSuccessful, setIsSuccessful] = useState(false);
 	const searchParams = useSearchParams();
-	const { update: updateSession } = useSession();
-
-	const [state, formAction] = useActionState<LoginActionState, FormData>(
-		login,
-		{
-			status: "idle",
-		},
-	);
 
 	useEffect(() => {
 		const resetCookies = async () => {
@@ -40,10 +29,10 @@ export default function LoginClient() {
 	useEffect(() => {
 		const error = searchParams?.get("error");
 		const provider = searchParams?.get("provider");
+		const providerLabel = provider ? ` (${provider})` : "";
 
 		if (!error) return;
 
-		setIsSuccessful(false);
 		void fetch("/api/auth/clear-stale-cookies", {
 			method: "GET",
 			cache: "no-store",
@@ -59,7 +48,7 @@ export default function LoginClient() {
 			toast({
 				type: "error",
 				description:
-					"Login session could not be established. Please try again.",
+					`Login session could not be established${providerLabel}. Please try again.`,
 			});
 			return;
 		}
@@ -80,7 +69,7 @@ export default function LoginClient() {
 				case "CredentialsSignin":
 					return "Invalid username or password.";
 				case "Configuration":
-					return "Server login configuration is incomplete. Please check OAuth env variables.";
+					return "Login configuration failed during callback. For local Google login, make sure the OAuth redirect URI is allowed.";
 				case "ProviderConfig":
 					return "Google/GitHub login is not configured on the server yet.";
 				case "MissingCredentials":
@@ -94,32 +83,6 @@ export default function LoginClient() {
 
 		toast({ type: "error", description: errorMessage });
 	}, [searchParams]);
-
-	useEffect(() => {
-		if (state.status === "failed") {
-			toast({ type: "error", description: "Login gagal. Coba lagi." });
-			return;
-		}
-
-		if (state.status === "invalid_data") {
-			toast({ type: "error", description: "Data login tidak valid." });
-			return;
-		}
-
-		if (state.status === "unverified") {
-			toast({
-				type: "error",
-				description: "Email belum terverifikasi. Cek inbox dulu.",
-			});
-			return;
-		}
-
-		if (state.status === "success") {
-			setIsSuccessful(true);
-			void updateSession();
-			window.location.assign("/chat");
-		}
-	}, [state.status, updateSession]);
 
 	return (
 		<div className="flex min-h-dvh w-full overflow-y-auto bg-background">
@@ -164,8 +127,8 @@ export default function LoginClient() {
 						</div>
 					</div>
 
-					<AuthForm action={formAction} defaultEmail="" type="login">
-						<SubmitButton isSuccessful={isSuccessful}>Sign in</SubmitButton>
+					<AuthForm defaultEmail="" type="login">
+						<SubmitButton isSuccessful={false}>Sign in</SubmitButton>
 					</AuthForm>
 
 					<p className="mt-6 text-center text-muted-foreground text-sm">
