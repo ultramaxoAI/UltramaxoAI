@@ -6,6 +6,8 @@ import { auth } from "@/app/(auth)/auth";
 
 const EXPIRY_MS = 24 * 60 * 60 * 1000; // 24 hours
 
+export const dynamic = "force-dynamic";
+
 export async function GET() {
 	const session = await auth();
 	if (!session?.user?.id) {

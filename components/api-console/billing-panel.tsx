@@ -40,8 +40,8 @@ export function BillingPanel() {
 
 	const load = useCallback(async () => {
 		const [credRes, ordRes] = await Promise.all([
-			fetch("/api/user/api-credits"),
-			fetch("/api/payment/history"),
+			fetch("/api/user/api-credits", { cache: "no-store" }),
+			fetch("/api/payment/history", { cache: "no-store" }),
 		]);
 		if (credRes.ok) {
 			const data: CreditSummary = await credRes.json();

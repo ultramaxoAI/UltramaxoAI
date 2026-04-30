@@ -97,8 +97,8 @@ export default function PaymentPage() {
 		);
 	}
 
-	const isPaid = data.status === "paid";
-	const isCancelled = data.status === "cancelled";
+	const isPaid = data.status === "paid" || data.status === "approved";
+	const isCancelled = data.status === "cancelled" || data.status === "rejected";
 	const isPending = !isPaid && !isCancelled;
 
 	return (
