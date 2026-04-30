@@ -3,11 +3,21 @@ import { auth } from "@/app/(auth)/auth";
 import { generateTitleFromUserMessage } from "@/app/(chat)/actions";
 import type { VisibilityType } from "@/components/visibility-selector";
 import { CREDIT_COSTS } from "@/lib/credits";
-import { getChatById, saveChat, saveMessages, spendCreditsForUser } from "@backend/db/queries";
+import {
+	getChatById,
+	saveChat,
+	saveMessages,
+	spendCreditsForUser,
+} from "@backend/db/queries";
 
 const MAIA_API_URL = "https://api.maiarouter.ai/v1/images/generations";
-const MAIA_API_KEY = (process.env.MAIA_API_KEY || process.env.OPENROUTER_API_KEY_1 || "").trim();
+const MAIA_API_KEY = (
+	process.env.MAIA_API_KEY ||
+	process.env.OPENROUTER_API_KEY_1 ||
+	""
+).trim();
 const MAIA_MODEL = "maia/imagen-3.0-generate-002";
+const isDevelopment = process.env.NODE_ENV === "development";
 
 const POLLINATIONS_URL = "https://image.pollinations.ai/prompt/";
 
@@ -151,10 +161,10 @@ async function createSuccessResponse({
 		assistantMessage:
 			assistantParts && assistantMessageId
 				? {
-					id: assistantMessageId,
-					role: "assistant",
-					parts: assistantParts,
-				}
+						id: assistantMessageId,
+						role: "assistant",
+						parts: assistantParts,
+					}
 				: null,
 	});
 }
@@ -195,7 +205,9 @@ export async function POST(request: NextRequest) {
 
 		const cleanPrompt = prompt.trim();
 		const sessionUser = session.user as { id?: string };
-		console.log(`[generate-image] Prompt: "${cleanPrompt.slice(0, 80)}..."`);
+		if (isDevelopment) {
+			console.log(`[generate-image] Prompt length: ${cleanPrompt.length}`);
+		}
 
 		if (session.user.id) {
 			const creditResult = await spendCreditsForUser({
@@ -220,7 +232,9 @@ export async function POST(request: NextRequest) {
 		// ============================================================
 		if (MAIA_API_KEY) {
 			try {
-				console.log("[generate-image] Trying MAIA Imagen 3.0...");
+				if (isDevelopment) {
+					console.log("[generate-image] Trying MAIA Imagen 3.0...");
+				}
 				const controller = new AbortController();
 				const timeoutId = setTimeout(() => controller.abort(), 30000);
 
@@ -228,7 +242,7 @@ export async function POST(request: NextRequest) {
 					method: "POST",
 					headers: {
 						"Content-Type": "application/json",
-						"Authorization": `Bearer ${MAIA_API_KEY}`,
+						Authorization: `Bearer ${MAIA_API_KEY}`,
 						"HTTP-Referer": "https://chat.ultramaxo.tech",
 						"X-Title": "UltramaxoAI",
 					},
@@ -243,8 +257,9 @@ export async function POST(request: NextRequest) {
 				clearTimeout(timeoutId);
 
 				const rawText = await maiaRes.text();
-				console.log("[generate-image] MAIA status:", maiaRes.status);
-				console.log("[generate-image] MAIA response preview:", rawText.slice(0, 500));
+				if (isDevelopment) {
+					console.log("[generate-image] MAIA status:", maiaRes.status);
+				}
 
 				if (maiaRes.ok) {
 					const data = JSON.parse(rawText);
@@ -294,7 +309,9 @@ export async function POST(request: NextRequest) {
 						}
 					}
 				}
-				console.warn("[generate-image] MAIA did not return a valid image, falling back to Pollinations.");
+				console.warn(
+					"[generate-image] MAIA did not return a valid image, falling back to Pollinations.",
+				);
 			} catch (maiaError) {
 				console.warn("[generate-image] MAIA error:", maiaError);
 			}
@@ -303,8 +320,12 @@ export async function POST(request: NextRequest) {
 		// ============================================================
 		// FALLBACK: Pollinations AI (flux model, uncensored)
 		// ============================================================
-		console.log("[generate-image] Using Pollinations fallback...");
-		const sanitizedPrompt = encodeURIComponent(cleanPrompt + " detailed, masterpiece, high quality, 8k resolution");
+		if (isDevelopment) {
+			console.log("[generate-image] Using Pollinations fallback...");
+		}
+		const sanitizedPrompt = encodeURIComponent(
+			cleanPrompt + " detailed, masterpiece, high quality, 8k resolution",
+		);
 		const seed = Math.floor(Math.random() * 1000000);
 		const pollinationsUrl = `${POLLINATIONS_URL}${sanitizedPrompt}?width=1024&height=1024&nofeed=yes&nologo=yes&seed=${seed}&model=flux`;
 
@@ -313,7 +334,7 @@ export async function POST(request: NextRequest) {
 			const timeoutId = setTimeout(() => controller.abort(), 25000);
 			const pollRes = await fetch(pollinationsUrl, {
 				method: "GET",
-				headers: { "Accept": "image/*" },
+				headers: { Accept: "image/*" },
 				signal: controller.signal,
 			});
 			clearTimeout(timeoutId);
@@ -335,7 +356,10 @@ export async function POST(request: NextRequest) {
 		}
 
 		return NextResponse.json(
-			{ error: "All image generation backends are currently unavailable. Please try again." },
+			{
+				error:
+					"All image generation backends are currently unavailable. Please try again.",
+			},
 			{ status: 502 },
 		);
 	} catch (error) {

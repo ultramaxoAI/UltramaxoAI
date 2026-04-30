@@ -1,43 +1,52 @@
+import * as dotenv from "dotenv";
+import { eq } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/postgres-js";
 import postgres from "postgres";
 import * as schema from "./backend/db/schema";
-import * as dotenv from "dotenv";
 import { generateHashedPassword } from "./backend/db/utils";
-import { eq } from "drizzle-orm";
 
 dotenv.config({ path: ".env.local" });
 
-const url = new URL(process.env.POSTGRES_URL!);
-const originalHost = url.hostname;
-url.hostname = '18.215.6.120'; // Force IPv4
+const postgresUrl = process.env.POSTGRES_URL;
+if (!postgresUrl) {
+	throw new Error("POSTGRES_URL must be set");
+}
 
-const client = postgres(url.toString(), { 
-  ssl: { servername: originalHost, rejectUnauthorized: true }, 
-  prepare: false 
+const url = new URL(postgresUrl);
+const originalHost = url.hostname;
+url.hostname = "18.215.6.120"; // Force IPv4
+
+const client = postgres(url.toString(), {
+	ssl: { servername: originalHost, rejectUnauthorized: true },
+	prepare: false,
 });
 const db = drizzle(client, { schema });
 
 async function updateAdmin() {
-  try {
-    const password = "anakanjg12";
-    const email = "admin@nexus.ai";
+	try {
+		const password = process.env.ADMIN_PASSWORD;
+		const email = process.env.ADMIN_EMAIL;
 
-    console.log("Updating admin password and role...");
-    await db.update(schema.user)
-      .set({ 
-          username: "admin",
-          password: generateHashedPassword(password),
-          role: "admin",
-          emailVerified: new Date()
-      })
-      .where(eq(schema.user.email, email));
-    console.log("Admin user updated successfully.");
+		if (!password || !email) {
+			throw new Error("ADMIN_EMAIL and ADMIN_PASSWORD must be set");
+		}
 
-  } catch (error) {
-    console.error("DB Error:", error);
-  } finally {
-    await client.end();
-  }
+		console.log("Updating admin password and role...");
+		await db
+			.update(schema.user)
+			.set({
+				username: "admin",
+				password: generateHashedPassword(password),
+				role: "admin",
+				emailVerified: new Date(),
+			})
+			.where(eq(schema.user.email, email));
+		console.log("Admin user updated successfully.");
+	} catch (error) {
+		console.error("DB Error:", error);
+	} finally {
+		await client.end();
+	}
 }
 
 updateAdmin();

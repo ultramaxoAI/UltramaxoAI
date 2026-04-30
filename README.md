@@ -78,10 +78,8 @@ npm install -g pnpm
 
 ## 🛡️ Admin Dashboard & Roles
 To access the `/admin` route, your account must have the `admin` role in the PostgreSQL database.
-- Default Admin Username: `admin`
-- Default Admin Password: `anakanjg12`
 
-> **Note:** For security in a production environment, please change the admin password immediately upon your first login.
+Use `ADMIN_EMAIL` and `ADMIN_PASSWORD` when running the admin update script. Do not commit real admin credentials.
 
 ---
 

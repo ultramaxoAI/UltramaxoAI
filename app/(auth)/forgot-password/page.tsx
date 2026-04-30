@@ -64,7 +64,7 @@ function ForgotPasswordForm() {
 	};
 
 	return (
-		<div className="min-h-screen flex flex-col items-center justify-center p-4 md:p-6 bg-[#0a0f14] text-slate-200 relative overflow-hidden">
+		<div className="relative flex min-h-dvh flex-col items-center justify-center overflow-y-auto bg-[#0a0f14] p-4 text-slate-200 md:p-6">
 			<div
 				aria-hidden
 				className="absolute inset-0 bg-[radial-gradient(ellipse_at_20%_50%,rgba(255,255,255,0.05),transparent_60%)]"
@@ -152,9 +152,9 @@ function ForgotPasswordForm() {
 							)}
 						</button>
 						<div className="text-center mt-6">
-							<button 
-								type="button" 
-								onClick={() => router.push('/login')}
+							<button
+								type="button"
+								onClick={() => router.push("/login")}
 								className="text-zinc-500 hover:text-white transition-colors text-sm"
 							>
 								Back to login

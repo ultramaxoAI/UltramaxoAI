@@ -2,6 +2,7 @@
 
 import {
 	ArrowLeft,
+	ChevronRightIcon,
 	KeyIcon,
 	Loader2Icon,
 	LockIcon,
@@ -9,13 +10,10 @@ import {
 	TicketIcon,
 	UserIcon,
 	ZapIcon,
-	ChevronRightIcon,
-	LogOutIcon,
 } from "lucide-react";
-import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
-import { useRouter } from "next/navigation";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -92,7 +90,11 @@ const PROVIDERS: ProviderConfig[] = [
 		placeholder: "sk-or-v1-...",
 		modelPlaceholder: "e.g. meta-llama/llama-3-8b",
 		icon: (
-			<svg viewBox="0 0 491 512" fill="currentColor" className="w-5 h-5 shrink-0">
+			<svg
+				viewBox="0 0 491 512"
+				fill="currentColor"
+				className="w-5 h-5 shrink-0"
+			>
 				<path d="M352.505 167.314c-11.838-16.14-26.656-30.083-43.585-41.05-16.929-10.968-35.619-18.729-55.032-22.855-19.412-4.126-39.215-4.47-58.303-.996-19.088 3.473-37.086 10.592-52.996 20.941-15.91 10.35-29.351 23.635-39.593 39.124-10.243 15.489-16.945 32.843-19.73 51.096-2.786 18.252-1.579 37.009 3.553 55.216 5.132 18.207 13.93 35.151 25.894 49.88l-60.671 67.575c-31.543-30.82-53.111-69.577-62.435-112.193C-3.475 221.439 6.273 167 36.565 122.95 66.857 78.9 114.743 45.483 162.723 33.64c51.745-12.772 106.918-4.8 152.483 23.313 45.565 28.113 78.783 72.39 96.657 122.106L352.505 167.314zm12.981 184.992c-15.487 19.344-34.909 35.083-56.91 46.124-22.001 11.042-46.331 17.155-71.282 17.915-24.951.759-49.626-4.008-72.298-13.968-22.671-9.959-42.618-24.935-58.441-43.88l-60.599 67.653c30.293 32.064 68.32 55.074 110.086 66.608 41.765 11.533 86.837 10.742 128.268-2.251C335.74 517.433 371.492 494.39 397.777 460.844c26.284-33.546 43.141-75.144 48.974-118.808H365.486zM488 221.78l-159.458 54L488 329.782v-108z" />
 			</svg>
 		),
@@ -175,11 +177,36 @@ export default function SettingsPage() {
 	const [activeTab, setActiveTab] = useState<TabId>("account");
 	const router = useRouter();
 
-	const tabs: { id: TabId; label: string; icon: React.ReactNode }[] = [
-		{ id: "account", label: "My Account", icon: <UserIcon size={16} /> },
-		{ id: "keys", label: "API Provider Keys", icon: <KeyIcon size={16} /> },
-		{ id: "preferences", label: "Preferences", icon: <SparklesIcon size={16} /> },
-		{ id: "redeem", label: "Redeem Voucher", icon: <TicketIcon size={16} /> },
+	const tabs: {
+		id: TabId;
+		label: string;
+		mobileLabel: string;
+		icon: React.ReactNode;
+	}[] = [
+		{
+			id: "account",
+			label: "My Account",
+			mobileLabel: "Account",
+			icon: <UserIcon size={16} />,
+		},
+		{
+			id: "keys",
+			label: "API Provider Keys",
+			mobileLabel: "Keys",
+			icon: <KeyIcon size={16} />,
+		},
+		{
+			id: "preferences",
+			label: "Preferences",
+			mobileLabel: "Prefs",
+			icon: <SparklesIcon size={16} />,
+		},
+		{
+			id: "redeem",
+			label: "Redeem Voucher",
+			mobileLabel: "Redeem",
+			icon: <TicketIcon size={16} />,
+		},
 	];
 
 	// Ensure desktop looks like a standard app container
@@ -262,25 +289,26 @@ export default function SettingsPage() {
 			</main>
 
 			{/* Mobile Bottom Navigation */}
-			<nav className="fixed bottom-0 left-0 right-0 z-50 flex md:hidden flex-row border-t border-zinc-200 dark:border-white/10 bg-white/80 dark:bg-[#0a0a0a]/80 backdrop-blur-xl pb-safe">
-				<div className="flex w-full overflow-x-auto hide-scrollbar px-2 py-2 gap-1 justify-around">
+			<nav className="fixed right-0 bottom-0 left-0 z-50 flex flex-row border-zinc-200 border-t bg-white/90 backdrop-blur-xl dark:border-white/10 dark:bg-[#0a0a0a]/90 md:hidden">
+				<div className="grid w-full grid-cols-4 gap-1 px-2 pt-2 pb-[max(0.5rem,env(safe-area-inset-bottom))]">
 					{tabs.map((tab) => (
 						<button
+							aria-label={tab.label}
 							key={tab.id}
-							type="button"
-							onClick={() => setActiveTab(tab.id)}
-							className={`relative flex flex-col items-center justify-center gap-1.5 w-[72px] h-12 rounded-xl transition-all duration-200 ${
+							className={`relative flex h-13 min-w-0 flex-col items-center justify-center gap-1 rounded-xl transition-all duration-200 ${
 								activeTab === tab.id
 									? "text-zinc-900 dark:text-white"
 									: "text-zinc-500 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-200"
 							}`}
+							onClick={() => setActiveTab(tab.id)}
+							type="button"
 						>
 							{activeTab === tab.id && (
 								<div className="absolute inset-0 bg-zinc-100 dark:bg-[#1a1a1a] rounded-xl -z-10" />
 							)}
 							{tab.icon}
-							<span className="text-[10px] font-medium tracking-tight whitespace-nowrap">
-								{tab.label}
+							<span className="max-w-full truncate px-1 text-[10px] font-medium tracking-tight">
+								{tab.mobileLabel}
 							</span>
 						</button>
 					))}
@@ -294,7 +322,13 @@ export default function SettingsPage() {
 // Shared UI Components
 // ============================================================
 
-const SectionHeader = ({ title, description }: { title: string; description: string }) => (
+const SectionHeader = ({
+	title,
+	description,
+}: {
+	title: string;
+	description: string;
+}) => (
 	<div className="mb-8">
 		<h2 className="text-xl font-semibold text-zinc-900 dark:text-zinc-50 mb-1.5 tracking-tight">
 			{title}
@@ -303,8 +337,16 @@ const SectionHeader = ({ title, description }: { title: string; description: str
 	</div>
 );
 
-const Card = ({ children, className = "" }: { children: React.ReactNode; className?: string }) => (
-	<div className={`p-6 bg-white dark:bg-[#0a0a0a] border border-zinc-200 dark:border-white/10 rounded-xl overflow-hidden shadow-sm ${className}`}>
+const Card = ({
+	children,
+	className = "",
+}: {
+	children: React.ReactNode;
+	className?: string;
+}) => (
+	<div
+		className={`p-6 bg-white dark:bg-[#0a0a0a] border border-zinc-200 dark:border-white/10 rounded-xl overflow-hidden shadow-sm ${className}`}
+	>
 		{children}
 	</div>
 );
@@ -395,7 +437,10 @@ function AccountTab() {
 					</h3>
 					<div className="flex items-center gap-4">
 						<div className="w-12 h-12 rounded-full bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center shrink-0 border border-zinc-200 dark:border-white/10">
-							<UserIcon size={20} className="text-zinc-600 dark:text-zinc-400" />
+							<UserIcon
+								size={20}
+								className="text-zinc-600 dark:text-zinc-400"
+							/>
 						</div>
 						<div className="overflow-hidden">
 							<p className="text-sm font-medium text-zinc-900 dark:text-zinc-100 truncate">
@@ -421,18 +466,22 @@ function AccountTab() {
 							</span>
 						)}
 					</div>
-					
+
 					<div className="flex-1 flex flex-col justify-end">
 						<div className="flex items-baseline gap-2">
 							<span className="text-2xl font-bold tracking-tight text-zinc-900 dark:text-white">
-								{user?.isPro ? "∞" : Math.max(0, 10 - (user?.messageCount || 0))}
+								{user?.isPro
+									? "∞"
+									: Math.max(0, 10 - (user?.messageCount || 0))}
 							</span>
 							{!user?.isPro && (
 								<span className="text-sm font-medium text-zinc-500">/ 10</span>
 							)}
 						</div>
 						<p className="text-xs text-zinc-500 mt-1">
-							{user?.isPro ? "Unlimited daily messages" : "Free daily messages remaining"}
+							{user?.isPro
+								? "Unlimited daily messages"
+								: "Free daily messages remaining"}
 						</p>
 					</div>
 				</Card>
@@ -445,7 +494,7 @@ function AccountTab() {
 					title="Change Password"
 					description="Ensure your account is using a long, random password to stay secure."
 				/>
-				
+
 				<form onSubmit={handlePasswordChange} className="space-y-4 max-w-sm">
 					<div className="space-y-2">
 						<Label className="text-sm font-medium text-zinc-700 dark:text-zinc-300">
@@ -457,7 +506,10 @@ function AccountTab() {
 							className="h-10 px-3 bg-white dark:bg-zinc-900 border-zinc-200 dark:border-white/10 focus-visible:ring-1 focus-visible:ring-zinc-900 dark:focus-visible:ring-zinc-300"
 							value={passwordData.currentPassword}
 							onChange={(e) =>
-								setPasswordData({ ...passwordData, currentPassword: e.target.value })
+								setPasswordData({
+									...passwordData,
+									currentPassword: e.target.value,
+								})
 							}
 						/>
 					</div>
@@ -471,7 +523,10 @@ function AccountTab() {
 							className="h-10 px-3 bg-white dark:bg-zinc-900 border-zinc-200 dark:border-white/10 focus-visible:ring-1 focus-visible:ring-zinc-900 dark:focus-visible:ring-zinc-300"
 							value={passwordData.newPassword}
 							onChange={(e) =>
-								setPasswordData({ ...passwordData, newPassword: e.target.value })
+								setPasswordData({
+									...passwordData,
+									newPassword: e.target.value,
+								})
 							}
 						/>
 					</div>
@@ -485,11 +540,14 @@ function AccountTab() {
 							className="h-10 px-3 bg-white dark:bg-zinc-900 border-zinc-200 dark:border-white/10 focus-visible:ring-1 focus-visible:ring-zinc-900 dark:focus-visible:ring-zinc-300"
 							value={passwordData.confirmPassword}
 							onChange={(e) =>
-								setPasswordData({ ...passwordData, confirmPassword: e.target.value })
+								setPasswordData({
+									...passwordData,
+									confirmPassword: e.target.value,
+								})
 							}
 						/>
 					</div>
-					
+
 					<Button
 						type="submit"
 						disabled={updateLoading}
@@ -721,20 +779,26 @@ function CustomAITab() {
 										</p>
 									</div>
 								</div>
-								
+
 								<button
 									type="button"
 									role="switch"
 									aria-checked={isEnabled}
 									onClick={() => handleToggle(provider.id, !isEnabled)}
 									className={`relative shrink-0 w-11 h-6 rounded-full transition-colors outline-none focus-visible:ring-2 focus-visible:ring-offset-2 ring-offset-white dark:ring-offset-black focus-visible:ring-zinc-900 dark:focus-visible:ring-zinc-300 ${
-										isEnabled ? "bg-zinc-900 dark:bg-zinc-200" : "bg-zinc-200 dark:bg-zinc-800"
+										isEnabled
+											? "bg-zinc-900 dark:bg-zinc-200"
+											: "bg-zinc-200 dark:bg-zinc-800"
 									}`}
 								>
-									<span className="sr-only">Toggle {provider.name} provider</span>
+									<span className="sr-only">
+										Toggle {provider.name} provider
+									</span>
 									<span
 										className={`pointer-events-none absolute left-[2px] top-[2px] h-5 w-5 rounded-full bg-white transition-transform ${
-											isEnabled ? "translate-x-5 shadow-sm dark:bg-zinc-900" : "translate-x-0"
+											isEnabled
+												? "translate-x-5 shadow-sm dark:bg-zinc-900"
+												: "translate-x-0"
 										}`}
 									/>
 								</button>
@@ -768,14 +832,19 @@ function CustomAITab() {
 										<Label className="text-xs font-medium text-zinc-700 dark:text-zinc-300">
 											ADD KEYS
 										</Label>
-										<span className="text-[10px] text-zinc-500">Comma/newline separated</span>
+										<span className="text-[10px] text-zinc-500">
+											Comma/newline separated
+										</span>
 									</div>
 									<textarea
 										className="w-full h-20 px-3 py-2 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-white/10 rounded-lg text-sm font-mono placeholder:text-zinc-400 dark:placeholder:text-zinc-600 outline-none focus-visible:ring-1 focus-visible:ring-zinc-900 dark:focus-visible:ring-zinc-300 resize-none shadow-sm"
 										placeholder={provider.placeholder}
 										value={rawKeys[provider.id] || ""}
 										onChange={(e) =>
-											setRawKeys((prev) => ({ ...prev, [provider.id]: e.target.value }))
+											setRawKeys((prev) => ({
+												...prev,
+												[provider.id]: e.target.value,
+											}))
 										}
 									/>
 								</div>
@@ -791,7 +860,10 @@ function CustomAITab() {
 											placeholder={provider.modelPlaceholder}
 											value={newModel[provider.id] || ""}
 											onChange={(e) =>
-												setNewModel((prev) => ({ ...prev, [provider.id]: e.target.value }))
+												setNewModel((prev) => ({
+													...prev,
+													[provider.id]: e.target.value,
+												}))
 											}
 											onKeyDown={(e) => {
 												if (e.key === "Enter") {
@@ -800,8 +872,8 @@ function CustomAITab() {
 												}
 											}}
 										/>
-										<Button 
-											variant="secondary" 
+										<Button
+											variant="secondary"
 											onClick={() => handleAddModel(provider.id)}
 											className="h-9 bg-zinc-100 hover:bg-zinc-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-zinc-900 dark:text-zinc-100 shrink-0"
 										>
@@ -818,7 +890,9 @@ function CustomAITab() {
 													{model}
 													<button
 														type="button"
-														onClick={() => handleRemoveModel(provider.id, model)}
+														onClick={() =>
+															handleRemoveModel(provider.id, model)
+														}
 														className="text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100 ml-0.5 outline-none rounded-full focus-visible:ring-1 focus-visible:ring-zinc-500"
 														aria-label={`Remove model ${model}`}
 													>
@@ -837,27 +911,37 @@ function CustomAITab() {
 											variant="outline"
 											size="sm"
 											className="h-9 text-xs font-medium border-zinc-200 dark:border-white/10"
-											disabled={testing === provider.id || !rawKeys[provider.id]?.trim()}
+											disabled={
+												testing === provider.id || !rawKeys[provider.id]?.trim()
+											}
 											onClick={() => handleTest(provider.id)}
 										>
 											{testing === provider.id ? (
-												<Loader2Icon className="animate-spin mr-1.5" size={14} />
+												<Loader2Icon
+													className="animate-spin mr-1.5"
+													size={14}
+												/>
 											) : null}
 											Test Setup
 										</Button>
 										<Button
 											size="sm"
 											className="h-9 text-xs font-medium bg-zinc-900 text-white hover:bg-zinc-800 dark:bg-white dark:text-black dark:hover:bg-zinc-200"
-											disabled={saving === provider.id || !rawKeys[provider.id]?.trim()}
+											disabled={
+												saving === provider.id || !rawKeys[provider.id]?.trim()
+											}
 											onClick={() => handleSave(provider.id)}
 										>
 											{saving === provider.id ? (
-												<Loader2Icon className="animate-spin mr-1.5" size={14} />
+												<Loader2Icon
+													className="animate-spin mr-1.5"
+													size={14}
+												/>
 											) : null}
 											Save
 										</Button>
 									</div>
-									
+
 									{data && (
 										<Button
 											variant="ghost"
@@ -973,7 +1057,8 @@ function PersonalizationTab() {
 						}
 					/>
 					<p className="text-xs text-zinc-500">
-						These instructions will be prepended to the system prompt in new chats.
+						These instructions will be prepended to the system prompt in new
+						chats.
 					</p>
 				</div>
 
@@ -1016,7 +1101,10 @@ function PersonalizationTab() {
 function RedeemTab() {
 	const [code, setCode] = useState("");
 	const [loading, setLoading] = useState(false);
-	const [result, setResult] = useState<{ type: string; message: string } | null>(null);
+	const [result, setResult] = useState<{
+		type: string;
+		message: string;
+	} | null>(null);
 
 	const handleRedeem = async (e: React.FormEvent) => {
 		e.preventDefault();
@@ -1024,10 +1112,10 @@ function RedeemTab() {
 			toast.error("Code cannot be empty.");
 			return;
 		}
-		
+
 		setLoading(true);
 		setResult(null);
-		
+
 		try {
 			const res = await fetch("/api/redeem", {
 				method: "POST",
@@ -1035,14 +1123,15 @@ function RedeemTab() {
 				body: JSON.stringify({ code: code.trim().toUpperCase() }),
 			});
 			const data = await res.json();
-			
+
 			if (data.error) {
 				setResult({ type: "error", message: data.error });
 				toast.error(data.error);
 			} else {
-				const msg = data.type === "PRO"
-					? "PRO status activated successfully!"
-					: `${data.value || 0} credits added to your account!`;
+				const msg =
+					data.type === "PRO"
+						? "PRO status activated successfully!"
+						: `${data.value || 0} credits added to your account!`;
 				setResult({ type: "success", message: msg });
 				toast.success(msg);
 				setCode(""); // Clear on success
@@ -1066,11 +1155,17 @@ function RedeemTab() {
 			<Card className="max-w-md">
 				<form onSubmit={handleRedeem} className="space-y-6">
 					<div className="space-y-3">
-						<Label htmlFor="voucherCode" className="text-sm font-medium text-zinc-700 dark:text-zinc-300">
+						<Label
+							htmlFor="voucherCode"
+							className="text-sm font-medium text-zinc-700 dark:text-zinc-300"
+						>
 							Voucher Code
 						</Label>
 						<div className="relative">
-							<TicketIcon className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400" size={18} />
+							<TicketIcon
+								className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400"
+								size={18}
+							/>
 							<Input
 								id="voucherCode"
 								autoComplete="off"
@@ -1080,7 +1175,9 @@ function RedeemTab() {
 								value={code}
 								onChange={(e) => {
 									// Normalize instantly for better parsing UX
-									setCode(e.target.value.replace(/[^a-zA-Z0-9-]/g, '').toUpperCase());
+									setCode(
+										e.target.value.replace(/[^a-zA-Z0-9-]/g, "").toUpperCase(),
+									);
 								}}
 								maxLength={32}
 							/>
@@ -1100,11 +1197,13 @@ function RedeemTab() {
 				</form>
 
 				{result && (
-					<div className={`mt-6 p-4 rounded-lg flex items-start gap-3 border text-sm ${
-						result.type === "success"
-							? "bg-emerald-50 dark:bg-emerald-950/20 border-emerald-200 dark:border-emerald-900/50 text-emerald-800 dark:text-emerald-300"
-							: "bg-red-50 dark:bg-red-950/20 border-red-200 dark:border-red-900/50 text-red-800 dark:text-red-300"
-					}`}>
+					<div
+						className={`mt-6 p-4 rounded-lg flex items-start gap-3 border text-sm ${
+							result.type === "success"
+								? "bg-emerald-50 dark:bg-emerald-950/20 border-emerald-200 dark:border-emerald-900/50 text-emerald-800 dark:text-emerald-300"
+								: "bg-red-50 dark:bg-red-950/20 border-red-200 dark:border-red-900/50 text-red-800 dark:text-red-300"
+						}`}
+					>
 						<div className="shrink-0 mt-0.5">
 							{result.type === "success" ? (
 								<SparklesIcon size={16} className="text-emerald-500" />
@@ -1126,18 +1225,24 @@ function RedeemTab() {
 						<div className="w-8 h-8 rounded-full bg-amber-100 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400 flex items-center justify-center mb-3">
 							<SparklesIcon size={14} />
 						</div>
-						<h4 className="text-sm font-medium text-zinc-900 dark:text-zinc-100 mb-1">PRO Membership</h4>
+						<h4 className="text-sm font-medium text-zinc-900 dark:text-zinc-100 mb-1">
+							PRO Membership
+						</h4>
 						<p className="text-xs text-zinc-500 line-height-[1.5]">
-							Unlocks unlimited queries and premium models for the duration specified in the voucher.
+							Unlocks unlimited queries and premium models for the duration
+							specified in the voucher.
 						</p>
 					</div>
 					<div className="p-4 rounded-xl border border-zinc-100 dark:border-white/5 bg-zinc-50/50 dark:bg-[#0f0f0f]">
 						<div className="w-8 h-8 rounded-full bg-indigo-100 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 flex items-center justify-center mb-3">
 							<ZapIcon size={14} />
 						</div>
-						<h4 className="text-sm font-medium text-zinc-900 dark:text-zinc-100 mb-1">Message Credits</h4>
+						<h4 className="text-sm font-medium text-zinc-900 dark:text-zinc-100 mb-1">
+							Message Credits
+						</h4>
 						<p className="text-xs text-zinc-500 line-height-[1.5]">
-							Permanently adds to your message allowance, used after your free daily tier limits are reached.
+							Permanently adds to your message allowance, used after your free
+							daily tier limits are reached.
 						</p>
 					</div>
 				</div>

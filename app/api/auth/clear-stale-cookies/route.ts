@@ -14,21 +14,27 @@ const COOKIE_NAMES = [
 
 const COOKIE_PREFIXES = ["", "__Secure-"];
 const COOKIE_DOMAINS = [undefined, ".ultramaxo.tech"] as const;
+const COOKIE_CHUNK_SUFFIXES = ["", ".0", ".1", ".2", ".3", ".4", ".5"];
+const isProduction = process.env.NODE_ENV === "production";
 
 function expireAuthCookies(response: NextResponse) {
 	for (const domain of COOKIE_DOMAINS) {
 		for (const prefix of COOKIE_PREFIXES) {
 			for (const cookieName of COOKIE_NAMES) {
-				response.cookies.set({
-					name: `${prefix}${cookieName}`,
-					value: "",
-					expires: new Date(0),
-					path: "/",
-					httpOnly: cookieName.includes("session-token") || cookieName.includes("csrf-token"),
-					secure: true,
-					sameSite: "lax",
-					...(domain ? { domain } : {}),
-				});
+				for (const suffix of COOKIE_CHUNK_SUFFIXES) {
+					response.cookies.set({
+						name: `${prefix}${cookieName}${suffix}`,
+						value: "",
+						expires: new Date(0),
+						path: "/",
+						httpOnly:
+							cookieName.includes("session-token") ||
+							cookieName.includes("csrf-token"),
+						secure: isProduction,
+						sameSite: "lax",
+						...(domain && isProduction ? { domain } : {}),
+					});
+				}
 			}
 		}
 	}
@@ -41,7 +47,8 @@ export async function GET() {
 		new NextResponse("stale auth cookies cleared", {
 			status: 200,
 			headers: {
-				"cache-control": "no-store, no-cache, must-revalidate, proxy-revalidate, max-age=0",
+				"cache-control":
+					"no-store, no-cache, must-revalidate, proxy-revalidate, max-age=0",
 				pragma: "no-cache",
 				expires: "0",
 			},

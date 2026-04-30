@@ -14,10 +14,15 @@ const APP_URL =
 	process.env.NODE_ENV === "production"
 		? "https://app.ultramaxo.tech"
 		: undefined;
+const CHAT_ORIGIN =
+	process.env.NODE_ENV === "production"
+		? "https://chat.ultramaxo.tech"
+		: undefined;
 
 export const authConfig = {
 	pages: {
 		signIn: "/login",
+		error: "/login",
 		newUser: CHAT_URL,
 	},
 	providers: [
@@ -37,6 +42,11 @@ export const authConfig = {
 			if (APP_URL) {
 				allowedOrigins.add(APP_URL);
 				rootOrigins.add(APP_URL);
+			}
+
+			if (CHAT_ORIGIN) {
+				allowedOrigins.add(CHAT_ORIGIN);
+				rootOrigins.add(CHAT_ORIGIN);
 			}
 
 			if (WWW_URL) {
@@ -71,7 +81,8 @@ export const authConfig = {
 
 			if (
 				rootOrigins.has(parsedUrl.origin) &&
-				(parsedUrl.pathname === "/chat" || parsedUrl.pathname.startsWith("/chat/"))
+				(parsedUrl.pathname === "/chat" ||
+					parsedUrl.pathname.startsWith("/chat/"))
 			) {
 				return resolvedChatUrl;
 			}

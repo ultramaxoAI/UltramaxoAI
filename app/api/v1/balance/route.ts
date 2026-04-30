@@ -2,6 +2,7 @@ import { db, ensureApiCreditAccountForUser } from "@backend/db/queries";
 import { platformApiKey } from "@backend/db/schema";
 import { eq } from "drizzle-orm";
 import { type NextRequest, NextResponse } from "next/server";
+import { hashPlatformApiKey } from "@/lib/platform-api-keys";
 
 const CORS_HEADERS = {
 	"Access-Control-Allow-Origin": "*",
@@ -27,10 +28,18 @@ export async function GET(req: NextRequest) {
 			);
 		}
 
-		const [keyRecord] = await db
+		const hashedApiKey = hashPlatformApiKey(apiKey);
+		let [keyRecord] = await db
 			.select()
 			.from(platformApiKey)
-			.where(eq(platformApiKey.key, apiKey));
+			.where(eq(platformApiKey.key, hashedApiKey));
+
+		if (!keyRecord) {
+			[keyRecord] = await db
+				.select()
+				.from(platformApiKey)
+				.where(eq(platformApiKey.key, apiKey));
+		}
 
 		if (!keyRecord || keyRecord.status !== "active") {
 			return NextResponse.json(

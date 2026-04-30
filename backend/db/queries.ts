@@ -25,10 +25,10 @@ import { ChatSDKError } from "@/lib/errors";
 import { generateUUID } from "@/lib/utils";
 import {
 	account,
-	apiCreditAccount,
-	apiCreditTransaction,
 	agentRun,
 	agentStep,
+	apiCreditAccount,
+	apiCreditTransaction,
 	authenticator,
 	type Chat,
 	chat,
@@ -2546,6 +2546,21 @@ export async function setEmailVerified(email: string) {
 	}
 }
 
+export async function setEmailVerifiedById(userId: string) {
+	try {
+		return await db
+			.update(user)
+			.set({ emailVerified: new Date() })
+			.where(eq(user.id, userId));
+	} catch (error) {
+		console.error("Database Error (setEmailVerifiedById):", error);
+		throw new ChatSDKError(
+			"bad_request:database",
+			"Failed to set email verified",
+		);
+	}
+}
+
 export async function createPasswordResetTokenForEmail(email: string) {
 	try {
 		const [foundUser] = await db
@@ -2749,45 +2764,45 @@ export async function updatePurchaseRequestStatus({
 					});
 				}
 			} else {
-			const [currentUser] = await db
-				.select()
-				.from(user)
-				.where(eq(user.id, requestRow.userId));
+				const [currentUser] = await db
+					.select()
+					.from(user)
+					.where(eq(user.id, requestRow.userId));
 
-			if (currentUser) {
-				const nextExpiry = computeProExpiry(
-					currentUser.proExpiresAt ?? null,
-					Number(requestRow.months) || 1,
-				);
+				if (currentUser) {
+					const nextExpiry = computeProExpiry(
+						currentUser.proExpiresAt ?? null,
+						Number(requestRow.months) || 1,
+					);
 
-				await db
-					.update(user)
-					.set({
+					await db
+						.update(user)
+						.set({
+							isPro: true,
+							limitCount: 99_999,
+							proExpiresAt: nextExpiry,
+						})
+						.where(eq(user.id, currentUser.id));
+
+					const proAllowance = getStartingCredits({
 						isPro: true,
-						limitCount: 99_999,
-						proExpiresAt: nextExpiry,
-					})
-					.where(eq(user.id, currentUser.id));
-
-				const proAllowance = getStartingCredits({
-					isPro: true,
-					role: currentUser.role,
-				});
-				const currentAccount = await ensureCreditAccountForUser({
-					userId: currentUser.id,
-				});
-
-				if (currentAccount.balance < proAllowance) {
-					await grantCreditsToUser({
-						userId: currentUser.id,
-						amount: proAllowance - currentAccount.balance,
-						reason: "pro approval top-up",
-						type: "grant",
-						metadata: { purchaseRequestId: requestRow.id },
+						role: currentUser.role,
 					});
+					const currentAccount = await ensureCreditAccountForUser({
+						userId: currentUser.id,
+					});
+
+					if (currentAccount.balance < proAllowance) {
+						await grantCreditsToUser({
+							userId: currentUser.id,
+							amount: proAllowance - currentAccount.balance,
+							reason: "pro approval top-up",
+							type: "grant",
+							metadata: { purchaseRequestId: requestRow.id },
+						});
+					}
 				}
 			}
-		}
 		}
 
 		const [updated] = await db

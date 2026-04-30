@@ -99,7 +99,7 @@ const SidebarProvider = React.forwardRef<
 			return isMobile
 				? setOpenMobile((open) => !open)
 				: setOpen((open) => !open);
-		}, [isMobile, setOpen, setOpenMobile]);
+		}, [isMobile, setOpen]);
 
 		// Adds a keyboard shortcut to toggle the sidebar.
 		React.useEffect(() => {
@@ -131,15 +131,7 @@ const SidebarProvider = React.forwardRef<
 				setOpenMobile,
 				toggleSidebar,
 			}),
-			[
-				state,
-				open,
-				setOpen,
-				isMobile,
-				openMobile,
-				setOpenMobile,
-				toggleSidebar,
-			],
+			[state, open, setOpen, isMobile, openMobile, toggleSidebar],
 		);
 
 		return (
@@ -160,6 +152,7 @@ const SidebarProvider = React.forwardRef<
 						}
 						{...props}
 					>
+						<MobileSidebarSwipeArea />
 						{children}
 					</div>
 				</TooltipProvider>
@@ -168,6 +161,40 @@ const SidebarProvider = React.forwardRef<
 	},
 );
 SidebarProvider.displayName = "SidebarProvider";
+
+function MobileSidebarSwipeArea() {
+	const { isMobile, openMobile, setOpenMobile } = useSidebar();
+	const touchStartRef = React.useRef<{ x: number; y: number } | null>(null);
+
+	if (!isMobile || openMobile) {
+		return null;
+	}
+
+	return (
+		<div
+			aria-hidden="true"
+			className="fixed inset-y-0 left-0 z-40 w-6 touch-pan-y md:hidden"
+			onTouchEnd={(event) => {
+				const start = touchStartRef.current;
+				touchStartRef.current = null;
+				if (!start) {
+					return;
+				}
+
+				const touch = event.changedTouches[0];
+				const deltaX = touch.clientX - start.x;
+				const deltaY = touch.clientY - start.y;
+				if (deltaX > 58 && Math.abs(deltaX) > Math.abs(deltaY) * 1.25) {
+					setOpenMobile(true);
+				}
+			}}
+			onTouchStart={(event) => {
+				const touch = event.touches[0];
+				touchStartRef.current = { x: touch.clientX, y: touch.clientY };
+			}}
+		/>
+	);
+}
 
 const Sidebar = React.forwardRef<
 	HTMLDivElement,
@@ -189,6 +216,27 @@ const Sidebar = React.forwardRef<
 		ref,
 	) => {
 		const { isMobile, state, openMobile, setOpenMobile } = useSidebar();
+		const mobileTouchStartRef = React.useRef<{ x: number; y: number } | null>(
+			null,
+		);
+
+		const handleMobileTouchEnd = React.useCallback(
+			(event: React.TouchEvent<HTMLDivElement>) => {
+				const start = mobileTouchStartRef.current;
+				mobileTouchStartRef.current = null;
+				if (!start) {
+					return;
+				}
+
+				const touch = event.changedTouches[0];
+				const deltaX = touch.clientX - start.x;
+				const deltaY = touch.clientY - start.y;
+				if (deltaX < -58 && Math.abs(deltaX) > Math.abs(deltaY) * 1.25) {
+					setOpenMobile(false);
+				}
+			},
+			[setOpenMobile],
+		);
 
 		if (collapsible === "none") {
 			return (
@@ -209,9 +257,17 @@ const Sidebar = React.forwardRef<
 			return (
 				<Sheet onOpenChange={setOpenMobile} open={openMobile} {...props}>
 					<SheetContent
-						className="w-[var(--sidebar-width)] bg-sidebar p-0 text-sidebar-foreground [&>button]:hidden"
+						className="w-[min(var(--sidebar-width),calc(100vw-2.75rem))] touch-pan-y overflow-visible bg-sidebar p-0 text-sidebar-foreground shadow-[18px_0_50px_rgba(0,0,0,0.22)] [&>button]:hidden"
 						data-mobile="true"
 						data-sidebar="sidebar"
+						onTouchEnd={handleMobileTouchEnd}
+						onTouchStart={(event) => {
+							const touch = event.touches[0];
+							mobileTouchStartRef.current = {
+								x: touch.clientX,
+								y: touch.clientY,
+							};
+						}}
 						side={side}
 						style={
 							{
@@ -219,6 +275,7 @@ const Sidebar = React.forwardRef<
 							} as React.CSSProperties
 						}
 					>
+						<div className="-right-3 absolute top-1/2 z-10 h-16 w-1.5 -translate-y-1/2 rounded-full bg-black/18 shadow-sm dark:bg-white/24" />
 						<SheetHeader className="sr-only">
 							<SheetTitle>Sidebar</SheetTitle>
 							<SheetDescription>Displays the mobile sidebar.</SheetDescription>

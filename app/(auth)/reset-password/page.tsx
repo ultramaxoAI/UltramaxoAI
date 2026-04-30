@@ -1,6 +1,5 @@
 "use client";
 import { motion } from "framer-motion";
-import { Bot } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useEffect, useState } from "react";
 
@@ -71,7 +70,7 @@ function ResetPasswordContent() {
 	};
 
 	return (
-		<div className="min-h-screen flex flex-col items-center justify-center p-4 md:p-6 bg-black text-slate-200 relative overflow-hidden">
+		<div className="relative flex min-h-dvh flex-col items-center justify-center overflow-y-auto bg-black p-4 text-slate-200 md:p-6">
 			<div
 				aria-hidden
 				className="absolute inset-0 bg-[radial-gradient(ellipse_at_20%_50%,rgba(255,255,255,0.05),transparent_60%)]"
@@ -131,11 +130,15 @@ function ResetPasswordContent() {
 						onSubmit={handleResetPassword}
 					>
 						<div className="flex flex-col gap-1.5">
-							<label className="block text-sm font-semibold text-zinc-300">
+							<label
+								className="block text-sm font-semibold text-zinc-300"
+								htmlFor="new-password"
+							>
 								New Password
 							</label>
 							<input
 								className="w-full h-10 rounded-xl border border-white/10 bg-white/5 px-4 text-sm text-white placeholder:text-zinc-500 focus:border-white focus:ring-2 focus:ring-white/20 outline-none transition-all"
+								id="new-password"
 								minLength={6}
 								onChange={(e) => setNewPassword(e.target.value)}
 								placeholder="Minimum 6 characters"
@@ -146,11 +149,15 @@ function ResetPasswordContent() {
 						</div>
 
 						<div className="flex flex-col gap-1.5">
-							<label className="block text-sm font-semibold text-zinc-300">
+							<label
+								className="block text-sm font-semibold text-zinc-300"
+								htmlFor="confirm-password"
+							>
 								Confirm Password
 							</label>
 							<input
 								className="w-full h-10 rounded-xl border border-white/10 bg-white/5 px-4 text-sm text-white placeholder:text-zinc-500 focus:border-white focus:ring-2 focus:ring-white/20 outline-none transition-all"
+								id="confirm-password"
 								minLength={6}
 								onChange={(e) => setConfirmPassword(e.target.value)}
 								placeholder="Re-enter your password"

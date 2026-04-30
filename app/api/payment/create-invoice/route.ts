@@ -12,6 +12,7 @@ const YOBASEPAY_BASE_URL =
 const YOBASEPAY_SUCCESS_URL =
 	process.env.YOBASEPAY_SUCCESS_URL || "https://ultramaxo.tech/payment/success";
 const YOBASEPAY_WEBHOOK_SECRET = process.env.YOBASEPAY_WEBHOOK_SECRET || "";
+const isDevelopment = process.env.NODE_ENV === "development";
 
 // Fallback: QRIS Cepat
 const QRIS_CEPAT_API_KEY = process.env.QRIS_CEPAT_API_KEY || "";
@@ -62,11 +63,13 @@ async function createYoBasePayTransaction({
 		signature,
 	};
 
-	console.log("[YoBasePay] Creating transaction:", {
-		merchant_ref: merchantRef,
-		amount,
-		description,
-	});
+	if (isDevelopment) {
+		console.log("[YoBasePay] Creating transaction:", {
+			merchant_ref: merchantRef,
+			amount,
+			description,
+		});
+	}
 
 	const response = await fetch(`${YOBASEPAY_BASE_URL}/transaction/create`, {
 		method: "POST",
@@ -78,7 +81,9 @@ async function createYoBasePayTransaction({
 	});
 
 	const text = await response.text();
-	console.log("[YoBasePay] Response:", response.status, text.substring(0, 200));
+	if (isDevelopment) {
+		console.log("[YoBasePay] Response:", response.status);
+	}
 
 	if (!response.ok) {
 		throw new Error(`YoBasePay API error: ${response.status} ${text}`);
@@ -91,7 +96,6 @@ export async function POST(request: Request) {
 	try {
 		// 1. Auth check
 		const session = await auth();
-		console.log("[Payment] Session user:", session?.user?.id);
 
 		if (!session?.user?.id) {
 			return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -100,7 +104,16 @@ export async function POST(request: Request) {
 		// 2. Parse body
 		const body = await request.json();
 		const { planId, price, months } = body;
-		console.log("[Payment] Plan:", planId, "Price:", price, "Months:", months);
+		if (isDevelopment) {
+			console.log(
+				"[Payment] Plan:",
+				planId,
+				"Price:",
+				price,
+				"Months:",
+				months,
+			);
+		}
 
 		if (!planId || !price) {
 			return NextResponse.json(
@@ -113,10 +126,7 @@ export async function POST(request: Request) {
 		const effectiveMonths = months || 1;
 		const validPrice = getValidPrice(planId, effectiveMonths);
 		if (validPrice === null) {
-			return NextResponse.json(
-				{ error: "Plan tidak valid" },
-				{ status: 400 },
-			);
+			return NextResponse.json({ error: "Plan tidak valid" }, { status: 400 });
 		}
 		if (Number(price) !== validPrice) {
 			console.warn(
@@ -206,8 +216,7 @@ export async function POST(request: Request) {
 				return NextResponse.json({
 					success: true,
 					requestId: purchaseReq.id,
-					checkoutUrl:
-						yobaseResult.url || yobaseResult.redirect_url || null,
+					checkoutUrl: yobaseResult.url || yobaseResult.redirect_url || null,
 					rawResponse: yobaseResult,
 					provider: "yobasepay",
 				});

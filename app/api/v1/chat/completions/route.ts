@@ -9,6 +9,7 @@ import { checkRateLimit } from "@backend/rateLimiter";
 import { eq } from "drizzle-orm";
 import { type NextRequest, NextResponse } from "next/server";
 import { calculateCostCents, estimateTokens } from "@/lib/api-billing";
+import { hashPlatformApiKey } from "@/lib/platform-api-keys";
 
 const MIN_BALANCE_CENTS = 200;
 const FREE_RPM_LIMIT = 5;
@@ -28,9 +29,32 @@ const SECURITY_HEADERS = {
 	"Cache-Control": "no-store, no-cache, must-revalidate",
 };
 
+type ChatMessage = {
+	role: string;
+	content?: unknown;
+};
+
+type ChatCompletionBody = {
+	model: string;
+	messages: ChatMessage[];
+	stream?: unknown;
+	temperature?: unknown;
+	max_tokens?: unknown;
+	top_p?: unknown;
+	stream_options?: unknown;
+};
+
+type ValidationResult =
+	| { valid: true; body: ChatCompletionBody }
+	| { valid: false; error: string };
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+	return Boolean(value && typeof value === "object" && !Array.isArray(value));
+}
+
 // Security: Validate and sanitize request body
-function validateBody(body: any): { valid: boolean; error?: string } {
-	if (!body || typeof body !== "object") {
+function validateBody(body: unknown): ValidationResult {
+	if (!isRecord(body)) {
 		return { valid: false, error: "Invalid request body" };
 	}
 
@@ -60,13 +84,20 @@ function validateBody(body: any): { valid: boolean; error?: string } {
 
 	// Validate each message
 	for (const msg of body.messages) {
-		if (!msg || typeof msg !== "object") {
+		if (!isRecord(msg)) {
 			return { valid: false, error: "Invalid message format" };
 		}
-		if (!["system", "user", "assistant", "tool", "function"].includes(msg.role)) {
-			return { valid: false, error: `Invalid message role: ${msg.role}` };
+		const role = msg.role;
+		if (
+			typeof role !== "string" ||
+			!["system", "user", "assistant", "tool", "function"].includes(role)
+		) {
+			return { valid: false, error: `Invalid message role: ${String(role)}` };
 		}
-		if (typeof msg.content === "string" && msg.content.length > MAX_MESSAGE_LENGTH) {
+		if (
+			typeof msg.content === "string" &&
+			msg.content.length > MAX_MESSAGE_LENGTH
+		) {
 			return {
 				valid: false,
 				error: `Message content too long. Maximum ${MAX_MESSAGE_LENGTH} characters.`,
@@ -85,7 +116,10 @@ function validateBody(body: any): { valid: boolean; error?: string } {
 	if (body.max_tokens !== undefined) {
 		const mt = Number(body.max_tokens);
 		if (!Number.isInteger(mt) || mt < 1 || mt > 1_000_000) {
-			return { valid: false, error: "max_tokens must be integer between 1 and 1,000,000" };
+			return {
+				valid: false,
+				error: "max_tokens must be integer between 1 and 1,000,000",
+			};
 		}
 	}
 
@@ -96,7 +130,7 @@ function validateBody(body: any): { valid: boolean; error?: string } {
 		}
 	}
 
-	return { valid: true };
+	return { valid: true, body: body as ChatCompletionBody };
 }
 
 export async function POST(req: NextRequest) {
@@ -143,10 +177,18 @@ export async function POST(req: NextRequest) {
 		}
 
 		// Security: Validate API Key in DB
-		const [keyRecord] = await db
+		const hashedApiKey = hashPlatformApiKey(apiKey);
+		let [keyRecord] = await db
 			.select()
 			.from(platformApiKey)
-			.where(eq(platformApiKey.key, apiKey));
+			.where(eq(platformApiKey.key, hashedApiKey));
+
+		if (!keyRecord) {
+			[keyRecord] = await db
+				.select()
+				.from(platformApiKey)
+				.where(eq(platformApiKey.key, apiKey));
+		}
 
 		if (!keyRecord || keyRecord.status !== "active") {
 			return NextResponse.json(
@@ -156,9 +198,9 @@ export async function POST(req: NextRequest) {
 		}
 
 		// Parse and validate request body
-		let body: any;
+		let parsedBody: unknown;
 		try {
-			body = await req.json();
+			parsedBody = await req.json();
 		} catch {
 			return NextResponse.json(
 				{ error: { message: "Invalid JSON in request body" } },
@@ -166,7 +208,7 @@ export async function POST(req: NextRequest) {
 			);
 		}
 
-		const validation = validateBody(body);
+		const validation = validateBody(parsedBody);
 		if (!validation.valid) {
 			return NextResponse.json(
 				{ error: { message: validation.error } },
@@ -174,6 +216,7 @@ export async function POST(req: NextRequest) {
 			);
 		}
 
+		const body = validation.body;
 		const requestedModel = body.model;
 		const modelInfo = await getModelCatalogById(requestedModel);
 		if (!modelInfo) {
@@ -246,10 +289,16 @@ export async function POST(req: NextRequest) {
 			model: body.model,
 			messages: body.messages,
 			...(body.stream !== undefined && { stream: Boolean(body.stream) }),
-			...(body.temperature !== undefined && { temperature: Number(body.temperature) }),
-			...(body.max_tokens !== undefined && { max_tokens: Number(body.max_tokens) }),
+			...(body.temperature !== undefined && {
+				temperature: Number(body.temperature),
+			}),
+			...(body.max_tokens !== undefined && {
+				max_tokens: Number(body.max_tokens),
+			}),
 			...(body.top_p !== undefined && { top_p: Number(body.top_p) }),
-			...(body.stream_options && { stream_options: body.stream_options }),
+			...(body.stream_options !== undefined
+				? { stream_options: body.stream_options }
+				: {}),
 		};
 
 		const swiftResponse = await fetch(

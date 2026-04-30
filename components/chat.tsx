@@ -1,6 +1,7 @@
 "use client";
 
 import { useChat } from "@ai-sdk/react";
+import type { Vote } from "@backend/db/schema";
 import { type DataUIPart, DefaultChatTransport } from "ai";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -12,7 +13,6 @@ import { ChatContextHeader } from "@/components/chat-context-header";
 import { useArtifactSelector, useArtifactUiState } from "@/hooks/use-artifact";
 import { useAutoResume } from "@/hooks/use-auto-resume";
 import { useChatVisibility } from "@/hooks/use-chat-visibility";
-import type { Vote } from "@backend/db/schema";
 import { ChatSDKError } from "@/lib/errors";
 import type { Attachment, ChatMessage, CustomUIDataTypes } from "@/lib/types";
 import {
@@ -331,7 +331,7 @@ export function Chat({
 		<>
 			<div
 				className={cn(
-					"relative flex h-dvh min-w-0 flex-col overflow-hidden bg-white text-[#171717] transition-all duration-300 ease-in-out dark:bg-[#171717] md:dark:bg-[#212121] dark:text-[#f3f4f1]",
+					"relative flex h-dvh min-w-0 max-w-full flex-col overflow-hidden bg-white text-[#171717] transition-all duration-300 ease-in-out dark:bg-[#171717] dark:text-[#f3f4f1] md:dark:bg-[#212121]",
 					isArtifactVisible
 						? isIdeArtifactLocked
 							? "lg:w-[46%]"
@@ -339,7 +339,7 @@ export function Chat({
 						: "w-full",
 				)}
 			>
-				<div className="pointer-events-none absolute left-0 right-0 top-0 z-20 px-3 pt-2 sm:px-4 sm:pt-2.5">
+				<div className="pointer-events-none absolute top-0 right-0 left-0 z-20 px-2 pt-2 sm:px-4 sm:pt-2.5">
 					<div className="pointer-events-auto mx-auto w-full max-w-5xl">
 						<ChatContextHeader
 							chatId={id}
@@ -351,12 +351,12 @@ export function Chat({
 				</div>
 
 				<div
-					className={`relative z-10 flex min-w-0 flex-1 flex-col overflow-hidden pt-15 sm:pt-16 ${
+					className={`relative z-10 flex min-w-0 flex-1 flex-col overflow-hidden pt-14 sm:pt-16 ${
 						messages.length === 0 ? "items-center justify-center" : ""
 					}`}
 				>
 					{messages.length > 0 && (
-						<div className="flex flex-1 flex-col overflow-hidden px-3 pb-3 sm:px-4 sm:pb-4">
+						<div className="flex flex-1 flex-col overflow-hidden px-2 pb-2 sm:px-4 sm:pb-4">
 							<div className="mx-auto flex h-full w-full max-w-5xl flex-1 flex-col overflow-hidden bg-transparent">
 								<Messages
 									addToolApprovalResponse={addToolApprovalResponse}
@@ -375,10 +375,10 @@ export function Chat({
 					)}
 
 					{messages.length === 0 && (
-						<div className="flex w-full flex-1 items-center justify-center px-4 pb-4">
+						<div className="flex w-full flex-1 items-center justify-center px-3 pb-4 sm:px-4">
 							<div className="mx-auto w-full max-w-3xl space-y-4 text-center">
 								<div className="mx-auto max-w-2xl">
-									<h1 className="text-balance text-[2.1rem] font-semibold tracking-[-0.05em] text-[#171717] sm:text-[2.6rem] dark:text-[#f3f4f1]">
+									<h1 className="text-balance text-[1.85rem] font-semibold leading-[1.08] tracking-[-0.04em] text-[#171717] dark:text-[#f3f4f1] sm:text-[2.6rem] sm:tracking-[-0.05em]">
 										Apa yang ingin Anda buat?
 									</h1>
 									<p className="mt-3 text-sm leading-7 text-[#5f6258] dark:text-[#a6aca6] sm:text-[15px]">
@@ -458,7 +458,7 @@ export function Chat({
 				</div>
 
 				{messages.length > 0 && (
-					<div className="relative z-10 w-full px-3 pb-6 sm:px-4 sm:pb-6">
+					<div className="relative z-10 w-full px-2 pb-[max(1rem,env(safe-area-inset-bottom))] sm:px-4 sm:pb-6">
 						{/* Contextual Upgrade Banner */}
 						{user?.type !== "pro" && (
 							<ContextualUpgradeBanner
@@ -467,7 +467,7 @@ export function Chat({
 								userType={user?.type}
 							/>
 						)}
-						<div className="mx-auto w-full max-w-4xl">
+						<div className="mx-auto min-w-0 w-full max-w-4xl">
 							{isReadonly ? (
 								<div className="flex w-full items-center justify-center p-4">
 									<div className="w-full max-w-3xl rounded-[28px] border border-dashed border-[#171717]/8 bg-white/42 p-6 text-center shadow-[0_18px_50px_rgba(23,23,23,0.05)] backdrop-blur-xl dark:border-white/10 dark:bg-[#171b1f]/78 dark:shadow-[0_18px_50px_rgba(0,0,0,0.24)]">

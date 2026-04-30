@@ -6,6 +6,8 @@ export function MainContentWrapper({
 	children: React.ReactNode;
 }) {
 	return (
-		<div className="flex-1 flex flex-col min-h-screen relative">{children}</div>
+		<div className="relative flex min-h-dvh min-w-0 flex-1 flex-col overflow-hidden">
+			{children}
+		</div>
 	);
 }

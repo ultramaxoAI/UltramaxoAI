@@ -1,8 +1,11 @@
 import { createHmac, timingSafeEqual } from "node:crypto";
+import { db, updatePurchaseRequestStatus } from "@backend/db/queries";
+import { purchaseRequest } from "@backend/db/schema";
+import { eq } from "drizzle-orm";
 import { NextResponse } from "next/server";
-import { updatePurchaseRequestStatus } from "@backend/db/queries";
 
 const YOBASEPAY_WEBHOOK_SECRET = process.env.YOBASEPAY_WEBHOOK_SECRET ?? "";
+const MAX_WEBHOOK_BODY = 16 * 1024;
 
 /**
  * Verifikasi signature webhook dari YoBasePay
@@ -15,9 +18,7 @@ function verifySignature(
 ): boolean {
 	if (!secret || !receivedSig) return false;
 
-	const expected = createHmac("sha256", secret)
-		.update(rawBody)
-		.digest("hex");
+	const expected = createHmac("sha256", secret).update(rawBody).digest("hex");
 
 	// Timing-safe comparison to prevent timing attacks
 	try {
@@ -30,45 +31,56 @@ function verifySignature(
 	}
 }
 
+function isValidUUID(value: string): boolean {
+	return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(
+		value,
+	);
+}
+
+function getHeaderSignature(request: Request): string {
+	return (
+		request.headers.get("X-Signature") ||
+		request.headers.get("X-YoBase-Signature") ||
+		request.headers.get("X-Webhook-Signature") ||
+		request.headers.get("X-YoBasePay-Signature") ||
+		""
+	);
+}
+
 export async function POST(request: Request) {
 	try {
+		const contentLength = request.headers.get("content-length");
+		if (contentLength && Number(contentLength) > MAX_WEBHOOK_BODY) {
+			return NextResponse.json({ error: "Payload too large" }, { status: 413 });
+		}
+
 		const rawBody = await request.text();
-		console.log("[Webhook YoBasePay] Raw payload:", rawBody);
+		if (rawBody.length > MAX_WEBHOOK_BODY) {
+			return NextResponse.json({ error: "Payload too large" }, { status: 413 });
+		}
 
-		// Verifikasi signature jika webhook secret dikonfigurasi
-		const receivedSig =
-			request.headers.get("X-Signature") ||
-			request.headers.get("X-YoBase-Signature") ||
-			request.headers.get("X-Webhook-Signature") ||
-			"";
-
-		if (YOBASEPAY_WEBHOOK_SECRET) {
-			if (!receivedSig) {
-				console.warn(
-					"[Webhook YoBasePay] Missing signature header! Rejecting.",
-				);
-				return NextResponse.json(
-					{ error: "Missing signature" },
-					{ status: 401 },
-				);
-			}
-
-			const isValid = verifySignature(
-				rawBody,
-				receivedSig,
-				YOBASEPAY_WEBHOOK_SECRET,
+		if (!YOBASEPAY_WEBHOOK_SECRET) {
+			console.error("[Webhook YoBasePay] Missing YOBASEPAY_WEBHOOK_SECRET");
+			return NextResponse.json(
+				{ error: "Webhook not configured" },
+				{ status: 500 },
 			);
-			if (!isValid) {
-				console.warn(
-					"[Webhook YoBasePay] Invalid signature! Possible spoofed request.",
-				);
-				return NextResponse.json(
-					{ error: "Invalid signature" },
-					{ status: 401 },
-				);
-			}
+		}
 
-			console.log("[Webhook YoBasePay] Signature verified ✓");
+		const receivedSig = getHeaderSignature(request);
+		if (!receivedSig) {
+			console.warn("[Webhook YoBasePay] Missing signature header");
+			return NextResponse.json({ error: "Missing signature" }, { status: 401 });
+		}
+
+		const isValid = verifySignature(
+			rawBody,
+			receivedSig,
+			YOBASEPAY_WEBHOOK_SECRET,
+		);
+		if (!isValid) {
+			console.warn("[Webhook YoBasePay] Invalid signature");
+			return NextResponse.json({ error: "Invalid signature" }, { status: 401 });
 		}
 
 		let body: Record<string, unknown>;
@@ -113,6 +125,31 @@ export async function POST(request: Request) {
 			);
 		}
 
+		if (!isValidUUID(referenceId)) {
+			return NextResponse.json({ error: "Invalid reference" }, { status: 400 });
+		}
+
+		const [order] = await db
+			.select()
+			.from(purchaseRequest)
+			.where(eq(purchaseRequest.id, referenceId))
+			.limit(1);
+
+		if (!order) {
+			return NextResponse.json({ error: "Order not found" }, { status: 404 });
+		}
+
+		const receivedAmount = Number(amount);
+		if (
+			Number.isFinite(receivedAmount) &&
+			receivedAmount > 0 &&
+			order.price > 0 &&
+			Math.abs(receivedAmount - order.price) / order.price > 0.01
+		) {
+			console.error("[Webhook YoBasePay] Amount mismatch for", referenceId);
+			return NextResponse.json({ error: "Amount mismatch" }, { status: 400 });
+		}
+
 		const normalizedStatus = String(status || "").toUpperCase();
 		const isSuccess = [
 			"PAID",
@@ -133,6 +170,13 @@ export async function POST(request: Request) {
 		);
 
 		if (isSuccess) {
+			if (order.status === "paid" || order.status === "approved") {
+				return NextResponse.json({
+					success: true,
+					message: "Payment already processed",
+				});
+			}
+
 			const updatedRequest = await updatePurchaseRequestStatus({
 				id: referenceId,
 				status: "approved",
@@ -154,13 +198,14 @@ export async function POST(request: Request) {
 						await sendProUpgradeEmail(proUser.email, proUser.name || "User");
 					}
 				} catch (emailErr) {
-					console.error("[Webhook YoBasePay] Failed to send PRO upgrade email:", emailErr);
+					console.error(
+						"[Webhook YoBasePay] Failed to send PRO upgrade email:",
+						emailErr,
+					);
 				}
 			}
 
-			console.log(
-				`[Webhook YoBasePay] Payment APPROVED for ${referenceId}`,
-			);
+			console.log(`[Webhook YoBasePay] Payment APPROVED for ${referenceId}`);
 			return NextResponse.json({
 				success: true,
 				message: "Payment processed",
@@ -183,9 +228,7 @@ export async function POST(request: Request) {
 		}
 
 		if (isPending) {
-			console.log(
-				`[Webhook YoBasePay] Payment PENDING for ${referenceId}`,
-			);
+			console.log(`[Webhook YoBasePay] Payment PENDING for ${referenceId}`);
 			return NextResponse.json({
 				success: true,
 				message: `Payment pending: ${status}`,
@@ -202,9 +245,6 @@ export async function POST(request: Request) {
 	} catch (error) {
 		console.error("[Webhook YoBasePay] Error:", error);
 		// Return 200 agar YoBasePay tidak retry terus
-		return NextResponse.json(
-			{ error: "Processing error" },
-			{ status: 200 },
-		);
+		return NextResponse.json({ error: "Processing error" }, { status: 200 });
 	}
 }

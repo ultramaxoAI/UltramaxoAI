@@ -311,8 +311,8 @@ export function PricingPage({ user }: PricingPageProps) {
 	const slotsRemaining = TOTAL_EARLY_ADOPTER_SLOTS - SLOTS_TAKEN;
 
 	return (
-		<div className="min-h-screen bg-white dark:bg-[#09090b] font-sans selection:bg-indigo-100 dark:selection:bg-indigo-500/20">
-			<div className="relative max-w-7xl mx-auto px-4 py-12 sm:px-6 lg:px-8">
+		<div className="min-h-dvh bg-white font-sans selection:bg-indigo-100 dark:bg-[#09090b] dark:selection:bg-indigo-500/20">
+			<div className="relative mx-auto max-w-7xl px-4 py-8 sm:px-6 sm:py-12 lg:px-8">
 				{/* Back Button */}
 				<Link
 					className="inline-flex items-center gap-2 text-sm font-medium text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white transition-colors mb-8"
@@ -323,8 +323,8 @@ export function PricingPage({ user }: PricingPageProps) {
 				</Link>
 
 				{/* Header */}
-				<div className="text-center mb-12">
-					<h1 className="text-4xl sm:text-5xl font-bold mb-4 text-zinc-900 dark:text-white">
+				<div className="mb-10 text-center sm:mb-12">
+					<h1 className="mb-4 text-3xl font-bold text-zinc-900 dark:text-white sm:text-5xl">
 						{qrisData
 							? "Checkout Pembayaran"
 							: activeTab === "plans"
@@ -332,25 +332,25 @@ export function PricingPage({ user }: PricingPageProps) {
 								: "API Platform"}
 					</h1>
 					{!qrisData && (
-						<div className="flex flex-col items-center gap-6">
-							<p className="text-zinc-600 dark:text-zinc-400 text-lg max-w-2xl mx-auto">
+						<div className="flex flex-col items-center gap-5 sm:gap-6">
+							<p className="mx-auto max-w-2xl text-base text-zinc-600 leading-7 dark:text-zinc-400 sm:text-lg">
 								{activeTab === "plans"
 									? "Pilih paket yang sesuai dengan kebutuhan Anda. Upgrade kapan saja."
 									: "Akses 50+ model premium melalui satu endpoint OpenAI-compatible."}
 							</p>
 
-							<div className="flex bg-zinc-100 dark:bg-white/5 p-1 rounded-xl border border-zinc-200 dark:border-white/10">
+							<div className="grid w-full max-w-sm grid-cols-2 rounded-xl border border-zinc-200 bg-zinc-100 p-1 dark:border-white/10 dark:bg-white/5">
 								<button
 									type="button"
 									onClick={() => setActiveTab("plans")}
-									className={`px-6 py-2 text-sm font-medium rounded-lg transition-all ${activeTab === "plans" ? "bg-white dark:bg-white/10 text-zinc-900 dark:text-white shadow-sm" : "text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-300"}`}
+									className={`rounded-lg px-4 py-2 font-medium text-sm transition-all ${activeTab === "plans" ? "bg-white text-zinc-900 shadow-sm dark:bg-white/10 dark:text-white" : "text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-300"}`}
 								>
 									Subscriptions
 								</button>
 								<button
 									type="button"
 									onClick={() => setActiveTab("api")}
-									className={`px-6 py-2 text-sm font-medium rounded-lg transition-all ${activeTab === "api" ? "bg-white dark:bg-white/10 text-zinc-900 dark:text-white shadow-sm" : "text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-300"}`}
+									className={`rounded-lg px-4 py-2 font-medium text-sm transition-all ${activeTab === "api" ? "bg-white text-zinc-900 shadow-sm dark:bg-white/10 dark:text-white" : "text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-300"}`}
 								>
 									API Platform
 								</button>
@@ -389,7 +389,7 @@ export function PricingPage({ user }: PricingPageProps) {
 
 				{/* Content Switch: QRIS, Plans, or API */}
 				{qrisData ? (
-					<div className="flex flex-col items-center justify-center p-8 text-center max-w-xl mx-auto bg-white dark:bg-white/[0.02] backdrop-blur-sm rounded-3xl border border-zinc-200 dark:border-white/[0.08]">
+					<div className="mx-auto flex max-w-xl flex-col items-center justify-center rounded-3xl border border-zinc-200 bg-white p-5 text-center backdrop-blur-sm dark:border-white/[0.08] dark:bg-white/[0.02] sm:p-8">
 						<h2 className="text-2xl font-bold text-zinc-900 dark:text-white mb-2">
 							Checkout {qrisData.planName}
 						</h2>
@@ -398,7 +398,7 @@ export function PricingPage({ user }: PricingPageProps) {
 							kesayangan Anda untuk membayar <b>{qrisData.price}</b>.
 						</p>
 
-						<div className="bg-white p-4 rounded-3xl shrink-0 mb-8 flex justify-center items-center w-64 h-64 border border-zinc-200 dark:border-zinc-700 relative mx-auto">
+						<div className="relative mx-auto mb-8 flex aspect-square w-full max-w-64 shrink-0 items-center justify-center rounded-3xl border border-zinc-200 bg-white p-4 dark:border-zinc-700">
 							<QRCode
 								value={qrisData.qris}
 								size={256}
@@ -447,13 +447,18 @@ export function PricingPage({ user }: PricingPageProps) {
 									Lifetime Spent
 								</p>
 								<p className="text-3xl font-bold text-zinc-900 dark:text-white">
-									${((credits?.account?.lifetimeSpentCents ?? 0) / 100).toFixed(2)}
+									$
+									{((credits?.account?.lifetimeSpentCents ?? 0) / 100).toFixed(
+										2,
+									)}
 								</p>
 							</div>
 							<div className="bg-white dark:bg-white/5 border border-zinc-200 dark:border-white/10 rounded-2xl p-6 flex flex-col justify-center">
 								<Button
 									className="w-full bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl"
-									onClick={() => window.open("https://app.ultramaxo.tech", "_blank")}
+									onClick={() =>
+										window.open("https://app.ultramaxo.tech", "_blank")
+									}
 								>
 									Open API Console
 								</Button>

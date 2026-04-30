@@ -1,23 +1,40 @@
-import { NextResponse } from "next/server";
+import { randomUUID } from "node:crypto";
 import { upsertVerificationCode } from "@backend/db/queries";
 import { sendVerificationEmail } from "@backend/email";
+import { checkRateLimit, getClientIp } from "@backend/rateLimiter";
+import { NextResponse } from "next/server";
 
 export async function POST(request: Request) {
 	try {
 		const { email } = await request.json();
+		const normalizedEmail = String(email ?? "")
+			.trim()
+			.toLowerCase();
+		const ip = getClientIp(request);
+		const rateLimit = checkRateLimit(
+			`verification:${normalizedEmail || ip}`,
+			3,
+			15 * 60 * 1000,
+		);
 
-		if (!email || !email.includes("@")) {
+		if (!rateLimit.allowed) {
+			return NextResponse.json(
+				{ error: "Terlalu banyak permintaan. Coba lagi nanti." },
+				{ status: 429 },
+			);
+		}
+
+		if (!normalizedEmail || !normalizedEmail.includes("@")) {
 			return NextResponse.json({ error: "Email tidak valid" }, { status: 400 });
 		}
 
-		// Generate 6-digit code
-		const code = Math.floor(100_000 + Math.random() * 900_000).toString();
+		const code = randomUUID();
 
 		// Save to DB
-		await upsertVerificationCode(email, code);
+		await upsertVerificationCode(normalizedEmail, code);
 
 		// Send Email
-		const sent = await sendVerificationEmail(email, code);
+		const sent = await sendVerificationEmail(normalizedEmail, code);
 
 		if (!sent) {
 			return NextResponse.json(

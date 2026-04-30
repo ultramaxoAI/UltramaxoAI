@@ -86,6 +86,7 @@ export const login = async (
 			username: identifier,
 			password: validatedData.password,
 			redirect: false,
+			redirectTo: "/chat",
 		});
 
 		if (result?.error) {

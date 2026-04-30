@@ -1,22 +1,32 @@
-import { NextResponse } from "next/server";
 import {
 	getUser,
 	setEmailVerified,
 	verifyVerificationCode,
 } from "@backend/db/queries";
 import { sendWelcomeEmail } from "@backend/email";
+import { NextResponse } from "next/server";
+import { z } from "zod";
+
+const verifyRequestSchema = z.object({
+	email: z
+		.string()
+		.email()
+		.transform((email) => email.trim().toLowerCase()),
+	code: z.string().min(16).max(128),
+});
 
 export async function POST(request: Request) {
 	try {
-		const { email, code } = await request.json();
+		const parsedBody = verifyRequestSchema.safeParse(await request.json());
 
-		if (!email || !code) {
+		if (!parsedBody.success) {
 			return NextResponse.json(
 				{ error: "Email dan kode verifikasi harus diisi" },
 				{ status: 400 },
 			);
 		}
 
+		const { email, code } = parsedBody.data;
 		const isValid = await verifyVerificationCode(email, code);
 		if (!isValid) {
 			return NextResponse.json(

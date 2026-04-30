@@ -1,20 +1,19 @@
-import { auth } from "@/app/(auth)/auth";
+import crypto from "node:crypto";
 import {
-	getPlatformApiKeysByUserId,
 	createPlatformApiKey,
+	getPlatformApiKeysByUserId,
 } from "@backend/db/queries";
 import { NextResponse } from "next/server";
-import crypto from "node:crypto";
+import { auth } from "@/app/(auth)/auth";
+import {
+	hashPlatformApiKey,
+	maskPlatformApiKey,
+} from "@/lib/platform-api-keys";
 
 // Security: Generate cryptographically secure API keys
 function generateSecureApiKey(): string {
 	const randomBytes = crypto.randomBytes(32).toString("hex");
 	return `ux_sk_${randomBytes}`;
-}
-
-// Security: Hash API key for storage (store hash, not plaintext)
-function hashApiKey(key: string): string {
-	return crypto.createHash("sha256").update(key).digest("hex");
 }
 
 // Security: Input validation
@@ -39,11 +38,11 @@ export async function GET() {
 	try {
 		const keys = await getPlatformApiKeysByUserId(session.user.id);
 		// Security: Never return full key in list — only masked prefix
-		const maskedKeys = keys.map((k: any) => ({
+		const maskedKeys = keys.map((k) => ({
 			...k,
 			key: k.key
-				? `${k.key.slice(0, 8)}${"•".repeat(24)}${k.key.slice(-4)}`
-				: "•".repeat(36),
+				? maskPlatformApiKey(k.key)
+				: "ux_sk_****************************",
 		}));
 		return NextResponse.json(maskedKeys);
 	} catch {
@@ -77,7 +76,8 @@ export async function POST(req: Request) {
 		if (!name) {
 			return NextResponse.json(
 				{
-					error: "Key name is required. Use 1-64 alphanumeric characters, hyphens, or underscores.",
+					error:
+						"Key name is required. Use 1-64 alphanumeric characters, hyphens, or underscores.",
 				},
 				{ status: 400 },
 			);
@@ -85,9 +85,7 @@ export async function POST(req: Request) {
 
 		// Security: Enforce max keys per user
 		const existingKeys = await getPlatformApiKeysByUserId(session.user.id);
-		const activeKeys = existingKeys.filter(
-			(k: any) => k.status === "active",
-		);
+		const activeKeys = existingKeys.filter((k) => k.status === "active");
 		if (activeKeys.length >= MAX_KEYS_PER_USER) {
 			return NextResponse.json(
 				{
@@ -103,7 +101,7 @@ export async function POST(req: Request) {
 		const newKey = await createPlatformApiKey({
 			userId: session.user.id,
 			name,
-			key: plainKey,
+			key: hashPlatformApiKey(plainKey),
 		});
 
 		// Security: Return the full key ONLY on creation (show-once)

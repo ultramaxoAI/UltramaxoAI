@@ -4,9 +4,14 @@ import { logPageVisit } from "@backend/db/queries";
 
 export async function POST(request: Request) {
 	try {
-		const { path } = await request.json();
+		const rawBody = await request.text();
+		if (!rawBody) {
+			return NextResponse.json({ error: "Missing body" }, { status: 400 });
+		}
 
-		if (!path) {
+		const { path } = JSON.parse(rawBody) as { path?: unknown };
+
+		if (typeof path !== "string" || !path) {
 			return NextResponse.json({ error: "Missing path" }, { status: 400 });
 		}
 

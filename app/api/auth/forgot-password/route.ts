@@ -1,10 +1,11 @@
-import { NextResponse } from "next/server";
 import {
 	consumePasswordResetToken,
 	createPasswordResetTokenForEmail,
 	updateUserPassword,
 } from "@backend/db/queries";
 import { sendPasswordResetEmail } from "@backend/email";
+import { checkRateLimit, getClientIp } from "@backend/rateLimiter";
+import { NextResponse } from "next/server";
 
 export async function POST(request: Request) {
 	try {
@@ -13,6 +14,20 @@ export async function POST(request: Request) {
 
 		if (email && !token && !newPassword) {
 			const normalizedEmail = String(email).trim().toLowerCase();
+			const ip = getClientIp(request);
+			const rateLimit = checkRateLimit(
+				`password-reset:${normalizedEmail || ip}`,
+				3,
+				15 * 60 * 1000,
+			);
+
+			if (!rateLimit.allowed) {
+				return NextResponse.json(
+					{ error: "Too many password reset requests. Try again later." },
+					{ status: 429 },
+				);
+			}
+
 			if (!normalizedEmail.includes("@")) {
 				return NextResponse.json({ error: "Invalid email" }, { status: 400 });
 			}

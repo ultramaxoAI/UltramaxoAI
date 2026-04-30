@@ -61,7 +61,7 @@ function VerifyContent() {
 	}, [token, email, router]);
 
 	return (
-		<div className="min-h-screen bg-[#050505] flex flex-col items-center justify-center p-4">
+		<div className="flex min-h-dvh flex-col items-center justify-center bg-[#050505] p-4">
 			<motion.div
 				animate={{ opacity: 1, y: 0 }}
 				className="w-full max-w-md"

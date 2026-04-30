@@ -21,7 +21,9 @@ function resolveRedirectTo(request: Request) {
 	return CHAT_SUCCESS_URL;
 }
 
-function isNextRedirectError(error: unknown): error is Error & { digest: string } {
+function isNextRedirectError(
+	error: unknown,
+): error is Error & { digest: string } {
 	return (
 		error instanceof Error &&
 		"digest" in error &&
@@ -44,7 +46,10 @@ async function handleCredentialsSignIn({
 	password: string;
 }) {
 	if (!username || !password) {
-		return NextResponse.redirect(new URL("/login?error=MissingCredentials", request.url), 303);
+		return NextResponse.redirect(
+			new URL("/login?error=MissingCredentials", request.url),
+			303,
+		);
 	}
 
 	try {
@@ -56,9 +61,8 @@ async function handleCredentialsSignIn({
 		});
 
 		if (result?.error) {
-			const errorParam = result.error === "unverified"
-				? "Unverified"
-				: result.error;
+			const errorParam =
+				result.error === "unverified" ? "Unverified" : result.error;
 			const loginUrl = new URL("/login", request.url);
 			loginUrl.searchParams.set("error", errorParam);
 			return NextResponse.redirect(loginUrl, 303);
@@ -82,16 +86,14 @@ async function handleCredentialsSignIn({
 	}
 }
 
-export async function GET(request: Request) {
-	const url = new URL(request.url);
-	const username = String(url.searchParams.get("username") ?? "").trim();
-	const password = String(url.searchParams.get("password") ?? "");
-
-	return handleCredentialsSignIn({
-		request,
-		username,
-		password,
-	});
+export async function GET() {
+	return NextResponse.json(
+		{ error: "Method not allowed" },
+		{
+			status: 405,
+			headers: { Allow: "POST" },
+		},
+	);
 }
 
 export async function POST(request: Request) {

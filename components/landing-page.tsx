@@ -47,7 +47,8 @@ const narrativeBlocks = [
 			"Prompts & revisions in one context",
 			"A cleaner surface for daily work",
 		],
-		image: "https://images.unsplash.com/photo-1555949963-ff9fe0c870eb?q=80&w=2070&auto=format&fit=crop",
+		image:
+			"https://images.unsplash.com/photo-1555949963-ff9fe0c870eb?q=80&w=2070&auto=format&fit=crop",
 	},
 	{
 		eyebrow: "Artifacts that can be used",
@@ -59,7 +60,8 @@ const narrativeBlocks = [
 			"Editor and preview stay readable",
 			"Revisions remain available",
 		],
-		image: "https://images.unsplash.com/photo-1618401471353-b98afee0b2eb?q=80&w=2088&auto=format&fit=crop",
+		image:
+			"https://images.unsplash.com/photo-1618401471353-b98afee0b2eb?q=80&w=2088&auto=format&fit=crop",
 	},
 	{
 		eyebrow: "Modes and headroom",
@@ -71,7 +73,8 @@ const narrativeBlocks = [
 			"Installable via PWA",
 			"Focused even when complex",
 		],
-		image: "https://images.unsplash.com/photo-1550751827-4bd374c3f58b?q=80&w=2070&auto=format&fit=crop",
+		image:
+			"https://images.unsplash.com/photo-1550751827-4bd374c3f58b?q=80&w=2070&auto=format&fit=crop",
 	},
 ];
 
@@ -270,42 +273,64 @@ function GSAPSplitText({
 	className = "",
 	as: Tag = "h1",
 	delay = 0,
+	animate = true,
 }: {
 	text: string;
 	className?: string;
 	as?: "h1" | "h2" | "h3" | "p" | "span";
 	delay?: number;
+	animate?: boolean;
 }) {
 	const containerRef = useRef<HTMLHeadingElement>(null);
 	const hasAnimated = useRef(false);
 
-	useGSAP(() => {
-		if (!containerRef.current || hasAnimated.current) return;
-		const words = containerRef.current.querySelectorAll(".split-word");
-		gsap.fromTo(
-			words,
-			{ opacity: 0, y: 40, filter: "blur(12px)" },
-			{
-				opacity: 1,
-				y: 0,
-				filter: "blur(0px)",
-				duration: 0.8,
-				stagger: 0.04,
-				ease: "power3.out",
-				delay,
-				onComplete: () => {
-					hasAnimated.current = true;
+	useGSAP(
+		() => {
+			if (!animate || !containerRef.current || hasAnimated.current) return;
+			const words = containerRef.current.querySelectorAll(".split-word");
+			gsap.fromTo(
+				words,
+				{ opacity: 0, y: 40, filter: "blur(12px)" },
+				{
+					opacity: 1,
+					y: 0,
+					filter: "blur(0px)",
+					duration: 0.8,
+					stagger: 0.04,
+					ease: "power3.out",
+					delay,
+					onComplete: () => {
+						hasAnimated.current = true;
+					},
 				},
-			},
-		);
-	}, { scope: containerRef });
+			);
+		},
+		{ scope: containerRef },
+	);
 
 	const words = text.split(" ");
 
+	if (!animate) {
+		return (
+			<Tag
+				ref={containerRef as React.RefObject<HTMLHeadingElement>}
+				className={className}
+			>
+				{text}
+			</Tag>
+		);
+	}
+
 	return (
-		<Tag ref={containerRef as React.RefObject<HTMLHeadingElement>} className={className}>
+		<Tag
+			ref={containerRef as React.RefObject<HTMLHeadingElement>}
+			className={className}
+		>
 			{words.map((word, i) => (
-				<span key={`${word}-${i}`} className="split-word inline-block will-change-transform">
+				<span
+					key={`${word}-${i}`}
+					className="split-word inline-block will-change-transform"
+				>
 					{word}
 					{i < words.length - 1 ? "\u00A0" : ""}
 				</span>
@@ -317,7 +342,9 @@ function GSAPSplitText({
 export default function LandingPage() {
 	const router = useRouter();
 	const [mobileNavOpen, setMobileNavOpen] = useState(false);
-	const [openFaq, setOpenFaq] = useState<string | null>(faqItems[0]?.question ?? null);
+	const [openFaq, setOpenFaq] = useState<string | null>(
+		faqItems[0]?.question ?? null,
+	);
 	const [heroTilt, setHeroTilt] = useState({ x: 0, y: 0 });
 	const [mounted, setMounted] = useState(false);
 	const [isMobile, setIsMobile] = useState(true);
@@ -359,9 +386,7 @@ export default function LandingPage() {
 					items.map((model: any) => ({
 						modelId: model.modelId || model.name,
 						name: model.name || model.modelId,
-						type: model.capabilities?.includes("code")
-							? "Chat & Code"
-							: "Chat",
+						type: model.capabilities?.includes("code") ? "Chat & Code" : "Chat",
 						provider: model.provider || "Unknown",
 						context: model.context || "-",
 						price: model.isFree
@@ -404,139 +429,349 @@ export default function LandingPage() {
 	const resetHeroPointer = () => setHeroTilt({ x: 0, y: 0 });
 
 	/* ─── GSAP - Simple Reveal + Product PIN ─── */
-	useGSAP(() => {
-		const prefersReduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-		if (prefersReduced) return;
+	useGSAP(
+		() => {
+			const prefersReduced = window.matchMedia(
+				"(prefers-reduced-motion: reduce)",
+			).matches;
+			if (prefersReduced || window.innerWidth < 768) return;
 
-		const ctx = gsap.context(() => {
-			/* 1. Hero entrance */
-			gsap.timeline({ defaults: { ease: "power3.out" } })
-				.fromTo(navRef.current, { y: -40, opacity: 0 }, { y: 0, opacity: 1, duration: 0.8 })
-				.fromTo(".hero-badge", { y: 20, opacity: 0 }, { y: 0, opacity: 1, duration: 0.6 }, "-=0.4")
-				.fromTo(".hero-headline .split-word", { y: 60, opacity: 0, filter: "blur(16px)" }, { y: 0, opacity: 1, filter: "blur(0px)", duration: 0.9, stagger: 0.05 }, "-=0.3")
-				.fromTo(".hero-subtitle", { y: 30, opacity: 0 }, { y: 0, opacity: 1, duration: 0.7 }, "-=0.6")
-				.fromTo(".hero-buttons", { y: 30, opacity: 0 }, { y: 0, opacity: 1, duration: 0.6 }, "-=0.4")
-				.fromTo(".hero-chips", { y: 20, opacity: 0 }, { y: 0, opacity: 1, duration: 0.5 }, "-=0.3")
-				.fromTo(heroMockupRef.current, { scale: 0.88, opacity: 0 }, { scale: 1, opacity: 1, duration: 1.2 }, "-=0.8");
+			const ctx = gsap.context(() => {
+				/* 1. Hero entrance */
+				gsap
+					.timeline({ defaults: { ease: "power3.out" } })
+					.fromTo(
+						navRef.current,
+						{ y: -40, opacity: 0 },
+						{ y: 0, opacity: 1, duration: 0.8 },
+					)
+					.fromTo(
+						".hero-badge",
+						{ y: 20, opacity: 0 },
+						{ y: 0, opacity: 1, duration: 0.6 },
+						"-=0.4",
+					)
+					.fromTo(
+						".hero-headline .split-word",
+						{ y: 60, opacity: 0, filter: "blur(16px)" },
+						{
+							y: 0,
+							opacity: 1,
+							filter: "blur(0px)",
+							duration: 0.9,
+							stagger: 0.05,
+						},
+						"-=0.3",
+					)
+					.fromTo(
+						".hero-subtitle",
+						{ y: 30, opacity: 0 },
+						{ y: 0, opacity: 1, duration: 0.7 },
+						"-=0.6",
+					)
+					.fromTo(
+						".hero-buttons",
+						{ y: 30, opacity: 0 },
+						{ y: 0, opacity: 1, duration: 0.6 },
+						"-=0.4",
+					)
+					.fromTo(
+						".hero-chips",
+						{ y: 20, opacity: 0 },
+						{ y: 0, opacity: 1, duration: 0.5 },
+						"-=0.3",
+					)
+					.fromTo(
+						heroMockupRef.current,
+						{ scale: 0.88, opacity: 0 },
+						{ scale: 1, opacity: 1, duration: 1.2 },
+						"-=0.8",
+					);
 
-			/* Navbar blur on scroll */
-			ScrollTrigger.create({
-				trigger: heroRef.current,
-				start: "top top",
-				end: "bottom top",
-				onUpdate: (self) => {
-					if (navRef.current) {
-						const progress = self.progress;
-						gsap.set(navRef.current?.querySelector("nav"), {
-							backgroundColor: `rgba(10,10,10,${0.4 + progress * 0.4})`,
-							backdropFilter: `blur(${12 + progress * 8}px)`,
-						});
-					}
-				},
-			});
-
-			/* Product - Viewport reveal (no pin, no blank gaps) */
-			gsap.utils.toArray<HTMLElement>(".narrative-block").forEach((block, i) => {
-				const accentLine = block.querySelector(".narrative-accent-line");
-				const textCol = block.querySelector(".narrative-text-col");
-				const imageCol = block.querySelector(".narrative-image");
-				const bullets = block.querySelectorAll(".narrative-bullet");
-
-				const tl = gsap.timeline({
-					scrollTrigger: {
-						trigger: block,
-						start: "top 78%",
-						toggleActions: "play none none reverse",
+				/* Navbar blur on scroll */
+				ScrollTrigger.create({
+					trigger: heroRef.current,
+					start: "top top",
+					end: "bottom top",
+					onUpdate: (self) => {
+						if (navRef.current) {
+							const progress = self.progress;
+							gsap.set(navRef.current?.querySelector("nav"), {
+								backgroundColor: `rgba(10,10,10,${0.4 + progress * 0.4})`,
+								backdropFilter: `blur(${12 + progress * 8}px)`,
+							});
+						}
 					},
-					defaults: { ease: "power3.out" },
 				});
 
-				/* Accent line draws */
-				if (accentLine) {
-					tl.fromTo(accentLine, { scaleX: 0 }, { scaleX: 1, duration: 0.5 });
-				}
+				/* Product - Viewport reveal (no pin, no blank gaps) */
+				gsap.utils
+					.toArray<HTMLElement>(".narrative-block")
+					.forEach((block, i) => {
+						const accentLine = block.querySelector(".narrative-accent-line");
+						const textCol = block.querySelector(".narrative-text-col");
+						const imageCol = block.querySelector(".narrative-image");
+						const bullets = block.querySelectorAll(".narrative-bullet");
 
-				/* Text column slides up */
-				if (textCol) {
-					tl.fromTo(textCol, { y: 40, opacity: 0 }, { y: 0, opacity: 1, duration: 0.7 }, "-=0.3");
-				}
+						const tl = gsap.timeline({
+							scrollTrigger: {
+								trigger: block,
+								start: "top 78%",
+								toggleActions: "play none none reverse",
+							},
+							defaults: { ease: "power3.out" },
+						});
 
-				/* Image slides in from side */
-				if (imageCol) {
-					const fromRight = i % 2 === 0;
-					tl.fromTo(imageCol,
-						{ x: fromRight ? 50 : -50, opacity: 0 },
-						{ x: 0, opacity: 1, duration: 0.8 },
-						"-=0.5"
-					);
-				}
+						/* Accent line draws */
+						if (accentLine) {
+							tl.fromTo(
+								accentLine,
+								{ scaleX: 0 },
+								{ scaleX: 1, duration: 0.5 },
+							);
+						}
 
-				/* Bullets stagger */
-				if (bullets.length) {
-					tl.fromTo(bullets,
-						{ x: -15, opacity: 0 },
-						{ x: 0, opacity: 1, duration: 0.4, stagger: 0.08 },
-						"-=0.4"
-					);
-				}
-			});
+						/* Text column slides up */
+						if (textCol) {
+							tl.fromTo(
+								textCol,
+								{ y: 40, opacity: 0 },
+								{ y: 0, opacity: 1, duration: 0.7 },
+								"-=0.3",
+							);
+						}
 
-			/* All other sections - simple reveal, NO PIN */
-			gsap.fromTo(".video-headline", { y: 30, opacity: 0 }, { y: 0, opacity: 1, duration: 0.5, ease: "power2.out",
-				scrollTrigger: { trigger: videoRef.current, start: "top 80%", toggleActions: "play none none reverse" }
-			});
+						/* Image slides in from side */
+						if (imageCol) {
+							const fromRight = i % 2 === 0;
+							tl.fromTo(
+								imageCol,
+								{ x: fromRight ? 50 : -50, opacity: 0 },
+								{ x: 0, opacity: 1, duration: 0.8 },
+								"-=0.5",
+							);
+						}
 
-			gsap.fromTo(".showcase-left, .showcase-right", { y: 30, opacity: 0 }, { y: 0, opacity: 1, duration: 0.5, stagger: 0.1, ease: "power2.out",
-				scrollTrigger: { trigger: showcaseRef.current, start: "top 80%", toggleActions: "play none none reverse" }
-			});
+						/* Bullets stagger */
+						if (bullets.length) {
+							tl.fromTo(
+								bullets,
+								{ x: -15, opacity: 0 },
+								{ x: 0, opacity: 1, duration: 0.4, stagger: 0.08 },
+								"-=0.4",
+							);
+						}
+					});
 
-			gsap.fromTo(".showcase-bubble", { y: 15, opacity: 0 }, { y: 0, opacity: 1, duration: 0.3, stagger: 0.06, ease: "power2.out",
-				scrollTrigger: { trigger: ".showcase-bubble-wrapper", start: "top 85%", toggleActions: "play none none reverse" }
-			});
+				/* All other sections - simple reveal, NO PIN */
+				gsap.fromTo(
+					".video-headline",
+					{ y: 30, opacity: 0 },
+					{
+						y: 0,
+						opacity: 1,
+						duration: 0.5,
+						ease: "power2.out",
+						scrollTrigger: {
+							trigger: videoRef.current,
+							start: "top 80%",
+							toggleActions: "play none none reverse",
+						},
+					},
+				);
 
-			gsap.fromTo(".usecase-card", { y: 30, opacity: 0 }, { y: 0, opacity: 1, duration: 0.5, stagger: 0.1, ease: "power2.out",
-				scrollTrigger: { trigger: useCasesRef.current, start: "top 80%", toggleActions: "play none none reverse" }
-			});
+				gsap.fromTo(
+					".showcase-left, .showcase-right",
+					{ y: 30, opacity: 0 },
+					{
+						y: 0,
+						opacity: 1,
+						duration: 0.5,
+						stagger: 0.1,
+						ease: "power2.out",
+						scrollTrigger: {
+							trigger: showcaseRef.current,
+							start: "top 80%",
+							toggleActions: "play none none reverse",
+						},
+					},
+				);
 
-			gsap.fromTo(".api-element", { y: 30, opacity: 0 }, { y: 0, opacity: 1, duration: 0.5, stagger: 0.1, ease: "power2.out",
-				scrollTrigger: { trigger: apiPlatformRef.current, start: "top 80%", toggleActions: "play none none reverse" }
-			});
+				gsap.fromTo(
+					".showcase-bubble",
+					{ y: 15, opacity: 0 },
+					{
+						y: 0,
+						opacity: 1,
+						duration: 0.3,
+						stagger: 0.06,
+						ease: "power2.out",
+						scrollTrigger: {
+							trigger: ".showcase-bubble-wrapper",
+							start: "top 85%",
+							toggleActions: "play none none reverse",
+						},
+					},
+				);
 
-			gsap.fromTo(".pricing-card", { y: 30, opacity: 0, scale: 0.95 }, { y: 0, opacity: 1, scale: 1, duration: 0.5, stagger: 0.1, ease: "power2.out",
-				scrollTrigger: { trigger: pricingRef.current, start: "top 80%", toggleActions: "play none none reverse" }
-			});
+				gsap.fromTo(
+					".usecase-card",
+					{ y: 30, opacity: 0 },
+					{
+						y: 0,
+						opacity: 1,
+						duration: 0.5,
+						stagger: 0.1,
+						ease: "power2.out",
+						scrollTrigger: {
+							trigger: useCasesRef.current,
+							start: "top 80%",
+							toggleActions: "play none none reverse",
+						},
+					},
+				);
 
-			gsap.fromTo(".faq-item", { y: 20, opacity: 0 }, { y: 0, opacity: 1, duration: 0.4, stagger: 0.08, ease: "power2.out",
-				scrollTrigger: { trigger: faqRef.current, start: "top 85%", toggleActions: "play none none reverse" }
-			});
+				gsap.fromTo(
+					".api-element",
+					{ y: 30, opacity: 0 },
+					{
+						y: 0,
+						opacity: 1,
+						duration: 0.5,
+						stagger: 0.1,
+						ease: "power2.out",
+						scrollTrigger: {
+							trigger: apiPlatformRef.current,
+							start: "top 80%",
+							toggleActions: "play none none reverse",
+						},
+					},
+				);
 
-			gsap.fromTo(".cta-headline", { y: 30, opacity: 0 }, { y: 0, opacity: 1, duration: 0.6, ease: "power2.out",
-				scrollTrigger: { trigger: ctaRef.current, start: "top 80%", toggleActions: "play none none reverse" }
-			});
-			gsap.fromTo(".cta-buttons", { y: 20, opacity: 0 }, { y: 0, opacity: 1, duration: 0.4, ease: "power2.out",
-				scrollTrigger: { trigger: ctaRef.current, start: "top 85%", toggleActions: "play none none reverse" }
-			});
+				gsap.fromTo(
+					".pricing-card",
+					{ y: 30, opacity: 0, scale: 0.95 },
+					{
+						y: 0,
+						opacity: 1,
+						scale: 1,
+						duration: 0.5,
+						stagger: 0.1,
+						ease: "power2.out",
+						scrollTrigger: {
+							trigger: pricingRef.current,
+							start: "top 80%",
+							toggleActions: "play none none reverse",
+						},
+					},
+				);
 
-			gsap.fromTo(".footer-content", { y: 15, opacity: 0 }, { y: 0, opacity: 1, duration: 0.3, ease: "power2.out",
-				scrollTrigger: { trigger: ".footer-content", start: "top 95%", toggleActions: "play none none reverse" }
-			});
-		}, mainRef);
+				gsap.fromTo(
+					".faq-item",
+					{ y: 20, opacity: 0 },
+					{
+						y: 0,
+						opacity: 1,
+						duration: 0.4,
+						stagger: 0.08,
+						ease: "power2.out",
+						scrollTrigger: {
+							trigger: faqRef.current,
+							start: "top 85%",
+							toggleActions: "play none none reverse",
+						},
+					},
+				);
 
-		return () => ctx.revert();
-	}, { scope: mainRef });
+				gsap.fromTo(
+					".cta-headline",
+					{ y: 30, opacity: 0 },
+					{
+						y: 0,
+						opacity: 1,
+						duration: 0.6,
+						ease: "power2.out",
+						scrollTrigger: {
+							trigger: ctaRef.current,
+							start: "top 80%",
+							toggleActions: "play none none reverse",
+						},
+					},
+				);
+				gsap.fromTo(
+					".cta-buttons",
+					{ y: 20, opacity: 0 },
+					{
+						y: 0,
+						opacity: 1,
+						duration: 0.4,
+						ease: "power2.out",
+						scrollTrigger: {
+							trigger: ctaRef.current,
+							start: "top 85%",
+							toggleActions: "play none none reverse",
+						},
+					},
+				);
+
+				gsap.fromTo(
+					".footer-content",
+					{ y: 15, opacity: 0 },
+					{
+						y: 0,
+						opacity: 1,
+						duration: 0.3,
+						ease: "power2.out",
+						scrollTrigger: {
+							trigger: ".footer-content",
+							start: "top 95%",
+							toggleActions: "play none none reverse",
+						},
+					},
+				);
+			}, mainRef);
+
+			return () => ctx.revert();
+		},
+		{ scope: mainRef },
+	);
 
 	/* Mobile sidebar GSAP */
-	useGSAP(() => {
-		if (mobileNavOpen && mobileOverlayRef.current && mobileSidebarRef.current) {
-			gsap.fromTo(mobileOverlayRef.current, { opacity: 0 }, { opacity: 1, duration: 0.25 });
-			gsap.fromTo(mobileSidebarRef.current, { x: "100%" }, { x: "0%", duration: 0.35, ease: "power3.out" });
-		}
-	}, { dependencies: [mobileNavOpen] });
+	useGSAP(
+		() => {
+			if (
+				mobileNavOpen &&
+				mobileOverlayRef.current &&
+				mobileSidebarRef.current
+			) {
+				gsap.fromTo(
+					mobileOverlayRef.current,
+					{ opacity: 0 },
+					{ opacity: 1, duration: 0.25 },
+				);
+				gsap.fromTo(
+					mobileSidebarRef.current,
+					{ x: "100%" },
+					{ x: "0%", duration: 0.35, ease: "power3.out" },
+				);
+			}
+		},
+		{ dependencies: [mobileNavOpen] },
+	);
 
 	const closeMobileNav = () => {
 		if (mobileOverlayRef.current && mobileSidebarRef.current) {
-			gsap.to(mobileSidebarRef.current, { x: "100%", duration: 0.3, ease: "power3.in", onComplete: () => setMobileNavOpen(false) });
-			gsap.to(mobileOverlayRef.current, { opacity: 0, duration: 0.25, delay: 0.05 });
+			gsap.to(mobileSidebarRef.current, {
+				x: "100%",
+				duration: 0.3,
+				ease: "power3.in",
+				onComplete: () => setMobileNavOpen(false),
+			});
+			gsap.to(mobileOverlayRef.current, {
+				opacity: 0,
+				duration: 0.25,
+				delay: 0.05,
+			});
 		} else {
 			setMobileNavOpen(false);
 		}
@@ -549,15 +784,39 @@ export default function LandingPage() {
 
 		const isOpen = openFaq === question;
 		if (isOpen) {
-			gsap.to(item, { height: 0, opacity: 0, duration: 0.35, ease: "power2.inOut", onComplete: () => setOpenFaq(null) });
+			gsap.to(item, {
+				height: 0,
+				opacity: 0,
+				duration: 0.35,
+				ease: "power2.inOut",
+				onComplete: () => setOpenFaq(null),
+			});
 		} else {
 			if (openFaq) {
-				const prev = document.querySelector(`[data-faq="${openFaq}"] .faq-answer`);
-				if (prev) gsap.to(prev, { height: 0, opacity: 0, duration: 0.3, ease: "power2.inOut" });
+				const prev = document.querySelector(
+					`[data-faq="${openFaq}"] .faq-answer`,
+				);
+				if (prev)
+					gsap.to(prev, {
+						height: 0,
+						opacity: 0,
+						duration: 0.3,
+						ease: "power2.inOut",
+					});
 			}
 			gsap.set(item, { height: "auto", opacity: 1 });
 			const height = (item as HTMLElement).offsetHeight;
-			gsap.fromTo(item, { height: 0, opacity: 0 }, { height, opacity: 1, duration: 0.4, ease: "power2.out", onComplete: () => setOpenFaq(question) });
+			gsap.fromTo(
+				item,
+				{ height: 0, opacity: 0 },
+				{
+					height,
+					opacity: 1,
+					duration: 0.4,
+					ease: "power2.out",
+					onComplete: () => setOpenFaq(question),
+				},
+			);
 		}
 	};
 
@@ -570,9 +829,9 @@ export default function LandingPage() {
 			{/* ══════ 1. NAVBAR ══════ */}
 			<header
 				ref={navRef}
-				className="fixed top-4 left-0 right-0 z-50 flex justify-center px-4 opacity-0"
+				className="fixed top-3 right-0 left-0 z-50 flex justify-center px-3 opacity-100 sm:top-4 sm:px-4 md:opacity-0"
 			>
-				<nav className="liquid-glass-strong rounded-full px-4 py-2.5 flex items-center justify-between gap-6 max-w-4xl w-full">
+				<nav className="liquid-glass-strong flex w-full max-w-4xl items-center justify-between gap-2 rounded-full px-3 py-2 sm:gap-6 sm:px-4 sm:py-2.5">
 					<button
 						className="flex items-center gap-3 mix-blend-screen"
 						onClick={() => scrollToSection("#home")}
@@ -619,10 +878,12 @@ export default function LandingPage() {
 						</button>
 						<button
 							onClick={() => router.push("/register")}
-							className="bg-white text-black rounded-full px-5 py-2.5 text-sm font-medium font-body inline-flex items-center gap-1.5 hover:scale-[1.02] transition-transform shrink-0"
+							className="inline-flex shrink-0 items-center gap-1.5 rounded-full bg-white px-4 py-2.5 font-body font-medium text-black text-sm transition-transform hover:scale-[1.02] sm:px-5"
 							type="button"
 						>
-							Start free <ArrowRight className="w-4 h-4" />
+							<span className="sm:hidden">Start</span>
+							<span className="hidden sm:inline">Start free</span>
+							<ArrowRight className="h-4 w-4" />
 						</button>
 						<button
 							className="md:hidden liquid-glass rounded-full p-2.5"
@@ -645,7 +906,7 @@ export default function LandingPage() {
 					/>
 					<div
 						ref={mobileSidebarRef}
-						className="fixed top-0 right-0 bottom-0 w-[280px] bg-[#0a0a0a] border-l border-white/10 z-[70] p-6 flex flex-col translate-x-full"
+						className="fixed top-0 right-0 bottom-0 z-[70] flex w-[min(300px,calc(100vw-2.5rem))] translate-x-full flex-col border-white/10 border-l bg-[#0a0a0a] p-5 sm:p-6"
 					>
 						<div className="flex justify-between items-center mb-8">
 							<UltramaxoLogo size={32} />
@@ -700,7 +961,7 @@ export default function LandingPage() {
 			<section
 				id="home"
 				ref={heroRef}
-				className="relative min-h-screen flex items-center justify-center pt-32 pb-20 px-6"
+				className="relative flex min-h-[100svh] items-start justify-start px-4 pt-28 pb-14 sm:items-center sm:justify-center sm:px-6 sm:pt-32 sm:pb-20"
 			>
 				{/* Background Video - Disabled on Mobile */}
 				{mounted && !isMobile && (
@@ -710,7 +971,7 @@ export default function LandingPage() {
 						loop
 						muted
 						playsInline
-						poster="/images/hero_bg.jpeg"
+						poster="/images/demo-thumbnail.png"
 					>
 						<source
 							src="https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260307_083826_e938b29f-a43a-41ec-a153-3d4730578ab8.mp4"
@@ -721,61 +982,62 @@ export default function LandingPage() {
 
 				<div className="absolute inset-0 bg-gradient-to-b from-transparent via-black/50 to-black z-0" />
 
-				<div className="relative z-10 w-full max-w-7xl mx-auto grid lg:grid-cols-[1fr_1fr] gap-12 items-center mt-8">
+				<div className="relative z-10 mx-auto grid w-full max-w-7xl items-center gap-8 sm:mt-8 sm:gap-9 lg:grid-cols-[1fr_1fr] lg:gap-12">
 					<div
 						ref={heroContentRef}
-						className="text-left flex flex-col items-start max-w-2xl"
+						className="flex max-w-2xl flex-col items-start text-left"
 					>
 						<div className="hero-badge">
-							<span className="liquid-glass rounded-full inline-flex items-center gap-2 px-1 py-1 pr-4">
+							<span className="liquid-glass inline-flex max-w-full items-center gap-2 rounded-full py-1 pr-3 pl-1 sm:pr-4">
 								<span className="bg-white text-black rounded-full px-3 py-1 text-[10px] font-bold uppercase tracking-wider font-body">
 									Ultramaxo UltraAgent
 								</span>
-								<span className="text-xs text-white/80 font-body font-medium">
+								<span className="truncate font-body font-medium text-white/80 text-xs">
 									The intelligent workspace
 								</span>
 							</span>
 						</div>
 
-						<div className="mt-8 hero-headline">
+						<div className="hero-headline mt-7 sm:mt-8">
 							<GSAPSplitText
 								text="One AI workspace for chat, artifacts, files, and execution."
-								className="text-5xl md:text-6xl lg:text-[5rem] font-heading italic text-white leading-[0.85] tracking-tight"
+								className="font-heading text-[2.55rem] text-white italic leading-[0.92] tracking-tight sm:text-5xl md:text-6xl lg:text-[5rem] lg:leading-[0.85]"
 								delay={0.6}
+								animate={!isMobile}
 							/>
 						</div>
 
-						<p className="hero-subtitle mt-8 text-white/60 font-body font-light text-base md:text-lg leading-relaxed max-w-xl">
+						<p className="hero-subtitle mt-5 max-w-xl font-body font-light text-base text-white/65 leading-relaxed sm:mt-8 md:text-lg">
 							Ultramaxo brings UltraAgent chat, code and document artifacts,
 							file uploads, workspace modes, and reusable history into one
 							elegant product. Built for real work.
 						</p>
 
-						<div className="hero-buttons mt-10 flex items-center gap-4 flex-wrap">
+						<div className="hero-buttons mt-6 flex w-full flex-col items-stretch gap-3 sm:mt-10 sm:w-auto sm:flex-row sm:flex-wrap sm:items-center sm:gap-4">
 							<button
 								type="button"
 								onClick={() => router.push("/register")}
-								className="bg-white text-black rounded-full px-7 py-3.5 text-sm font-semibold font-body inline-flex items-center gap-2 hover:scale-[1.03] transition-transform shadow-[0_0_40px_rgba(255,255,255,0.3)]"
+								className="inline-flex justify-center gap-2 rounded-full bg-white px-7 py-3.5 font-body font-semibold text-black text-sm shadow-[0_0_40px_rgba(255,255,255,0.3)] transition-transform hover:scale-[1.03]"
 							>
 								Start free <ArrowRight className="w-4 h-4" />
 							</button>
 							<button
 								type="button"
 								onClick={() => window.open("/app-release.apk", "_blank")}
-								className="liquid-glass-strong rounded-full px-7 py-3.5 text-sm font-medium font-body inline-flex items-center gap-2 text-white hover:text-white transition-colors border border-white/20"
+								className="liquid-glass-strong inline-flex justify-center gap-2 rounded-full border border-white/20 px-7 py-3.5 font-body font-medium text-sm text-white transition-colors hover:text-white"
 							>
 								Download App
 							</button>
 							<button
 								type="button"
 								onClick={() => scrollToSection("#product")}
-								className="liquid-glass-strong rounded-full px-7 py-3.5 text-sm font-medium font-body inline-flex items-center gap-2 text-white hover:text-white transition-colors"
+								className="liquid-glass-strong inline-flex justify-center gap-2 rounded-full px-7 py-3.5 font-body font-medium text-sm text-white transition-colors hover:text-white"
 							>
 								See the workspace <ChevronRight className="w-4 h-4" />
 							</button>
 						</div>
 
-						<div className="hero-chips mt-12 flex flex-wrap gap-3">
+						<div className="hero-chips mt-7 flex flex-wrap gap-2.5 sm:mt-12 sm:gap-3">
 							{capabilityChips.slice(0, 3).map((chip) => (
 								<div
 									key={chip}
@@ -1162,7 +1424,9 @@ export default function LandingPage() {
 						<Badge>API Platform</Badge>
 						<SectionHeading>One API. Every Premium Model.</SectionHeading>
 						<p className="mt-6 text-white/50 font-body text-base max-w-2xl mx-auto">
-							Access GPT-5.5, DeepSeek V4 Flash, Claude, and 50+ models through a single OpenAI-compatible endpoint. Switch base URL and start building.
+							Access GPT-5.5, DeepSeek V4 Flash, Claude, and 50+ models through
+							a single OpenAI-compatible endpoint. Switch base URL and start
+							building.
 						</p>
 					</div>
 
@@ -1170,29 +1434,51 @@ export default function LandingPage() {
 						{/* Code Snippet Side */}
 						<div className="lg:col-span-1 space-y-6 api-element">
 							<div className="liquid-glass-strong rounded-[32px] p-6 md:p-8 border border-white/20 shadow-[0_0_40px_rgba(255,255,255,0.05)]">
-								<h3 className="text-2xl font-heading italic text-white mb-4">Zero Hassle Integration</h3>
+								<h3 className="text-2xl font-heading italic text-white mb-4">
+									Zero Hassle Integration
+								</h3>
 								<p className="text-white/60 font-body text-sm leading-relaxed mb-6">
-									Works natively with Claude Code, Cursor, Opencode, and any OpenAI SDK. Just change your base URL.
+									Works natively with Claude Code, Cursor, Opencode, and any
+									OpenAI SDK. Just change your base URL.
 								</p>
 								<div className="bg-[#020202] rounded-xl p-4 border border-white/10 font-mono text-xs text-white/70 overflow-x-auto">
-									<div className="text-white/40 mb-2"># 1. Set Environment Variables</div>
-									<div className="mb-1"><span className="text-rose-400">export</span> OPENAI_BASE_URL=<span className="text-emerald-300">&quot;https://api.ultramaxo.tech/v1&quot;</span></div>
-									<div className="mb-4"><span className="text-rose-400">export</span> OPENAI_API_KEY=<span className="text-emerald-300">&quot;ux_sk_...&quot;</span></div>
-									
-									<div className="text-white/40 mb-2"># 2. Use Claude Code or standard SDK</div>
-									<div><span className="text-rose-400">claude</span> <span className="text-white/80">--model</span> deepseek-v4-flash</div>
+									<div className="text-white/40 mb-2">
+										# 1. Set Environment Variables
+									</div>
+									<div className="mb-1">
+										<span className="text-rose-400">export</span>{" "}
+										OPENAI_BASE_URL=
+										<span className="text-emerald-300">
+											&quot;https://api.ultramaxo.tech/v1&quot;
+										</span>
+									</div>
+									<div className="mb-4">
+										<span className="text-rose-400">export</span>{" "}
+										OPENAI_API_KEY=
+										<span className="text-emerald-300">
+											&quot;ux_sk_...&quot;
+										</span>
+									</div>
+
+									<div className="text-white/40 mb-2">
+										# 2. Use Claude Code or standard SDK
+									</div>
+									<div>
+										<span className="text-rose-400">claude</span>{" "}
+										<span className="text-white/80">--model</span>{" "}
+										deepseek-v4-flash
+									</div>
 								</div>
-								
+
 								<button
-										type="button"
+									type="button"
 									onClick={() =>
 										window.open("https://app.ultramaxo.tech", "_blank")
 									}
-										className="mt-8 w-full bg-white text-black rounded-full py-3.5 text-sm font-semibold font-body inline-flex items-center justify-center gap-2 hover:scale-[1.02] transition-transform"
+									className="mt-8 w-full bg-white text-black rounded-full py-3.5 text-sm font-semibold font-body inline-flex items-center justify-center gap-2 hover:scale-[1.02] transition-transform"
 								>
-										Generate API Key <ArrowRight className="w-4 h-4" />
+									Generate API Key <ArrowRight className="w-4 h-4" />
 								</button>
-
 							</div>
 						</div>
 
@@ -1202,26 +1488,45 @@ export default function LandingPage() {
 								<table className="w-full text-left font-body whitespace-nowrap">
 									<thead className="bg-white/5 border-b border-white/10">
 										<tr>
-											<th className="px-6 py-4 text-xs font-semibold uppercase tracking-wider text-white/50">Model</th>
-											<th className="px-6 py-4 text-xs font-semibold uppercase tracking-wider text-white/50">Model ID</th>
-											<th className="px-6 py-4 text-xs font-semibold uppercase tracking-wider text-white/50">Provider</th>
-											<th className="px-6 py-4 text-xs font-semibold uppercase tracking-wider text-white/50">Context</th>
-											<th className="px-6 py-4 text-xs font-semibold uppercase tracking-wider text-white/50">Price (I/O)</th>
+											<th className="px-6 py-4 text-xs font-semibold uppercase tracking-wider text-white/50">
+												Model
+											</th>
+											<th className="px-6 py-4 text-xs font-semibold uppercase tracking-wider text-white/50">
+												Model ID
+											</th>
+											<th className="px-6 py-4 text-xs font-semibold uppercase tracking-wider text-white/50">
+												Provider
+											</th>
+											<th className="px-6 py-4 text-xs font-semibold uppercase tracking-wider text-white/50">
+												Context
+											</th>
+											<th className="px-6 py-4 text-xs font-semibold uppercase tracking-wider text-white/50">
+												Price (I/O)
+											</th>
 										</tr>
 									</thead>
 									<tbody className="divide-y divide-white/5">
 										{apiModels.map((model, i) => (
-											<tr key={i} className="hover:bg-white/[0.02] transition-colors">
+											<tr
+												key={i}
+												className="hover:bg-white/[0.02] transition-colors"
+											>
 												<td className="px-6 py-5">
 													<div className="flex items-center gap-3">
-														<span className="text-sm font-medium text-white">{model.name}</span>
+														<span className="text-sm font-medium text-white">
+															{model.name}
+														</span>
 														{model.badge && (
-															<span className={`text-[10px] uppercase tracking-widest font-bold px-2 py-0.5 rounded-full ${model.badge === 'Free' ? 'bg-emerald-500/20 text-emerald-300' : 'bg-rose-500/20 text-rose-300'}`}>
+															<span
+																className={`text-[10px] uppercase tracking-widest font-bold px-2 py-0.5 rounded-full ${model.badge === "Free" ? "bg-emerald-500/20 text-emerald-300" : "bg-rose-500/20 text-rose-300"}`}
+															>
 																{model.badge}
 															</span>
 														)}
 													</div>
-													<div className="text-xs text-white/40 mt-1">{model.type}</div>
+													<div className="text-xs text-white/40 mt-1">
+														{model.type}
+													</div>
 													<div className="mt-2 flex flex-wrap gap-2">
 														{model.capabilities?.includes("vision") && (
 															<span className="rounded-full border border-white/10 px-2 py-0.5 text-[10px] uppercase tracking-[0.2em] text-white/60">
@@ -1240,9 +1545,17 @@ export default function LandingPage() {
 														)}
 													</div>
 												</td>
-												<td className="px-6 py-5"><code className="text-xs text-cyan-300/80 font-mono bg-white/5 px-2 py-1 rounded">{model.modelId}</code></td>
-												<td className="px-6 py-5 text-sm text-white/60">{model.provider}</td>
-												<td className="px-6 py-5 text-sm text-white/60">{model.context}</td>
+												<td className="px-6 py-5">
+													<code className="text-xs text-cyan-300/80 font-mono bg-white/5 px-2 py-1 rounded">
+														{model.modelId}
+													</code>
+												</td>
+												<td className="px-6 py-5 text-sm text-white/60">
+													{model.provider}
+												</td>
+												<td className="px-6 py-5 text-sm text-white/60">
+													{model.context}
+												</td>
 												<td className="px-6 py-5 text-sm text-white/80 font-medium">
 													{model.price}
 												</td>
@@ -1252,8 +1565,16 @@ export default function LandingPage() {
 								</table>
 							</div>
 							<div className="p-4 border-t border-white/5 bg-white/[0.02] flex items-center justify-between">
-								<span className="text-xs text-white/50 font-body">Top 5 of 50+ supported models</span>
-								<button type="button" onClick={() => router.push("/docs")} className="text-xs text-white/70 hover:text-white font-body font-medium transition-colors">View all models →</button>
+								<span className="text-xs text-white/50 font-body">
+									Top 5 of 50+ supported models
+								</span>
+								<button
+									type="button"
+									onClick={() => router.push("/docs")}
+									className="text-xs text-white/70 hover:text-white font-body font-medium transition-colors"
+								>
+									View all models →
+								</button>
 							</div>
 						</div>
 					</div>

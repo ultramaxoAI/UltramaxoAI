@@ -1,18 +1,12 @@
 import type { Adapter } from "@auth/core/adapters";
 import { DrizzleAdapter } from "@auth/drizzle-adapter";
-import { compare } from "bcrypt-ts";
-import { and, eq, sql } from "drizzle-orm";
-import NextAuth, { type DefaultSession } from "next-auth";
-import type { DefaultJWT } from "next-auth/jwt";
-import Credentials from "next-auth/providers/credentials";
-import GitHub from "next-auth/providers/github";
-import Google from "next-auth/providers/google";
 import {
 	createGuestUser,
 	db,
 	getUser,
 	getUserByIdentifier,
 	setEmailVerified,
+	setEmailVerifiedById,
 	verifyVerificationCode,
 } from "@backend/db/queries";
 import {
@@ -23,6 +17,13 @@ import {
 	verificationToken as verificationTokenTable,
 } from "@backend/db/schema";
 import { generateDummyPassword } from "@backend/db/utils";
+import { compare } from "bcrypt-ts";
+import { and, eq, sql } from "drizzle-orm";
+import NextAuth, { type DefaultSession } from "next-auth";
+import type { DefaultJWT } from "next-auth/jwt";
+import Credentials from "next-auth/providers/credentials";
+import GitHub from "next-auth/providers/github";
+import Google from "next-auth/providers/google";
 import { authConfig } from "./auth.config";
 
 export type UserType = "guest" | "regular" | "pro";
@@ -65,12 +66,24 @@ declare module "@auth/core/adapters" {
 
 const isProduction = process.env.NODE_ENV === "production";
 // Only enforce cross-subdomain cookies & proxy if deployed to the actual production domain
-const isRealProduction = isProduction && (process.env.VERCEL_ENV === "production" || process.env.AUTH_URL?.includes("ultramaxo.tech"));
+const isRealProduction =
+	isProduction &&
+	(process.env.VERCEL_ENV === "production" ||
+		process.env.AUTH_URL?.includes("ultramaxo.tech"));
 const cookieDomain = isRealProduction ? ".ultramaxo.tech" : undefined;
 const redirectProxyUrl =
 	process.env.AUTH_REDIRECT_PROXY_URL ||
 	(isRealProduction ? "https://ultramaxo.tech/api/auth" : undefined);
 const cookiePrefix = isProduction ? "__Secure-" : "";
+const authSecret = process.env.AUTH_SECRET || process.env.NEXTAUTH_SECRET;
+const googleClientId =
+	process.env.AUTH_GOOGLE_ID || process.env.GOOGLE_CLIENT_ID;
+const googleClientSecret =
+	process.env.AUTH_GOOGLE_SECRET || process.env.GOOGLE_CLIENT_SECRET;
+const githubClientId =
+	process.env.AUTH_GITHUB_ID || process.env.GITHUB_CLIENT_ID;
+const githubClientSecret =
+	process.env.AUTH_GITHUB_SECRET || process.env.GITHUB_CLIENT_SECRET;
 const baseAdapter = DrizzleAdapter(db, {
 	usersTable: userTable,
 	accountsTable: accountTable,
@@ -119,6 +132,23 @@ function isAdminUser({
 	);
 }
 
+function isVerifiedOAuthEmail({
+	provider,
+	profile,
+}: {
+	provider: string;
+	profile?: unknown;
+}) {
+	if (provider === "google") {
+		return (
+			(profile as { email_verified?: boolean } | undefined)?.email_verified ===
+			true
+		);
+	}
+
+	return true;
+}
+
 const sharedCookieOptions = {
 	httpOnly: true,
 	sameSite: "lax" as const,
@@ -134,6 +164,7 @@ export const {
 	signOut,
 } = NextAuth({
 	...authConfig,
+	secret: authSecret,
 	trustHost: true,
 	redirectProxyUrl,
 	cookies: {
@@ -278,13 +309,13 @@ export const {
 	},
 	providers: [
 		Google({
-			clientId: process.env.AUTH_GOOGLE_ID,
-			clientSecret: process.env.AUTH_GOOGLE_SECRET,
+			clientId: googleClientId,
+			clientSecret: googleClientSecret,
 			allowDangerousEmailAccountLinking: true,
 		}),
 		GitHub({
-			clientId: process.env.AUTH_GITHUB_ID,
-			clientSecret: process.env.AUTH_GITHUB_SECRET,
+			clientId: githubClientId,
+			clientSecret: githubClientSecret,
 			allowDangerousEmailAccountLinking: true,
 		}),
 		Credentials({
@@ -446,9 +477,14 @@ export const {
 				session.user.id = token.id;
 				session.user.type = token.type;
 				session.user.role = token.role;
-				session.user.email = (token.email as string | undefined) ?? session.user.email;
-				session.user.name = (token.name as string | undefined) ?? session.user.name;
-				session.user.onboardingReason = token.onboardingReason as string | null | undefined;
+				session.user.email =
+					(token.email as string | undefined) ?? session.user.email;
+				session.user.name =
+					(token.name as string | undefined) ?? session.user.name;
+				session.user.onboardingReason = token.onboardingReason as
+					| string
+					| null
+					| undefined;
 			}
 
 			return session;
@@ -460,10 +496,22 @@ export const {
 			}
 
 			// For OAuth providers (Google, GitHub), auto-link if email already exists
-			if (account && (account.provider === "google" || account.provider === "github")) {
+			if (
+				account &&
+				(account.provider === "google" || account.provider === "github")
+			) {
 				const oauthEmail = normalizeEmail(profile?.email ?? user?.email);
 				if (!oauthEmail) {
 					return true;
+				}
+
+				if (
+					!isVerifiedOAuthEmail({
+						provider: account.provider,
+						profile,
+					})
+				) {
+					return false;
 				}
 
 				// Check if user already exists with this email
@@ -511,12 +559,13 @@ export const {
 
 							// Also mark email as verified since OAuth provider verified it
 							if (!existingUser.emailVerified) {
-								await setEmailVerified(existingUser.id);
+								await setEmailVerifiedById(existingUser.id);
 							}
 
 							// Sync name from OAuth profile if user doesn't have one
-							const displayName = (profile as { name?: string; login?: string })?.name
-								?? (profile as { login?: string })?.login;
+							const displayName =
+								(profile as { name?: string; login?: string })?.name ??
+								(profile as { login?: string })?.login;
 							if (displayName && !existingUser.name) {
 								await db
 									.update(userTable)
@@ -576,7 +625,10 @@ export const {
 					.set({ role: "user", isPro: false })
 					.where(eq(userTable.id, user.id as string));
 			} catch (error) {
-				console.error("[Auth.js][createUser] Failed to finalize OAuth user", error);
+				console.error(
+					"[Auth.js][createUser] Failed to finalize OAuth user",
+					error,
+				);
 			}
 		},
 	},

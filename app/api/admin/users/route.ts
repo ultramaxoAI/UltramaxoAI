@@ -8,6 +8,67 @@ import {
 	updateUserAdmin,
 } from "@backend/db/queries";
 
+const ALLOWED_ROLES = new Set(["user", "admin"]);
+
+function normalizeAdminUpdates(body: Record<string, unknown>) {
+	const safeUpdates: Record<string, unknown> = {};
+
+	if (typeof body.isPro === "boolean") {
+		safeUpdates.isPro = body.isPro;
+	}
+
+	if (typeof body.proExpiresAt === "string") {
+		const date = new Date(body.proExpiresAt);
+		if (Number.isNaN(date.getTime())) {
+			throw new Error("Invalid proExpiresAt");
+		}
+		safeUpdates.proExpiresAt = date;
+	}
+
+	if (body.proExpiresAt === null) {
+		safeUpdates.proExpiresAt = null;
+	}
+
+	if (typeof body.role === "string") {
+		if (!ALLOWED_ROLES.has(body.role)) {
+			throw new Error("Invalid role");
+		}
+		safeUpdates.role = body.role;
+	}
+
+	if (
+		typeof body.limitCount === "number" &&
+		Number.isInteger(body.limitCount)
+	) {
+		safeUpdates.limitCount = Math.max(0, body.limitCount);
+	}
+
+	if (
+		typeof body.creditBalance === "number" &&
+		Number.isFinite(body.creditBalance)
+	) {
+		safeUpdates.creditBalance = Math.max(0, body.creditBalance);
+	}
+
+	if (typeof body.name === "string") {
+		const name = body.name.trim();
+		if (name.length > 80) {
+			throw new Error("Invalid name");
+		}
+		safeUpdates.name = name || null;
+	}
+
+	if (typeof body.email === "string") {
+		const email = body.email.trim().toLowerCase();
+		if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+			throw new Error("Invalid email");
+		}
+		safeUpdates.email = email;
+	}
+
+	return safeUpdates;
+}
+
 export async function GET() {
 	const session = await auth();
 	if (session?.user?.role !== "admin") {
@@ -33,28 +94,17 @@ export async function PATCH(request: Request) {
 	}
 
 	try {
-		const body = await request.json();
+		const body = (await request.json()) as Record<string, unknown>;
 		const { id } = body;
 
-		if (!id) {
+		if (typeof id !== "string" || !id) {
 			return NextResponse.json(
 				{ error: "User ID is required" },
 				{ status: 400 },
 			);
 		}
 
-		// FIX #3: Whitelist field yang diizinkan (mencegah mass assignment)
-		const ALLOWED_FIELDS = ["isPro", "proExpiresAt", "role", "limitCount", "creditBalance", "name", "email"];
-		const safeUpdates: Record<string, unknown> = {};
-		for (const field of ALLOWED_FIELDS) {
-			if (body[field] !== undefined) {
-				safeUpdates[field] = body[field];
-			}
-		}
-
-		if (typeof safeUpdates.proExpiresAt === "string") {
-			safeUpdates.proExpiresAt = new Date(safeUpdates.proExpiresAt as string);
-		}
+		const safeUpdates = normalizeAdminUpdates(body);
 
 		if (Object.keys(safeUpdates).length === 0) {
 			return NextResponse.json(
@@ -67,10 +117,11 @@ export async function PATCH(request: Request) {
 		return NextResponse.json({ success: true });
 	} catch (error) {
 		console.error("API Error (admin/users/PATCH):", error);
-		return NextResponse.json(
-			{ error: "Gagal memperbarui user" },
-			{ status: 500 },
-		);
+		const message =
+			error instanceof Error && error.message.startsWith("Invalid")
+				? error.message
+				: "Gagal memperbarui user";
+		return NextResponse.json({ error: message }, { status: 400 });
 	}
 }
 
