@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
 
+const DEFAULT_FREE_MODEL_ID = "gpt-5.3-codex";
+
 export const metadata: Metadata = {
 	title: "API Documentation — Billing & Limits",
 	description: "Informasi billing, harga model, rate limits, dan sistem kredit Ultramaxo API. Pay-as-you-go tanpa langganan bulanan.",
@@ -39,9 +41,9 @@ export default function DocsBillingPage() {
 
 				<h3>Free Models</h3>
 				<p>
-					Models marked as &quot;free&quot; (e.g. GPT-5.3) do not deduct from
-					your balance. You can use them without any credits. However, rate
-					limits still apply.
+					Models marked as &quot;free&quot; (e.g. {DEFAULT_FREE_MODEL_ID}) do
+					not deduct from your balance. You can use them without any credits.
+					However, rate limits still apply.
 				</p>
 
 				<h3>Minimum Balance</h3>

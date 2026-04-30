@@ -1,4 +1,5 @@
 import { getModelCatalogById } from "@backend/models/model-catalog";
+import { enrichModel } from "@backend/models/model-metadata";
 import { NextResponse } from "next/server";
 
 const MODEL_ID_ALIASES: Record<string, string> = {
@@ -27,7 +28,27 @@ export async function GET(
 			);
 		}
 
-		return NextResponse.json(model, { headers: CORS_HEADERS });
+		const meta = enrichModel(model.modelId, model.provider);
+		const normalizedModel = {
+			...model,
+			name: model.name || meta.displayName,
+			provider:
+				model.provider && model.provider.toLowerCase() !== "unknown"
+					? model.provider
+					: meta.provider,
+			context: model.context || meta.context,
+			priceIn: model.priceIn || meta.priceIn,
+			priceOut: model.priceOut || meta.priceOut,
+			isFree: model.isFree || meta.isFree,
+			capabilities:
+				Array.isArray(model.capabilities) && model.capabilities.length > 0
+					? Array.from(new Set([...model.capabilities, ...meta.capabilities]))
+					: meta.capabilities,
+			status:
+				model.status && model.status !== "hidden" ? model.status : "active",
+		};
+
+		return NextResponse.json(normalizedModel, { headers: CORS_HEADERS });
 	} catch (error) {
 		console.error("Model Fetch Error:", error);
 		return NextResponse.json(
