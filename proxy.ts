@@ -181,6 +181,7 @@ function handleRouting(
 			pathname.startsWith("/api") ||
 			pathname.startsWith("/_next") ||
 			pathname.startsWith("/favicon") ||
+			pathname.startsWith("/maintenance") ||
 			pathname.startsWith("/oauth") ||
 			pathname.startsWith("/login") ||
 			pathname.startsWith("/register") ||
