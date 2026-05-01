@@ -55,14 +55,14 @@ function SVGChart({
 								y1={y}
 								x2={w - padX}
 								y2={y}
-								stroke="#1a1a1a"
+								stroke="rgba(255,255,255,0.06)"
 								strokeWidth={1}
 							/>
 							<text
 								x={padX - 6}
 								y={y + 3}
 								fontSize={9}
-								fill="#444"
+								fill="rgba(255,255,255,0.28)"
 								textAnchor="end"
 							>
 								{valueKey === "spend"
@@ -130,7 +130,7 @@ function SVGChart({
 							x={x}
 							y={h + 16}
 							fontSize={9}
-							fill="#444"
+							fill="rgba(255,255,255,0.28)"
 							textAnchor="middle"
 						>
 							{formatDate(day)}
@@ -153,9 +153,17 @@ export function UsageChart({ data }: { data: string }) {
 
 	if (!points.length) {
 		return (
-			<div className="rounded-[28px] border border-white/10 bg-[#101318] p-6 shadow-[0_20px_60px_rgba(0,0,0,0.2)]">
-				<div className="rounded-[24px] border border-dashed border-white/10 bg-white/[0.02] px-6 py-16 text-center text-sm text-white/46">
-					No usage data yet. Start making API requests to see your charts.
+			<div className="rounded-[24px] border border-white/8 bg-[#0f1318] p-6 shadow-[0_18px_60px_rgba(0,0,0,0.2)]">
+				<div className="border-white/8 border-b pb-4">
+					<h2 className="text-lg font-semibold tracking-[-0.03em] text-white">
+						Usage insight
+					</h2>
+					<p className="mt-1 text-sm text-white/46">
+						Request trend dan cost breakdown akan muncul setelah ada traffic.
+					</p>
+				</div>
+				<div className="mt-5 rounded-[18px] border border-dashed border-white/10 bg-white/[0.02] px-6 py-16 text-center text-sm text-white/42">
+					No usage data yet. Start making API requests to populate this view.
 				</div>
 			</div>
 		);
@@ -181,8 +189,8 @@ export function UsageChart({ data }: { data: string }) {
 
 	if (!entries.length) {
 		return (
-			<div className="rounded-[28px] border border-white/10 bg-[#101318] p-6 shadow-[0_20px_60px_rgba(0,0,0,0.2)]">
-				<div className="rounded-[24px] border border-dashed border-white/10 bg-white/[0.02] px-6 py-16 text-center text-sm text-white/46">
+			<div className="rounded-[24px] border border-white/8 bg-[#0f1318] p-6 shadow-[0_18px_60px_rgba(0,0,0,0.2)]">
+				<div className="rounded-[18px] border border-dashed border-white/10 bg-white/[0.02] px-6 py-16 text-center text-sm text-white/42">
 					No usage data to chart.
 				</div>
 			</div>
@@ -190,59 +198,67 @@ export function UsageChart({ data }: { data: string }) {
 	}
 
 	return (
-		<div className="grid gap-5 lg:grid-cols-2">
-			<div className="rounded-[28px] border border-white/10 bg-[#101318] p-6 shadow-[0_20px_60px_rgba(0,0,0,0.2)]">
-				<div className="mb-5 flex items-start justify-between gap-4">
-					<div>
-						<div className="text-lg font-semibold tracking-[-0.03em] text-white">
-							Requests & Tokens
-						</div>
-						<p className="mt-1 text-xs uppercase tracking-[0.2em] text-white/35">
-							Daily activity over time
-						</p>
-					</div>
-					<div className="rounded-full border border-emerald-400/18 bg-emerald-400/10 px-3 py-1 text-[10px] uppercase tracking-[0.2em] text-emerald-300">
-						Requests
-					</div>
-				</div>
-				<div className="mb-3 flex flex-wrap items-center gap-3 text-xs text-white/45">
-					<span className="inline-flex items-center gap-2">
-						<span className="inline-block h-2 w-2 rounded-[3px] bg-emerald-400" />
-						Requests
-					</span>
-					<span className="inline-flex items-center gap-2">
-						<span className="inline-block h-2 w-2 rounded-[3px] bg-sky-400" />
-						Tokens
-					</span>
-				</div>
-				<SVGChart
-					entries={entries}
-					valueKey="reqs"
-					color="#4ade80"
-					label="Requests over time"
-				/>
+		<div className="rounded-[24px] border border-white/8 bg-[#0f1318] p-6 shadow-[0_18px_60px_rgba(0,0,0,0.2)]">
+			<div className="border-white/8 border-b pb-4">
+				<h2 className="text-lg font-semibold tracking-[-0.03em] text-white">
+					Usage insight
+				</h2>
+				<p className="mt-1 text-sm text-white/46">
+					Activity trend and spend behavior over the last 14 entries.
+				</p>
 			</div>
-
-			<div className="rounded-[28px] border border-white/10 bg-[#101318] p-6 shadow-[0_20px_60px_rgba(0,0,0,0.2)]">
-				<div className="mb-5 flex items-start justify-between gap-4">
-					<div>
-						<div className="text-lg font-semibold tracking-[-0.03em] text-white">
-							Daily Spend
+			<div className="mt-6 grid gap-6 xl:grid-cols-2">
+				<div>
+					<div className="mb-4 flex items-start justify-between gap-4">
+						<div>
+							<div className="text-sm font-medium text-white">
+								Requests & Tokens
+							</div>
+							<p className="mt-1 text-xs uppercase tracking-[0.2em] text-white/32">
+								Daily activity
+							</p>
 						</div>
-						<p className="mt-1 text-xs uppercase tracking-[0.2em] text-white/35">
-							Cost breakdown by day
-						</p>
+						<div className="rounded-full border border-white/8 px-3 py-1 text-[10px] uppercase tracking-[0.2em] text-white/46">
+							Requests
+						</div>
 					</div>
-					<div className="rounded-full border border-violet-400/18 bg-violet-400/10 px-3 py-1 text-[10px] uppercase tracking-[0.2em] text-violet-300">
-						Spend
+					<div className="mb-3 flex flex-wrap items-center gap-3 text-xs text-white/42">
+						<span className="inline-flex items-center gap-2">
+							<span className="inline-block h-2 w-2 rounded-[3px] bg-emerald-400" />
+							Requests
+						</span>
+						<span className="inline-flex items-center gap-2">
+							<span className="inline-block h-2 w-2 rounded-[3px] bg-sky-400" />
+							Tokens
+						</span>
 					</div>
+					<SVGChart
+						entries={entries}
+						valueKey="reqs"
+						color="#4ade80"
+						label="Requests over time"
+					/>
 				</div>
-				<SVGChart
-					entries={entries}
-					valueKey="spend"
-					color="#a78bfa"
-					label="Daily spend chart"
-				/>
+
+				<div>
+					<div className="mb-4 flex items-start justify-between gap-4">
+						<div>
+							<div className="text-sm font-medium text-white">Daily Spend</div>
+							<p className="mt-1 text-xs uppercase tracking-[0.2em] text-white/32">
+								Cost breakdown
+							</p>
+						</div>
+						<div className="rounded-full border border-white/8 px-3 py-1 text-[10px] uppercase tracking-[0.2em] text-white/46">
+							Spend
+						</div>
+					</div>
+					<SVGChart
+						entries={entries}
+						valueKey="spend"
+						color="#a78bfa"
+						label="Daily spend chart"
+					/>
+				</div>
 			</div>
 		</div>
 	);

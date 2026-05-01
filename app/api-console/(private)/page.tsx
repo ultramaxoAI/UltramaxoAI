@@ -3,13 +3,12 @@ import {
 	getPlatformApiKeysByUserId,
 } from "@backend/db/queries";
 import {
-	Activity,
 	ArrowRight,
-	Braces,
 	CircleDollarSign,
 	KeyRound,
 	Play,
-	Sparkles,
+	ReceiptText,
+	Waypoints,
 } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
@@ -37,30 +36,22 @@ const statCards = [
 	{
 		key: "spent",
 		label: "Total Spend",
-		caption: "Lifetime usage value",
-		icon: CircleDollarSign,
-		accent: "from-cyan-400/22 via-cyan-400/6 to-transparent",
+		description: "Lifetime usage value",
 	},
 	{
 		key: "requests",
 		label: "API Requests",
-		caption: "Completed request volume",
-		icon: Activity,
-		accent: "from-emerald-400/22 via-emerald-400/6 to-transparent",
+		description: "Completed request volume",
 	},
 	{
 		key: "tokens",
 		label: "Total Tokens",
-		caption: "Input and output tokens",
-		icon: Sparkles,
-		accent: "from-sky-300/18 via-sky-300/6 to-transparent",
+		description: "Input and output tokens",
 	},
 	{
 		key: "success",
 		label: "Success Rate",
-		caption: "Healthy delivery signal",
-		icon: Braces,
-		accent: "from-violet-400/18 via-violet-400/6 to-transparent",
+		description: "Healthy delivery signal",
 	},
 ] as const;
 
@@ -114,99 +105,153 @@ export default async function ApiConsoleDashboard() {
 		<div className="apic-stack apic-stack--32">
 			<DashboardAutoRefresh />
 
-			<section className="relative overflow-hidden rounded-[34px] border border-white/10 bg-[#090b10] p-6 shadow-[0_28px_90px_rgba(0,0,0,0.38)] sm:p-8">
-				<div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(34,211,238,0.16),transparent_28%),radial-gradient(circle_at_82%_20%,rgba(255,255,255,0.08),transparent_20%),linear-gradient(180deg,rgba(255,255,255,0.04),rgba(255,255,255,0.01))]" />
-				<div className="relative grid gap-8 xl:grid-cols-[1.1fr_0.9fr]">
-					<div className="space-y-6">
-						<div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.04] px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.26em] text-white/60">
-							<span className="h-2 w-2 rounded-full bg-cyan-300" />
-							Console overview
+			<section className="rounded-[28px] border border-white/8 bg-[#0f1318] shadow-[0_18px_60px_rgba(0,0,0,0.22)]">
+				<div className="grid gap-0 xl:grid-cols-[minmax(0,1.2fr)_360px]">
+					<div className="border-white/8 border-b p-6 sm:p-8 xl:border-r xl:border-b-0">
+						<div className="flex flex-wrap items-center gap-3">
+							<span className="inline-flex items-center gap-2 rounded-full border border-white/10 px-3 py-1 text-[11px] font-medium uppercase tracking-[0.22em] text-white/48">
+								<span className="h-1.5 w-1.5 rounded-full bg-cyan-300" />
+								Overview
+							</span>
+							<span className="text-xs uppercase tracking-[0.2em] text-white/28">
+								API control center
+							</span>
 						</div>
-						<div>
-							<h1 className="max-w-3xl font-body text-4xl font-semibold tracking-[-0.06em] text-white sm:text-5xl lg:text-6xl">
-								Build smarter.
-								<br />
-								Ship further.
-							</h1>
-							<p className="mt-5 max-w-2xl text-sm leading-7 text-white/62 sm:text-base">
-								Satu permukaan yang lebih tenang untuk memantau spend, request,
-								token, key aktif, dan kesehatan workflow API kamu tanpa terasa
-								seperti dashboard template.
-							</p>
-						</div>
-						<div className="flex flex-wrap gap-3">
+						<h1 className="mt-6 text-3xl font-semibold tracking-[-0.05em] text-white sm:text-4xl">
+							Monitor usage, manage access, and keep delivery clean.
+						</h1>
+						<p className="mt-4 max-w-2xl text-sm leading-7 text-white/56 sm:text-[15px]">
+							Overview ini jadi tempat paling cepat untuk lihat saldo, key
+							aktif, spend terbaru, dan jalur tindakan utama tanpa kebanyakan
+							dekorasi.
+						</p>
+						<div className="mt-8 flex flex-wrap gap-3">
 							<Link
 								href="/api-console/keys"
-								className="inline-flex items-center gap-2 rounded-full bg-white px-5 py-3 text-sm font-semibold text-black transition-transform hover:scale-[1.02]"
+								className="inline-flex items-center gap-2 rounded-full bg-white px-5 py-3 text-sm font-semibold text-black transition-colors hover:bg-white/90"
 							>
-								Manage API Keys <ArrowRight className="h-4 w-4" />
+								Manage keys <ArrowRight className="h-4 w-4" />
 							</Link>
 							<Link
 								href="/api-console/playground"
-								className="inline-flex items-center gap-2 rounded-full border border-white/12 bg-white/[0.04] px-5 py-3 text-sm font-medium text-white/86 transition-colors hover:bg-white/[0.08]"
+								className="inline-flex items-center gap-2 rounded-full border border-white/10 px-5 py-3 text-sm font-medium text-white/82 transition-colors hover:bg-white/[0.05]"
 							>
-								Open Playground <Play className="h-4 w-4" />
+								Open playground <Play className="h-4 w-4" />
 							</Link>
+						</div>
+						<div className="mt-8 grid gap-px overflow-hidden rounded-[22px] border border-white/8 bg-white/8 sm:grid-cols-3">
+							<div className="bg-[#0f1318] p-5">
+								<div className="flex items-center gap-2 text-white/36">
+									<CircleDollarSign className="h-4 w-4" />
+									<span className="text-[11px] uppercase tracking-[0.22em]">
+										Balance
+									</span>
+								</div>
+								<div className="mt-4 text-3xl font-medium tracking-[-0.05em] text-white">
+									${balance}
+								</div>
+								<p className="mt-2 text-sm text-white/48">
+									Ready to spend across all supported models.
+								</p>
+							</div>
+							<div className="bg-[#0f1318] p-5">
+								<div className="flex items-center gap-2 text-white/36">
+									<KeyRound className="h-4 w-4" />
+									<span className="text-[11px] uppercase tracking-[0.22em]">
+										Active keys
+									</span>
+								</div>
+								<div className="mt-4 text-3xl font-medium tracking-[-0.05em] text-white">
+									{activeKeys}
+								</div>
+								<p className="mt-2 text-sm text-white/48">
+									{keys.length} total key tercatat di akun ini.
+								</p>
+							</div>
+							<div className="bg-[#0f1318] p-5">
+								<div className="flex items-center gap-2 text-white/36">
+									<ReceiptText className="h-4 w-4" />
+									<span className="text-[11px] uppercase tracking-[0.22em]">
+										Latest spend
+									</span>
+								</div>
+								<div className="mt-4 text-2xl font-medium tracking-[-0.04em] text-white">
+									{latestSpendSummary?.spend || "Belum ada"}
+								</div>
+								<p className="mt-2 text-sm text-white/48">
+									{latestSpendSummary?.date ||
+										"Spend terbaru akan muncul di sini."}
+								</p>
+							</div>
 						</div>
 					</div>
 
-					<div className="grid gap-4 sm:grid-cols-3 xl:grid-cols-1">
-						<div className="rounded-[28px] border border-white/10 bg-white/[0.035] p-5">
-							<div className="flex items-start justify-between gap-4">
-								<div>
-									<p className="text-[11px] uppercase tracking-[0.24em] text-white/42">
-										Available balance
-									</p>
-									<p className="mt-3 text-4xl font-medium tracking-[-0.05em] text-white">
-										${balance}
-									</p>
-								</div>
-								<div className="rounded-2xl border border-cyan-400/20 bg-cyan-400/10 p-3 text-cyan-300">
-									<CircleDollarSign className="h-5 w-5" />
-								</div>
-							</div>
-							<p className="mt-4 text-sm text-white/55">
-								Saldo aktif untuk request berikutnya di seluruh model API.
-							</p>
+					<div className="p-6 sm:p-8">
+						<div className="flex items-center gap-2 text-white/36">
+							<Waypoints className="h-4 w-4" />
+							<span className="text-[11px] uppercase tracking-[0.22em]">
+								Quick actions
+							</span>
 						</div>
-						<div className="rounded-[28px] border border-white/10 bg-white/[0.035] p-5">
-							<div className="flex items-start justify-between gap-4">
-								<div>
-									<p className="text-[11px] uppercase tracking-[0.24em] text-white/42">
-										Active keys
-									</p>
-									<p className="mt-3 text-4xl font-medium tracking-[-0.05em] text-white">
-										{activeKeys}
-									</p>
+						<div className="mt-5 space-y-3">
+							<Link
+								href="/api-console/keys"
+								className="block rounded-[18px] border border-white/8 px-4 py-4 transition-colors hover:bg-white/[0.04]"
+							>
+								<div className="flex items-center justify-between gap-4">
+									<div>
+										<div className="text-sm font-medium text-white">
+											Create or revoke API keys
+										</div>
+										<div className="mt-1 text-xs text-white/42">
+											Kontrol environment dan akses model.
+										</div>
+									</div>
+									<ArrowRight className="h-4 w-4 text-white/32" />
 								</div>
-								<div className="rounded-2xl border border-emerald-400/20 bg-emerald-400/10 p-3 text-emerald-300">
-									<KeyRound className="h-5 w-5" />
+							</Link>
+							<Link
+								href="/api-console/billing"
+								className="block rounded-[18px] border border-white/8 px-4 py-4 transition-colors hover:bg-white/[0.04]"
+							>
+								<div className="flex items-center justify-between gap-4">
+									<div>
+										<div className="text-sm font-medium text-white">
+											Review balance and top up
+										</div>
+										<div className="mt-1 text-xs text-white/42">
+											Lihat saldo dan histori transaksi.
+										</div>
+									</div>
+									<ArrowRight className="h-4 w-4 text-white/32" />
 								</div>
-							</div>
-							<p className="mt-4 text-sm text-white/55">
-								{activeKeys} aktif dari total {keys.length} key yang pernah
-								dibuat.
-							</p>
+							</Link>
+							<Link
+								href="/api-console/docs"
+								className="block rounded-[18px] border border-white/8 px-4 py-4 transition-colors hover:bg-white/[0.04]"
+							>
+								<div className="flex items-center justify-between gap-4">
+									<div>
+										<div className="text-sm font-medium text-white">
+											Open docs and integration guides
+										</div>
+										<div className="mt-1 text-xs text-white/42">
+											Endpoint, auth flow, dan contoh request.
+										</div>
+									</div>
+									<ArrowRight className="h-4 w-4 text-white/32" />
+								</div>
+							</Link>
 						</div>
-						<div className="rounded-[28px] border border-white/10 bg-white/[0.035] p-5">
-							<p className="text-[11px] uppercase tracking-[0.24em] text-white/42">
-								Latest spend
-							</p>
-							<p className="mt-3 text-2xl font-medium tracking-[-0.04em] text-white">
-								{latestSpendSummary?.spend || "Belum ada"}
-							</p>
-							<p className="mt-2 text-sm text-white/55">
-								{latestSpendSummary?.date ||
-									"Begitu request pertama masuk, spend terbaru akan muncul di sini."}
-							</p>
+						<div className="mt-6 rounded-[22px] border border-white/8 bg-[#0b0f13] p-4">
+							<LiveBalanceCard initialBalance={balance} />
 						</div>
 					</div>
 				</div>
 			</section>
 
-			<div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+			<div className="grid gap-px overflow-hidden rounded-[22px] border border-white/8 bg-white/8 md:grid-cols-2 xl:grid-cols-4">
 				{statCards.map((card) => {
-					const Icon = card.icon;
 					const value =
 						card.key === "spent"
 							? `$${spent}`
@@ -217,107 +262,72 @@ export default async function ApiConsoleDashboard() {
 									: successRate;
 
 					return (
-						<div
-							key={card.key}
-							className="group relative overflow-hidden rounded-[28px] border border-white/10 bg-[#101318] p-5 transition-transform duration-200 hover:-translate-y-0.5"
-						>
-							<div
-								className={`pointer-events-none absolute inset-0 bg-gradient-to-br ${card.accent}`}
-							/>
-							<div className="relative">
-								<div className="flex items-start justify-between gap-4">
-									<div>
-										<p className="text-[11px] uppercase tracking-[0.22em] text-white/42">
-											{card.label}
-										</p>
-										<p className="mt-4 text-4xl font-medium tracking-[-0.06em] text-white">
-											{value}
-										</p>
-									</div>
-									<div className="rounded-2xl border border-white/10 bg-white/[0.04] p-3 text-white/72">
-										<Icon className="h-5 w-5" />
-									</div>
-								</div>
-								<p className="mt-4 text-sm text-white/56">{card.caption}</p>
-							</div>
+						<div key={card.key} className="bg-[#0f1318] p-5">
+							<p className="text-[11px] uppercase tracking-[0.22em] text-white/38">
+								{card.label}
+							</p>
+							<p className="mt-4 text-4xl font-medium tracking-[-0.06em] text-white">
+								{value}
+							</p>
+							<p className="mt-2 text-sm text-white/46">{card.description}</p>
 						</div>
 					);
 				})}
 			</div>
 
-			<div className="grid gap-5 xl:grid-cols-[1.15fr_0.85fr]">
+			<div className="grid gap-5 xl:grid-cols-[1.2fr_0.8fr]">
 				<UsageChart data={JSON.stringify(chartData)} />
 
-				<div className="apic-stack apic-stack--16">
-					<div className="rounded-[28px] border border-white/10 bg-[#101318] p-6 shadow-[0_20px_60px_rgba(0,0,0,0.2)]">
-						<div className="flex items-center justify-between gap-3">
-							<div>
-								<h2 className="text-xl font-semibold tracking-[-0.03em] text-white">
-									Quick actions
-								</h2>
-								<p className="mt-2 text-sm leading-6 text-white/56">
-									Akses flow yang paling sering dipakai tanpa muter-muter.
-								</p>
-							</div>
-							<div className="rounded-2xl border border-white/10 bg-white/[0.04] p-3 text-cyan-300">
-								<Braces className="h-5 w-5" />
-							</div>
-						</div>
-
-						<div className="mt-6 grid gap-3">
-							<Link
-								href="/api-console/keys"
-								className="flex items-center justify-between rounded-[22px] border border-white/10 bg-white/[0.03] px-4 py-4 text-sm text-white/85 transition-colors hover:bg-white/[0.06]"
-							>
-								<div>
-									<div className="font-medium text-white">
-										Generate or revoke keys
-									</div>
-									<div className="mt-1 text-xs text-white/45">
-										Kontrol akses model dan environment.
-									</div>
-								</div>
-								<ArrowRight className="h-4 w-4 text-white/45" />
-							</Link>
-							<Link
-								href="/api-console/billing"
-								className="flex items-center justify-between rounded-[22px] border border-white/10 bg-white/[0.03] px-4 py-4 text-sm text-white/85 transition-colors hover:bg-white/[0.06]"
-							>
-								<div>
-									<div className="font-medium text-white">
-										Top up and track credits
-									</div>
-									<div className="mt-1 text-xs text-white/45">
-										Lihat saldo realtime dan histori pembayaran.
-									</div>
-								</div>
-								<ArrowRight className="h-4 w-4 text-white/45" />
-							</Link>
-							<Link
-								href="/api-console/docs"
-								className="flex items-center justify-between rounded-[22px] border border-white/10 bg-white/[0.03] px-4 py-4 text-sm text-white/85 transition-colors hover:bg-white/[0.06]"
-							>
-								<div>
-									<div className="font-medium text-white">
-										Open documentation
-									</div>
-									<div className="mt-1 text-xs text-white/45">
-										Copy endpoint, auth flow, dan contoh request.
-									</div>
-								</div>
-								<ArrowRight className="h-4 w-4 text-white/45" />
-							</Link>
+				<section className="rounded-[24px] border border-white/8 bg-[#0f1318] p-6 shadow-[0_18px_60px_rgba(0,0,0,0.2)]">
+					<div className="flex items-center justify-between gap-4 border-white/8 border-b pb-4">
+						<div>
+							<h2 className="text-lg font-semibold tracking-[-0.03em] text-white">
+								Account state
+							</h2>
+							<p className="mt-1 text-sm text-white/46">
+								Ringkasan singkat untuk health, credits, dan flow utama.
+							</p>
 						</div>
 					</div>
-
-					<Link
-						href="/api-console/billing"
-						className="rounded-[28px] border border-white/10 bg-[#101318] p-6 shadow-[0_20px_60px_rgba(0,0,0,0.2)]"
-						style={{ textDecoration: "none" }}
-					>
-						<LiveBalanceCard initialBalance={balance} />
-					</Link>
-				</div>
+					<div className="mt-5 space-y-4">
+						<div className="flex items-start justify-between gap-4">
+							<div>
+								<div className="text-[11px] uppercase tracking-[0.22em] text-white/35">
+									Balance status
+								</div>
+								<div className="mt-2 text-2xl font-medium tracking-[-0.04em] text-white">
+									${balance}
+								</div>
+							</div>
+							<div className="rounded-full border border-white/8 px-3 py-1 text-[10px] uppercase tracking-[0.2em] text-cyan-300">
+								Ready
+							</div>
+						</div>
+						<div className="grid gap-px overflow-hidden rounded-[18px] border border-white/8 bg-white/8">
+							<div className="flex items-center justify-between bg-[#0f1318] px-4 py-3 text-sm">
+								<span className="text-white/46">Active keys</span>
+								<span className="font-medium text-white">{activeKeys}</span>
+							</div>
+							<div className="flex items-center justify-between bg-[#0f1318] px-4 py-3 text-sm">
+								<span className="text-white/46">Total requests</span>
+								<span className="font-medium text-white">
+									{totalRequests.toLocaleString()}
+								</span>
+							</div>
+							<div className="flex items-center justify-between bg-[#0f1318] px-4 py-3 text-sm">
+								<span className="text-white/46">Success rate</span>
+								<span className="font-medium text-white">{successRate}</span>
+							</div>
+						</div>
+						<Link
+							href="/api-console/billing"
+							className="block rounded-[18px] border border-white/8 bg-[#0b0f13] p-4"
+							style={{ textDecoration: "none" }}
+						>
+							<LiveBalanceCard initialBalance={balance} />
+						</Link>
+					</div>
+				</section>
 			</div>
 		</div>
 	);
