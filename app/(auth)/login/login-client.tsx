@@ -57,7 +57,7 @@ export default function LoginClient() {
 			toast({
 				type: "error",
 				description:
-					"Sign in failed. If you're logging in with username/password, double-check the admin credentials on the server and try again.",
+					`This email is already linked to a different sign-in method${providerLabel}. Try the original method for that account, then connect this provider from inside your account if needed.`,
 			});
 			return;
 		}

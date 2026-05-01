@@ -346,8 +346,6 @@ export default function LandingPage() {
 		faqItems[0]?.question ?? null,
 	);
 	const [heroTilt, setHeroTilt] = useState({ x: 0, y: 0 });
-	const [mounted, setMounted] = useState(false);
-	const [isMobile, setIsMobile] = useState(true);
 	const [apiModels, setApiModels] = useState<ApiModel[]>(defaultApiModels);
 
 	const mainRef = useRef<HTMLDivElement>(null);
@@ -365,14 +363,6 @@ export default function LandingPage() {
 	const ctaRef = useRef<HTMLDivElement>(null);
 	const mobileSidebarRef = useRef<HTMLDivElement>(null);
 	const mobileOverlayRef = useRef<HTMLDivElement>(null);
-
-	useEffect(() => {
-		setMounted(true);
-		const checkMobile = () => setIsMobile(window.innerWidth < 768);
-		checkMobile();
-		window.addEventListener("resize", checkMobile);
-		return () => window.removeEventListener("resize", checkMobile);
-	}, []);
 
 	useEffect(() => {
 		const loadModels = async () => {
@@ -963,22 +953,21 @@ export default function LandingPage() {
 				ref={heroRef}
 				className="relative flex min-h-[100svh] items-start justify-start px-4 pt-28 pb-14 sm:items-center sm:justify-center sm:px-6 sm:pt-32 sm:pb-20"
 			>
-				{/* Background Video - Disabled on Mobile */}
-				{mounted && !isMobile && (
-					<video
-						className="absolute w-full h-[120%] object-cover opacity-40 mix-blend-screen pointer-events-none"
-						autoPlay
-						loop
-						muted
-						playsInline
-						poster="/images/demo-thumbnail.png"
-					>
-						<source
-							src="https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260307_083826_e938b29f-a43a-41ec-a153-3d4730578ab8.mp4"
-							type="video/mp4"
-						/>
-					</video>
-				)}
+				<div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(255,255,255,0.08),transparent_48%),radial-gradient(circle_at_70%_35%,rgba(255,255,255,0.05),transparent_38%)] pointer-events-none" />
+				<video
+					className="pointer-events-none absolute hidden h-[120%] w-full object-cover opacity-40 mix-blend-screen md:block"
+					autoPlay
+					loop
+					muted
+					playsInline
+					poster="/images/demo-thumbnail.png"
+					preload="none"
+				>
+					<source
+						src="https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260307_083826_e938b29f-a43a-41ec-a153-3d4730578ab8.mp4"
+						type="video/mp4"
+					/>
+				</video>
 
 				<div className="absolute inset-0 bg-gradient-to-b from-transparent via-black/50 to-black z-0" />
 
@@ -1003,7 +992,7 @@ export default function LandingPage() {
 								text="One AI workspace for chat, artifacts, files, and execution."
 								className="font-heading text-[2.55rem] text-white italic leading-[0.92] tracking-tight sm:text-5xl md:text-6xl lg:text-[5rem] lg:leading-[0.85]"
 								delay={0.6}
-								animate={!isMobile}
+								animate
 							/>
 						</div>
 
@@ -1222,12 +1211,13 @@ export default function LandingPage() {
 				className="relative min-h-screen flex items-center justify-center py-24"
 			>
 				<div className="absolute inset-0 z-0 overflow-hidden">
-					{mounted && !isMobile && (
+					<div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(255,255,255,0.08),transparent_42%),linear-gradient(180deg,rgba(255,255,255,0.02),transparent_55%)]" />
+					<div className="absolute inset-0 hidden md:block">
 						<HlsVideo
 							src="https://stream.mux.com/9JXDljEVWYwWu01PUkAemafDugK89o01BR6zqJ3aS9u00A.m3u8"
-							className="absolute inset-0 w-full h-full object-cover opacity-60 mix-blend-screen"
+							className="absolute inset-0 h-full w-full object-cover opacity-60 mix-blend-screen"
 						/>
-					)}
+					</div>
 					<div className="absolute top-0 inset-x-0 h-40 bg-gradient-to-b from-black to-transparent" />
 					<div className="absolute bottom-0 inset-x-0 h-40 bg-gradient-to-t from-black to-transparent" />
 				</div>
@@ -1703,12 +1693,13 @@ export default function LandingPage() {
 				className="relative py-32 px-6 md:px-16 lg:px-24 border-t border-white/10"
 			>
 				<div className="absolute inset-0 z-0 overflow-hidden">
-					{mounted && !isMobile && (
+					<div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(255,255,255,0.08),transparent_42%),linear-gradient(180deg,rgba(255,255,255,0.02),transparent_55%)]" />
+					<div className="absolute inset-0 hidden md:block">
 						<HlsVideo
 							src="https://stream.mux.com/8wrHPCX2dC3msyYU9ObwqNdm00u3ViXvOSHUMRYSEe5Q.m3u8"
-							className="absolute inset-0 w-full h-full object-cover opacity-50 mix-blend-screen"
+							className="absolute inset-0 h-full w-full object-cover opacity-50 mix-blend-screen"
 						/>
-					)}
+					</div>
 					<div className="absolute top-0 inset-x-0 h-40 bg-gradient-to-b from-black to-transparent" />
 					<div className="absolute bottom-0 inset-x-0 h-40 bg-gradient-to-t from-black to-transparent" />
 				</div>
