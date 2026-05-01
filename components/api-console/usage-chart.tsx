@@ -153,11 +153,10 @@ export function UsageChart({ data }: { data: string }) {
 
 	if (!points.length) {
 		return (
-			<div
-				className="apic-card"
-				style={{ textAlign: "center", padding: 40, color: "#555" }}
-			>
-				No usage data yet. Start making API requests to see your charts.
+			<div className="rounded-[28px] border border-white/10 bg-[#101318] p-6 shadow-[0_20px_60px_rgba(0,0,0,0.2)]">
+				<div className="rounded-[24px] border border-dashed border-white/10 bg-white/[0.02] px-6 py-16 text-center text-sm text-white/46">
+					No usage data yet. Start making API requests to see your charts.
+				</div>
 			</div>
 		);
 	}
@@ -182,71 +181,37 @@ export function UsageChart({ data }: { data: string }) {
 
 	if (!entries.length) {
 		return (
-			<div
-				className="apic-card"
-				style={{ textAlign: "center", padding: 40, color: "#555" }}
-			>
-				No usage data to chart.
+			<div className="rounded-[28px] border border-white/10 bg-[#101318] p-6 shadow-[0_20px_60px_rgba(0,0,0,0.2)]">
+				<div className="rounded-[24px] border border-dashed border-white/10 bg-white/[0.02] px-6 py-16 text-center text-sm text-white/46">
+					No usage data to chart.
+				</div>
 			</div>
 		);
 	}
 
 	return (
-		<div className="apic-grid apic-grid--2">
-			{/* Requests & Tokens chart */}
-			<div className="apic-card">
-				<div className="apic-row apic-row--between" style={{ marginBottom: 8 }}>
+		<div className="grid gap-5 lg:grid-cols-2">
+			<div className="rounded-[28px] border border-white/10 bg-[#101318] p-6 shadow-[0_20px_60px_rgba(0,0,0,0.2)]">
+				<div className="mb-5 flex items-start justify-between gap-4">
 					<div>
-						<div className="apic-h3">Requests & Tokens</div>
-						<p
-							style={{
-								fontSize: 11,
-								color: "#555",
-								margin: "2px 0 0",
-							}}
-						>
+						<div className="text-lg font-semibold tracking-[-0.03em] text-white">
+							Requests & Tokens
+						</div>
+						<p className="mt-1 text-xs uppercase tracking-[0.2em] text-white/35">
 							Daily activity over time
 						</p>
 					</div>
+					<div className="rounded-full border border-emerald-400/18 bg-emerald-400/10 px-3 py-1 text-[10px] uppercase tracking-[0.2em] text-emerald-300">
+						Requests
+					</div>
 				</div>
-				<div
-					className="apic-row apic-row--8"
-					style={{ fontSize: 11, color: "#555", marginBottom: 8 }}
-				>
-					<span
-						style={{
-							display: "inline-flex",
-							alignItems: "center",
-							gap: 4,
-						}}
-					>
-						<span
-							style={{
-								width: 8,
-								height: 8,
-								background: "#4ade80",
-								display: "inline-block",
-								borderRadius: 2,
-							}}
-						/>
+				<div className="mb-3 flex flex-wrap items-center gap-3 text-xs text-white/45">
+					<span className="inline-flex items-center gap-2">
+						<span className="inline-block h-2 w-2 rounded-[3px] bg-emerald-400" />
 						Requests
 					</span>
-					<span
-						style={{
-							display: "inline-flex",
-							alignItems: "center",
-							gap: 4,
-						}}
-					>
-						<span
-							style={{
-								width: 8,
-								height: 8,
-								background: "#38bdf8",
-								display: "inline-block",
-								borderRadius: 2,
-							}}
-						/>
+					<span className="inline-flex items-center gap-2">
+						<span className="inline-block h-2 w-2 rounded-[3px] bg-sky-400" />
 						Tokens
 					</span>
 				</div>
@@ -258,20 +223,18 @@ export function UsageChart({ data }: { data: string }) {
 				/>
 			</div>
 
-			{/* Daily Spend chart */}
-			<div className="apic-card">
-				<div className="apic-row apic-row--between" style={{ marginBottom: 8 }}>
+			<div className="rounded-[28px] border border-white/10 bg-[#101318] p-6 shadow-[0_20px_60px_rgba(0,0,0,0.2)]">
+				<div className="mb-5 flex items-start justify-between gap-4">
 					<div>
-						<div className="apic-h3">Daily Spend</div>
-						<p
-							style={{
-								fontSize: 11,
-								color: "#555",
-								margin: "2px 0 0",
-							}}
-						>
+						<div className="text-lg font-semibold tracking-[-0.03em] text-white">
+							Daily Spend
+						</div>
+						<p className="mt-1 text-xs uppercase tracking-[0.2em] text-white/35">
 							Cost breakdown by day
 						</p>
+					</div>
+					<div className="rounded-full border border-violet-400/18 bg-violet-400/10 px-3 py-1 text-[10px] uppercase tracking-[0.2em] text-violet-300">
+						Spend
 					</div>
 				</div>
 				<SVGChart
