@@ -206,9 +206,9 @@ export default async function RootLayout({
 			<body className="font-sans antialiased bg-background text-foreground transition-colors duration-500 ease-in-out">
 				<ThemeProvider
 					attribute="class"
-					defaultTheme="light"
+					defaultTheme="dark"
 					disableTransitionOnChange
-					enableSystem
+					enableSystem={false}
 				>
 					<Toaster position="top-left" richColors />
 					<VisitorTracker />

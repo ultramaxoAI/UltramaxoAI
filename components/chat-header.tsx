@@ -20,7 +20,7 @@ function PureChatHeader({
 	const isGuest = guestRegex.test(data?.user?.email ?? "");
 
 	return (
-		<header className="sticky top-0 flex items-center justify-between gap-2 bg-background px-4 py-2 border-b border-border z-10">
+		<header className="sticky top-0 z-10 flex items-center justify-between gap-3 border-b border-black/6 bg-[linear-gradient(180deg,rgba(246,242,234,0.9),rgba(246,242,234,0.72))] px-3 py-2.5 backdrop-blur-xl dark:border-white/6 dark:bg-[linear-gradient(180deg,rgba(11,13,16,0.92),rgba(11,13,16,0.74))] sm:px-4">
 			<div className="flex items-center gap-2">
 				{!isReadonly && (
 					<>
@@ -33,7 +33,6 @@ function PureChatHeader({
 				)}
 			</div>
 
-			{/* Upgrade Pro Button - Top Right */}
 			{!isGuest && data?.user && <UpgradeProButton user={data.user} />}
 		</header>
 	);

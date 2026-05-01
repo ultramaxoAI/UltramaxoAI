@@ -331,7 +331,7 @@ export function Chat({
 		<>
 			<div
 				className={cn(
-					"relative flex h-dvh min-w-0 max-w-full flex-col overflow-hidden bg-white text-[#171717] transition-all duration-300 ease-in-out dark:bg-[#171717] dark:text-[#f3f4f1] md:dark:bg-[#212121]",
+					"relative flex h-dvh min-w-0 max-w-full flex-col overflow-hidden bg-transparent text-[#171717] transition-all duration-300 ease-in-out dark:text-[#f3f4f1]",
 					isArtifactVisible
 						? isIdeArtifactLocked
 							? "lg:w-[46%]"
@@ -340,7 +340,7 @@ export function Chat({
 				)}
 			>
 				<div className="pointer-events-none absolute top-0 right-0 left-0 z-20 px-2 pt-2 sm:px-4 sm:pt-2.5">
-					<div className="pointer-events-auto mx-auto w-full max-w-5xl">
+					<div className="pointer-events-auto mx-auto w-full max-w-4xl">
 						<ChatContextHeader
 							chatId={id}
 							isReadonly={isReadonly}
@@ -357,7 +357,7 @@ export function Chat({
 				>
 					{messages.length > 0 && (
 						<div className="flex flex-1 flex-col overflow-hidden px-2 pb-2 sm:px-4 sm:pb-4">
-							<div className="mx-auto flex h-full w-full max-w-5xl flex-1 flex-col overflow-hidden bg-transparent">
+							<div className="mx-auto flex h-full w-full max-w-4xl flex-1 flex-col overflow-hidden bg-transparent">
 								<Messages
 									addToolApprovalResponse={addToolApprovalResponse}
 									chatId={id}
@@ -376,18 +376,21 @@ export function Chat({
 
 					{messages.length === 0 && (
 						<div className="flex w-full flex-1 items-center justify-center px-3 pb-4 sm:px-4">
-							<div className="mx-auto w-full max-w-3xl space-y-4 text-center">
+							<div className="mx-auto w-full max-w-4xl space-y-6 text-center">
 								<div className="mx-auto max-w-2xl">
-									<h1 className="text-balance text-[1.85rem] font-semibold leading-[1.08] tracking-[-0.04em] text-[#171717] dark:text-[#f3f4f1] sm:text-[2.6rem] sm:tracking-[-0.05em]">
+									<div className="mb-4 inline-flex items-center rounded-full border border-black/7 bg-white/68 px-3 py-1 text-[11px] font-medium uppercase tracking-[0.18em] text-[#6b6e69] shadow-[0_10px_24px_rgba(16,18,20,0.05)] backdrop-blur-xl dark:border-white/8 dark:bg-white/[0.04] dark:text-[#8f948e] dark:shadow-none">
+										Ultramaxo Workspace
+									</div>
+									<h1 className="text-balance text-[2.1rem] font-semibold leading-[1.02] tracking-[-0.055em] text-[#171717] dark:text-[#f4f1ec] sm:text-[3.25rem]">
 										Apa yang ingin Anda buat?
 									</h1>
-									<p className="mt-3 text-sm leading-7 text-[#5f6258] dark:text-[#a6aca6] sm:text-[15px]">
-										Mulai dari satu prompt.
+									<p className="mt-4 text-sm leading-7 text-[#676c68] dark:text-[#9ba09b] sm:text-[15px]">
+										Mulai dari satu prompt. Tulis ide, bangun sesuatu, atau lanjutkan pekerjaan Anda dengan alur yang terasa ringan dan fokus.
 									</p>
 								</div>
 
 								{isReadonly ? (
-									<div className="rounded-[28px] border border-dashed border-[#171717]/8 bg-white/42 px-6 py-5 text-center backdrop-blur-xl dark:border-white/10 dark:bg-white/4">
+									<div className="rounded-[30px] border border-dashed border-black/7 bg-white/52 px-6 py-5 text-center shadow-[0_18px_50px_rgba(18,20,22,0.06)] backdrop-blur-xl dark:border-white/10 dark:bg-white/4 dark:shadow-none">
 										<p className="text-sm text-[#5f6258] dark:text-[#a6aca6]">
 											Masuk dulu untuk mulai ngobrol dan buka workspace penuh
 											Ultramaxo AI.
@@ -407,7 +410,7 @@ export function Chat({
 										</div>
 									</div>
 								) : isAtLimit ? (
-									<div className="rounded-[28px] border border-dashed border-[#171717]/8 bg-white/42 px-6 py-5 text-center backdrop-blur-xl dark:border-white/10 dark:bg-white/4">
+									<div className="rounded-[30px] border border-dashed border-black/7 bg-white/52 px-6 py-5 text-center shadow-[0_18px_50px_rgba(18,20,22,0.06)] backdrop-blur-xl dark:border-white/10 dark:bg-white/4 dark:shadow-none">
 										<p className="text-sm font-medium text-[#171717] dark:text-[#f3f4f1]">
 											You have reached your free daily limit of 10 messages.
 										</p>
@@ -422,7 +425,7 @@ export function Chat({
 										</div>
 									</div>
 								) : (
-									<div className="mx-auto w-full max-w-3xl">
+									<div className="mx-auto w-full max-w-4xl">
 										<MultimodalInput
 											attachments={attachments}
 											chatId={id}
@@ -470,7 +473,7 @@ export function Chat({
 						<div className="mx-auto min-w-0 w-full max-w-4xl">
 							{isReadonly ? (
 								<div className="flex w-full items-center justify-center p-4">
-									<div className="w-full max-w-3xl rounded-[28px] border border-dashed border-[#171717]/8 bg-white/42 p-6 text-center shadow-[0_18px_50px_rgba(23,23,23,0.05)] backdrop-blur-xl dark:border-white/10 dark:bg-[#171b1f]/78 dark:shadow-[0_18px_50px_rgba(0,0,0,0.24)]">
+									<div className="w-full max-w-3xl rounded-[30px] border border-dashed border-black/7 bg-white/52 p-6 text-center shadow-[0_18px_50px_rgba(18,20,22,0.06)] backdrop-blur-xl dark:border-white/10 dark:bg-[#171b1f]/78 dark:shadow-[0_18px_50px_rgba(0,0,0,0.24)]">
 										<p className="text-sm text-[#5f6258] dark:text-[#a6aca6]">
 											Please sign in to start chatting with Ultramaxo AI.
 										</p>
@@ -491,7 +494,7 @@ export function Chat({
 								</div>
 							) : isAtLimit ? (
 								<div className="flex w-full items-center justify-center p-4">
-									<div className="w-full max-w-3xl rounded-[28px] border border-dashed border-[#171717]/8 bg-white/42 p-6 text-center shadow-[0_18px_50px_rgba(23,23,23,0.05)] backdrop-blur-xl dark:border-white/10 dark:bg-[#171b1f]/78 dark:shadow-[0_18px_50px_rgba(0,0,0,0.24)]">
+									<div className="w-full max-w-3xl rounded-[30px] border border-dashed border-black/7 bg-white/52 p-6 text-center shadow-[0_18px_50px_rgba(18,20,22,0.06)] backdrop-blur-xl dark:border-white/10 dark:bg-[#171b1f]/78 dark:shadow-[0_18px_50px_rgba(0,0,0,0.24)]">
 										<p className="text-sm font-medium text-[#171717] dark:text-[#f3f4f1]">
 											You have reached your free daily limit of 10 messages.
 										</p>
@@ -508,7 +511,7 @@ export function Chat({
 								</div>
 							) : (
 								<div className="relative flex flex-col gap-2">
-									<div className="mx-auto w-full max-w-5xl">
+									<div className="mx-auto w-full max-w-4xl">
 										<MultimodalInput
 											attachments={attachments}
 											chatId={id}

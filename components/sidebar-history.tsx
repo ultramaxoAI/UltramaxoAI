@@ -232,7 +232,7 @@ export function SidebarHistory({ user }: { user: User | undefined }) {
 
 		return (
 			<div>
-				<div className="px-2 py-1 text-[11px] font-medium tracking-[0.08em] uppercase text-[#74675c] dark:text-[#8f857a]">
+				<div className="px-3 py-1.5 text-[10px] font-semibold tracking-[0.18em] uppercase text-[#7c7369] dark:text-[#828882]">
 					{label}
 				</div>
 				{chats.map((chat) => (
@@ -319,11 +319,11 @@ export function SidebarHistory({ user }: { user: User | undefined }) {
 						onFoldersUpdated={handleHistoryRefresh}
 						onSelectFolder={setFolderFilter}
 					/>
-					<div className="mb-4 space-y-2 px-2">
+					<div className="mb-4 space-y-2 px-3">
 						<div className="relative">
-							<SearchIcon className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#7a807a] dark:text-[#988d81]" />
+							<SearchIcon className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#858278] dark:text-[#838982]" />
 							<input
-								className="h-10 w-full rounded-xl border border-black/6 bg-black/[0.03] pl-9 pr-3 text-sm text-[#221c17] outline-none placeholder:text-[#7a807a] dark:border-white/6 dark:bg-white/[0.03] dark:text-[#ece4d8] dark:placeholder:text-[#988d81]"
+								className="h-11 w-full rounded-2xl border border-black/6 bg-white/70 pl-9 pr-3 text-sm text-[#1d1f22] shadow-[0_8px_18px_rgba(16,18,20,0.04)] outline-none placeholder:text-[#7d817b] dark:border-white/7 dark:bg-white/[0.03] dark:text-[#ece4d8] dark:shadow-none dark:placeholder:text-[#7f8781]"
 								onChange={(e) => setSearchTerm(e.target.value)}
 								placeholder="Search chats"
 								value={searchTerm}
@@ -331,7 +331,7 @@ export function SidebarHistory({ user }: { user: User | undefined }) {
 						</div>
 					</div>
 					<SidebarMenu>
-						<div className="flex flex-col gap-6">
+						<div className="flex flex-col gap-5">
 							{renderChatSection("Pinned", pinnedChats)}
 							{renderChatSection("Today", groupedChats.today)}
 							{renderChatSection("Yesterday", groupedChats.yesterday)}
@@ -339,7 +339,7 @@ export function SidebarHistory({ user }: { user: User | undefined }) {
 							{renderChatSection("Last 30 days", groupedChats.lastMonth)}
 							{renderChatSection("Older than last month", groupedChats.older)}
 							{filteredChats.length === 0 ? (
-								<div className="px-2 py-4 text-sm text-[#6f746f] dark:text-[#9d9388]">
+								<div className="px-3 py-4 text-sm text-[#6f746f] dark:text-[#9d9388]">
 									No chats match the current filters.
 								</div>
 							) : null}

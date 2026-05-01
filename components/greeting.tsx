@@ -13,7 +13,7 @@ export const Greeting = () => {
 		>
 			<motion.div
 				animate={{ opacity: 1, y: 0 }}
-				className="mb-2 text-2xl font-semibold tracking-[-0.04em] md:text-3xl"
+				className="mb-2 text-3xl font-semibold tracking-[-0.05em] text-[#16181b] dark:text-[#f4f1ec] md:text-4xl"
 				exit={{ opacity: 0, y: -10 }}
 				initial={{ opacity: 0, y: 10 }}
 				transition={{ delay: 0.3, duration: 0.4, ease: "easeOut" }}
@@ -22,12 +22,12 @@ export const Greeting = () => {
 			</motion.div>
 			<motion.div
 				animate={{ opacity: 1, y: 0 }}
-				className="text-lg text-[#5f6258] md:text-xl dark:text-[#a6aca6]"
+				className="text-base text-[#686d69] dark:text-[#989d98] md:text-lg"
 				exit={{ opacity: 0, y: -10 }}
 				initial={{ opacity: 0, y: 10 }}
 				transition={{ delay: 0.4, duration: 0.4, ease: "easeOut" }}
 			>
-				What can I help you with today?
+				What would you like to explore today?
 			</motion.div>
 		</div>
 	);

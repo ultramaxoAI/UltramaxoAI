@@ -33,7 +33,7 @@ async function SidebarWrapper({ children }: { children: React.ReactNode }) {
 
 	return (
 		<SidebarProvider defaultOpen={!isCollapsed}>
-			<div className="flex h-screen w-full">
+			<div className="flex h-screen w-full bg-[#0b0d10] text-foreground">
 				<AppSidebar user={session?.user} />
 				<MainContentWrapper>{children}</MainContentWrapper>
 			</div>

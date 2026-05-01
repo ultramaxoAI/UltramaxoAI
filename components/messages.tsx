@@ -80,7 +80,7 @@ function PureMessages({
 						className="absolute inset-0 touch-pan-y overflow-y-auto"
 						ref={messagesContainerRef}
 					>
-						<div className="mx-auto flex min-w-0 w-full max-w-5xl flex-col gap-5 px-4 py-5 md:gap-7 md:px-6">
+						<div className="mx-auto flex min-w-0 w-full max-w-4xl flex-col gap-6 px-4 py-6 md:gap-8 md:px-6 md:py-8">
 							{messages.map((message, index) => (
 								<PreviewMessage
 									addToolApprovalResponse={addToolApprovalResponse}
@@ -118,7 +118,7 @@ function PureMessages({
 
 					<button
 						aria-label="Scroll to bottom"
-						className={`absolute bottom-5 left-1/2 z-10 -translate-x-1/2 rounded-full border border-[#171717]/8 bg-white/90 p-2.5 text-[#171717] shadow-[0_10px_30px_rgba(23,23,23,0.12)] backdrop-blur transition-all hover:bg-white dark:border-white/10 dark:bg-[#171b1f]/92 dark:text-[#f3f4f1] dark:shadow-[0_12px_32px_rgba(0,0,0,0.35)] dark:hover:bg-[#1d2227] ${
+						className={`absolute bottom-5 left-1/2 z-10 -translate-x-1/2 rounded-full border border-black/8 bg-white/88 p-2.5 text-[#171717] shadow-[0_12px_30px_rgba(18,20,22,0.12)] backdrop-blur-xl transition-all hover:bg-white dark:border-white/10 dark:bg-[#171c21]/94 dark:text-[#f3f4f1] dark:shadow-[0_12px_32px_rgba(0,0,0,0.35)] dark:hover:bg-[#1d2227] ${
 							isAtBottom
 								? "pointer-events-none scale-0 opacity-0"
 								: "pointer-events-auto scale-100 opacity-100"
