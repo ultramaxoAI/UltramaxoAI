@@ -32,10 +32,5 @@
 		"next.config.js",
 		".next/dev/types/**/*.ts"
 	],
-	"exclude": [
-		"node_modules",
-		"Ultramaxo",
-		"pixel.io-nextjs-1.0.0",
-		"ultramaxo-website-shine"
-	]
+	"exclude": ["node_modules", "Ultramaxo", "pixel.io-nextjs-1.0.0"]
 }

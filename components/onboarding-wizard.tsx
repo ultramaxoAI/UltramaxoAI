@@ -7,6 +7,7 @@ import {
 	ShieldAlert,
 	Sparkles,
 	TerminalSquare,
+	Workflow,
 } from "lucide-react";
 import { useSession } from "next-auth/react";
 import { useEffect, useState } from "react";
@@ -47,7 +48,12 @@ export function OnboardingWizard() {
 			if (response.ok) {
 				setStep(2);
 			} else {
-				toast.error("Gagal menyimpan preferensi. Silakan coba lagi.");
+				const payload = (await response.json().catch(() => null)) as {
+					error?: string;
+				} | null;
+				toast.error(
+					payload?.error || "Gagal menyimpan preferensi. Silakan coba lagi.",
+				);
 			}
 		} catch (_error) {
 			toast.error("Terjadi kesalahan jaringan.");
@@ -62,25 +68,32 @@ export function OnboardingWizard() {
 
 	const REASONS = [
 		{
-			id: "Belajar Hacking & CTF",
-			title: "Keamanan Siber & CTF",
+			id: "Membangun produk lebih cepat",
+			title: "Build Faster",
 			description:
-				"Mempelajari kerentanan sistem, eksploitasi, dan teknik pertahanan.",
-			icon: <ShieldAlert className="text-red-500" size={24} />,
+				"Saya ingin menulis, menguji, dan mengirim pekerjaan lebih cepat dengan bantuan AI.",
+			icon: <TerminalSquare className="text-cyan-400" size={24} />,
 		},
 		{
-			id: "Koding Ekstrem",
-			title: "Pengembangan Perangkat Lunak",
+			id: "Menggunakan API platform",
+			title: "Use the API",
 			description:
-				"Membangun aplikasi kompleks dengan bantuan AI tanpa sensor.",
-			icon: <TerminalSquare className="text-blue-500" size={24} />,
+				"Saya butuh akses model, key management, dan endpoint yang siap dipakai di workflow developer.",
+			icon: <Workflow className="text-emerald-400" size={24} />,
 		},
 		{
-			id: "Eksplorasi Bebas",
-			title: "Eksplorasi Kapabilitas AI",
+			id: "Eksplorasi workspace AI",
+			title: "Explore the Workspace",
 			description:
-				"Menguji batas kecerdasan buatan dalam memberikan solusi tak terbatas.",
-			icon: <Sparkles className="text-amber-500" size={24} />,
+				"Saya ingin mencoba chat, dokumen, artifact, dan cara kerja Ultramaxo secara langsung.",
+			icon: <Sparkles className="text-amber-400" size={24} />,
+		},
+		{
+			id: "Bergabung dengan komunitas",
+			title: "Join the Community",
+			description:
+				"Saya datang dari komunitas, teman, atau ingin ikut diskusi dan update seputar Ultramaxo.",
+			icon: <ShieldAlert className="text-violet-400" size={24} />,
 		},
 	];
 
@@ -94,60 +107,56 @@ export function OnboardingWizard() {
 					animate={{ opacity: 1, scale: 1, y: 0 }}
 					exit={{ opacity: 0, scale: 0.95, y: 10 }}
 					transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
-					className="w-full max-w-xl bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 rounded-3xl overflow-hidden shadow-2xl"
+					className="w-full max-w-2xl overflow-hidden rounded-[32px] border border-white/10 bg-[#08090c] shadow-[0_32px_120px_rgba(0,0,0,0.55)]"
 				>
-					{/* Header */}
-					<div className="relative p-6 sm:p-8 border-b border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-[#0c0c0e]">
+					<div className="relative border-white/10 border-b bg-[radial-gradient(circle_at_top_left,rgba(56,189,248,0.16),transparent_40%),linear-gradient(180deg,rgba(255,255,255,0.04),rgba(255,255,255,0.01))] p-6 sm:p-8">
 						<div className="flex items-center gap-3">
-							<div className="size-10 rounded-xl bg-zinc-100 dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 flex items-center justify-center shrink-0">
-								<Sparkles
-									size={20}
-									className="text-zinc-500 dark:text-zinc-100"
-								/>
+							<div className="flex size-10 shrink-0 items-center justify-center rounded-xl border border-white/10 bg-white/5">
+								<Sparkles size={20} className="text-cyan-300" />
 							</div>
 							<div>
-								<h2 className="text-xl sm:text-2xl font-bold text-zinc-900 dark:text-white tracking-tight">
+								<h2 className="text-xl font-bold tracking-tight text-white sm:text-2xl">
 									{step === 1
-										? "Selamat Datang di Ultramaxo"
-										: "Bergabung dengan Komunitas"}
+										? "Selamat datang di Ultramaxo"
+										: "Masuk ke komunitas"}
 								</h2>
-								<p className="text-sm text-zinc-500 dark:text-zinc-400 mt-1">
+								<p className="mt-1 text-sm text-white/60">
 									{step === 1
-										? "Mari sesuaikan pengalaman Anda untuk hasil yang lebih terarah."
-										: "Langkah terakhir sebelum Anda memulai eksplorasi."}
+										? "Pilih alasan utama Anda bergabung agar pengalaman awal terasa lebih relevan."
+										: "Satu langkah ringan sebelum Anda mulai memakai workspace."}
 								</p>
 							</div>
 						</div>
 					</div>
 
-					{/* Body */}
-					<div className="p-6 sm:p-8 bg-white dark:bg-zinc-950">
+					<div className="bg-[#08090c] p-6 sm:p-8">
 						{step === 1 ? (
 							<div className="space-y-6">
 								<div className="space-y-3">
-									<h3 className="text-sm font-bold tracking-widest text-zinc-500 uppercase">
-										Pilih Tujuan Utama Anda
+									<h3 className="text-xs font-bold tracking-[0.24em] text-white/45 uppercase">
+										Why Ultramaxo
 									</h3>
-									<div className="grid grid-cols-1 gap-3">
+									<div className="grid grid-cols-1 gap-3 md:grid-cols-2">
 										{REASONS.map((option) => (
 											<button
 												key={option.id}
 												onClick={() => handleSelectReason(option.id)}
 												disabled={isSubmitting}
-												className="flex items-center gap-4 w-full p-4 rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-zinc-50 dark:bg-zinc-900/50 hover:bg-zinc-100 dark:hover:bg-zinc-800 hover:border-zinc-300 dark:hover:border-zinc-700 transition-all duration-200 group text-left disabled:opacity-50 disabled:cursor-not-allowed"
+												className="group flex w-full items-start gap-4 rounded-[24px] border border-white/10 bg-white/[0.03] p-4 text-left transition-all duration-200 hover:border-cyan-400/30 hover:bg-white/[0.055] disabled:cursor-not-allowed disabled:opacity-50"
+												type="button"
 											>
-												<div className="size-12 rounded-xl bg-white dark:bg-zinc-950 border border-zinc-200 dark:border-zinc-800 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform duration-300 shadow-sm">
+												<div className="flex size-12 shrink-0 items-center justify-center rounded-2xl border border-white/10 bg-black/40 transition-transform duration-300 group-hover:scale-105">
 													{option.icon}
 												</div>
 												<div className="flex-1 min-w-0">
-													<p className="font-bold text-zinc-900 dark:text-zinc-100 text-base">
+													<p className="text-base font-bold text-white">
 														{option.title}
 													</p>
-													<p className="text-xs sm:text-sm text-zinc-500 dark:text-zinc-400 mt-1 pr-4 line-clamp-2">
+													<p className="mt-1 pr-2 text-xs text-white/58 sm:text-sm">
 														{option.description}
 													</p>
 												</div>
-												<ChevronRight className="text-zinc-400 dark:text-zinc-600 group-hover:text-zinc-600 dark:group-hover:text-zinc-300 transition-colors shrink-0" />
+												<ChevronRight className="shrink-0 text-white/30 transition-colors group-hover:text-cyan-300" />
 											</button>
 										))}
 									</div>
@@ -155,22 +164,22 @@ export function OnboardingWizard() {
 							</div>
 						) : (
 							<div className="space-y-6 text-center py-4">
-								<div className="mx-auto size-20 rounded-2xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center mb-6">
-									<Send size={40} className="text-blue-500" />
+								<div className="mx-auto mb-6 flex size-20 items-center justify-center rounded-[24px] border border-cyan-400/20 bg-cyan-400/10">
+									<Send size={40} className="text-cyan-300" />
 								</div>
-								<h3 className="text-lg sm:text-xl font-bold text-zinc-900 dark:text-white mb-2">
-									Akses Komunitas Khusus
+								<h3 className="mb-2 text-lg font-bold text-white sm:text-xl">
+									Join komunitas Ultramaxo
 								</h3>
-								<p className="text-sm text-zinc-500 dark:text-zinc-400 leading-relaxed max-w-md mx-auto">
-									Bergabunglah dengan grup Telegram kami untuk berdiskusi dengan
-									sesama pengembang, berbagi teknik lanjutan, dan mendapatkan
-									pembaruan eksklusif seputar ekosistem Ultramaxo.
+								<p className="mx-auto max-w-md text-sm leading-relaxed text-white/60">
+									Masuk ke grup Telegram untuk update produk, diskusi sesama
+									pengguna, dan jalur komunikasi paling cepat dengan komunitas.
 								</p>
 
-								<div className="pt-8 flex flex-col sm:flex-row items-center gap-3 justify-center border-t border-zinc-200 dark:border-zinc-800 mt-8">
+								<div className="mt-8 flex flex-col items-center justify-center gap-3 border-white/10 border-t pt-8 sm:flex-row">
 									<button
 										onClick={handleFinish}
-										className="w-full sm:w-auto px-6 py-3 rounded-xl text-sm font-bold text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-900 transition-colors"
+										className="w-full rounded-xl px-6 py-3 text-sm font-bold text-white/55 transition-colors hover:bg-white/5 hover:text-white sm:w-auto"
+										type="button"
 									>
 										Mungkin Nanti
 									</button>
@@ -179,7 +188,7 @@ export function OnboardingWizard() {
 										target="_blank"
 										rel="noopener noreferrer"
 										onClick={handleFinish}
-										className="w-full sm:w-auto px-6 py-3 rounded-xl text-sm font-bold bg-zinc-900 text-white dark:bg-white dark:text-black hover:bg-zinc-800 dark:hover:bg-zinc-200 transition-colors flex items-center justify-center gap-2"
+										className="flex w-full items-center justify-center gap-2 rounded-xl bg-white px-6 py-3 text-sm font-bold text-black transition-colors hover:bg-cyan-50 sm:w-auto"
 									>
 										Bergabung ke Telegram <ChevronRight size={16} />
 									</a>

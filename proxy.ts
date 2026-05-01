@@ -107,12 +107,22 @@ function isBypassedApiMaintenancePath(pathname: string) {
 	);
 }
 
-function isApiRequestPath(host: string, pathname: string) {
+function isProtectedApiPlatformPath(host: string, pathname: string) {
 	if (host.startsWith(API_SUBDOMAIN)) {
 		return pathname === "/v1" || pathname.startsWith("/v1/");
 	}
 
-	return pathname.startsWith("/api/");
+	return (
+		pathname.startsWith("/api/v1/") ||
+		pathname === "/api/v1" ||
+		pathname === "/api/user/api-credits" ||
+		pathname === "/api/user/keys" ||
+		pathname.startsWith("/api/user/keys/") ||
+		pathname === "/api/payment/create-api-topup" ||
+		pathname === "/api/payment/history" ||
+		pathname.startsWith("/api/payment/status/") ||
+		pathname === "/api/payment/check-qris"
+	);
 }
 
 async function shouldBlockApiRequest(
@@ -120,7 +130,7 @@ async function shouldBlockApiRequest(
 	host: string,
 	pathname: string,
 ) {
-	if (!isApiRequestPath(host, pathname)) {
+	if (!isProtectedApiPlatformPath(host, pathname)) {
 		return false;
 	}
 
