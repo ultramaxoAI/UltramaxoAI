@@ -5,7 +5,7 @@ import { createOpenAI } from "@ai-sdk/openai";
 // ============================================================
 // Default API Keys Setup
 // ============================================================
-const maiaApiKey = (process.env.OPENROUTER_API_KEY_1 || "").trim();
+const maiaApiKey = (process.env.MAIAROUTER_API_KEY || process.env.OPENROUTER_API_KEY_1 || "").trim();
 const swiftRouterApiKey = (process.env.SWIFTROUTER_API_KEY || "").trim();
 
 // ============================================================
@@ -44,9 +44,18 @@ function getMaiaRouterModel(modelId: string, customKey?: string) {
 					body.safety_settings = [
 						{ category: "HARM_CATEGORY_HARASSMENT", threshold: "BLOCK_NONE" },
 						{ category: "HARM_CATEGORY_HATE_SPEECH", threshold: "BLOCK_NONE" },
-						{ category: "HARM_CATEGORY_SEXUALLY_EXPLICIT", threshold: "BLOCK_NONE" },
-						{ category: "HARM_CATEGORY_DANGEROUS_CONTENT", threshold: "BLOCK_NONE" },
-						{ category: "HARM_CATEGORY_CIVIC_INTEGRITY", threshold: "BLOCK_NONE" },
+						{
+							category: "HARM_CATEGORY_SEXUALLY_EXPLICIT",
+							threshold: "BLOCK_NONE",
+						},
+						{
+							category: "HARM_CATEGORY_DANGEROUS_CONTENT",
+							threshold: "BLOCK_NONE",
+						},
+						{
+							category: "HARM_CATEGORY_CIVIC_INTEGRITY",
+							threshold: "BLOCK_NONE",
+						},
 					];
 					return fetch(url, {
 						...options,
@@ -65,7 +74,9 @@ function getMaiaRouterModel(modelId: string, customKey?: string) {
 function getSwiftRouterModel(modelId: string, customKey?: string) {
 	const key = customKey || swiftRouterApiKey;
 	if (!key) {
-		throw new Error("No SwiftRouter API key configured. Set SWIFTROUTER_API_KEY in .env.local");
+		throw new Error(
+			"No SwiftRouter API key configured. Set SWIFTROUTER_API_KEY in .env.local",
+		);
 	}
 	const client = createOpenAI({
 		baseURL: "https://api.swiftrouter.com/v1",
