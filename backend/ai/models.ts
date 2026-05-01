@@ -5,6 +5,7 @@ export type ChatModel = {
 	name: string;
 	provider: string;
 	description: string;
+	isPro?: boolean;
 };
 
 export const chatModels: ChatModel[] = [
@@ -20,6 +21,14 @@ export const chatModels: ChatModel[] = [
 		provider: "ultramaxo",
 		description:
 			"Advanced AI with superior reasoning, deep thinking, and expert-level coding powered by Qwen 3.6 Plus",
+		isPro: true,
+	},
+	{
+		id: "openai/gpt-5.4-mini",
+		name: "GPT-5.4 Mini",
+		provider: "openai",
+		description: "Powerful task execution for IDE mode and deep reasoning.",
+		isPro: true,
 	},
 ];
 

@@ -842,6 +842,7 @@ function PureModelSelectorCompact({
 	const isProRestrictedModel = useCallback(
 		(modelId: string, modelName?: string) =>
 			modelId === "ultramaxo/ultra-agent-pro" ||
+			modelId === "openai/gpt-5.4-mini" ||
 			modelId.endsWith("-pro") ||
 			Boolean(modelName?.includes("Pro")),
 		[],
