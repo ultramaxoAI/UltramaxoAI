@@ -691,8 +691,12 @@ export async function POST(request: Request) {
 
 							// Determine which model to use
 							let effectiveModel = selectedChatModel;
-							if (deepThinkingEnabled) {
-								effectiveModel = "qwen3.6-plus";
+							if (isIdeAgentMode || deepThinkingEnabled) {
+								if (isPro) {
+									effectiveModel = "openai/gpt-5.4-mini";
+								} else if (deepThinkingEnabled) {
+									effectiveModel = "qwen3.6-plus";
+								}
 							}
 
 							// Intelligent Prompt Jailbreak Injection
