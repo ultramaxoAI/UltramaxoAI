@@ -1,12 +1,12 @@
 import { NextResponse } from "next/server";
 export const dynamic = "force-dynamic";
 
-import { auth } from "@/app/(auth)/auth";
 import {
 	deleteUserById,
 	listUsersWithChatCount,
 	updateUserAdmin,
 } from "@backend/db/queries";
+import { auth } from "@/app/(auth)/auth";
 
 const ALLOWED_ROLES = new Set(["user", "admin"]);
 

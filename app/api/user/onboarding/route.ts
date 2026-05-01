@@ -1,8 +1,8 @@
-import { auth } from "@/app/(auth)/auth";
 import { db } from "@backend/db/queries";
 import { user } from "@backend/db/schema";
 import { eq } from "drizzle-orm";
 import { NextResponse } from "next/server";
+import { auth } from "@/app/(auth)/auth";
 
 export async function POST(request: Request) {
 	const session = await auth();
@@ -17,7 +17,7 @@ export async function POST(request: Request) {
 		if (!reason || typeof reason !== "string") {
 			return NextResponse.json(
 				{ error: "Valid reason is required" },
-				{ status: 400 }
+				{ status: 400 },
 			);
 		}
 
@@ -36,12 +36,15 @@ export async function POST(request: Request) {
 			return NextResponse.json({ error: "User not found" }, { status: 404 });
 		}
 
-		return NextResponse.json({ success: true, message: "Onboarding completed" });
+		return NextResponse.json({
+			success: true,
+			message: "Onboarding completed",
+		});
 	} catch (error) {
 		console.error("[Onboarding] Failed to save reason:", error);
 		return NextResponse.json(
 			{ error: "Internal Server Error" },
-			{ status: 500 }
+			{ status: 500 },
 		);
 	}
 }

@@ -2,10 +2,9 @@
 
 import { FolderOpen, Pencil, Plus, Trash2 } from "lucide-react";
 import { useMemo, useState } from "react";
-import useSWR from "swr";
 import { toast } from "sonner";
+import useSWR from "swr";
 import { fetcher } from "@/lib/utils";
-import { Button } from "./ui/button";
 import {
 	AlertDialog,
 	AlertDialogAction,
@@ -16,6 +15,7 @@ import {
 	AlertDialogHeader,
 	AlertDialogTitle,
 } from "./ui/alert-dialog";
+import { Button } from "./ui/button";
 import {
 	Dialog,
 	DialogContent,
@@ -55,8 +55,12 @@ export function SidebarFolderManager({
 	const [folderName, setFolderName] = useState("");
 	const [renamingFolder, setRenamingFolder] = useState<string | null>(null);
 	const [renameValue, setRenameValue] = useState("");
-	const [folderPendingDelete, setFolderPendingDelete] = useState<string | null>(null);
-	const [pendingMoveTarget, setPendingMoveTarget] = useState<string | null>(null);
+	const [folderPendingDelete, setFolderPendingDelete] = useState<string | null>(
+		null,
+	);
+	const [pendingMoveTarget, setPendingMoveTarget] = useState<string | null>(
+		null,
+	);
 
 	const folders = useMemo(() => data?.folders ?? [], [data]);
 	const normalizedFolderNames = useMemo(
@@ -116,7 +120,10 @@ export function SidebarFolderManager({
 		const response = await fetch("/api/user/folders", {
 			method: "PATCH",
 			headers: { "Content-Type": "application/json" },
-			body: JSON.stringify({ previousName: renamingFolder, nextName: normalizedName }),
+			body: JSON.stringify({
+				previousName: renamingFolder,
+				nextName: normalizedName,
+			}),
 		});
 
 		if (!response.ok) {
@@ -177,7 +184,12 @@ export function SidebarFolderManager({
 				</div>
 				<Dialog onOpenChange={setCreateOpen} open={createOpen}>
 					<DialogTrigger asChild>
-						<Button className="h-7 rounded-full px-2.5 text-xs text-[#6f6257] dark:text-[#b9afa3]" size="sm" type="button" variant="ghost">
+						<Button
+							className="h-7 rounded-full px-2.5 text-xs text-[#6f6257] dark:text-[#b9afa3]"
+							size="sm"
+							type="button"
+							variant="ghost"
+						>
 							<Plus className="mr-1 h-3.5 w-3.5" />
 							New
 						</Button>
@@ -213,7 +225,9 @@ export function SidebarFolderManager({
 				}}
 				type="button"
 			>
-				<span className={activeFolder === "all" ? "font-semibold" : ""}>All chats</span>
+				<span className={activeFolder === "all" ? "font-semibold" : ""}>
+					All chats
+				</span>
 				<span className="text-xs text-[#7a807a] dark:text-[#988d81]">
 					{Object.values(chatCounts).reduce((sum, current) => sum + current, 0)}
 				</span>
@@ -230,7 +244,9 @@ export function SidebarFolderManager({
 					}}
 					type="button"
 				>
-					<span className={activeFolder === "uncategorized" ? "font-semibold" : ""}>
+					<span
+						className={activeFolder === "uncategorized" ? "font-semibold" : ""}
+					>
 						Uncategorized
 					</span>
 					<span className="text-xs text-[#7a807a] dark:text-[#988d81]">
@@ -255,7 +271,9 @@ export function SidebarFolderManager({
 								type="button"
 							>
 								<FolderOpen className="h-4 w-4 shrink-0 text-[#7a807a] dark:text-[#988d81]" />
-								<span className={`truncate ${activeFolder === folder.name ? "font-semibold" : ""}`}>
+								<span
+									className={`truncate ${activeFolder === folder.name ? "font-semibold" : ""}`}
+								>
 									{folder.name}
 								</span>
 								<span className="ml-auto text-xs text-[#7a807a] dark:text-[#988d81]">
@@ -300,7 +318,9 @@ export function SidebarFolderManager({
 				<DialogContent className="sm:max-w-sm">
 					<DialogHeader>
 						<DialogTitle>Rename folder</DialogTitle>
-						<DialogDescription>Update the folder name and keep its chats linked.</DialogDescription>
+						<DialogDescription>
+							Update the folder name and keep its chats linked.
+						</DialogDescription>
 					</DialogHeader>
 					<Input
 						onChange={(e) => setRenameValue(e.target.value)}
@@ -326,9 +346,8 @@ export function SidebarFolderManager({
 					<AlertDialogHeader>
 						<AlertDialogTitle>Delete folder?</AlertDialogTitle>
 						<AlertDialogDescription>
-							This removes the folder `
-							{folderPendingDelete}
-							` and moves its chats to uncategorized.
+							This removes the folder `{folderPendingDelete}` and moves its
+							chats to uncategorized.
 						</AlertDialogDescription>
 					</AlertDialogHeader>
 					<AlertDialogFooter>
@@ -363,7 +382,9 @@ export function SidebarFolderManager({
 					</AlertDialogHeader>
 					<AlertDialogFooter>
 						<AlertDialogCancel>Cancel</AlertDialogCancel>
-						<AlertDialogAction onClick={() => void confirmMoveToUncategorized()}>
+						<AlertDialogAction
+							onClick={() => void confirmMoveToUncategorized()}
+						>
 							Move chat
 						</AlertDialogAction>
 					</AlertDialogFooter>

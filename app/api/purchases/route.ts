@@ -1,10 +1,10 @@
-import { NextResponse } from "next/server";
-import { auth } from "@/app/(auth)/auth";
 import {
 	createPurchaseRequest,
 	getUserById,
 	listPurchaseRequestsByUserId,
 } from "@backend/db/queries";
+import { NextResponse } from "next/server";
+import { auth } from "@/app/(auth)/auth";
 
 export async function GET() {
 	const session = await auth();

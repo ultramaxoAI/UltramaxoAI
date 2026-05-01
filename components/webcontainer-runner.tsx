@@ -10,7 +10,7 @@ import {
 	startDevServer,
 } from "@/lib/webcontainer/engine";
 import type { TerminalOutput } from "@/lib/webcontainer/types";
-import { useWebContainerOptional, type QueuedAction } from "./webcontainer-provider";
+import { useWebContainerOptional } from "./webcontainer-provider";
 
 /**
  * Headless component that:
@@ -102,15 +102,14 @@ export function WebContainerRunner() {
 	}, [ctx, ctx?.status, ctx?.workspaceFiles]);
 
 	// Create output handler
-	const createOutputHandler = useCallback(
-		(): ((output: TerminalOutput) => void) => {
-			if (!ctx) return () => {};
-			return (output: TerminalOutput) => {
-				ctx.addTerminalOutput(output);
-			};
-		},
-		[ctx],
-	);
+	const createOutputHandler = useCallback((): ((
+		output: TerminalOutput,
+	) => void) => {
+		if (!ctx) return () => {};
+		return (output: TerminalOutput) => {
+			ctx.addTerminalOutput(output);
+		};
+	}, [ctx]);
 
 	// Process command queue
 	useEffect(() => {

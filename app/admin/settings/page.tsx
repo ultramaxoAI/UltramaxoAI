@@ -50,7 +50,10 @@ export default function AdminSettingsPage() {
 	}, []);
 
 	const handleSave = async () => {
-		if (!settings.maintenanceTitle.trim() || !settings.maintenanceMessage.trim()) {
+		if (
+			!settings.maintenanceTitle.trim() ||
+			!settings.maintenanceMessage.trim()
+		) {
 			toast.error("Title and message are required");
 			return;
 		}
@@ -97,14 +100,25 @@ export default function AdminSettingsPage() {
 			<div className="bg-white dark:bg-[#0a0a0a] border border-gray-200 dark:border-white/10 rounded-xl shadow-sm overflow-hidden">
 				<div className="px-6 py-5 border-b border-gray-200 dark:border-white/10 flex items-center justify-between">
 					<div>
-						<h3 className="text-sm font-medium text-gray-900 dark:text-white">Maintenance Mode</h3>
-						<p className="text-xs text-gray-500 mt-0.5">When enabled, all non-admin users see the maintenance page.</p>
+						<h3 className="text-sm font-medium text-gray-900 dark:text-white">
+							Maintenance Mode
+						</h3>
+						<p className="text-xs text-gray-500 mt-0.5">
+							When enabled, all non-admin users see the maintenance page.
+						</p>
 					</div>
 					<button
 						type="button"
-						onClick={() => setSettings({ ...settings, maintenanceEnabled: !settings.maintenanceEnabled })}
+						onClick={() =>
+							setSettings({
+								...settings,
+								maintenanceEnabled: !settings.maintenanceEnabled,
+							})
+						}
 						className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-							settings.maintenanceEnabled ? "bg-red-500" : "bg-gray-300 dark:bg-white/10"
+							settings.maintenanceEnabled
+								? "bg-red-500"
+								: "bg-gray-300 dark:bg-white/10"
 						}`}
 					>
 						<span
@@ -117,39 +131,57 @@ export default function AdminSettingsPage() {
 
 				<div className="p-6 space-y-6">
 					{/* Status Indicator */}
-					<div className={`flex items-center gap-3 px-4 py-3 rounded-lg border ${
-						settings.maintenanceEnabled
-							? "border-red-200 dark:border-red-500/20 bg-red-50 dark:bg-red-500/5"
-							: "border-emerald-200 dark:border-emerald-500/20 bg-emerald-50 dark:bg-emerald-500/5"
-					}`}>
-						<div className={`w-2 h-2 rounded-full ${settings.maintenanceEnabled ? "bg-red-500 animate-pulse" : "bg-emerald-500"}`} />
-						<span className={`text-sm font-medium ${
-							settings.maintenanceEnabled ? "text-red-700 dark:text-red-400" : "text-emerald-700 dark:text-emerald-400"
-						}`}>
-							{settings.maintenanceEnabled ? "Site is OFFLINE for non-admin users" : "Site is LIVE and operational"}
+					<div
+						className={`flex items-center gap-3 px-4 py-3 rounded-lg border ${
+							settings.maintenanceEnabled
+								? "border-red-200 dark:border-red-500/20 bg-red-50 dark:bg-red-500/5"
+								: "border-emerald-200 dark:border-emerald-500/20 bg-emerald-50 dark:bg-emerald-500/5"
+						}`}
+					>
+						<div
+							className={`w-2 h-2 rounded-full ${settings.maintenanceEnabled ? "bg-red-500 animate-pulse" : "bg-emerald-500"}`}
+						/>
+						<span
+							className={`text-sm font-medium ${
+								settings.maintenanceEnabled
+									? "text-red-700 dark:text-red-400"
+									: "text-emerald-700 dark:text-emerald-400"
+							}`}
+						>
+							{settings.maintenanceEnabled
+								? "Site is OFFLINE for non-admin users"
+								: "Site is LIVE and operational"}
 						</span>
 					</div>
 
 					{/* Template Selection */}
 					<div className="space-y-3">
-						<span className="text-sm font-medium text-gray-900 dark:text-white">Maintenance Template</span>
+						<span className="text-sm font-medium text-gray-900 dark:text-white">
+							Maintenance Template
+						</span>
 						<div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-							{TEMPLATE_OPTIONS.map(tpl => (
+							{TEMPLATE_OPTIONS.map((tpl) => (
 								<button
 									key={tpl.value}
 									type="button"
-									onClick={() => setSettings({ ...settings, maintenanceTemplate: tpl.value })}
+									onClick={() =>
+										setSettings({ ...settings, maintenanceTemplate: tpl.value })
+									}
 									className={`p-3 rounded-lg border text-left transition-all ${
 										settings.maintenanceTemplate === tpl.value
 											? "border-indigo-500 bg-indigo-50 dark:bg-indigo-500/10 ring-1 ring-indigo-500/20"
 											: "border-gray-200 dark:border-white/10 hover:border-gray-300 dark:hover:border-white/20"
 									}`}
 								>
-									<p className={`text-sm font-medium ${
-										settings.maintenanceTemplate === tpl.value
-											? "text-indigo-700 dark:text-indigo-400"
-											: "text-gray-900 dark:text-white"
-									}`}>{tpl.label}</p>
+									<p
+										className={`text-sm font-medium ${
+											settings.maintenanceTemplate === tpl.value
+												? "text-indigo-700 dark:text-indigo-400"
+												: "text-gray-900 dark:text-white"
+										}`}
+									>
+										{tpl.label}
+									</p>
 									<p className="text-xs text-gray-500 mt-0.5">{tpl.desc}</p>
 								</button>
 							))}
@@ -158,11 +190,15 @@ export default function AdminSettingsPage() {
 
 					{/* Title */}
 					<div className="space-y-2">
-						<span className="text-sm font-medium text-gray-900 dark:text-white">Title</span>
+						<span className="text-sm font-medium text-gray-900 dark:text-white">
+							Title
+						</span>
 						<input
 							type="text"
 							value={settings.maintenanceTitle}
-							onChange={e => setSettings({ ...settings, maintenanceTitle: e.target.value })}
+							onChange={(e) =>
+								setSettings({ ...settings, maintenanceTitle: e.target.value })
+							}
 							className="w-full px-4 py-2.5 bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-lg text-sm dark:text-white focus:outline-none focus:border-indigo-500 transition-colors"
 							placeholder="We'll be right back"
 						/>
@@ -170,11 +206,15 @@ export default function AdminSettingsPage() {
 
 					{/* Message */}
 					<div className="space-y-2">
-						<span className="text-sm font-medium text-gray-900 dark:text-white">Message</span>
+						<span className="text-sm font-medium text-gray-900 dark:text-white">
+							Message
+						</span>
 						<textarea
 							rows={3}
 							value={settings.maintenanceMessage}
-							onChange={e => setSettings({ ...settings, maintenanceMessage: e.target.value })}
+							onChange={(e) =>
+								setSettings({ ...settings, maintenanceMessage: e.target.value })
+							}
 							className="w-full px-4 py-2.5 bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-lg text-sm dark:text-white focus:outline-none focus:border-indigo-500 transition-colors resize-y"
 							placeholder="Currently performing maintenance..."
 						/>

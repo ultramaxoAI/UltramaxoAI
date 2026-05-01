@@ -1,5 +1,5 @@
-import { notFound } from "next/navigation";
 import { getChatById, getMessagesByChatId } from "@backend/db/queries";
+import { notFound } from "next/navigation";
 
 function getPlainText(parts: unknown) {
 	if (!Array.isArray(parts)) {
@@ -13,7 +13,7 @@ function getPlainText(parts: unknown) {
 			}
 
 			const candidate = part as { type?: string; text?: string };
-			return candidate.type === "text" ? candidate.text ?? "" : "";
+			return candidate.type === "text" ? (candidate.text ?? "") : "";
 		})
 		.filter(Boolean)
 		.join("\n\n");

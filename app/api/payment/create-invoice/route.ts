@@ -1,9 +1,9 @@
+import { createHmac } from "node:crypto";
+import { createPurchaseRequest, db } from "@backend/db/queries";
+import { user } from "@backend/db/schema";
 import { eq } from "drizzle-orm";
 import { NextResponse } from "next/server";
 import { auth } from "@/app/(auth)/auth";
-import { createPurchaseRequest, db } from "@backend/db/queries";
-import { user } from "@backend/db/schema";
-import { createHmac } from "node:crypto";
 
 // YoBasePay V3
 const YOBASEPAY_API_KEY = process.env.YOBASEPAY_API_KEY || "";
@@ -11,7 +11,7 @@ const YOBASEPAY_BASE_URL =
 	process.env.YOBASEPAY_BASE_URL || "https://yobasepay.net/api/v3";
 const YOBASEPAY_SUCCESS_URL =
 	process.env.YOBASEPAY_SUCCESS_URL || "https://ultramaxo.tech/payment/success";
-const YOBASEPAY_WEBHOOK_SECRET = process.env.YOBASEPAY_WEBHOOK_SECRET || "";
+const _YOBASEPAY_WEBHOOK_SECRET = process.env.YOBASEPAY_WEBHOOK_SECRET || "";
 const isDevelopment = process.env.NODE_ENV === "development";
 
 // Fallback: QRIS Cepat
@@ -238,7 +238,7 @@ export async function POST(request: Request) {
 				console.log(
 					"[QRISCepat] Response:",
 					qrisResponse.status,
-					qrisText.substring(0, 100) + "...",
+					`${qrisText.substring(0, 100)}...`,
 				);
 
 				if (qrisResponse.ok) {

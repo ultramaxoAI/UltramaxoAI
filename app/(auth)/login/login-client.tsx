@@ -47,8 +47,7 @@ export default function LoginClient() {
 		if (error === "OAuthCallback") {
 			toast({
 				type: "error",
-				description:
-					`Login session could not be established${providerLabel}. Please try again.`,
+				description: `Login session could not be established${providerLabel}. Please try again.`,
 			});
 			return;
 		}
@@ -56,8 +55,7 @@ export default function LoginClient() {
 		if (error === "OAuthAccountNotLinked") {
 			toast({
 				type: "error",
-				description:
-					`This email is already linked to a different sign-in method${providerLabel}. Try the original method for that account, then connect this provider from inside your account if needed.`,
+				description: `This email is already linked to a different sign-in method${providerLabel}. Try the original method for that account, then connect this provider from inside your account if needed.`,
 			});
 			return;
 		}

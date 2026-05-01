@@ -4,8 +4,13 @@ const DEFAULT_FREE_MODEL_ID = "gpt-5.3-codex";
 
 export const metadata: Metadata = {
 	title: "API Documentation — SDKs & Libraries",
-	description: "SDK dan library untuk integrasi Ultramaxo API. Contoh kode Python, Node.js, Go, cURL dan OpenAI-compatible SDK.",
-	openGraph: { title: "Ultramaxo API — SDKs & Libraries", description: "SDK dan contoh kode integrasi API.", url: "https://app.ultramaxo.tech/docs/sdks" },
+	description:
+		"SDK dan library untuk integrasi Ultramaxo API. Contoh kode Python, Node.js, Go, cURL dan OpenAI-compatible SDK.",
+	openGraph: {
+		title: "Ultramaxo API — SDKs & Libraries",
+		description: "SDK dan contoh kode integrasi API.",
+		url: "https://app.ultramaxo.tech/docs/sdks",
+	},
 };
 
 import Link from "next/link";

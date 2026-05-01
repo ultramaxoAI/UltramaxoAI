@@ -1,18 +1,4 @@
-import { geolocation } from "@vercel/functions";
-import {
-	convertToModelMessages,
-	createUIMessageStream,
-	createUIMessageStreamResponse,
-	generateId,
-	stepCountIs,
-	streamText,
-} from "ai";
-import { after } from "next/server";
-import { createResumableStreamContext } from "resumable-stream";
-import { auth } from "@/app/(auth)/auth";
 import { type RequestHints, systemPrompt } from "@backend/ai/prompts";
-import { getChatCreditCost } from "@/lib/credits";
-
 import { getLanguageModel } from "@backend/ai/providers";
 import {
 	reportAgentStepWithPersistence,
@@ -29,25 +15,21 @@ import {
 	updateCodeFile,
 } from "@backend/ai/tools/code-workspace";
 import { createDocument } from "@backend/ai/tools/create-document";
+import { getWeather } from "@backend/ai/tools/get-weather";
 import { requestSuggestions } from "@backend/ai/tools/request-suggestions";
 import { updateDocument } from "@backend/ai/tools/update-document";
 import { webSearch } from "@backend/ai/tools/web-search";
-import {
-	isFullstackModeInMaintenance,
-	isDevelopmentEnvironment,
-	isMobileModeInMaintenance,
-	isProductionEnvironment,
-} from "@/lib/constants";
 import {
 	createStreamId,
 	deductUserLimitCount,
 	deleteChatById,
 	expireProIfNeeded,
 	getChatById,
-	getMessagesByChatId,
-	getTodayMessageCount,
-	getEnabledUserMemoryByUserId,
 	getEnabledUserKnowledgeEntriesByUserId,
+	getEnabledUserMemoryByUserId,
+	getMessagesByChatId,
+	getRecentCrossChatMemory,
+	getTodayMessageCount,
 	getUserById,
 	resolveExistingUserId,
 	saveChat,
@@ -56,7 +38,6 @@ import {
 	spendCreditsForUser,
 	updateChatTitleById,
 	updateMessage,
-	getRecentCrossChatMemory,
 	updateUserIdeModeUsage,
 } from "@backend/db/queries";
 import {
@@ -64,12 +45,30 @@ import {
 	getUserSettings,
 } from "@backend/db/queries-settings";
 import type { DBMessage } from "@backend/db/schema";
-import { decryptData, maskKey } from "@backend/encryption";
-import { ChatSDKError } from "@/lib/errors";
+import { decryptData } from "@backend/encryption";
 import { checkRateLimit, getClientIp } from "@backend/rateLimiter";
+import { geolocation } from "@vercel/functions";
+import {
+	convertToModelMessages,
+	createUIMessageStream,
+	createUIMessageStreamResponse,
+	generateId,
+	stepCountIs,
+	streamText,
+} from "ai";
+import { after } from "next/server";
+import { createResumableStreamContext } from "resumable-stream";
+import { auth } from "@/app/(auth)/auth";
+import {
+	isDevelopmentEnvironment,
+	isFullstackModeInMaintenance,
+	isMobileModeInMaintenance,
+	isProductionEnvironment,
+} from "@/lib/constants";
+import { getChatCreditCost } from "@/lib/credits";
+import { ChatSDKError } from "@/lib/errors";
 import type { ChatMessage } from "@/lib/types";
 import { convertToUIMessages, generateUUID } from "@/lib/utils";
-import { getWeather } from "@backend/ai/tools/get-weather";
 import { generateTitleFromUserMessage } from "../../actions";
 import { type PostRequestBody, postRequestBodySchema } from "./schema";
 
@@ -86,6 +85,68 @@ type StreamErrorDetails = Error & {
 	statusCode?: number;
 	cause?: unknown;
 };
+type ChatMessagePart = ChatMessage["parts"][number];
+type ModelMessages = Awaited<ReturnType<typeof convertToModelMessages>>;
+type ModelMessage = ModelMessages[number];
+
+function isImageLikePart(part: unknown) {
+	if (!part || typeof part !== "object" || !("type" in part)) {
+		return false;
+	}
+
+	const partType = (part as { type?: unknown }).type;
+	return partType === "file" || partType === "image";
+}
+
+function getPartUrlValue(value: unknown) {
+	if (typeof value === "string") {
+		return value;
+	}
+
+	if (value instanceof URL) {
+		return value.toString();
+	}
+
+	if (
+		value &&
+		typeof value === "object" &&
+		"url" in value &&
+		typeof value.url === "string"
+	) {
+		return value.url;
+	}
+
+	return "";
+}
+
+function getStreamErrorMessage(error: unknown) {
+	const fallbackMessage =
+		"Model Ultramaxo sedang tidak tersedia sementara. Coba lagi sebentar lagi atau pilih model lain.";
+
+	if (!(error instanceof Error)) {
+		return fallbackMessage;
+	}
+
+	const errorMessage = error.message.toLowerCase();
+	const errorCause = (error as StreamErrorDetails).cause;
+	const causeText =
+		typeof errorCause === "string" ? errorCause.toLowerCase() : "";
+
+	if (
+		errorMessage.includes("service unavailable") ||
+		errorMessage.includes("maintenance") ||
+		causeText.includes("service unavailable") ||
+		causeText.includes("maintenance")
+	) {
+		return fallbackMessage;
+	}
+
+	if (errorMessage.includes("no maia router api key configured")) {
+		return "Provider default Ultramaxo belum dikonfigurasi di environment lokal ini.";
+	}
+
+	return fallbackMessage;
+}
 
 function getStreamContext() {
 	try {
@@ -131,8 +192,11 @@ export async function POST(request: Request) {
 				Boolean(mobileModeEnabled) && !isMobileModeInMaintenance;
 			const latestUserText = Array.isArray(message?.parts)
 				? message.parts
-						.filter((part: any) => part?.type === "text")
-						.map((part: any) => part?.text ?? "")
+						.filter(
+							(part): part is Extract<ChatMessagePart, { type: "text" }> =>
+								part?.type === "text",
+						)
+						.map((part) => part.text ?? "")
 						.join(" ")
 				: "";
 			const requestedMobileModeByText =
@@ -340,16 +404,13 @@ export async function POST(request: Request) {
 			}
 
 			// Check if any messages (including history) have image attachments
-			const hasImagesInHistory = uiMessages.some((msg: any) =>
-				msg.parts?.some(
-					(part: any) =>
-						part && (part.type === "file" || part.type === "image"),
-				),
+			const hasImagesInHistory = uiMessages.some((msg) =>
+				msg.parts?.some((part) => isImageLikePart(part)),
 			);
 
 			// Check if current message has file attachments
-			const hasFileAttachment = message?.parts?.some(
-				(part: any) => part && (part.type === "file" || part.type === "image"),
+			const hasFileAttachment = message?.parts?.some((part) =>
+				isImageLikePart(part),
 			);
 
 			// Allow all models to attempt vision parsing if forced
@@ -421,7 +482,7 @@ export async function POST(request: Request) {
 
 			const crossChatContext =
 				crossChatMemoryData.length > 0
-					? `\n\n[CROSS-CHAT MEMORY]\nInformasi dari obrolan user sebelumnya di chat lain (Gunakan sebagai konteks jika relevan):\n${crossChatMemoryData.map((m: any, i: number) => `${i + 1}. "${String(m.content || "").slice(0, 220)}"`).join("\n")}`
+					? `\n\n[CROSS-CHAT MEMORY]\nInformasi dari obrolan user sebelumnya di chat lain (Gunakan sebagai konteks jika relevan):\n${crossChatMemoryData.map((memory, index) => `${index + 1}. "${String(memory.content || "").slice(0, 220)}"`).join("\n")}`
 					: "";
 
 			const persistentMemoryContext =
@@ -448,15 +509,15 @@ export async function POST(request: Request) {
 
 			// Filter out problematic image parts that might cause "Cannot read" errors
 			// This handles screenshots from web preview and base64 image data that might cause issues
-			const filteredModelMessages = modelMessages.map((msg: any) => {
+			const filteredModelMessages = modelMessages.map((msg: ModelMessage) => {
 				if (msg.role === "user" && msg.content) {
 					const filteredContent = Array.isArray(msg.content)
-						? msg.content.filter((part: any) => {
+						? msg.content.filter((part) => {
 								// Keep text, skip images that might have inaccessible URLs or cause vision errors
 								if (part.type === "text") return true;
 								if (part.type === "image") {
 									// Check if image URL is accessible (not blob/localhost)
-									const url = part.image?.url || part.url || "";
+									const url = getPartUrlValue(part.image);
 									const urlLower = url.toLowerCase();
 									// Filter out blob URLs, localhost, data URLs, and problematic image names
 									if (
@@ -661,7 +722,11 @@ export async function POST(request: Request) {
 									lastMsg.content.toLowerCase().includes(kw),
 							);
 
-							if (isToxic && typeof lastMsg?.content === "string") {
+							if (
+								isToxic &&
+								lastMsg?.role === "user" &&
+								typeof lastMsg.content === "string"
+							) {
 								console.log(
 									"[Chat API] Toxic intent detected. Injecting System Gaslight...",
 								);
@@ -678,7 +743,7 @@ export async function POST(request: Request) {
 									customConfig, // Pass custom key config
 								),
 								system: baseSystemPrompt,
-								messages: finalMessages as any,
+								messages: finalMessages,
 								stopWhen: stepCountIs(isIdeAgentMode ? 10 : 8),
 								maxOutputTokens: isIdeAgentMode ? 8192 : 8192,
 								toolChoice: "auto",
@@ -975,7 +1040,7 @@ export async function POST(request: Request) {
 						"[Stream Error] Cause:",
 						(error as { cause?: unknown })?.cause,
 					);
-					return "Oops, an error occurred!";
+					return getStreamErrorMessage(error);
 				},
 			});
 

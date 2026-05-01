@@ -114,7 +114,9 @@ export function KnowledgeBasePanel() {
 
 			if (!res.ok) throw new Error();
 
-			toast.success(editingId ? "Knowledge entry updated" : "Knowledge entry saved");
+			toast.success(
+				editingId ? "Knowledge entry updated" : "Knowledge entry saved",
+			);
 			resetForm();
 			loadEntries();
 		} catch {
@@ -333,7 +335,9 @@ export function KnowledgeBasePanel() {
 												</span>
 											) : null}
 											<span className="rounded-full bg-zinc-100 px-2.5 py-1 dark:bg-zinc-800">
-												{entry.workspace ? `workspace: ${entry.workspace}` : "global"}
+												{entry.workspace
+													? `workspace: ${entry.workspace}`
+													: "global"}
 											</span>
 										</div>
 									</div>

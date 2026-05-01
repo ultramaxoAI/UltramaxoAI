@@ -1,6 +1,6 @@
+import { redeemVoucher } from "@backend/db/queries";
 import { NextResponse } from "next/server";
 import { auth } from "@/app/(auth)/auth";
-import { redeemVoucher } from "@backend/db/queries";
 
 export async function POST(request: Request) {
 	try {

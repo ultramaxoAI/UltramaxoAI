@@ -1,8 +1,5 @@
 "use server";
 
-import { generateText, type UIMessage } from "ai";
-import { cookies } from "next/headers";
-import type { VisibilityType } from "@/components/visibility-selector";
 import { titlePrompt } from "@backend/ai/prompts";
 import { getTitleModel } from "@backend/ai/providers";
 import {
@@ -10,6 +7,9 @@ import {
 	getMessageById,
 	updateChatVisibilityById,
 } from "@backend/db/queries";
+import { generateText, type UIMessage } from "ai";
+import { cookies } from "next/headers";
+import type { VisibilityType } from "@/components/visibility-selector";
 import { getTextFromMessage } from "@/lib/utils";
 
 export async function saveChatModelAsCookie(model: string) {

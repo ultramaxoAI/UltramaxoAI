@@ -10,7 +10,7 @@ const withSerwist = withSerwistInit({
 const nextConfig: NextConfig = {
 	// ── Production: strip ALL console.* from client & server bundles ──
 	compiler: {
-		removeConsole: process.env.NODE_ENV === "production" ? true : false,
+		removeConsole: process.env.NODE_ENV === "production",
 	},
 	// Disable cacheComponents to allow dynamic route segments
 	cacheComponents: false,

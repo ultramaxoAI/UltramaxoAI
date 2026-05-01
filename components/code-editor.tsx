@@ -1,5 +1,6 @@
 "use client";
 
+import type { Suggestion } from "@backend/db/schema";
 import { javascript } from "@codemirror/lang-javascript";
 import { python } from "@codemirror/lang-python";
 import { Compartment, EditorState, Transaction } from "@codemirror/state";
@@ -7,7 +8,6 @@ import { oneDark } from "@codemirror/theme-one-dark";
 import { EditorView } from "@codemirror/view";
 import { basicSetup } from "codemirror";
 import { memo, useEffect, useRef } from "react";
-import type { Suggestion } from "@backend/db/schema";
 
 export type SupportedLanguage =
 	| "javascript"
@@ -208,7 +208,7 @@ function PureCodeEditor({
 		};
 		// Create the editor only once; content and language are updated by dedicated effects.
 		// eslint-disable-next-line react-hooks/exhaustive-deps
-	}, []);
+	}, [content, detectedLanguage]);
 
 	useEffect(() => {
 		const view = editorRef.current;

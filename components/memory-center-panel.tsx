@@ -1,6 +1,12 @@
 "use client";
 
-import { BrainIcon, Loader2Icon, PinIcon, PlusIcon, Trash2Icon } from "lucide-react";
+import {
+	BrainIcon,
+	Loader2Icon,
+	PinIcon,
+	PlusIcon,
+	Trash2Icon,
+} from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -91,7 +97,9 @@ export function MemoryCenterPanel() {
 
 	const deleteMemory = async (id: string) => {
 		try {
-			const res = await fetch(`/api/user/memory?id=${id}`, { method: "DELETE" });
+			const res = await fetch(`/api/user/memory?id=${id}`, {
+				method: "DELETE",
+			});
 			if (!res.ok) throw new Error();
 			toast.success("Memory deleted");
 			loadMemories();
@@ -100,7 +108,10 @@ export function MemoryCenterPanel() {
 		}
 	};
 
-	const toggleMemory = async (memory: MemoryItem, patch: Partial<MemoryItem>) => {
+	const toggleMemory = async (
+		memory: MemoryItem,
+		patch: Partial<MemoryItem>,
+	) => {
 		try {
 			const res = await fetch("/api/user/memory", {
 				method: "PATCH",
@@ -119,7 +130,9 @@ export function MemoryCenterPanel() {
 			<header>
 				<div className="flex items-center gap-2 text-zinc-900 dark:text-white">
 					<BrainIcon size={20} />
-					<h1 className="text-2xl font-semibold tracking-tight">Memory Center</h1>
+					<h1 className="text-2xl font-semibold tracking-tight">
+						Memory Center
+					</h1>
 				</div>
 				<p className="mt-2 text-sm text-zinc-500 dark:text-zinc-400">
 					Store persistent context the workspace should remember across chats.
@@ -132,7 +145,9 @@ export function MemoryCenterPanel() {
 						<Label>Memory title</Label>
 						<Input
 							value={form.title}
-							onChange={(e) => setForm((prev) => ({ ...prev, title: e.target.value }))}
+							onChange={(e) =>
+								setForm((prev) => ({ ...prev, title: e.target.value }))
+							}
 							placeholder="Preferred stack"
 						/>
 					</div>
@@ -141,7 +156,12 @@ export function MemoryCenterPanel() {
 						<select
 							className="h-10 w-full rounded-xl border border-zinc-200 bg-white px-3 text-sm dark:border-white/10 dark:bg-zinc-900"
 							value={form.category}
-							onChange={(e) => setForm((prev) => ({ ...prev, category: e.target.value as MemoryCategory }))}
+							onChange={(e) =>
+								setForm((prev) => ({
+									...prev,
+									category: e.target.value as MemoryCategory,
+								}))
+							}
 						>
 							{categoryOptions.map((category) => (
 								<option key={category} value={category}>
@@ -157,25 +177,48 @@ export function MemoryCenterPanel() {
 					<textarea
 						className="min-h-32 w-full rounded-xl border border-zinc-200 bg-white px-4 py-3 text-sm dark:border-white/10 dark:bg-zinc-900"
 						value={form.content}
-						onChange={(e) => setForm((prev) => ({ ...prev, content: e.target.value }))}
+						onChange={(e) =>
+							setForm((prev) => ({ ...prev, content: e.target.value }))
+						}
 						placeholder="Always default to Next.js App Router, TypeScript strict mode, and Tailwind."
 					/>
 				</div>
 
 				<div className="grid gap-3 sm:grid-cols-2">
 					<label className="flex items-center gap-3 rounded-xl border border-zinc-200 bg-white px-4 py-3 text-sm dark:border-white/10 dark:bg-zinc-900">
-						<input checked={form.isEnabled} onChange={(e) => setForm((prev) => ({ ...prev, isEnabled: e.target.checked }))} type="checkbox" />
+						<input
+							checked={form.isEnabled}
+							onChange={(e) =>
+								setForm((prev) => ({ ...prev, isEnabled: e.target.checked }))
+							}
+							type="checkbox"
+						/>
 						Enabled in chat
 					</label>
 					<label className="flex items-center gap-3 rounded-xl border border-zinc-200 bg-white px-4 py-3 text-sm dark:border-white/10 dark:bg-zinc-900">
-						<input checked={form.isPinned} onChange={(e) => setForm((prev) => ({ ...prev, isPinned: e.target.checked }))} type="checkbox" />
+						<input
+							checked={form.isPinned}
+							onChange={(e) =>
+								setForm((prev) => ({ ...prev, isPinned: e.target.checked }))
+							}
+							type="checkbox"
+						/>
 						Pin as high priority
 					</label>
 				</div>
 
 				<div className="flex gap-3">
-					<Button className="bg-zinc-900 text-white dark:bg-white dark:text-black" disabled={saving} onClick={saveMemory} type="button">
-						{saving ? <Loader2Icon className="mr-2 h-4 w-4 animate-spin" /> : <PlusIcon className="mr-2 h-4 w-4" />}
+					<Button
+						className="bg-zinc-900 text-white dark:bg-white dark:text-black"
+						disabled={saving}
+						onClick={saveMemory}
+						type="button"
+					>
+						{saving ? (
+							<Loader2Icon className="mr-2 h-4 w-4 animate-spin" />
+						) : (
+							<PlusIcon className="mr-2 h-4 w-4" />
+						)}
 						{editingId ? "Update memory" : "Save memory"}
 					</Button>
 					{editingId ? (
@@ -198,24 +241,49 @@ export function MemoryCenterPanel() {
 				) : (
 					<div className="space-y-3">
 						{memories.map((memory) => (
-							<div className="rounded-2xl border border-zinc-200 bg-white p-4 dark:border-white/5 dark:bg-[#101010]" key={memory.id}>
+							<div
+								className="rounded-2xl border border-zinc-200 bg-white p-4 dark:border-white/5 dark:bg-[#101010]"
+								key={memory.id}
+							>
 								<div className="flex flex-wrap items-start justify-between gap-3">
 									<div>
 										<div className="flex items-center gap-2">
-											<h3 className="text-sm font-semibold text-zinc-900 dark:text-white">{memory.title}</h3>
-											{memory.isPinned ? <PinIcon className="h-3.5 w-3.5 text-amber-500" /> : null}
+											<h3 className="text-sm font-semibold text-zinc-900 dark:text-white">
+												{memory.title}
+											</h3>
+											{memory.isPinned ? (
+												<PinIcon className="h-3.5 w-3.5 text-amber-500" />
+											) : null}
 										</div>
-										<p className="mt-1 line-clamp-3 text-sm text-zinc-500 dark:text-zinc-400">{memory.content}</p>
+										<p className="mt-1 line-clamp-3 text-sm text-zinc-500 dark:text-zinc-400">
+											{memory.content}
+										</p>
 										<div className="mt-3 flex flex-wrap gap-2 text-[11px] text-zinc-500 dark:text-zinc-400">
-											<span className="rounded-full bg-zinc-100 px-2.5 py-1 dark:bg-zinc-800">{memory.category}</span>
-											<span className="rounded-full bg-zinc-100 px-2.5 py-1 dark:bg-zinc-800">{memory.isEnabled ? "active" : "disabled"}</span>
+											<span className="rounded-full bg-zinc-100 px-2.5 py-1 dark:bg-zinc-800">
+												{memory.category}
+											</span>
+											<span className="rounded-full bg-zinc-100 px-2.5 py-1 dark:bg-zinc-800">
+												{memory.isEnabled ? "active" : "disabled"}
+											</span>
 										</div>
 									</div>
 									<div className="flex gap-2">
-										<Button onClick={() => toggleMemory(memory, { isPinned: !memory.isPinned })} type="button" variant="outline">
+										<Button
+											onClick={() =>
+												toggleMemory(memory, { isPinned: !memory.isPinned })
+											}
+											type="button"
+											variant="outline"
+										>
 											{memory.isPinned ? "Unpin" : "Pin"}
 										</Button>
-										<Button onClick={() => toggleMemory(memory, { isEnabled: !memory.isEnabled })} type="button" variant="outline">
+										<Button
+											onClick={() =>
+												toggleMemory(memory, { isEnabled: !memory.isEnabled })
+											}
+											type="button"
+											variant="outline"
+										>
 											{memory.isEnabled ? "Disable" : "Enable"}
 										</Button>
 										<Button
@@ -234,7 +302,11 @@ export function MemoryCenterPanel() {
 										>
 											Edit
 										</Button>
-										<Button onClick={() => deleteMemory(memory.id)} type="button" variant="ghost">
+										<Button
+											onClick={() => deleteMemory(memory.id)}
+											type="button"
+											variant="ghost"
+										>
 											<Trash2Icon size={16} />
 										</Button>
 									</div>

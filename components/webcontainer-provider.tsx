@@ -2,13 +2,17 @@
 
 import {
 	createContext,
+	type ReactNode,
 	useCallback,
 	useContext,
 	useRef,
 	useState,
-	type ReactNode,
 } from "react";
-import type { DevServerInfo, EngineStatus, TerminalOutput } from "@/lib/webcontainer/types";
+import type {
+	DevServerInfo,
+	EngineStatus,
+	TerminalOutput,
+} from "@/lib/webcontainer/types";
 
 type WorkspaceFile = {
 	path: string;
@@ -61,7 +65,9 @@ export type QueuedAction =
 // Context
 // ---------------------------------------------------------------------------
 
-const WebContainerContext = createContext<WebContainerContextValue | null>(null);
+const WebContainerContext = createContext<WebContainerContextValue | null>(
+	null,
+);
 
 export function useWebContainer(): WebContainerContextValue {
 	const ctx = useContext(WebContainerContext);
@@ -85,7 +91,9 @@ export function WebContainerProvider({ children }: { children: ReactNode }) {
 	const [isRunning, setIsRunning] = useState(false);
 	const [devServer, setDevServer] = useState<DevServerInfo | null>(null);
 	const [terminalOutputs, setTerminalOutputs] = useState<TerminalOutput[]>([]);
-	const [workspaceFiles, setWorkspaceFilesState] = useState<WorkspaceFile[]>([]);
+	const [workspaceFiles, setWorkspaceFilesState] = useState<WorkspaceFile[]>(
+		[],
+	);
 	const queueRef = useRef<QueuedAction[]>([]);
 	const workspaceSignatureRef = useRef("[]");
 	const [, setQueueVersion] = useState(0); // trigger re-renders on queue change

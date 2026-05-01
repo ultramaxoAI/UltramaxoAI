@@ -1,19 +1,20 @@
+import { getSiteSettings } from "@backend/db/queries-settings";
 import { GeistMono } from "geist/font/mono";
 import { GeistSans } from "geist/font/sans";
 import type { Metadata } from "next";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
+import Script from "next/script";
 import { Toaster } from "sonner";
-import { ThemeProvider } from "@/components/theme-provider";
 import { auth } from "@/app/(auth)/auth";
-import { getSiteSettings } from "@backend/db/queries-settings";
+import { ThemeProvider } from "@/components/theme-provider";
 
 import "./globals.css";
 import { SessionProvider } from "next-auth/react";
-import { VisitorTracker } from "@/components/visitor-tracker";
 import { CookieConsent } from "@/components/cookie-consent";
-import { OnboardingWizard } from "@/components/onboarding-wizard";
 import { JsonLd } from "@/components/json-ld";
+import { OnboardingWizard } from "@/components/onboarding-wizard";
+import { VisitorTracker } from "@/components/visitor-tracker";
 
 export const metadata: Metadata = {
 	metadataBase: new URL("https://ultramaxo.tech"),
@@ -194,14 +195,18 @@ export default async function RootLayout({
 		>
 			<head>
 				<link rel="preconnect" href="https://fonts.googleapis.com" />
-				<link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-				<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@1&family=Barlow:wght@300;400;500;600&display=swap" rel="stylesheet" />
-				<script
-					// biome-ignore lint/security/noDangerouslySetInnerHtml: "Required"
-					dangerouslySetInnerHTML={{
-						__html: THEME_COLOR_SCRIPT,
-					}}
+				<link
+					rel="preconnect"
+					href="https://fonts.gstatic.com"
+					crossOrigin="anonymous"
 				/>
+				<link
+					href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@1&family=Barlow:wght@300;400;500;600&display=swap"
+					rel="stylesheet"
+				/>
+				<Script id="theme-color-script" strategy="beforeInteractive">
+					{THEME_COLOR_SCRIPT}
+				</Script>
 			</head>
 			<body className="font-sans antialiased bg-background text-foreground transition-colors duration-500 ease-in-out">
 				<ThemeProvider

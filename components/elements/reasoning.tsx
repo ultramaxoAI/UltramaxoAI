@@ -1,9 +1,17 @@
 "use client";
 
 import { useControllableState } from "@radix-ui/react-use-controllable-state";
-import { BrainIcon, CheckIcon, ChevronDownIcon, LoaderIcon } from "lucide-react";
+import { CheckIcon, ChevronDownIcon, LoaderIcon } from "lucide-react";
 import type { ComponentProps } from "react";
-import { createContext, memo, useCallback, useContext, useEffect, useRef, useState } from "react";
+import {
+	createContext,
+	memo,
+	useCallback,
+	useContext,
+	useEffect,
+	useRef,
+	useState,
+} from "react";
 import {
 	Collapsible,
 	CollapsibleContent,
@@ -120,9 +128,12 @@ export const Reasoning = memo(
 			}
 		}, [isStreaming, isOpen, defaultOpen, setIsOpen, hasAutoClosedRef]);
 
-		const handleOpenChange = useCallback((newOpen: boolean) => {
-			setIsOpen(newOpen);
-		}, [setIsOpen]);
+		const handleOpenChange = useCallback(
+			(newOpen: boolean) => {
+				setIsOpen(newOpen);
+			},
+			[setIsOpen],
+		);
 
 		return (
 			<ReasoningContext.Provider
@@ -198,7 +209,7 @@ export const ReasoningContent = memo(
 			if (isStreaming && scrollRef.current) {
 				scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
 			}
-		}, [isStreaming, children]);
+		}, [isStreaming]);
 
 		return (
 			<CollapsibleContent

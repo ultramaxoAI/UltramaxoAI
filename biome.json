@@ -12,7 +12,8 @@
 			"!Ultramaxo",
 			"!pixel.io-nextjs-1.0.0",
 			"!ultramaxo-website-shine",
-			"public/sw.js"
+			"!public/sw.js",
+			"!backend/db/migrations/meta"
 		]
 	}
 }

@@ -24,10 +24,7 @@ function SVGChart({
 	color: string;
 	label: string;
 }) {
-	const maxVal = Math.max(
-		...entries.map(([, v]) => v[valueKey]),
-		1,
-	);
+	const maxVal = Math.max(...entries.map(([, v]) => v[valueKey]), 1);
 
 	const w = Math.max(entries.length * 56 + 40, 400);
 	const h = 180;
@@ -80,8 +77,7 @@ function SVGChart({
 
 				{/* Bars */}
 				{entries.map(([day, v], i) => {
-					const x =
-						padX + (i / Math.max(entries.length - 1, 1)) * chartW;
+					const x = padX + (i / Math.max(entries.length - 1, 1)) * chartW;
 					const barH = (v[valueKey] / maxVal) * chartH;
 					return (
 						<rect
@@ -102,13 +98,8 @@ function SVGChart({
 					<path
 						d={`M ${entries
 							.map(([, v], i) => {
-								const x =
-									padX +
-									(i / Math.max(entries.length - 1, 1)) *
-										chartW;
-								const y =
-									padY +
-									(1 - v[valueKey] / maxVal) * chartH;
+								const x = padX + (i / Math.max(entries.length - 1, 1)) * chartW;
+								const y = padY + (1 - v[valueKey] / maxVal) * chartH;
 								return `${x},${y}`;
 							})
 							.join(" L ")}`}
@@ -123,25 +114,16 @@ function SVGChart({
 
 				{/* Dots */}
 				{entries.map(([day, v], i) => {
-					const x =
-						padX + (i / Math.max(entries.length - 1, 1)) * chartW;
-					const y =
-						padY + (1 - v[valueKey] / maxVal) * chartH;
+					const x = padX + (i / Math.max(entries.length - 1, 1)) * chartW;
+					const y = padY + (1 - v[valueKey] / maxVal) * chartH;
 					return (
-						<circle
-							key={`dot-${day}`}
-							cx={x}
-							cy={y}
-							r={3.5}
-							fill={color}
-						/>
+						<circle key={`dot-${day}`} cx={x} cy={y} r={3.5} fill={color} />
 					);
 				})}
 
 				{/* Date Labels */}
 				{entries.map(([day], i) => {
-					const x =
-						padX + (i / Math.max(entries.length - 1, 1)) * chartW;
+					const x = padX + (i / Math.max(entries.length - 1, 1)) * chartW;
 					return (
 						<text
 							key={`label-${day}`}
@@ -213,10 +195,7 @@ export function UsageChart({ data }: { data: string }) {
 		<div className="apic-grid apic-grid--2">
 			{/* Requests & Tokens chart */}
 			<div className="apic-card">
-				<div
-					className="apic-row apic-row--between"
-					style={{ marginBottom: 8 }}
-				>
+				<div className="apic-row apic-row--between" style={{ marginBottom: 8 }}>
 					<div>
 						<div className="apic-h3">Requests & Tokens</div>
 						<p
@@ -281,10 +260,7 @@ export function UsageChart({ data }: { data: string }) {
 
 			{/* Daily Spend chart */}
 			<div className="apic-card">
-				<div
-					className="apic-row apic-row--between"
-					style={{ marginBottom: 8 }}
-				>
+				<div className="apic-row apic-row--between" style={{ marginBottom: 8 }}>
 					<div>
 						<div className="apic-h3">Daily Spend</div>
 						<p

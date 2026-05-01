@@ -1,12 +1,12 @@
 "use client";
 
+import type { Document } from "@backend/db/schema";
 import { isAfter } from "date-fns";
 import { motion } from "framer-motion";
 import { useState } from "react";
 import { useSWRConfig } from "swr";
 import { useWindowSize } from "usehooks-ts";
 import { useArtifact } from "@/hooks/use-artifact";
-import type { Document } from "@backend/db/schema";
 import { getDocumentTimestampByIndex } from "@/lib/utils";
 import { LoaderIcon } from "./icons";
 import { Button } from "./ui/button";

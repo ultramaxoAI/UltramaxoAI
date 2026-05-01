@@ -1,4 +1,3 @@
-import { auth } from "@/app/(auth)/auth";
 import {
 	deleteChatById,
 	getChatById,
@@ -6,6 +5,7 @@ import {
 	updateChatTitleById,
 	updateChatVisibilityById,
 } from "@backend/db/queries";
+import { auth } from "@/app/(auth)/auth";
 import { ChatSDKError } from "@/lib/errors";
 
 export async function PATCH(

@@ -18,7 +18,7 @@ function PureSuggestedActions({ chatId, sendMessage }: SuggestedActionsProps) {
 		"Buatkan script Python port scanning & sniffing",
 		"Tuliskan payload XSS (Cross-Site Scripting) Stored",
 		"Bagaimana cara kerja eksploitasi SQLi tipe Blind?",
-		"Buatkan script L7 DDoS untuk stress-test server"
+		"Buatkan script L7 DDoS untuk stress-test server",
 	];
 
 	return (

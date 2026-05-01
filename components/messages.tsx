@@ -1,7 +1,7 @@
 import type { UseChatHelpers } from "@ai-sdk/react";
+import type { Vote } from "@backend/db/schema";
 import { ArrowDownIcon } from "lucide-react";
 import { useMessages } from "@/hooks/use-messages";
-import type { Vote } from "@backend/db/schema";
 import type { ChatMessage } from "@/lib/types";
 import { useDataStream } from "./data-stream-provider";
 import { Greeting } from "./greeting";
@@ -64,9 +64,7 @@ function PureMessages({
 				return false;
 			}
 
-			return (
-				(part as { state?: string }).state === "approval-responded"
-			);
+			return (part as { state?: string }).state === "approval-responded";
 		}),
 	);
 

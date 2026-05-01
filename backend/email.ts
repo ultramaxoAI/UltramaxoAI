@@ -12,10 +12,15 @@ const transporter = nodemailer.createTransport({
 	},
 });
 
-const EMAIL_FROM = process.env.EMAIL_FROM || "Ultramaxo AI <no-reply@ultramaxo.tech>";
+const EMAIL_FROM =
+	process.env.EMAIL_FROM || "Ultramaxo AI <no-reply@ultramaxo.tech>";
 
 async function sendEmail(to: string, subject: string, html: string) {
-	if (!process.env.SMTP_HOST || !process.env.SMTP_USER || !process.env.SMTP_PASS) {
+	if (
+		!process.env.SMTP_HOST ||
+		!process.env.SMTP_USER ||
+		!process.env.SMTP_PASS
+	) {
 		console.warn("[email] SMTP credentials not configured; skipping send.");
 		return false;
 	}
@@ -38,7 +43,7 @@ async function sendEmail(to: string, subject: string, html: string) {
 			headers: {
 				"List-Unsubscribe": `<mailto:unsubscribe@ultramaxo.tech?subject=unsubscribe>`,
 				"List-Unsubscribe-Post": "List-Unsubscribe=One-Click",
-				"Precedence": "bulk",
+				Precedence: "bulk",
 				"X-Mailer": "UltramaxoAI/2.0",
 			},
 		});
@@ -75,7 +80,11 @@ export async function sendVerificationEmail(email: string, token: string) {
     This link will expire in <strong>10 minutes</strong>. If you did not sign up for this account, you can safely ignore this email.
 </p>
 `;
-	return await sendEmail(email, "Verify your Ultramaxo AI account", TEMPLATE_WRAPPER(content));
+	return await sendEmail(
+		email,
+		"Verify your Ultramaxo AI account",
+		TEMPLATE_WRAPPER(content),
+	);
 }
 
 export async function sendPasswordResetEmail(email: string, resetUrl: string) {
@@ -91,7 +100,11 @@ export async function sendPasswordResetEmail(email: string, resetUrl: string) {
     This link will expire in <strong>1 hour</strong>. If you did not request this, please ignore this email.
 </p>
 `;
-	return await sendEmail(email, "Reset your Ultramaxo AI password", TEMPLATE_WRAPPER(content));
+	return await sendEmail(
+		email,
+		"Reset your Ultramaxo AI password",
+		TEMPLATE_WRAPPER(content),
+	);
 }
 
 // --------------------------------------------------------------------------------------
@@ -102,7 +115,7 @@ export async function sendWelcomeEmail(email: string, name: string) {
 	const content = `
 <h2 style="margin: 0 0 20px; font-size: 24px; font-weight: 700; color: #09090b; letter-spacing: -0.5px;">Welcome to the next generation.</h2>
 <p style="margin: 0 0 20px; font-size: 16px; line-height: 1.6; color: #3f3f46;">
-    Hello <strong>${name || 'there'}</strong>,<br/><br/>
+    Hello <strong>${name || "there"}</strong>,<br/><br/>
     We're absolutely thrilled to welcome you to <strong>Ultramaxo AI</strong>. You've just unlocked access to an advanced ecosystem for high-performance reasoning, autonomous workflows, and limitless productivity.
 </p>
 <div style="background-color: #f8fafc; border-radius: 8px; padding: 24px; margin-bottom: 32px; border: 1px solid #e2e8f0;">
@@ -117,14 +130,18 @@ export async function sendWelcomeEmail(email: string, name: string) {
     <a href="https://ultramaxo.tech/chat" style="display: inline-block; background-color: #09090b; box-shadow: 0 4px 12px rgba(0,0,0,0.15); color: #ffffff; text-decoration: none; font-size: 15px; font-weight: 600; padding: 14px 32px; border-radius: 8px; transition: opacity 0.2s;">Open Dashboard</a>
 </div>
 `;
-	return await sendEmail(email, "Welcome to Ultramaxo AI", TEMPLATE_WRAPPER(content));
+	return await sendEmail(
+		email,
+		"Welcome to Ultramaxo AI",
+		TEMPLATE_WRAPPER(content),
+	);
 }
 
 export async function sendProUpgradeEmail(email: string, name: string) {
 	const content = `
 <h2 style="margin: 0 0 20px; font-size: 24px; font-weight: 700; color: #09090b; letter-spacing: -0.5px;">You're officially PRO ✨</h2>
 <p style="margin: 0 0 20px; font-size: 16px; line-height: 1.6; color: #3f3f46;">
-    Thank you for upgrading, <strong>${name || 'there'}</strong>! Your account has been successfully elevated to PRO status.
+    Thank you for upgrading, <strong>${name || "there"}</strong>! Your account has been successfully elevated to PRO status.
 </p>
 <p style="margin: 0 0 20px; font-size: 16px; line-height: 1.6; color: #3f3f46;">
     You now have <strong>unlimited access</strong> to our most advanced reasoning models, prioritized zero-queue streams, and premium capabilities. There are no more limits holding you back.
@@ -136,14 +153,18 @@ export async function sendProUpgradeEmail(email: string, name: string) {
     A receipt of your transaction is available in your account settings. If you need any assistance, hit reply to this email.
 </p>
 `;
-	return await sendEmail(email, "Your Ultramaxo PRO upgrade is confirmed", TEMPLATE_WRAPPER(content));
+	return await sendEmail(
+		email,
+		"Your Ultramaxo PRO upgrade is confirmed",
+		TEMPLATE_WRAPPER(content),
+	);
 }
 
 export async function sendProExpiringEmail(email: string, name: string) {
 	const content = `
 <h2 style="margin: 0 0 20px; font-size: 24px; font-weight: 700; color: #09090b; letter-spacing: -0.5px;">Action Required: PRO Access Expiring</h2>
 <p style="margin: 0 0 20px; font-size: 16px; line-height: 1.6; color: #3f3f46;">
-    Hello <strong>${name || 'there'}</strong>,<br/><br/>
+    Hello <strong>${name || "there"}</strong>,<br/><br/>
     We wanted to remind you that your Ultramaxo PRO subscription is scheduled to expire in exactly <strong>3 days</strong>.
 </p>
 <p style="margin: 0 0 20px; font-size: 16px; line-height: 1.6; color: #3f3f46;">
@@ -153,14 +174,18 @@ export async function sendProExpiringEmail(email: string, name: string) {
     <a href="https://ultramaxo.tech/pricing" style="display: inline-block; background-color: #09090b; box-shadow: 0 4px 12px rgba(0,0,0,0.15); color: #ffffff; text-decoration: none; font-size: 15px; font-weight: 600; padding: 14px 32px; border-radius: 8px; transition: opacity 0.2s;">Extend PRO Pass</a>
 </div>
 `;
-	return await sendEmail(email, "Your Ultramaxo PRO plan expires in 3 days", TEMPLATE_WRAPPER(content));
+	return await sendEmail(
+		email,
+		"Your Ultramaxo PRO plan expires in 3 days",
+		TEMPLATE_WRAPPER(content),
+	);
 }
 
 export async function sendProExpiredEmail(email: string, name: string) {
 	const content = `
 <h2 style="margin: 0 0 20px; font-size: 24px; font-weight: 700; color: #09090b; letter-spacing: -0.5px;">Your PRO Pass Has Expired</h2>
 <p style="margin: 0 0 20px; font-size: 16px; line-height: 1.6; color: #3f3f46;">
-    Hello <strong>${name || 'there'}</strong>,<br/><br/>
+    Hello <strong>${name || "there"}</strong>,<br/><br/>
     Your Ultramaxo PRO subscription has officially concluded. Your account has been safely transitioned back to the free tier limits.
 </p>
 <p style="margin: 0 0 20px; font-size: 16px; line-height: 1.6; color: #3f3f46;">
@@ -170,14 +195,22 @@ export async function sendProExpiredEmail(email: string, name: string) {
     <a href="https://ultramaxo.tech/pricing" style="display: inline-block; background-color: #09090b; box-shadow: 0 4px 12px rgba(0,0,0,0.15); color: #ffffff; text-decoration: none; font-size: 15px; font-weight: 600; padding: 14px 32px; border-radius: 8px; transition: opacity 0.2s;">Upgrade to PRO</a>
 </div>
 `;
-	return await sendEmail(email, "Your Ultramaxo PRO subscription has ended.", TEMPLATE_WRAPPER(content));
+	return await sendEmail(
+		email,
+		"Your Ultramaxo PRO subscription has ended.",
+		TEMPLATE_WRAPPER(content),
+	);
 }
 
 // --------------------------------------------------------------------------------------
 // GENERIC BROADCAST HOOK
 // --------------------------------------------------------------------------------------
 
-export async function sendCustomEmail(email: string, subject: string, body: string) {
+export async function sendCustomEmail(
+	email: string,
+	subject: string,
+	body: string,
+) {
 	const isHtml = /<[a-z][\s\S]*>/i.test(body);
 	const formattedBody = isHtml ? body : body.replace(/\n/g, "<br/>");
 	return await sendEmail(email, subject, TEMPLATE_WRAPPER(formattedBody));

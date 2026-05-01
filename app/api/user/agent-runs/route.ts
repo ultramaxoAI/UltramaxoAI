@@ -1,8 +1,8 @@
-import { auth } from "@/app/(auth)/auth";
 import {
 	getAgentRunsByUserId,
 	updateAgentRunStatus,
 } from "@backend/db/queries";
+import { auth } from "@/app/(auth)/auth";
 
 export async function GET() {
 	const session = await auth();
@@ -26,7 +26,10 @@ export async function PATCH(request: Request) {
 	const body = await request.json();
 
 	if (!body.runId || !body.status) {
-		return Response.json({ error: "runId and status are required" }, { status: 400 });
+		return Response.json(
+			{ error: "runId and status are required" },
+			{ status: 400 },
+		);
 	}
 
 	const run = await updateAgentRunStatus({

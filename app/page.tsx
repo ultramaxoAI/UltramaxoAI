@@ -1,9 +1,10 @@
+import type { Metadata } from "next";
 import LandingPage from "@/components/landing-page";
-import { Metadata } from "next";
 
 export const metadata: Metadata = {
 	title: "UltramaxoAI - The Uncensored AI Workspace",
-	description: "UltramaxoAI adalah AI workspace multimodal untuk chat, coding, dan dokumen yang bantu kamu kerja lebih cepat tanpa sensor.",
+	description:
+		"UltramaxoAI adalah AI workspace multimodal untuk chat, coding, dan dokumen yang bantu kamu kerja lebih cepat tanpa sensor.",
 	alternates: {
 		canonical: "https://ultramaxo.tech",
 		languages: {

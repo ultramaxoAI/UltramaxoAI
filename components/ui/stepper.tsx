@@ -233,7 +233,7 @@ function SlideTransition({
 		if (containerRef.current) {
 			onHeightReady(containerRef.current.offsetHeight);
 		}
-	}, [children, onHeightReady]);
+	}, [onHeightReady]);
 
 	return (
 		<motion.div

@@ -198,7 +198,7 @@ export default function LandingPage() {
 		},
 	];
 
-	const handleUpgrade = async (planName: string, e: React.MouseEvent) => {
+	const _handleUpgrade = async (_planName: string, e: React.MouseEvent) => {
 		e.preventDefault();
 		router.push("/plan");
 	};

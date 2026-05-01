@@ -1,8 +1,8 @@
+import { db } from "@backend/db/queries";
+import { purchaseRequest } from "@backend/db/schema";
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { auth } from "@/app/(auth)/auth";
-import { db } from "@backend/db/queries";
-import { purchaseRequest } from "@backend/db/schema";
 
 const upgradeRequestSchema = z.object({
 	planId: z.string(),

@@ -1,12 +1,12 @@
 "use client";
 
-import { PanelLeftClose, PanelLeftOpen, Menu, X } from "lucide-react";
+import { Menu, PanelLeftClose, PanelLeftOpen, X } from "lucide-react";
 import Link from "next/link";
-import { useState, useEffect } from "react";
 import { usePathname } from "next/navigation";
-import { ApiConsoleSidebarNav } from "./sidebar-nav";
-import { ThemeToggle } from "@/components/theme-toggle";
+import { useEffect, useState } from "react";
 import { GoogleTranslate } from "@/components/google-translate";
+import { ThemeToggle } from "@/components/theme-toggle";
+import { ApiConsoleSidebarNav } from "./sidebar-nav";
 
 export function ApiConsoleClientLayout({
 	children,
@@ -17,12 +17,12 @@ export function ApiConsoleClientLayout({
 }) {
 	const [sidebarOpen, setSidebarOpen] = useState(true);
 	const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
-	const pathname = usePathname();
+	const _pathname = usePathname();
 
 	// Close mobile sidebar when route changes
 	useEffect(() => {
 		setMobileSidebarOpen(false);
-	}, [pathname]);
+	}, []);
 
 	// Prevent body scroll when mobile sidebar is open
 	useEffect(() => {
@@ -40,13 +40,15 @@ export function ApiConsoleClientLayout({
 		<div className="apic">
 			{/* Mobile Overlay */}
 			{mobileSidebarOpen && (
-				<div 
+				<div
 					className="fixed inset-0 bg-black/50 z-40 md:hidden backdrop-blur-sm transition-opacity"
 					onClick={() => setMobileSidebarOpen(false)}
 				/>
 			)}
 
-			<aside className={`apic-sidebar ${!sidebarOpen ? "apic-sidebar--collapsed" : ""} ${mobileSidebarOpen ? "apic-sidebar--mobile-open" : ""}`}>
+			<aside
+				className={`apic-sidebar ${!sidebarOpen ? "apic-sidebar--collapsed" : ""} ${mobileSidebarOpen ? "apic-sidebar--mobile-open" : ""}`}
+			>
 				<div className="apic-sidebar-head flex items-center justify-between w-full">
 					<div className="flex items-center gap-2">
 						<Link href="/api-console" className="apic-logo">
@@ -108,13 +110,16 @@ export function ApiConsoleClientLayout({
 				}}
 			>
 				<div className="flex items-center gap-3">
-					<button 
+					<button
 						onClick={() => setMobileSidebarOpen(true)}
 						className="p-1 rounded-md text-gray-500 hover:bg-gray-100 dark:hover:bg-gray-800"
 					>
 						<Menu size={20} />
 					</button>
-					<Link href="/api-console" className="apic-logo flex items-center gap-2">
+					<Link
+						href="/api-console"
+						className="apic-logo flex items-center gap-2"
+					>
 						<span className="apic-logo-mark flex items-center justify-center w-7 h-7 rounded-md font-bold text-sm">
 							U
 						</span>
@@ -128,7 +133,9 @@ export function ApiConsoleClientLayout({
 				</div>
 			</div>
 
-			<main className={`apic-main ${!sidebarOpen ? "apic-main--expanded" : ""}`}>
+			<main
+				className={`apic-main ${!sidebarOpen ? "apic-main--expanded" : ""}`}
+			>
 				{children}
 			</main>
 		</div>

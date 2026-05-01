@@ -18,7 +18,9 @@ export default function Layout({ children }: { children: React.ReactNode }) {
 			/>
 			<WebContainerProvider>
 				<DataStreamProvider>
-					<Suspense fallback={<ChatRouteLoading label="Loading chat shell..." />}>
+					<Suspense
+						fallback={<ChatRouteLoading label="Loading chat shell..." />}
+					>
 						<SidebarWrapper>{children}</SidebarWrapper>
 					</Suspense>
 				</DataStreamProvider>

@@ -105,7 +105,10 @@ export function parseArtifactCodeFiles(content: string): ArtifactCodeFile[] {
 	return matches.map((match, index) => {
 		const fileName = normalizeFileName(match[1] ?? "file.txt");
 		const startIndex = (match.index ?? 0) + match[0].length;
-		const endIndex = index < matches.length - 1 ? (matches[index + 1].index ?? content.length) : content.length;
+		const endIndex =
+			index < matches.length - 1
+				? (matches[index + 1].index ?? content.length)
+				: content.length;
 
 		return {
 			name: fileName,
@@ -116,7 +119,10 @@ export function parseArtifactCodeFiles(content: string): ArtifactCodeFile[] {
 
 export function serializeArtifactCodeFiles(files: ArtifactCodeFile[]) {
 	return files
-		.map((file) => `// file: ${normalizeFileName(file.name)}\n${file.content.trim()}\n`)
+		.map(
+			(file) =>
+				`// file: ${normalizeFileName(file.name)}\n${file.content.trim()}\n`,
+		)
 		.join("\n");
 }
 
@@ -139,7 +145,12 @@ export function upsertArtifactCodeFile(
 	return [...files, { name: normalizedName, content }];
 }
 
-export function deleteArtifactCodeFile(files: ArtifactCodeFile[], name: string) {
+export function deleteArtifactCodeFile(
+	files: ArtifactCodeFile[],
+	name: string,
+) {
 	const normalizedName = normalizeFileName(name);
-	return files.filter((file) => normalizeFileName(file.name) !== normalizedName);
+	return files.filter(
+		(file) => normalizeFileName(file.name) !== normalizedName,
+	);
 }

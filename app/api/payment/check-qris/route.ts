@@ -1,9 +1,9 @@
-import { eq } from "drizzle-orm";
-import { NextResponse } from "next/server";
-import { auth } from "@/app/(auth)/auth";
 import { db, updatePurchaseRequestStatus } from "@backend/db/queries";
 import { purchaseRequest, user } from "@backend/db/schema";
 import { sendProUpgradeEmail } from "@backend/email";
+import { eq } from "drizzle-orm";
+import { NextResponse } from "next/server";
+import { auth } from "@/app/(auth)/auth";
 
 export const dynamic = "force-dynamic";
 
@@ -19,10 +19,7 @@ export async function GET(request: Request) {
 		const requestId = searchParams.get("requestId");
 
 		if (!requestId) {
-			return NextResponse.json(
-				{ error: "Missing requestId" },
-				{ status: 400 },
-			);
+			return NextResponse.json({ error: "Missing requestId" }, { status: 400 });
 		}
 
 		// Look up purchase request
@@ -33,10 +30,7 @@ export async function GET(request: Request) {
 			.limit(1);
 
 		if (!reqInfo) {
-			return NextResponse.json(
-				{ error: "Request not found" },
-				{ status: 404 },
-			);
+			return NextResponse.json({ error: "Request not found" }, { status: 404 });
 		}
 
 		// Ensure the user owns this request
@@ -61,26 +55,37 @@ export async function GET(request: Request) {
 		// Call QRIS Cepat checking endpoint
 		const checkUrl = `https://qriscepat.com/api/trx/${trxId}`;
 		console.log("[QRIS Check] Polling QRISCepat API for trx:", trxId);
-		
+
 		const checkResponse = await fetch(checkUrl);
 		const checkText = await checkResponse.text();
-		
-		console.log("[QRIS Check] Response:", checkResponse.status, checkText.substring(0, 100) + "...");
+
+		console.log(
+			"[QRIS Check] Response:",
+			checkResponse.status,
+			`${checkText.substring(0, 100)}...`,
+		);
 
 		if (checkResponse.ok) {
 			const checkData = JSON.parse(checkText);
-			
+
 			if (checkData.status === "success" && checkData.data) {
 				const trxStatus = checkData.data.trx_status?.toLowerCase();
-				
-				if (trxStatus === "success" || trxStatus === "paid" || trxStatus === "settled") {
-					console.log("[QRIS Check] Payment successful for requestId:", requestId);
+
+				if (
+					trxStatus === "success" ||
+					trxStatus === "paid" ||
+					trxStatus === "settled"
+				) {
+					console.log(
+						"[QRIS Check] Payment successful for requestId:",
+						requestId,
+					);
 					// Mark as approved (this grants PRO inside queries.ts)
 					await updatePurchaseRequestStatus({
 						id: requestId,
 						status: "approved",
 					});
-					
+
 					// Trigger Upgrade Email
 					try {
 						const [proUser] = await db
@@ -93,9 +98,12 @@ export async function GET(request: Request) {
 							await sendProUpgradeEmail(proUser.email, proUser.name || "User");
 						}
 					} catch (emailErr) {
-						console.error("[QRIS Check] Failed to send PRO upgrade email:", emailErr);
+						console.error(
+							"[QRIS Check] Failed to send PRO upgrade email:",
+							emailErr,
+						);
 					}
-					
+
 					return NextResponse.json({ paid: true, status: "approved" });
 				} else if (trxStatus === "failed" || trxStatus === "expired") {
 					await updatePurchaseRequestStatus({
@@ -104,9 +112,12 @@ export async function GET(request: Request) {
 					});
 					return NextResponse.json({ paid: false, status: "rejected" });
 				}
-				
+
 				// "pending"
-				return NextResponse.json({ paid: false, status: trxStatus || "pending" });
+				return NextResponse.json({
+					paid: false,
+					status: trxStatus || "pending",
+				});
 			}
 		}
 

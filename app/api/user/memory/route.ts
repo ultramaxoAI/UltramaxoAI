@@ -1,10 +1,10 @@
-import { auth } from "@/app/(auth)/auth";
 import {
 	createUserMemory,
 	deleteUserMemoryById,
 	getUserMemoryByUserId,
 	updateUserMemoryById,
 } from "@backend/db/queries";
+import { auth } from "@/app/(auth)/auth";
 
 type MemoryCategory = "profile" | "coding" | "product" | "instruction";
 
@@ -38,7 +38,8 @@ export async function POST(request: Request) {
 
 	const memory = await createUserMemory({
 		userId: session.user.id,
-		category: ((body.category as MemoryCategory) || "instruction") as MemoryCategory,
+		category: ((body.category as MemoryCategory) ||
+			"instruction") as MemoryCategory,
 		title: body.title.trim(),
 		content: body.content.trim(),
 		isEnabled: body.isEnabled,

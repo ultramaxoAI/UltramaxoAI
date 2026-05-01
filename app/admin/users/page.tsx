@@ -1,9 +1,9 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { Search, ShieldAlert, Sparkles, Trash2, Crown } from "lucide-react";
-import { toast } from "sonner";
 import { formatDistanceToNow } from "date-fns";
+import { Crown, Search, ShieldAlert, Sparkles, Trash2 } from "lucide-react";
+import { useEffect, useState } from "react";
+import { toast } from "sonner";
 
 interface AdminUser {
 	id: string;
@@ -52,7 +52,7 @@ export default function AdminUsersPage() {
 			const data = await res.json();
 			if (data.success) {
 				toast.success("User deleted");
-				setUsers(users.filter(u => u.id !== userId));
+				setUsers(users.filter((u) => u.id !== userId));
 			} else {
 				toast.error(data.error || "Delete failed");
 			}
@@ -63,16 +63,19 @@ export default function AdminUsersPage() {
 
 	const handleTogglePro = async (user: AdminUser) => {
 		const isCurrentlyPro = user.isPro;
-		
+
 		let updates: Record<string, unknown> = {};
 
 		if (isCurrentlyPro) {
 			if (!window.confirm("Revoke PRO status for this user?")) return;
 			updates = { isPro: false, limitCount: 5, proExpiresAt: null };
 		} else {
-			const duration = window.prompt("Grant PRO status. Enter duration in months (1, 6, 12) or type 'lifetime':", "12");
+			const duration = window.prompt(
+				"Grant PRO status. Enter duration in months (1, 6, 12) or type 'lifetime':",
+				"12",
+			);
 			if (!duration) return;
-			
+
 			if (duration.toLowerCase().trim() === "lifetime") {
 				updates = { isPro: true, limitCount: 99999, proExpiresAt: null };
 			} else {
@@ -83,10 +86,14 @@ export default function AdminUsersPage() {
 				}
 				const expiryDate = new Date();
 				expiryDate.setMonth(expiryDate.getMonth() + months);
-				updates = { isPro: true, limitCount: 99999, proExpiresAt: expiryDate.toISOString() };
+				updates = {
+					isPro: true,
+					limitCount: 99999,
+					proExpiresAt: expiryDate.toISOString(),
+				};
 			}
 		}
-			
+
 		try {
 			const res = await fetch("/api/admin/users", {
 				method: "PATCH",
@@ -96,7 +103,11 @@ export default function AdminUsersPage() {
 			const data = await res.json();
 			if (data.success) {
 				toast.success(isCurrentlyPro ? "PRO Revoked" : "PRO Granted");
-				setUsers(users.map(u => u.id === user.id ? { ...u, ...updates } as AdminUser : u));
+				setUsers(
+					users.map((u) =>
+						u.id === user.id ? ({ ...u, ...updates } as AdminUser) : u,
+					),
+				);
 			} else {
 				toast.error(data.error || "Update failed");
 			}
@@ -108,7 +119,7 @@ export default function AdminUsersPage() {
 	const filteredUsers = users.filter(
 		(u) =>
 			u.email?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-			u.name?.toLowerCase().includes(searchQuery.toLowerCase())
+			u.name?.toLowerCase().includes(searchQuery.toLowerCase()),
 	);
 
 	return (
@@ -150,13 +161,19 @@ export default function AdminUsersPage() {
 						<tbody className="divide-y divide-gray-200 dark:divide-white/10">
 							{loading ? (
 								<tr>
-									<td colSpan={6} className="px-6 py-8 text-center text-gray-500">
+									<td
+										colSpan={6}
+										className="px-6 py-8 text-center text-gray-500"
+									>
 										Loading user data...
 									</td>
 								</tr>
 							) : filteredUsers.length === 0 ? (
 								<tr>
-									<td colSpan={6} className="px-6 py-8 text-center text-gray-500">
+									<td
+										colSpan={6}
+										className="px-6 py-8 text-center text-gray-500"
+									>
 										No users found.
 									</td>
 								</tr>
@@ -169,7 +186,10 @@ export default function AdminUsersPage() {
 									const isNearLimit = today >= dailyLimit - 2;
 
 									return (
-										<tr key={user.id} className="hover:bg-gray-50/50 dark:hover:bg-white/2 transition-colors">
+										<tr
+											key={user.id}
+											className="hover:bg-gray-50/50 dark:hover:bg-white/2 transition-colors"
+										>
 											<td className="px-6 py-4">
 												<div className="flex items-center gap-3">
 													<div className="size-8 rounded-full bg-indigo-100 dark:bg-indigo-500/20 text-indigo-700 dark:text-indigo-400 flex items-center justify-center font-semibold text-xs shrink-0">
@@ -179,7 +199,9 @@ export default function AdminUsersPage() {
 														<p className="font-medium text-gray-900 dark:text-white">
 															{user.name || "Anonymous"}
 														</p>
-														<p className="text-xs text-gray-500 mt-0.5">{user.email}</p>
+														<p className="text-xs text-gray-500 mt-0.5">
+															{user.email}
+														</p>
 													</div>
 												</div>
 											</td>
@@ -189,7 +211,9 @@ export default function AdminUsersPage() {
 														<ShieldAlert size={12} /> Admin
 													</span>
 												) : (
-													<span className="text-gray-600 dark:text-gray-400 text-xs">Standard</span>
+													<span className="text-gray-600 dark:text-gray-400 text-xs">
+														Standard
+													</span>
 												)}
 											</td>
 											<td className="px-6 py-4">
@@ -205,22 +229,36 @@ export default function AdminUsersPage() {
 											</td>
 											<td className="px-6 py-4">
 												{user.isPro ? (
-													<span className="text-xs text-indigo-500 dark:text-indigo-400 font-medium">Unlimited</span>
+													<span className="text-xs text-indigo-500 dark:text-indigo-400 font-medium">
+														Unlimited
+													</span>
 												) : (
 													<div className="flex flex-col gap-1">
-														<span className={`text-xs font-mono font-semibold ${
-															isHigh ? "text-red-500" : isNearLimit ? "text-amber-500" : "text-gray-700 dark:text-gray-300"
-														}`}>
+														<span
+															className={`text-xs font-mono font-semibold ${
+																isHigh
+																	? "text-red-500"
+																	: isNearLimit
+																		? "text-amber-500"
+																		: "text-gray-700 dark:text-gray-300"
+															}`}
+														>
 															{today}/{dailyLimit}
 														</span>
 														{bonus > 0 && (
-															<span className="text-[10px] text-emerald-500">+{bonus} bonus</span>
+															<span className="text-[10px] text-emerald-500">
+																+{bonus} bonus
+															</span>
 														)}
 													</div>
 												)}
 											</td>
 											<td className="px-6 py-4 text-gray-500 dark:text-gray-400 text-xs">
-												{user.createdAt ? formatDistanceToNow(new Date(user.createdAt), { addSuffix: true }) : "Unknown"}
+												{user.createdAt
+													? formatDistanceToNow(new Date(user.createdAt), {
+															addSuffix: true,
+														})
+													: "Unknown"}
 											</td>
 											<td className="px-6 py-4 text-right">
 												<div className="flex items-center justify-end gap-2">
@@ -230,7 +268,14 @@ export default function AdminUsersPage() {
 														className="p-1.5 text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 dark:hover:text-indigo-400 dark:hover:bg-indigo-500/10 rounded-md transition-colors"
 														title={user.isPro ? "Revoke Pro" : "Make Pro"}
 													>
-														{user.isPro ? <Sparkles size={16} className="text-indigo-500/50" /> : <Crown size={16} />}
+														{user.isPro ? (
+															<Sparkles
+																size={16}
+																className="text-indigo-500/50"
+															/>
+														) : (
+															<Crown size={16} />
+														)}
 													</button>
 													<button
 														type="button"

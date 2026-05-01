@@ -1,6 +1,6 @@
-import { auth } from "@/app/(auth)/auth";
 import { getApiCreditSummaryByUserId } from "@backend/db/queries";
 import { NextResponse } from "next/server";
+import { auth } from "@/app/(auth)/auth";
 
 export const dynamic = "force-dynamic";
 
@@ -11,7 +11,9 @@ export async function GET() {
 	}
 
 	try {
-		const summary = await getApiCreditSummaryByUserId({ userId: session.user.id });
+		const summary = await getApiCreditSummaryByUserId({
+			userId: session.user.id,
+		});
 		return NextResponse.json(summary);
 	} catch (error) {
 		console.error("API credit summary error:", error);

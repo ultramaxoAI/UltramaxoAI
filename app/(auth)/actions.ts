@@ -59,7 +59,9 @@ function isAdminCandidate({
 	const normalizedEmail = email?.trim().toLowerCase();
 	const adminEmail = process.env.ADMIN_EMAIL?.trim().toLowerCase();
 
-	return role === "admin" || Boolean(adminEmail && normalizedEmail === adminEmail);
+	return (
+		role === "admin" || Boolean(adminEmail && normalizedEmail === adminEmail)
+	);
 }
 
 export const login = async (

@@ -1,8 +1,4 @@
-export function ChatRouteLoading({
-	label = "Loading...",
-}: {
-	label?: string;
-}) {
+export function ChatRouteLoading({ label = "Loading..." }: { label?: string }) {
 	return (
 		<div className="flex h-dvh w-full items-center justify-center bg-[#f3efe6] dark:bg-[#111315]">
 			<div className="flex flex-col items-center gap-5">

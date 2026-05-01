@@ -41,7 +41,10 @@ export function ContextualUpgradeBanner({
 		}
 
 		// Show after reaching message threshold
-		if (messageCount >= TRIGGER_THRESHOLD && messageCount % TRIGGER_THRESHOLD === 0) {
+		if (
+			messageCount >= TRIGGER_THRESHOLD &&
+			messageCount % TRIGGER_THRESHOLD === 0
+		) {
 			setMode("milestone");
 			setVisible(true);
 		}
@@ -75,7 +78,8 @@ export function ContextualUpgradeBanner({
 								Batas percakapan gratis tercapai
 							</h3>
 							<p className="text-xs text-amber-300/70 leading-relaxed mb-3">
-								Anda telah mencapai batas permintaan. Upgrade ke Pro untuk chat tanpa batas, tanpa antri.
+								Anda telah mencapai batas permintaan. Upgrade ke Pro untuk chat
+								tanpa batas, tanpa antri.
 							</p>
 							<div className="flex items-center gap-3 flex-wrap">
 								<Link
@@ -85,8 +89,12 @@ export function ContextualUpgradeBanner({
 									<Zap className="w-3.5 h-3.5" />
 									Upgrade Pro — Rp 15.000/bln
 								</Link>
-								<span className="text-xs text-amber-400/50 line-through">Rp 30.000</span>
-								<span className="text-[10px] font-bold text-emerald-400 bg-emerald-950/40 px-2 py-0.5 rounded-full">HEMAT 50%</span>
+								<span className="text-xs text-amber-400/50 line-through">
+									Rp 30.000
+								</span>
+								<span className="text-[10px] font-bold text-emerald-400 bg-emerald-950/40 px-2 py-0.5 rounded-full">
+									HEMAT 50%
+								</span>
 							</div>
 						</div>
 					</div>
@@ -110,7 +118,8 @@ export function ContextualUpgradeBanner({
 								Anda sudah mengirim {messageCount} pesan hari ini
 							</h3>
 							<p className="text-xs text-indigo-300/70 leading-relaxed mb-3">
-								Nikmati chat tanpa batas, riwayat permanen, dan full artifact system dengan upgrade ke Pro.
+								Nikmati chat tanpa batas, riwayat permanen, dan full artifact
+								system dengan upgrade ke Pro.
 							</p>
 							<div className="flex items-center gap-3 flex-wrap">
 								<Link

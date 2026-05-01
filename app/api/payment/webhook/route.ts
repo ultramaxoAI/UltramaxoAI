@@ -4,8 +4,7 @@ import { purchaseRequest } from "@backend/db/schema";
 import { eq } from "drizzle-orm";
 import { NextResponse } from "next/server";
 
-const WEBHOOK_SECRET =
-	process.env.YOBASEPAY_WEBHOOK_SECRET || "";
+const WEBHOOK_SECRET = process.env.YOBASEPAY_WEBHOOK_SECRET || "";
 
 // Security: Constant-time HMAC verification
 function verifySignature(payload: string, signature: string): boolean {
@@ -29,7 +28,9 @@ function verifySignature(payload: string, signature: string): boolean {
 
 // Security: Validate UUID format
 function isValidUUID(id: string): boolean {
-	return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
+	return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(
+		id,
+	);
 }
 
 // Security: Rate limit webhook calls (prevent replay attacks)
@@ -57,20 +58,14 @@ export async function POST(request: Request) {
 		// Security: Check content length
 		const contentLength = request.headers.get("content-length");
 		if (contentLength && Number(contentLength) > MAX_WEBHOOK_BODY) {
-			return NextResponse.json(
-				{ error: "Payload too large" },
-				{ status: 413 },
-			);
+			return NextResponse.json({ error: "Payload too large" }, { status: 413 });
 		}
 
 		const rawBody = await request.text();
 
 		// Security: Enforce body size limit
 		if (rawBody.length > MAX_WEBHOOK_BODY) {
-			return NextResponse.json(
-				{ error: "Payload too large" },
-				{ status: 413 },
-			);
+			return NextResponse.json({ error: "Payload too large" }, { status: 413 });
 		}
 
 		const signature = request.headers.get("X-YoBasePay-Signature");
@@ -85,11 +80,11 @@ export async function POST(request: Request) {
 		}
 
 		if (!signature || !verifySignature(rawBody, signature)) {
-			console.error("[Webhook] Invalid signature attempt from:", request.headers.get("x-forwarded-for") || "unknown");
-			return NextResponse.json(
-				{ error: "Invalid signature" },
-				{ status: 403 },
+			console.error(
+				"[Webhook] Invalid signature attempt from:",
+				request.headers.get("x-forwarded-for") || "unknown",
 			);
+			return NextResponse.json({ error: "Invalid signature" }, { status: 403 });
 		}
 
 		// Security: Parse with error handling
@@ -97,10 +92,7 @@ export async function POST(request: Request) {
 		try {
 			body = JSON.parse(rawBody);
 		} catch {
-			return NextResponse.json(
-				{ error: "Invalid JSON" },
-				{ status: 400 },
-			);
+			return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
 		}
 
 		const { event, reff_id, trxid, amount, status } = body;

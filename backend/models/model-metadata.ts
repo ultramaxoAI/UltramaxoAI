@@ -14,8 +14,8 @@ export interface ModelMeta {
 	capabilities: string[];
 	context: number | null;
 	maxTokens: number | null;
-	priceIn: number | null;   // USD per 1M tokens
-	priceOut: number | null;  // USD per 1M tokens
+	priceIn: number | null; // USD per 1M tokens
+	priceOut: number | null; // USD per 1M tokens
 	displayName: string;
 	isFree?: boolean;
 }
@@ -31,8 +31,8 @@ export const MODEL_METADATA: Record<string, ModelMeta> = {
 		capabilities: ["text"],
 		context: 256000,
 		maxTokens: 8000,
-		priceIn: 2.50,
-		priceOut: 10.00,
+		priceIn: 2.5,
+		priceOut: 10.0,
 		displayName: "Command A 03-2025",
 	},
 	"command-r-08-2024": {
@@ -41,7 +41,7 @@ export const MODEL_METADATA: Record<string, ModelMeta> = {
 		context: 128000,
 		maxTokens: 4000,
 		priceIn: 0.15,
-		priceOut: 0.60,
+		priceOut: 0.6,
 		displayName: "Command R 08-2024",
 	},
 	"command-r-plus-08-2024": {
@@ -49,8 +49,8 @@ export const MODEL_METADATA: Record<string, ModelMeta> = {
 		capabilities: ["text", "tools"],
 		context: 128000,
 		maxTokens: 4000,
-		priceIn: 2.50,
-		priceOut: 10.00,
+		priceIn: 2.5,
+		priceOut: 10.0,
 		displayName: "Command R Plus 08-2024",
 	},
 	"command-r7b-12-2024": {
@@ -88,7 +88,7 @@ export const MODEL_METADATA: Record<string, ModelMeta> = {
 		context: 164000,
 		maxTokens: 66000,
 		priceIn: 0.25,
-		priceOut: 0.40,
+		priceOut: 0.4,
 		displayName: "DeepSeek V3.2",
 	},
 	"deepseek-v4-flash": {
@@ -105,8 +105,8 @@ export const MODEL_METADATA: Record<string, ModelMeta> = {
 		capabilities: ["text", "vision", "tools"],
 		context: 164000,
 		maxTokens: 66000,
-		priceIn: 0.90,
-		priceOut: 2.20,
+		priceIn: 0.9,
+		priceOut: 2.2,
 		displayName: "DeepSeek V4 Pro",
 	},
 
@@ -116,8 +116,8 @@ export const MODEL_METADATA: Record<string, ModelMeta> = {
 		capabilities: ["text", "tools", "code"],
 		context: 262000,
 		maxTokens: null,
-		priceIn: 0.40,
-		priceOut: 2.00,
+		priceIn: 0.4,
+		priceOut: 2.0,
 		displayName: "Devstral 2512",
 	},
 	"devstral-small-2512": {
@@ -125,8 +125,8 @@ export const MODEL_METADATA: Record<string, ModelMeta> = {
 		capabilities: ["text", "tools"],
 		context: 131000,
 		maxTokens: null,
-		priceIn: 0.10,
-		priceOut: 0.30,
+		priceIn: 0.1,
+		priceOut: 0.3,
 		displayName: "Devstral Small 2512",
 	},
 	"ministral-14b-2512": {
@@ -134,8 +134,8 @@ export const MODEL_METADATA: Record<string, ModelMeta> = {
 		capabilities: ["text", "vision", "tools"],
 		context: 262000,
 		maxTokens: null,
-		priceIn: 0.20,
-		priceOut: 0.20,
+		priceIn: 0.2,
+		priceOut: 0.2,
 		displayName: "Ministral 14B 2512",
 	},
 	"ministral-3b-2512": {
@@ -143,8 +143,8 @@ export const MODEL_METADATA: Record<string, ModelMeta> = {
 		capabilities: ["text", "vision", "tools"],
 		context: 131000,
 		maxTokens: null,
-		priceIn: 0.10,
-		priceOut: 0.10,
+		priceIn: 0.1,
+		priceOut: 0.1,
 		displayName: "Ministral 3B 2512",
 	},
 	"ministral-8b-2512": {
@@ -170,8 +170,8 @@ export const MODEL_METADATA: Record<string, ModelMeta> = {
 		capabilities: ["text", "tools"],
 		context: 66000,
 		maxTokens: null,
-		priceIn: 2.00,
-		priceOut: 6.00,
+		priceIn: 2.0,
+		priceOut: 6.0,
 		displayName: "Mixtral 8x22B Instruct",
 	},
 	"mixtral-8x7b-instruct": {
@@ -208,8 +208,8 @@ export const MODEL_METADATA: Record<string, ModelMeta> = {
 		capabilities: ["text"],
 		context: 8000,
 		maxTokens: 2000,
-		priceIn: 0.00,
-		priceOut: 0.00,
+		priceIn: 0.0,
+		priceOut: 0.0,
 		displayName: "Gemma 3N E2B IT",
 		isFree: true,
 	},
@@ -230,7 +230,7 @@ export const MODEL_METADATA: Record<string, ModelMeta> = {
 		context: 203000,
 		maxTokens: 16000,
 		priceIn: 0.06,
-		priceOut: 0.40,
+		priceOut: 0.4,
 		displayName: "GLM 4.7 Flash",
 	},
 	"glm-4.7": {
@@ -238,8 +238,8 @@ export const MODEL_METADATA: Record<string, ModelMeta> = {
 		capabilities: ["text", "vision", "tools"],
 		context: 203000,
 		maxTokens: 16000,
-		priceIn: 0.10,
-		priceOut: 0.40,
+		priceIn: 0.1,
+		priceOut: 0.4,
 		displayName: "GLM 4.7",
 	},
 	"glm-5": {
@@ -247,8 +247,8 @@ export const MODEL_METADATA: Record<string, ModelMeta> = {
 		capabilities: ["text", "vision", "tools"],
 		context: 203000,
 		maxTokens: 16000,
-		priceIn: 0.50,
-		priceOut: 2.00,
+		priceIn: 0.5,
+		priceOut: 2.0,
 		displayName: "GLM 5",
 	},
 	"glm-5.1": {
@@ -256,8 +256,8 @@ export const MODEL_METADATA: Record<string, ModelMeta> = {
 		capabilities: ["text", "vision", "tools"],
 		context: 203000,
 		maxTokens: 16000,
-		priceIn: 1.00,
-		priceOut: 4.00,
+		priceIn: 1.0,
+		priceOut: 4.0,
 		displayName: "GLM 5.1",
 	},
 
@@ -268,7 +268,7 @@ export const MODEL_METADATA: Record<string, ModelMeta> = {
 		context: 400000,
 		maxTokens: 128000,
 		priceIn: 1.75,
-		priceOut: 14.00,
+		priceOut: 14.0,
 		displayName: "GPT 5.2",
 	},
 	"gpt-5.3-codex": {
@@ -277,7 +277,7 @@ export const MODEL_METADATA: Record<string, ModelMeta> = {
 		context: 400000,
 		maxTokens: 128000,
 		priceIn: 1.75,
-		priceOut: 14.00,
+		priceOut: 14.0,
 		displayName: "GPT 5.3 Codex",
 	},
 	"gpt-5.4": {
@@ -285,8 +285,8 @@ export const MODEL_METADATA: Record<string, ModelMeta> = {
 		capabilities: ["text", "vision", "tools"],
 		context: 1100000,
 		maxTokens: 128000,
-		priceIn: 2.50,
-		priceOut: 15.00,
+		priceIn: 2.5,
+		priceOut: 15.0,
 		displayName: "GPT 5.4",
 	},
 	"gpt-5.4-mini": {
@@ -295,7 +295,7 @@ export const MODEL_METADATA: Record<string, ModelMeta> = {
 		context: 400000,
 		maxTokens: 128000,
 		priceIn: 0.75,
-		priceOut: 4.50,
+		priceOut: 4.5,
 		displayName: "GPT 5.4 Mini",
 	},
 	"gpt-5.5": {
@@ -303,8 +303,8 @@ export const MODEL_METADATA: Record<string, ModelMeta> = {
 		capabilities: ["text", "vision", "tools"],
 		context: 1000000,
 		maxTokens: 128000,
-		priceIn: 5.00,
-		priceOut: 30.00,
+		priceIn: 5.0,
+		priceOut: 30.0,
 		displayName: "GPT 5.5",
 	},
 	"gpt-image-2": {
@@ -312,8 +312,8 @@ export const MODEL_METADATA: Record<string, ModelMeta> = {
 		capabilities: ["image"],
 		context: null,
 		maxTokens: null,
-		priceIn: 2.00,
-		priceOut: 8.00,
+		priceIn: 2.0,
+		priceOut: 8.0,
 		displayName: "GPT Image 2",
 	},
 	"gpt-oss-120b": {
@@ -353,7 +353,7 @@ export const MODEL_METADATA: Record<string, ModelMeta> = {
 		context: 60000,
 		maxTokens: null,
 		priceIn: 0.03,
-		priceOut: 0.20,
+		priceOut: 0.2,
 		displayName: "Llama 3.2 1B Instruct",
 	},
 	"llama-3.2-3b-instruct": {
@@ -371,7 +371,7 @@ export const MODEL_METADATA: Record<string, ModelMeta> = {
 		context: 328000,
 		maxTokens: 16000,
 		priceIn: 0.08,
-		priceOut: 0.30,
+		priceOut: 0.3,
 		displayName: "Llama 4 Scout",
 	},
 	"llama-guard-3-8b": {
@@ -391,7 +391,7 @@ export const MODEL_METADATA: Record<string, ModelMeta> = {
 		context: 197000,
 		maxTokens: 197000,
 		priceIn: 0.26,
-		priceOut: 1.00,
+		priceOut: 1.0,
 		displayName: "MiniMax M2",
 	},
 	"minimax-m2.1": {
@@ -409,7 +409,7 @@ export const MODEL_METADATA: Record<string, ModelMeta> = {
 		context: 197000,
 		maxTokens: 197000,
 		priceIn: 0.28,
-		priceOut: 1.10,
+		priceOut: 1.1,
 		displayName: "MiniMax M2.5",
 	},
 	"minimax-m2.7": {
@@ -417,8 +417,8 @@ export const MODEL_METADATA: Record<string, ModelMeta> = {
 		capabilities: ["text", "vision", "tools"],
 		context: 205000,
 		maxTokens: null,
-		priceIn: 0.30,
-		priceOut: 1.20,
+		priceIn: 0.3,
+		priceOut: 1.2,
 		displayName: "MiniMax M2.7",
 	},
 
@@ -429,7 +429,7 @@ export const MODEL_METADATA: Record<string, ModelMeta> = {
 		context: 262000,
 		maxTokens: 228000,
 		priceIn: 0.05,
-		priceOut: 0.20,
+		priceOut: 0.2,
 		displayName: "Nemotron 3 Nano 30B A3B",
 	},
 	"nemotron-nano-12b-v2-vl": {
@@ -437,8 +437,8 @@ export const MODEL_METADATA: Record<string, ModelMeta> = {
 		capabilities: ["text", "vision"],
 		context: 131000,
 		maxTokens: 16000,
-		priceIn: 0.20,
-		priceOut: 0.60,
+		priceIn: 0.2,
+		priceOut: 0.6,
 		displayName: "Nemotron Nano 12B V2 VL",
 	},
 	"nemotron-nano-9b-v2": {
@@ -466,8 +466,8 @@ export const MODEL_METADATA: Record<string, ModelMeta> = {
 		capabilities: ["text", "vision", "tools"],
 		context: 131000,
 		maxTokens: 8000,
-		priceIn: 0.40,
-		priceOut: 1.20,
+		priceIn: 0.4,
+		priceOut: 1.2,
 		displayName: "Qwen 3.6 Plus",
 	},
 	"qwen3-coder-480b": {
@@ -476,7 +476,7 @@ export const MODEL_METADATA: Record<string, ModelMeta> = {
 		context: 262000,
 		maxTokens: 66000,
 		priceIn: 0.22,
-		priceOut: 1.00,
+		priceOut: 1.0,
 		displayName: "Qwen3 Coder 480B",
 	},
 	"qwen3-coder-next": {
@@ -493,7 +493,7 @@ export const MODEL_METADATA: Record<string, ModelMeta> = {
 		capabilities: ["text", "vision", "tools"],
 		context: 262000,
 		maxTokens: 16000,
-		priceIn: 0.20,
+		priceIn: 0.2,
 		priceOut: 0.88,
 		displayName: "Qwen3 VL 235B Instruct",
 	},
@@ -502,8 +502,8 @@ export const MODEL_METADATA: Record<string, ModelMeta> = {
 		capabilities: ["text", "vision", "tools"],
 		context: 131000,
 		maxTokens: 33000,
-		priceIn: 0.00,
-		priceOut: 0.00,
+		priceIn: 0.0,
+		priceOut: 0.0,
 		displayName: "Qwen3 VL 235B Thinking",
 		isFree: true,
 	},
@@ -513,7 +513,7 @@ export const MODEL_METADATA: Record<string, ModelMeta> = {
 		context: 33000,
 		maxTokens: 131000,
 		priceIn: 0.15,
-		priceOut: 0.40,
+		priceOut: 0.4,
 		displayName: "QwQ 32B",
 	},
 
@@ -523,8 +523,8 @@ export const MODEL_METADATA: Record<string, ModelMeta> = {
 		capabilities: ["text", "tools"],
 		context: 131000,
 		maxTokens: 8000,
-		priceIn: 0.30,
-		priceOut: 1.20,
+		priceIn: 0.3,
+		priceOut: 1.2,
 		displayName: "Kimi K2.5",
 	},
 	"kimi-k2.6": {
@@ -532,8 +532,8 @@ export const MODEL_METADATA: Record<string, ModelMeta> = {
 		capabilities: ["text", "tools"],
 		context: 131000,
 		maxTokens: 8000,
-		priceIn: 0.60,
-		priceOut: 2.40,
+		priceIn: 0.6,
+		priceOut: 2.4,
 		displayName: "Kimi K2.6",
 	},
 

@@ -18,7 +18,12 @@ interface CodeBlockProps {
 	isLoading?: boolean;
 }
 
-function PureCodeBlock({ children, className, language, isLoading }: CodeBlockProps) {
+function PureCodeBlock({
+	children,
+	className,
+	language,
+	isLoading,
+}: CodeBlockProps) {
 	const [copied, setCopied] = useState(false);
 	const [showFull, setShowFull] = useState(false);
 	const { setArtifact } = useArtifact();
@@ -41,7 +46,8 @@ function PureCodeBlock({ children, className, language, isLoading }: CodeBlockPr
 	// Determine rendering strategy
 	const lineCount = debouncedChildren.split("\n").length;
 	const isTooLargeForHighlight =
-		debouncedChildren.length > MAX_HIGHLIGHT_CHARS || lineCount > MAX_HIGHLIGHT_LINES;
+		debouncedChildren.length > MAX_HIGHLIGHT_CHARS ||
+		lineCount > MAX_HIGHLIGHT_LINES;
 	const isTooLargeForDisplay = debouncedChildren.length > MAX_DISPLAY_CHARS;
 
 	// Truncate if necessary

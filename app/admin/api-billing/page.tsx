@@ -1,9 +1,8 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { toast } from "sonner";
 import { formatDistanceToNow } from "date-fns";
-import { CreditCard, MoreVertical } from "lucide-react";
+import { useCallback, useEffect, useState } from "react";
+import { toast } from "sonner";
 
 interface Purchase {
 	id: string;
@@ -23,22 +22,22 @@ export default function AdminBillingPage() {
 	const [loading, setLoading] = useState(true);
 	const [updating, setUpdating] = useState<string | null>(null);
 
-	const fetchPurchases = async () => {
+	const fetchPurchases = useCallback(async () => {
 		setLoading(true);
 		try {
 			const res = await fetch("/api/admin/purchases");
 			const data = await res.json();
 			if (data.purchases) setPurchases(data.purchases);
-		} catch (error) {
+		} catch (_error) {
 			toast.error("Failed to load purchases");
 		} finally {
 			setLoading(false);
 		}
-	};
+	}, []);
 
 	useEffect(() => {
 		fetchPurchases();
-	}, []);
+	}, [fetchPurchases]);
 
 	const handleStatusUpdate = async (id: string, newStatus: string) => {
 		setUpdating(id);
@@ -55,7 +54,7 @@ export default function AdminBillingPage() {
 			} else {
 				toast.error("Update failed");
 			}
-		} catch (error) {
+		} catch (_error) {
 			toast.error("Network error");
 		} finally {
 			setUpdating(null);
@@ -63,7 +62,9 @@ export default function AdminBillingPage() {
 	};
 
 	const pendingCount = purchases.filter((p) => p.status === "pending").length;
-	const paidCount = purchases.filter((p) => p.status === "paid" || p.status === "approved").length;
+	const paidCount = purchases.filter(
+		(p) => p.status === "paid" || p.status === "approved",
+	).length;
 
 	return (
 		<div className="p-8 max-w-6xl mx-auto space-y-8">
@@ -79,16 +80,24 @@ export default function AdminBillingPage() {
 			{/* Stats */}
 			<div className="grid grid-cols-3 gap-4">
 				<div className="p-4 rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-[#0a0a0a]">
-					<p className="text-xs text-gray-500 font-medium">Total Transactions</p>
-					<p className="text-xl font-semibold text-gray-900 dark:text-white mt-1">{purchases.length}</p>
+					<p className="text-xs text-gray-500 font-medium">
+						Total Transactions
+					</p>
+					<p className="text-xl font-semibold text-gray-900 dark:text-white mt-1">
+						{purchases.length}
+					</p>
 				</div>
 				<div className="p-4 rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-[#0a0a0a]">
 					<p className="text-xs text-gray-500 font-medium">Pending Payments</p>
-					<p className="text-xl font-semibold text-amber-600 dark:text-amber-400 mt-1">{pendingCount}</p>
+					<p className="text-xl font-semibold text-amber-600 dark:text-amber-400 mt-1">
+						{pendingCount}
+					</p>
 				</div>
 				<div className="p-4 rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-[#0a0a0a]">
 					<p className="text-xs text-gray-500 font-medium">Completed</p>
-					<p className="text-xl font-semibold text-emerald-600 dark:text-emerald-400 mt-1">{paidCount}</p>
+					<p className="text-xl font-semibold text-emerald-600 dark:text-emerald-400 mt-1">
+						{paidCount}
+					</p>
 				</div>
 			</div>
 
@@ -110,14 +119,34 @@ export default function AdminBillingPage() {
 						</thead>
 						<tbody className="divide-y divide-gray-200 dark:divide-white/10">
 							{loading ? (
-								<tr><td colSpan={8} className="px-6 py-8 text-center text-gray-500">Loading transactions...</td></tr>
+								<tr>
+									<td
+										colSpan={8}
+										className="px-6 py-8 text-center text-gray-500"
+									>
+										Loading transactions...
+									</td>
+								</tr>
 							) : purchases.length === 0 ? (
-								<tr><td colSpan={8} className="px-6 py-8 text-center text-gray-500">No transactions found.</td></tr>
+								<tr>
+									<td
+										colSpan={8}
+										className="px-6 py-8 text-center text-gray-500"
+									>
+										No transactions found.
+									</td>
+								</tr>
 							) : (
-								purchases.map(purchase => (
-									<tr key={purchase.id} className="hover:bg-gray-50/50 dark:hover:bg-white/[0.02] transition-colors">
+								purchases.map((purchase) => (
+									<tr
+										key={purchase.id}
+										className="hover:bg-gray-50/50 dark:hover:bg-white/[0.02] transition-colors"
+									>
 										<td className="px-6 py-3">
-											<span className="font-mono text-xs text-gray-900 dark:text-white truncate max-w-[120px] block" title={purchase.id}>
+											<span
+												className="font-mono text-xs text-gray-900 dark:text-white truncate max-w-[120px] block"
+												title={purchase.id}
+											>
 												{purchase.id.substring(0, 8)}...
 											</span>
 										</td>
@@ -141,27 +170,39 @@ export default function AdminBillingPage() {
 											{purchase.method}
 										</td>
 										<td className="px-6 py-3">
-											{purchase.status === "paid" || purchase.status === "approved" ? (
-												<span className="text-xs font-medium text-emerald-600 dark:text-emerald-400">Paid</span>
+											{purchase.status === "paid" ||
+											purchase.status === "approved" ? (
+												<span className="text-xs font-medium text-emerald-600 dark:text-emerald-400">
+													Paid
+												</span>
 											) : purchase.status === "pending" ? (
-												<span className="text-xs font-medium text-amber-600 dark:text-amber-400">Pending</span>
+												<span className="text-xs font-medium text-amber-600 dark:text-amber-400">
+													Pending
+												</span>
 											) : (
-												<span className="text-xs font-medium text-red-600 dark:text-red-400 capitalize">{purchase.status}</span>
+												<span className="text-xs font-medium text-red-600 dark:text-red-400 capitalize">
+													{purchase.status}
+												</span>
 											)}
 										</td>
 										<td className="px-6 py-3 text-xs text-gray-500">
-											{formatDistanceToNow(new Date(purchase.createdAt), { addSuffix: true })}
+											{formatDistanceToNow(new Date(purchase.createdAt), {
+												addSuffix: true,
+											})}
 										</td>
 										<td className="px-6 py-3 text-right">
 											<select
 												disabled={updating === purchase.id}
 												value={purchase.status}
-												onChange={(e) => handleStatusUpdate(purchase.id, e.target.value)}
+												onChange={(e) =>
+													handleStatusUpdate(purchase.id, e.target.value)
+												}
 												className="text-xs py-1 px-2 border border-gray-200 dark:border-white/10 rounded bg-white dark:bg-black text-gray-900 dark:text-white"
 											>
 												<option value="pending">Pending</option>
 												<option value="paid">Paid</option>
 												<option value="rejected">Rejected</option>
+												<option value="approved">Approved</option>
 												<option value="cancelled">Cancelled</option>
 											</select>
 										</td>

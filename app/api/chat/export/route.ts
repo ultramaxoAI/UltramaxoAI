@@ -1,9 +1,9 @@
-import { eq } from "drizzle-orm";
-import { NextResponse } from "next/server";
-import { auth } from "@/app/(auth)/auth";
 import { db } from "@backend/db/queries";
 import { chat, message } from "@backend/db/schema";
 import { logger } from "@backend/logger";
+import { eq } from "drizzle-orm";
+import { NextResponse } from "next/server";
+import { auth } from "@/app/(auth)/auth";
 
 export async function GET(request: Request) {
 	try {

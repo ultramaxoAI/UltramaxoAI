@@ -1,7 +1,9 @@
+import {
+	getSiteSettings,
+	upsertSiteSettings,
+} from "@backend/db/queries-settings";
 import { NextResponse } from "next/server";
-
 import { auth } from "@/app/(auth)/auth";
-import { getSiteSettings, upsertSiteSettings } from "@backend/db/queries-settings";
 
 export const dynamic = "force-dynamic";
 
@@ -32,7 +34,9 @@ export async function PATCH(request: Request) {
 	try {
 		const body = await request.json();
 		const maintenanceEnabled = Boolean(body.maintenanceEnabled);
-		const maintenanceTemplate = String(body.maintenanceTemplate ?? "minimal").trim();
+		const maintenanceTemplate = String(
+			body.maintenanceTemplate ?? "minimal",
+		).trim();
 		const maintenanceTitle = String(body.maintenanceTitle ?? "").trim();
 		const maintenanceMessage = String(body.maintenanceMessage ?? "").trim();
 

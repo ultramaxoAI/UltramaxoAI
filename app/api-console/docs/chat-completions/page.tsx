@@ -4,8 +4,13 @@ const DEFAULT_FREE_MODEL_ID = "gpt-5.3-codex";
 
 export const metadata: Metadata = {
 	title: "API Documentation — Chat Completions",
-	description: "Panduan endpoint Chat Completions API Ultramaxo. Compatible dengan OpenAI SDK untuk akses GPT-5, Claude, Gemini, dan 40+ model AI.",
-	openGraph: { title: "Ultramaxo API — Chat Completions", description: "Endpoint Chat Completions compatible dengan OpenAI SDK.", url: "https://app.ultramaxo.tech/docs/chat-completions" },
+	description:
+		"Panduan endpoint Chat Completions API Ultramaxo. Compatible dengan OpenAI SDK untuk akses GPT-5, Claude, Gemini, dan 40+ model AI.",
+	openGraph: {
+		title: "Ultramaxo API — Chat Completions",
+		description: "Endpoint Chat Completions compatible dengan OpenAI SDK.",
+		url: "https://app.ultramaxo.tech/docs/chat-completions",
+	},
 };
 
 export default function DocsChatCompletionsPage() {
@@ -32,7 +37,9 @@ export default function DocsChatCompletionsPage() {
 							<div className="apic-params-type">string</div>
 							<div className="apic-params-desc">
 								The model ID to use (e.g.{" "}
-								<code className="apic-code--inline">{DEFAULT_FREE_MODEL_ID}</code>
+								<code className="apic-code--inline">
+									{DEFAULT_FREE_MODEL_ID}
+								</code>
 								). See the Models page for available options.
 							</div>
 						</div>

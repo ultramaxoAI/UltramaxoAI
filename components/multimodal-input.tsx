@@ -1,6 +1,11 @@
 "use client";
 
 import type { UseChatHelpers } from "@ai-sdk/react";
+import {
+	chatModels,
+	DEFAULT_CHAT_MODEL,
+	modelsByProvider,
+} from "@backend/ai/models";
 import type { UIMessage } from "ai";
 import equal from "fast-deep-equal";
 import {
@@ -10,10 +15,8 @@ import {
 	FileTextIcon,
 	ImageIcon,
 	PlusIcon,
-	SparklesIcon,
 	Wand2Icon,
 } from "lucide-react";
-
 import { nanoid } from "nanoid";
 import {
 	type ChangeEvent,
@@ -35,11 +38,6 @@ import {
 	DropdownMenuSeparator,
 	DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import {
-	chatModels,
-	DEFAULT_CHAT_MODEL,
-	modelsByProvider,
-} from "@backend/ai/models";
 import {
 	isFullstackModeInMaintenance,
 	isMobileModeInMaintenance,
@@ -661,8 +659,7 @@ function PureMultimodalInput({
 											fileInputRef.current.click();
 											setTimeout(() => {
 												if (fileInputRef.current) {
-													fileInputRef.current.accept =
-														"*/*";
+													fileInputRef.current.accept = "*/*";
 												}
 											}, 100);
 										}

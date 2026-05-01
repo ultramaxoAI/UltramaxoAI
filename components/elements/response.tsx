@@ -10,7 +10,12 @@ import { CodeBlock } from "./code-block";
 
 type ResponseProps = ComponentProps<typeof Streamdown>;
 
-export function Response({ className, children, isLoading, ...props }: ResponseProps & { isLoading?: boolean }) {
+export function Response({
+	className,
+	children,
+	isLoading,
+	...props
+}: ResponseProps & { isLoading?: boolean }) {
 	return (
 		<Streamdown
 			className={cn(
@@ -78,7 +83,11 @@ export function Response({ className, children, isLoading, ...props }: ResponseP
 					}
 
 					return (
-						<CodeBlock className={`language-${language}`} language={language} isLoading={isLoading}>
+						<CodeBlock
+							className={`language-${language}`}
+							language={language}
+							isLoading={isLoading}
+						>
 							{codeContent}
 						</CodeBlock>
 					);
@@ -91,7 +100,7 @@ export function Response({ className, children, isLoading, ...props }: ResponseP
 								className={cn(
 									"bg-muted px-1.5 py-0.5 rounded-md font-mono text-sm",
 									className,
-								)}		
+								)}
 								{...props}
 							>
 								{children}

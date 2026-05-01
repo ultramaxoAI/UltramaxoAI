@@ -1,5 +1,5 @@
-import { notFound } from "next/navigation";
 import { getSharedDocumentById } from "@backend/db/queries";
+import { notFound } from "next/navigation";
 
 export default async function SharedArtifactPage({
 	params,

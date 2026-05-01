@@ -705,15 +705,12 @@ export const {
 								profile,
 							});
 						} catch (linkError) {
-							console.error(
-								"[Auth.js] Auto-link reconciliation failed:",
-								{
-									provider: account.provider,
-									email: oauthEmail,
-									targetUserId: existingUser.id,
-									error: linkError,
-								},
-							);
+							console.error("[Auth.js] Auto-link reconciliation failed:", {
+								provider: account.provider,
+								email: oauthEmail,
+								targetUserId: existingUser.id,
+								error: linkError,
+							});
 							return false;
 						}
 					} else if (

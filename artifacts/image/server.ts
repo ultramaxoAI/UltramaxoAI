@@ -1,6 +1,6 @@
-import { generateText } from "ai";
 import { getLanguageModel } from "@backend/ai/providers";
 import { createDocumentHandler } from "@backend/artifacts/server";
+import { generateText } from "ai";
 
 export const imageDocumentHandler = createDocumentHandler<"image">({
 	kind: "image",

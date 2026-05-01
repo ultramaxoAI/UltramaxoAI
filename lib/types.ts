@@ -1,7 +1,7 @@
-import type { InferUITool, UIMessage } from "ai";
-import { z } from "zod";
-import type { ArtifactKind } from "@/components/artifact";
-import type { reportAgentStep, startAgentTask } from "@backend/ai/tools/agent-mode";
+import type {
+	reportAgentStep,
+	startAgentTask,
+} from "@backend/ai/tools/agent-mode";
 import type {
 	createCodeFile,
 	deleteCodeFile,
@@ -15,6 +15,9 @@ import type { requestSuggestions } from "@backend/ai/tools/request-suggestions";
 import type { updateDocument } from "@backend/ai/tools/update-document";
 import type { webSearch } from "@backend/ai/tools/web-search";
 import type { Suggestion } from "@backend/db/schema";
+import type { InferUITool, UIMessage } from "ai";
+import { z } from "zod";
+import type { ArtifactKind } from "@/components/artifact";
 
 export type DataPart = { type: "append-message"; message: string };
 
@@ -37,7 +40,9 @@ type listCodeFilesTool = InferUITool<ReturnType<typeof listCodeFiles>>;
 type createCodeFileTool = InferUITool<ReturnType<typeof createCodeFile>>;
 type updateCodeFileTool = InferUITool<ReturnType<typeof updateCodeFile>>;
 type deleteCodeFileTool = InferUITool<ReturnType<typeof deleteCodeFile>>;
-type runWorkspaceCommandTool = InferUITool<ReturnType<typeof runWorkspaceCommand>>;
+type runWorkspaceCommandTool = InferUITool<
+	ReturnType<typeof runWorkspaceCommand>
+>;
 
 export type ChatTools = {
 	getWeather: weatherTool;

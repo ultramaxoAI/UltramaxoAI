@@ -1,6 +1,6 @@
 "use client";
 
-import { PanelLeft, SquarePen, Search, Settings } from "lucide-react";
+import { PanelLeft, Search, Settings, SquarePen } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import type { User } from "next-auth";
@@ -22,13 +22,13 @@ import {
 	SidebarMenu,
 	useSidebar,
 } from "@/components/ui/sidebar";
-import { cn } from "@/lib/utils";
 import {
 	Tooltip,
 	TooltipContent,
 	TooltipProvider,
 	TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { cn } from "@/lib/utils";
 import {
 	AlertDialog,
 	AlertDialogAction,
@@ -42,7 +42,8 @@ import {
 
 export function AppSidebar({ user }: { user: User | undefined }) {
 	const router = useRouter();
-	const { setOpenMobile, state, open, setOpen, isMobile, toggleSidebar } = useSidebar();
+	const { setOpenMobile, state, open, setOpen, isMobile, toggleSidebar } =
+		useSidebar();
 	const { mutate } = useSWRConfig();
 	const [showDeleteAllDialog, setShowDeleteAllDialog] = useState(false);
 
@@ -75,134 +76,169 @@ export function AppSidebar({ user }: { user: User | undefined }) {
 				<SidebarHeader className="border-b border-black/6 dark:border-white/6">
 					<SidebarMenu>
 						<TooltipProvider delayDuration={0}>
-						<div className="flex flex-col gap-3 px-3 py-4">
-							{/* Toggle + Title Row */}
-							<div className={cn("mb-1 flex items-center", isSidebarOpen ? "justify-between" : "justify-center")}>
-								{/* App Title - show when open */}
-								{isSidebarOpen && (
-									<Link
-										className="ml-2 flex flex-1 items-center transition-opacity hover:opacity-80"
-										href="/chat"
-										onClick={() => setOpenMobile(false)}
-									>
-										<span className="text-[1.55rem] font-serif tracking-[-0.045em] text-[#16181b] dark:text-[#f4f1ec]">
-											Ultramaxo
-										</span>
-									</Link>
-								)}
-
-								{/* Toggle Button */}
-								<Tooltip>
-									<TooltipTrigger asChild>
-										<Button
-											aria-label={
-												isSidebarOpen ? "Collapse sidebar" : "Expand sidebar"
-											}
-											className="h-8 w-8 shrink-0 rounded-xl p-0 text-[#5e625c] transition-colors hover:bg-black/5 hover:text-[#15181b] dark:text-[#8f948d] dark:hover:bg-white/6 dark:hover:text-[#f4f1ec]"
-											onClick={toggleSidebar}
-											type="button"
-											variant="ghost"
+							<div className="flex flex-col gap-3 px-3 py-4">
+								{/* Toggle + Title Row */}
+								<div
+									className={cn(
+										"mb-1 flex items-center",
+										isSidebarOpen ? "justify-between" : "justify-center",
+									)}
+								>
+									{/* App Title - show when open */}
+									{isSidebarOpen && (
+										<Link
+											className="ml-2 flex flex-1 items-center transition-opacity hover:opacity-80"
+											href="/chat"
+											onClick={() => setOpenMobile(false)}
 										>
-											<PanelLeft className="h-5 w-5 opacity-70" />
-										</Button>
-									</TooltipTrigger>
-									<TooltipContent side="right" sideOffset={12} className="rounded-xl border border-white/8 bg-[#121519] px-3 py-1.5 text-xs font-medium text-white shadow-xl">
-										<span>{isSidebarOpen ? "Close sidebar" : "Open sidebar"}</span>
-										<span className="text-white/50 text-[10px] uppercase font-mono tracking-widest ml-1">Ctrl+.</span>
-									</TooltipContent>
-								</Tooltip>
+											<span className="text-[1.55rem] font-serif tracking-[-0.045em] text-[#16181b] dark:text-[#f4f1ec]">
+												Ultramaxo
+											</span>
+										</Link>
+									)}
+
+									{/* Toggle Button */}
+									<Tooltip>
+										<TooltipTrigger asChild>
+											<Button
+												aria-label={
+													isSidebarOpen ? "Collapse sidebar" : "Expand sidebar"
+												}
+												className="h-8 w-8 shrink-0 rounded-xl p-0 text-[#5e625c] transition-colors hover:bg-black/5 hover:text-[#15181b] dark:text-[#8f948d] dark:hover:bg-white/6 dark:hover:text-[#f4f1ec]"
+												onClick={toggleSidebar}
+												type="button"
+												variant="ghost"
+											>
+												<PanelLeft className="h-5 w-5 opacity-70" />
+											</Button>
+										</TooltipTrigger>
+										<TooltipContent
+											side="right"
+											sideOffset={12}
+											className="rounded-xl border border-white/8 bg-[#121519] px-3 py-1.5 text-xs font-medium text-white shadow-xl"
+										>
+											<span>
+												{isSidebarOpen ? "Close sidebar" : "Open sidebar"}
+											</span>
+											<span className="text-white/50 text-[10px] uppercase font-mono tracking-widest ml-1">
+												Ctrl+.
+											</span>
+										</TooltipContent>
+									</Tooltip>
+								</div>
+
+								<div className="flex w-full flex-col gap-0.5">
+									{/* New Chat Button */}
+									<Tooltip>
+										<TooltipTrigger asChild>
+											<Button
+												className={cn(
+													"cursor-pointer font-normal text-[#1b1e21] transition-all hover:bg-black/5 dark:text-[#f4f1ec] dark:hover:bg-white/6",
+													isSidebarOpen
+														? "h-11 w-full justify-start gap-3 rounded-2xl px-3"
+														: "mx-auto h-9 w-9 rounded-2xl p-0",
+												)}
+												onClick={() => {
+													setOpenMobile(false);
+													router.push("/chat");
+													router.refresh();
+												}}
+												type="button"
+												variant="ghost"
+											>
+												<SquarePen className="h-[18px] w-[18px] shrink-0 opacity-80" />
+												{isSidebarOpen && (
+													<span className="text-[14px] font-medium">
+														New chat
+													</span>
+												)}
+											</Button>
+										</TooltipTrigger>
+										{!isSidebarOpen && (
+											<TooltipContent
+												side="right"
+												sideOffset={12}
+												className="rounded-xl border border-white/8 bg-[#121519] px-3 py-1.5 text-xs font-medium text-white shadow-xl"
+											>
+												<span>New chat</span>
+											</TooltipContent>
+										)}
+									</Tooltip>
+
+									{/* Search Placeholder */}
+									<Tooltip>
+										<TooltipTrigger asChild>
+											<Button
+												className={cn(
+													"cursor-pointer font-normal text-[#1b1e21] transition-all hover:bg-black/5 dark:text-[#f4f1ec] dark:hover:bg-white/6",
+													isSidebarOpen
+														? "h-10 w-full justify-start gap-3 rounded-2xl px-3"
+														: "mx-auto h-9 w-9 rounded-2xl p-0",
+												)}
+												type="button"
+												variant="ghost"
+											>
+												<Search className="h-[18px] w-[18px] shrink-0 opacity-80" />
+												{isSidebarOpen && (
+													<span className="text-[13px] text-[#666b66] dark:text-[#959b95]">
+														Search
+													</span>
+												)}
+											</Button>
+										</TooltipTrigger>
+										{!isSidebarOpen && (
+											<TooltipContent
+												side="right"
+												sideOffset={12}
+												className="rounded-xl border border-white/8 bg-[#121519] px-3 py-1.5 text-xs font-medium text-white shadow-xl"
+											>
+												<span>Search</span>
+											</TooltipContent>
+										)}
+									</Tooltip>
+
+									{/* Settings / Personalization */}
+									<Tooltip>
+										<TooltipTrigger asChild>
+											<Button
+												className={cn(
+													"cursor-pointer font-normal text-[#1b1e21] transition-all hover:bg-black/5 dark:text-[#f4f1ec] dark:hover:bg-white/6",
+													isSidebarOpen
+														? "h-10 w-full justify-start gap-3 rounded-2xl px-3"
+														: "mx-auto h-9 w-9 rounded-2xl p-0",
+												)}
+												onClick={() => {
+													setOpenMobile(false);
+													router.push("/settings");
+												}}
+												type="button"
+												variant="ghost"
+											>
+												<Settings className="h-[18px] w-[18px] shrink-0 opacity-80" />
+												{isSidebarOpen && (
+													<span className="text-[13px] text-[#666b66] dark:text-[#959b95]">
+														Personalization
+													</span>
+												)}
+											</Button>
+										</TooltipTrigger>
+										{!isSidebarOpen && (
+											<TooltipContent
+												side="right"
+												sideOffset={12}
+												className="rounded-xl border border-white/8 bg-[#121519] px-3 py-1.5 text-xs font-medium text-white shadow-xl"
+											>
+												<span>Personalization</span>
+											</TooltipContent>
+										)}
+									</Tooltip>
+								</div>
 							</div>
-
-							<div className="flex w-full flex-col gap-0.5">
-								{/* New Chat Button */}
-								<Tooltip>
-									<TooltipTrigger asChild>
-										<Button
-											className={cn(
-												"cursor-pointer font-normal text-[#1b1e21] transition-all hover:bg-black/5 dark:text-[#f4f1ec] dark:hover:bg-white/6",
-												isSidebarOpen
-													? "h-11 w-full justify-start gap-3 rounded-2xl px-3"
-													: "mx-auto h-9 w-9 rounded-2xl p-0",
-											)}
-											onClick={() => {
-												setOpenMobile(false);
-												router.push("/chat");
-												router.refresh();
-											}}
-											type="button"
-											variant="ghost"
-										>
-											<SquarePen className="h-[18px] w-[18px] shrink-0 opacity-80" />
-											{isSidebarOpen && <span className="text-[14px] font-medium">New chat</span>}
-										</Button>
-									</TooltipTrigger>
-									{!isSidebarOpen && (
-										<TooltipContent side="right" sideOffset={12} className="rounded-xl border border-white/8 bg-[#121519] px-3 py-1.5 text-xs font-medium text-white shadow-xl">
-											<span>New chat</span>
-										</TooltipContent>
-									)}
-								</Tooltip>
-
-								{/* Search Placeholder */}
-								<Tooltip>
-									<TooltipTrigger asChild>
-										<Button
-											className={cn(
-												"cursor-pointer font-normal text-[#1b1e21] transition-all hover:bg-black/5 dark:text-[#f4f1ec] dark:hover:bg-white/6",
-												isSidebarOpen
-													? "h-10 w-full justify-start gap-3 rounded-2xl px-3"
-													: "mx-auto h-9 w-9 rounded-2xl p-0",
-											)}
-											type="button"
-											variant="ghost"
-										>
-											<Search className="h-[18px] w-[18px] shrink-0 opacity-80" />
-											{isSidebarOpen && <span className="text-[13px] text-[#666b66] dark:text-[#959b95]">Search</span>}
-										</Button>
-									</TooltipTrigger>
-									{!isSidebarOpen && (
-										<TooltipContent side="right" sideOffset={12} className="rounded-xl border border-white/8 bg-[#121519] px-3 py-1.5 text-xs font-medium text-white shadow-xl">
-											<span>Search</span>
-										</TooltipContent>
-									)}
-								</Tooltip>
-
-								{/* Settings / Personalization */}
-								<Tooltip>
-									<TooltipTrigger asChild>
-										<Button
-											className={cn(
-												"cursor-pointer font-normal text-[#1b1e21] transition-all hover:bg-black/5 dark:text-[#f4f1ec] dark:hover:bg-white/6",
-												isSidebarOpen
-													? "h-10 w-full justify-start gap-3 rounded-2xl px-3"
-													: "mx-auto h-9 w-9 rounded-2xl p-0",
-											)}
-											onClick={() => {
-												setOpenMobile(false);
-												router.push("/settings");
-											}}
-											type="button"
-											variant="ghost"
-										>
-											<Settings className="h-[18px] w-[18px] shrink-0 opacity-80" />
-											{isSidebarOpen && <span className="text-[13px] text-[#666b66] dark:text-[#959b95]">Personalization</span>}
-										</Button>
-									</TooltipTrigger>
-									{!isSidebarOpen && (
-										<TooltipContent side="right" sideOffset={12} className="rounded-xl border border-white/8 bg-[#121519] px-3 py-1.5 text-xs font-medium text-white shadow-xl">
-											<span>Personalization</span>
-										</TooltipContent>
-									)}
-								</Tooltip>
-							</div>
-						</div>
 						</TooltipProvider>
 					</SidebarMenu>
 				</SidebarHeader>
 				<SidebarContent>
-					{isSidebarOpen ? (
-						<SidebarHistory user={user} />
-					) : null}
+					{isSidebarOpen ? <SidebarHistory user={user} /> : null}
 				</SidebarContent>
 				<SidebarFooter>
 					{user && <SidebarUserNav isCollapsed={!isSidebarOpen} user={user} />}

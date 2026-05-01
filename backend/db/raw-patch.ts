@@ -13,7 +13,7 @@ async function main() {
 	}
 
 	const connection = postgres(process.env.POSTGRES_URL, { max: 1 });
-	const db = drizzle(connection);
+	const _db = drizzle(connection);
 
 	try {
 		console.log("Adding freeIdeModeUsedAt column to user table...");

@@ -127,7 +127,9 @@ export function PromptLibraryPanel() {
 						<Label>Preset Name</Label>
 						<Input
 							value={form.title}
-							onChange={(e) => setForm((prev) => ({ ...prev, title: e.target.value }))}
+							onChange={(e) =>
+								setForm((prev) => ({ ...prev, title: e.target.value }))
+							}
 							placeholder="Landing page audit"
 						/>
 					</div>
@@ -135,7 +137,9 @@ export function PromptLibraryPanel() {
 						<Label>Preferred Model</Label>
 						<Input
 							value={form.modelId}
-							onChange={(e) => setForm((prev) => ({ ...prev, modelId: e.target.value }))}
+							onChange={(e) =>
+								setForm((prev) => ({ ...prev, modelId: e.target.value }))
+							}
 							placeholder="openai/gpt-4.1"
 						/>
 					</div>
@@ -146,37 +150,89 @@ export function PromptLibraryPanel() {
 					<textarea
 						className="min-h-36 w-full rounded-xl border border-zinc-200 dark:border-white/10 bg-white dark:bg-zinc-900 px-4 py-3 text-sm text-zinc-900 dark:text-white outline-none"
 						value={form.prompt}
-						onChange={(e) => setForm((prev) => ({ ...prev, prompt: e.target.value }))}
+						onChange={(e) =>
+							setForm((prev) => ({ ...prev, prompt: e.target.value }))
+						}
 						placeholder="Review this feature request, break it into implementation steps, then produce the first working draft..."
 					/>
 				</div>
 
 				<div className="grid gap-3 sm:grid-cols-2">
 					<label className="flex items-center gap-3 rounded-xl border border-zinc-200 dark:border-white/10 bg-white dark:bg-zinc-900 px-4 py-3 text-sm">
-						<input checked={form.webSearchEnabled} onChange={(e) => setForm((prev) => ({ ...prev, webSearchEnabled: e.target.checked }))} type="checkbox" />
+						<input
+							checked={form.webSearchEnabled}
+							onChange={(e) =>
+								setForm((prev) => ({
+									...prev,
+									webSearchEnabled: e.target.checked,
+								}))
+							}
+							type="checkbox"
+						/>
 						Web search
 					</label>
 					<label className="flex items-center gap-3 rounded-xl border border-zinc-200 dark:border-white/10 bg-white dark:bg-zinc-900 px-4 py-3 text-sm">
-						<input checked={form.deepThinkingEnabled} onChange={(e) => setForm((prev) => ({ ...prev, deepThinkingEnabled: e.target.checked }))} type="checkbox" />
+						<input
+							checked={form.deepThinkingEnabled}
+							onChange={(e) =>
+								setForm((prev) => ({
+									...prev,
+									deepThinkingEnabled: e.target.checked,
+								}))
+							}
+							type="checkbox"
+						/>
 						Deep thinking
 					</label>
 					<label className="flex items-center gap-3 rounded-xl border border-zinc-200 dark:border-white/10 bg-white dark:bg-zinc-900 px-4 py-3 text-sm">
-						<input checked={form.fullstackModeEnabled} onChange={(e) => setForm((prev) => ({ ...prev, fullstackModeEnabled: e.target.checked }))} type="checkbox" />
+						<input
+							checked={form.fullstackModeEnabled}
+							onChange={(e) =>
+								setForm((prev) => ({
+									...prev,
+									fullstackModeEnabled: e.target.checked,
+								}))
+							}
+							type="checkbox"
+						/>
 						Fullstack mode
 					</label>
 					<label className="flex items-center gap-3 rounded-xl border border-zinc-200 dark:border-white/10 bg-white dark:bg-zinc-900 px-4 py-3 text-sm">
-						<input checked={form.mobileModeEnabled} onChange={(e) => setForm((prev) => ({ ...prev, mobileModeEnabled: e.target.checked }))} type="checkbox" />
+						<input
+							checked={form.mobileModeEnabled}
+							onChange={(e) =>
+								setForm((prev) => ({
+									...prev,
+									mobileModeEnabled: e.target.checked,
+								}))
+							}
+							type="checkbox"
+						/>
 						Mobile mode
 					</label>
 				</div>
 
 				<div className="flex gap-3">
-					<Button className="bg-zinc-900 text-white dark:bg-white dark:text-black" disabled={saving} onClick={handleSubmit} type="button">
-						{saving ? <Loader2Icon className="mr-2 animate-spin" size={16} /> : <PlusIcon className="mr-2" size={16} />}
+					<Button
+						className="bg-zinc-900 text-white dark:bg-white dark:text-black"
+						disabled={saving}
+						onClick={handleSubmit}
+						type="button"
+					>
+						{saving ? (
+							<Loader2Icon className="mr-2 animate-spin" size={16} />
+						) : (
+							<PlusIcon className="mr-2" size={16} />
+						)}
 						{editingId ? "Update preset" : "Save preset"}
 					</Button>
 					{editingId ? (
-						<Button disabled={saving} onClick={resetForm} type="button" variant="outline">
+						<Button
+							disabled={saving}
+							onClick={resetForm}
+							type="button"
+							variant="outline"
+						>
 							Cancel edit
 						</Button>
 					) : null}
@@ -200,17 +256,44 @@ export function PromptLibraryPanel() {
 				) : (
 					<div className="space-y-3">
 						{presets.map((preset) => (
-							<div className="rounded-2xl border border-zinc-200 dark:border-white/5 bg-white dark:bg-[#101010] p-4" key={preset.id}>
+							<div
+								className="rounded-2xl border border-zinc-200 dark:border-white/5 bg-white dark:bg-[#101010] p-4"
+								key={preset.id}
+							>
 								<div className="flex flex-wrap items-start justify-between gap-3">
 									<div>
-										<h3 className="text-sm font-semibold text-zinc-900 dark:text-white">{preset.title}</h3>
-										<p className="mt-1 line-clamp-3 text-sm text-zinc-500 dark:text-zinc-400">{preset.prompt}</p>
+										<h3 className="text-sm font-semibold text-zinc-900 dark:text-white">
+											{preset.title}
+										</h3>
+										<p className="mt-1 line-clamp-3 text-sm text-zinc-500 dark:text-zinc-400">
+											{preset.prompt}
+										</p>
 										<div className="mt-3 flex flex-wrap gap-2 text-[11px] text-zinc-500 dark:text-zinc-400">
-											{preset.modelId ? <span className="rounded-full bg-zinc-100 dark:bg-zinc-800 px-2.5 py-1">{preset.modelId}</span> : null}
-											{preset.webSearchEnabled ? <span className="rounded-full bg-zinc-100 dark:bg-zinc-800 px-2.5 py-1">web</span> : null}
-											{preset.deepThinkingEnabled ? <span className="rounded-full bg-zinc-100 dark:bg-zinc-800 px-2.5 py-1">deep</span> : null}
-											{preset.fullstackModeEnabled ? <span className="rounded-full bg-zinc-100 dark:bg-zinc-800 px-2.5 py-1">fullstack</span> : null}
-											{preset.mobileModeEnabled ? <span className="rounded-full bg-zinc-100 dark:bg-zinc-800 px-2.5 py-1">mobile</span> : null}
+											{preset.modelId ? (
+												<span className="rounded-full bg-zinc-100 dark:bg-zinc-800 px-2.5 py-1">
+													{preset.modelId}
+												</span>
+											) : null}
+											{preset.webSearchEnabled ? (
+												<span className="rounded-full bg-zinc-100 dark:bg-zinc-800 px-2.5 py-1">
+													web
+												</span>
+											) : null}
+											{preset.deepThinkingEnabled ? (
+												<span className="rounded-full bg-zinc-100 dark:bg-zinc-800 px-2.5 py-1">
+													deep
+												</span>
+											) : null}
+											{preset.fullstackModeEnabled ? (
+												<span className="rounded-full bg-zinc-100 dark:bg-zinc-800 px-2.5 py-1">
+													fullstack
+												</span>
+											) : null}
+											{preset.mobileModeEnabled ? (
+												<span className="rounded-full bg-zinc-100 dark:bg-zinc-800 px-2.5 py-1">
+													mobile
+												</span>
+											) : null}
 										</div>
 									</div>
 									<div className="flex gap-2">
@@ -233,7 +316,11 @@ export function PromptLibraryPanel() {
 										>
 											Edit
 										</Button>
-										<Button onClick={() => handleDelete(preset.id)} type="button" variant="ghost">
+										<Button
+											onClick={() => handleDelete(preset.id)}
+											type="button"
+											variant="ghost"
+										>
 											<Trash2Icon size={16} />
 										</Button>
 									</div>

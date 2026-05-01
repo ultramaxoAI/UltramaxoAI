@@ -24,13 +24,7 @@ export default function robots(): MetadataRoute.Robots {
 			},
 			{
 				userAgent: "Googlebot",
-				allow: [
-					"/",
-					"/docs",
-					"/docs/",
-					"/models",
-					"/pricing",
-				],
+				allow: ["/", "/docs", "/docs/", "/models", "/pricing"],
 				disallow: [
 					"/api/",
 					"/chat/",

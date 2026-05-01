@@ -1,7 +1,7 @@
 "use client";
 
+import { Cookie, X } from "lucide-react";
 import { useEffect, useState } from "react";
-import { X, Cookie } from "lucide-react";
 import { Button } from "./ui/button";
 
 export function CookieConsent() {
@@ -15,7 +15,7 @@ export function CookieConsent() {
 				setIsVisible(true);
 			}
 		}, 1000);
-		
+
 		return () => clearTimeout(timer);
 	}, []);
 
@@ -44,7 +44,10 @@ export function CookieConsent() {
 							We respect your privacy
 						</h3>
 						<p className="text-zinc-600 dark:text-zinc-400 text-xs sm:text-sm leading-relaxed max-w-2xl">
-							We use essential cookies to keep your session secure (1-Day limit) and to make our AI features work. By clicking "Accept All", you also agree to our use of analytics cookies to improve your experience.
+							We use essential cookies to keep your session secure (1-Day limit)
+							and to make our AI features work. By clicking "Accept All", you
+							also agree to our use of analytics cookies to improve your
+							experience.
 						</p>
 					</div>
 				</div>

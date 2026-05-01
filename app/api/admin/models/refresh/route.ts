@@ -1,6 +1,6 @@
+import { refreshModelCatalog } from "@backend/models/model-catalog";
 import { NextResponse } from "next/server";
 import { auth } from "@/app/(auth)/auth";
-import { refreshModelCatalog } from "@backend/models/model-catalog";
 
 export async function POST() {
 	const session = await auth();

@@ -2,8 +2,13 @@ import type { Metadata } from "next";
 
 export const metadata: Metadata = {
 	title: "API Documentation — Error Reference",
-	description: "Referensi kode error Ultramaxo API. Panduan troubleshooting untuk HTTP status code dan error message.",
-	openGraph: { title: "Ultramaxo API — Error Reference", description: "Referensi kode error dan troubleshooting API.", url: "https://app.ultramaxo.tech/docs/errors" },
+	description:
+		"Referensi kode error Ultramaxo API. Panduan troubleshooting untuk HTTP status code dan error message.",
+	openGraph: {
+		title: "Ultramaxo API — Error Reference",
+		description: "Referensi kode error dan troubleshooting API.",
+		url: "https://app.ultramaxo.tech/docs/errors",
+	},
 };
 
 export default function DocsErrorsPage() {

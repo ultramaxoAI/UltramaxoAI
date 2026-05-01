@@ -1,4 +1,5 @@
 import type { UseChatHelpers } from "@ai-sdk/react";
+import type { Document, Vote } from "@backend/db/schema";
 import { formatDistance } from "date-fns";
 import equal from "fast-deep-equal";
 import { AnimatePresence, motion } from "framer-motion";
@@ -17,12 +18,11 @@ import { imageArtifact } from "@/artifacts/image/client";
 import { sheetArtifact } from "@/artifacts/sheet/client";
 import { textArtifact } from "@/artifacts/text/client";
 import { useArtifact, useArtifactUiState } from "@/hooks/use-artifact";
-import type { Document, Vote } from "@backend/db/schema";
 import type { Attachment, ChatMessage } from "@/lib/types";
 import { cn, fetcher } from "@/lib/utils";
-import { ArtifactShareButton } from "./artifact-share-button";
 import { ArtifactActions } from "./artifact-actions";
 import { ArtifactCloseButton } from "./artifact-close-button";
+import { ArtifactShareButton } from "./artifact-share-button";
 import { Toolbar } from "./toolbar";
 import { useSidebar } from "./ui/sidebar";
 import { VersionFooter } from "./version-footer";
@@ -301,7 +301,9 @@ function PureArtifact({
 										height:
 											isIdeLocked && windowHeight
 												? windowHeight * 0.56
-												: windowHeight ? windowHeight : "100dvh",
+												: windowHeight
+													? windowHeight
+													: "100dvh",
 										width: windowWidth ? windowWidth : "100dvw",
 										borderRadius: 0,
 										transition: {
@@ -357,7 +359,9 @@ function PureArtifact({
 										height:
 											isIdeLocked && windowHeight
 												? windowHeight * 0.52
-												: windowHeight ? windowHeight : "100dvh",
+												: windowHeight
+													? windowHeight
+													: "100dvh",
 										width: windowWidth ? windowWidth : "100dvw",
 										borderRadius: 0,
 									}
@@ -376,7 +380,9 @@ function PureArtifact({
 								<ArtifactCloseButton />
 
 								<div className="flex min-w-0 flex-col">
-									<div className="truncate font-semibold text-zinc-100 text-sm tracking-wide md:text-base">{artifact.title}</div>
+									<div className="truncate font-semibold text-zinc-100 text-sm tracking-wide md:text-base">
+										{artifact.title}
+									</div>
 
 									{isContentDirty ? (
 										<div className="text-muted-foreground text-xs md:text-sm">
@@ -398,24 +404,24 @@ function PureArtifact({
 								</div>
 							</div>
 
-						<div className="flex shrink-0 items-center gap-2">
-							{document ? (
-								<ArtifactShareButton
-									defaultShared={Boolean(document.isShared)}
-									documentId={artifact.documentId}
+							<div className="flex shrink-0 items-center gap-2">
+								{document ? (
+									<ArtifactShareButton
+										defaultShared={Boolean(document.isShared)}
+										documentId={artifact.documentId}
+									/>
+								) : null}
+								<ArtifactActions
+									artifact={artifact}
+									currentVersionIndex={currentVersionIndex}
+									handleVersionChange={handleVersionChange}
+									isCurrentVersion={isCurrentVersion}
+									metadata={metadata}
+									mode={mode}
+									setMetadata={setMetadata}
 								/>
-							) : null}
-							<ArtifactActions
-								artifact={artifact}
-								currentVersionIndex={currentVersionIndex}
-								handleVersionChange={handleVersionChange}
-								isCurrentVersion={isCurrentVersion}
-								metadata={metadata}
-								mode={mode}
-								setMetadata={setMetadata}
-							/>
+							</div>
 						</div>
-					</div>
 
 						<div className="h-full flex-1 max-w-full! items-center overflow-y-auto bg-zinc-950">
 							<div className={artifact.kind === "code" ? "" : "p-3 md:p-4"}>

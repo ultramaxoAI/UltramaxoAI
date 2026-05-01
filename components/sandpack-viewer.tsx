@@ -2,9 +2,7 @@
 
 import {
 	SandpackCodeEditor,
-	SandpackConsole,
 	type SandpackPredefinedTemplate,
-	SandpackPreview,
 	SandpackProvider,
 	useSandpack,
 } from "@codesandbox/sandpack-react";
@@ -19,7 +17,7 @@ import {
 	PlusIcon,
 	Trash2Icon,
 } from "lucide-react";
-import { memo, type ReactNode, useMemo, useState, useEffect } from "react";
+import { memo, type ReactNode, useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -395,7 +393,11 @@ function SandpackIDE({
 	onSaveContent,
 }: Pick<
 	SandpackViewerProps,
-	"dependencies" | "status" | "userDependencies" | "onDependenciesChange" | "onSaveContent"
+	| "dependencies"
+	| "status"
+	| "userDependencies"
+	| "onDependenciesChange"
+	| "onSaveContent"
 >) {
 	const { sandpack } = useSandpack();
 	const [expandedFolders, setExpandedFolders] = useState<
@@ -506,7 +508,7 @@ function SandpackIDE({
 		setRenamedFile("");
 	};
 
-	const handleAddDependency = () => {
+	const _handleAddDependency = () => {
 		const parsedPackage = parsePackageSpec(packageInput);
 
 		if (!parsedPackage) {
@@ -521,12 +523,18 @@ function SandpackIDE({
 	};
 
 	useEffect(() => {
-		if (Object.keys(sandpack.files).length > 0 && onSaveContent && status !== "streaming") {
-			const playableFiles = Object.entries(sandpack.files).map(([path, file]) => ({
-				name: path.replace(/^\//, ""),
-				content: file.code,
-				language: inferLanguageFromPath(path)
-			}));
+		if (
+			Object.keys(sandpack.files).length > 0 &&
+			onSaveContent &&
+			status !== "streaming"
+		) {
+			const playableFiles = Object.entries(sandpack.files).map(
+				([path, file]) => ({
+					name: path.replace(/^\//, ""),
+					content: file.code,
+					language: inferLanguageFromPath(path),
+				}),
+			);
 			onSaveContent(playableFiles);
 		}
 	}, [sandpack.files, status, onSaveContent]);

@@ -29,7 +29,8 @@ export function useAutoResume({
 
 		const mostRecentMessage = safeInitialMessages.at(-1);
 		const hasInvalidParts = safeInitialMessages.some(
-			(msg) => (msg.parts?.length ?? 0) !== (msg.parts ?? []).filter(Boolean).length,
+			(msg) =>
+				(msg.parts?.length ?? 0) !== (msg.parts ?? []).filter(Boolean).length,
 		);
 
 		if (mostRecentMessage?.role === "user" && !hasInvalidParts) {
@@ -49,7 +50,12 @@ export function useAutoResume({
 
 		// we intentionally run this once
 		// eslint-disable-next-line react-hooks/exhaustive-deps
-	}, [autoResume, resumeStream]);
+	}, [
+		autoResume,
+		resumeStream,
+		safeInitialMessages.at,
+		safeInitialMessages.some,
+	]);
 
 	useEffect(() => {
 		if (!dataStream) {

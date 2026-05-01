@@ -1,5 +1,8 @@
-import { BillingPanel } from "@/components/api-console/billing-panel";
 import type { Metadata } from "next";
+import { BillingPanel } from "@/components/api-console/billing-panel";
+
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
 
 export const metadata: Metadata = {
 	title: "API Console — Billing & Credits",

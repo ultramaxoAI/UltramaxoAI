@@ -1,11 +1,8 @@
 import "server-only";
 
-import { and, eq, sql } from "drizzle-orm";
 import { db } from "@backend/db/queries";
-import {
-	modelCatalog,
-	modelCatalogRefreshLog,
-} from "@backend/db/schema";
+import { modelCatalog, modelCatalogRefreshLog } from "@backend/db/schema";
+import { and, eq, sql } from "drizzle-orm";
 
 const SWIFTROUTER_BASE_URL = "https://api.swiftrouter.com/v1";
 const FREE_MODEL_HINT = "gpt-5.3";
@@ -106,7 +103,9 @@ export async function listModelCatalog(filter: ModelCatalogFilter = {}) {
 	}
 
 	if (filter.capability) {
-		conditions.push(sql`${modelCatalog.capabilities}::jsonb ? ${filter.capability}`);
+		conditions.push(
+			sql`${modelCatalog.capabilities}::jsonb ? ${filter.capability}`,
+		);
 	}
 
 	const baseQuery = db.select().from(modelCatalog);
@@ -176,12 +175,20 @@ export async function refreshModelCatalog() {
 
 		// Get data from API response first
 		const apiName = String(modelRecord.name || modelId);
-		const apiProvider = String(modelRecord.provider || modelRecord.owner || modelRecord.owned_by || "unknown");
+		const apiProvider = String(
+			modelRecord.provider ||
+				modelRecord.owner ||
+				modelRecord.owned_by ||
+				"unknown",
+		);
 		const apiContext =
-			modelRecord.context_length || modelRecord.context || modelRecord.max_context;
+			modelRecord.context_length ||
+			modelRecord.context ||
+			modelRecord.max_context;
 		const apiContextText = apiContext ? String(apiContext) : null;
 
-		const { priceIn: apiPriceIn, priceOut: apiPriceOut } = getPriceFromModel(modelRecord);
+		const { priceIn: apiPriceIn, priceOut: apiPriceOut } =
+			getPriceFromModel(modelRecord);
 		const apiCapabilities = normalizeCapabilities(
 			modelRecord.capabilities || modelRecord.modalities,
 			modelId,
@@ -192,15 +199,18 @@ export async function refreshModelCatalog() {
 
 		const name = meta.displayName || apiName;
 		const provider = meta.provider || apiProvider;
-		const contextText = apiContextText || (meta.context ? String(meta.context) : null);
+		const contextText =
+			apiContextText || (meta.context ? String(meta.context) : null);
 		const priceIn = apiPriceIn ?? (meta.priceIn ? Number(meta.priceIn) : null);
-		const priceOut = apiPriceOut ?? (meta.priceOut ? Number(meta.priceOut) : null);
-		const capabilities = (apiCapabilities.length > 1 || apiCapabilities[0] !== "text")
-			? apiCapabilities
-			: meta.capabilities;
+		const priceOut =
+			apiPriceOut ?? (meta.priceOut ? Number(meta.priceOut) : null);
+		const capabilities =
+			apiCapabilities.length > 1 || apiCapabilities[0] !== "text"
+				? apiCapabilities
+				: meta.capabilities;
 
 		// Models with pricing are active, others use metadata to decide
-		const status = (priceIn !== null || priceOut !== null) ? "active" : "active";
+		const status = priceIn !== null || priceOut !== null ? "active" : "active";
 
 		const priceInStr = priceIn !== null ? String(priceIn) : null;
 		const priceOutStr = priceOut !== null ? String(priceOut) : null;

@@ -1,9 +1,9 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { TicketIcon, Plus, Copy, Check } from "lucide-react";
-import { toast } from "sonner";
 import { formatDistanceToNow } from "date-fns";
+import { Check, Copy, Plus } from "lucide-react";
+import { useCallback, useEffect, useState } from "react";
+import { toast } from "sonner";
 
 interface RedeemCode {
 	id: string;
@@ -32,7 +32,7 @@ export default function AdminVouchersPage() {
 		expiresAt: "",
 	});
 
-	const fetchCodes = async () => {
+	const fetchCodes = useCallback(async () => {
 		setLoading(true);
 		try {
 			const res = await fetch("/api/admin/redeem-codes");
@@ -43,11 +43,11 @@ export default function AdminVouchersPage() {
 		} finally {
 			setLoading(false);
 		}
-	};
+	}, []);
 
 	useEffect(() => {
 		fetchCodes();
-	}, []);
+	}, [fetchCodes]);
 
 	const generateCode = () => {
 		const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
@@ -70,7 +70,8 @@ export default function AdminVouchersPage() {
 				code: formData.code.trim().toUpperCase(),
 				type: formData.type,
 				value: formData.type === "CREDIT" ? Math.max(1, formData.value) : 0,
-				durationMonths: formData.type === "PRO" ? Math.max(1, formData.durationMonths) : 0,
+				durationMonths:
+					formData.type === "PRO" ? Math.max(1, formData.durationMonths) : 0,
 			};
 			if (formData.expiresAt) payload.expiresAt = formData.expiresAt;
 
@@ -82,7 +83,13 @@ export default function AdminVouchersPage() {
 			const data = await res.json();
 			if (data.success) {
 				toast.success("Voucher created");
-				setFormData({ code: "", type: "PRO", value: 0, durationMonths: 1, expiresAt: "" });
+				setFormData({
+					code: "",
+					type: "PRO",
+					value: 0,
+					durationMonths: 1,
+					expiresAt: "",
+				});
 				fetchCodes();
 			} else {
 				toast.error(data.error || "Create failed");
@@ -101,8 +108,8 @@ export default function AdminVouchersPage() {
 		setTimeout(() => setCopiedId(null), 2000);
 	};
 
-	const usedCount = codes.filter(c => c.isUsed).length;
-	const activeCount = codes.filter(c => !c.isUsed).length;
+	const usedCount = codes.filter((c) => c.isUsed).length;
+	const activeCount = codes.filter((c) => !c.isUsed).length;
 
 	return (
 		<div className="p-8 max-w-6xl mx-auto space-y-8">
@@ -119,30 +126,42 @@ export default function AdminVouchersPage() {
 			<div className="grid grid-cols-3 gap-4">
 				<div className="p-4 rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-[#0a0a0a]">
 					<p className="text-xs text-gray-500 font-medium">Total Codes</p>
-					<p className="text-xl font-semibold text-gray-900 dark:text-white mt-1">{codes.length}</p>
+					<p className="text-xl font-semibold text-gray-900 dark:text-white mt-1">
+						{codes.length}
+					</p>
 				</div>
 				<div className="p-4 rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-[#0a0a0a]">
 					<p className="text-xs text-gray-500 font-medium">Active</p>
-					<p className="text-xl font-semibold text-emerald-600 dark:text-emerald-400 mt-1">{activeCount}</p>
+					<p className="text-xl font-semibold text-emerald-600 dark:text-emerald-400 mt-1">
+						{activeCount}
+					</p>
 				</div>
 				<div className="p-4 rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-[#0a0a0a]">
 					<p className="text-xs text-gray-500 font-medium">Redeemed</p>
-					<p className="text-xl font-semibold text-gray-400 mt-1">{usedCount}</p>
+					<p className="text-xl font-semibold text-gray-400 mt-1">
+						{usedCount}
+					</p>
 				</div>
 			</div>
 
 			{/* Create Form */}
 			<div className="bg-white dark:bg-[#0a0a0a] border border-gray-200 dark:border-white/10 rounded-xl p-6 shadow-sm">
-				<h3 className="text-sm font-medium text-gray-900 dark:text-white mb-4">Create New Voucher</h3>
+				<h3 className="text-sm font-medium text-gray-900 dark:text-white mb-4">
+					Create New Voucher
+				</h3>
 				<form onSubmit={handleCreate} className="space-y-4">
 					<div className="grid grid-cols-1 md:grid-cols-3 gap-4">
 						<div className="space-y-2">
-							<span className="text-xs font-medium text-gray-500 dark:text-gray-400">Code</span>
+							<span className="text-xs font-medium text-gray-500 dark:text-gray-400">
+								Code
+							</span>
 							<div className="flex gap-2">
 								<input
 									type="text"
 									value={formData.code}
-									onChange={e => setFormData({ ...formData, code: e.target.value })}
+									onChange={(e) =>
+										setFormData({ ...formData, code: e.target.value })
+									}
 									className="flex-1 px-3 py-2 bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-lg text-sm font-mono dark:text-white focus:outline-none focus:border-indigo-500"
 									placeholder="ULTRA-XXXXXXXX"
 								/>
@@ -157,10 +176,17 @@ export default function AdminVouchersPage() {
 						</div>
 
 						<div className="space-y-2">
-							<span className="text-xs font-medium text-gray-500 dark:text-gray-400">Type</span>
+							<span className="text-xs font-medium text-gray-500 dark:text-gray-400">
+								Type
+							</span>
 							<select
 								value={formData.type}
-								onChange={e => setFormData({ ...formData, type: e.target.value as "PRO" | "CREDIT" })}
+								onChange={(e) =>
+									setFormData({
+										...formData,
+										type: e.target.value as "PRO" | "CREDIT",
+									})
+								}
 								className="w-full px-3 py-2 bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-lg text-sm dark:text-white focus:outline-none focus:border-indigo-500"
 							>
 								<option value="PRO">PRO Upgrade</option>
@@ -170,23 +196,34 @@ export default function AdminVouchersPage() {
 
 						{formData.type === "PRO" ? (
 							<div className="space-y-2">
-								<span className="text-xs font-medium text-gray-500 dark:text-gray-400">Duration (months)</span>
+								<span className="text-xs font-medium text-gray-500 dark:text-gray-400">
+									Duration (months)
+								</span>
 								<input
 									type="number"
 									min={1}
 									value={formData.durationMonths}
-									onChange={e => setFormData({ ...formData, durationMonths: Number(e.target.value) })}
+									onChange={(e) =>
+										setFormData({
+											...formData,
+											durationMonths: Number(e.target.value),
+										})
+									}
 									className="w-full px-3 py-2 bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-lg text-sm dark:text-white focus:outline-none focus:border-indigo-500"
 								/>
 							</div>
 						) : (
 							<div className="space-y-2">
-								<span className="text-xs font-medium text-gray-500 dark:text-gray-400">Credit Amount</span>
+								<span className="text-xs font-medium text-gray-500 dark:text-gray-400">
+									Credit Amount
+								</span>
 								<input
 									type="number"
 									min={1}
 									value={formData.value}
-									onChange={e => setFormData({ ...formData, value: Number(e.target.value) })}
+									onChange={(e) =>
+										setFormData({ ...formData, value: Number(e.target.value) })
+									}
 									className="w-full px-3 py-2 bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-lg text-sm dark:text-white focus:outline-none focus:border-indigo-500"
 								/>
 							</div>
@@ -195,11 +232,15 @@ export default function AdminVouchersPage() {
 
 					<div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
 						<div className="space-y-2">
-							<span className="text-xs font-medium text-gray-500 dark:text-gray-400">Expiry Date (optional)</span>
+							<span className="text-xs font-medium text-gray-500 dark:text-gray-400">
+								Expiry Date (optional)
+							</span>
 							<input
 								type="date"
 								value={formData.expiresAt}
-								onChange={e => setFormData({ ...formData, expiresAt: e.target.value })}
+								onChange={(e) =>
+									setFormData({ ...formData, expiresAt: e.target.value })
+								}
 								className="w-full px-3 py-2 bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-lg text-sm dark:text-white focus:outline-none focus:border-indigo-500"
 							/>
 						</div>
@@ -233,12 +274,29 @@ export default function AdminVouchersPage() {
 						</thead>
 						<tbody className="divide-y divide-gray-200 dark:divide-white/10">
 							{loading ? (
-								<tr><td colSpan={6} className="px-6 py-8 text-center text-gray-500">Loading codes...</td></tr>
+								<tr>
+									<td
+										colSpan={6}
+										className="px-6 py-8 text-center text-gray-500"
+									>
+										Loading codes...
+									</td>
+								</tr>
 							) : codes.length === 0 ? (
-								<tr><td colSpan={6} className="px-6 py-8 text-center text-gray-500">No vouchers created yet.</td></tr>
+								<tr>
+									<td
+										colSpan={6}
+										className="px-6 py-8 text-center text-gray-500"
+									>
+										No vouchers created yet.
+									</td>
+								</tr>
 							) : (
-								codes.map(code => (
-									<tr key={code.id} className="hover:bg-gray-50/50 dark:hover:bg-white/[0.02] transition-colors">
+								codes.map((code) => (
+									<tr
+										key={code.id}
+										className="hover:bg-gray-50/50 dark:hover:bg-white/[0.02] transition-colors"
+									>
 										<td className="px-6 py-3">
 											<span className="font-mono text-xs font-semibold text-gray-900 dark:text-white bg-gray-100 dark:bg-white/5 px-2 py-1 rounded">
 												{code.code}
@@ -246,23 +304,33 @@ export default function AdminVouchersPage() {
 										</td>
 										<td className="px-6 py-3">
 											{code.type === "PRO" ? (
-												<span className="text-xs font-medium text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-500/10 px-2 py-0.5 rounded">PRO</span>
+												<span className="text-xs font-medium text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-500/10 px-2 py-0.5 rounded">
+													PRO
+												</span>
 											) : (
-												<span className="text-xs font-medium text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-500/10 px-2 py-0.5 rounded">CREDIT</span>
+												<span className="text-xs font-medium text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-500/10 px-2 py-0.5 rounded">
+													CREDIT
+												</span>
 											)}
 										</td>
 										<td className="px-6 py-3 text-xs text-gray-500">
-											{code.type === "PRO" ? `${code.durationMonths}mo` : `${code.value} credits`}
+											{code.type === "PRO"
+												? `${code.durationMonths}mo`
+												: `${code.value} credits`}
 										</td>
 										<td className="px-6 py-3">
 											{code.isUsed ? (
 												<span className="text-xs text-gray-400">Redeemed</span>
 											) : (
-												<span className="text-xs font-medium text-emerald-600 dark:text-emerald-400">Active</span>
+												<span className="text-xs font-medium text-emerald-600 dark:text-emerald-400">
+													Active
+												</span>
 											)}
 										</td>
 										<td className="px-6 py-3 text-xs text-gray-500">
-											{formatDistanceToNow(new Date(code.createdAt), { addSuffix: true })}
+											{formatDistanceToNow(new Date(code.createdAt), {
+												addSuffix: true,
+											})}
 										</td>
 										<td className="px-6 py-3 text-right">
 											<button
@@ -271,7 +339,11 @@ export default function AdminVouchersPage() {
 												className="p-1.5 text-gray-400 hover:text-gray-700 dark:hover:text-white rounded-md transition-colors"
 												title="Copy code"
 											>
-												{copiedId === code.id ? <Check size={14} className="text-emerald-500" /> : <Copy size={14} />}
+												{copiedId === code.id ? (
+													<Check size={14} className="text-emerald-500" />
+												) : (
+													<Copy size={14} />
+												)}
 											</button>
 										</td>
 									</tr>

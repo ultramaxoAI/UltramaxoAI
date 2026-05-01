@@ -120,16 +120,12 @@ export default function ApiConsoleKeysPage() {
 					<div className="apic-stack apic-stack--8">
 						<div style={{ display: "flex", alignItems: "center", gap: 8 }}>
 							<span style={{ fontSize: 16 }}>🔑</span>
-							<span
-								className="apic-h3"
-								style={{ color: "#22c55e", margin: 0 }}
-							>
+							<span className="apic-h3" style={{ color: "#22c55e", margin: 0 }}>
 								Your new API key
 							</span>
 						</div>
 						<p style={{ fontSize: 12, color: "#f59e0b", margin: 0 }}>
-							⚠️ Copy this key now — you won&apos;t be able to see it
-							again!
+							⚠️ Copy this key now — you won&apos;t be able to see it again!
 						</p>
 						<div className="apic-row apic-row--8">
 							<code
@@ -149,9 +145,7 @@ export default function ApiConsoleKeysPage() {
 							<button
 								type="button"
 								className="apic-btn apic-btn--primary"
-								onClick={() =>
-									handleCopy(revealedKey.key, revealedKey.id)
-								}
+								onClick={() => handleCopy(revealedKey.key, revealedKey.id)}
 								style={{ whiteSpace: "nowrap" }}
 							>
 								{copiedId === revealedKey.id ? "✓ Copied" : "Copy"}
@@ -173,7 +167,9 @@ export default function ApiConsoleKeysPage() {
 			{showCreate && (
 				<div className="apic-card apic-stack apic-stack--12">
 					<div className="apic-h3">Create a new key</div>
-					<p style={{ fontSize: 12, color: "var(--apic-text-muted)", margin: 0 }}>
+					<p
+						style={{ fontSize: 12, color: "var(--apic-text-muted)", margin: 0 }}
+					>
 						Give your key a descriptive name so you can identify it later.
 					</p>
 					<div className="apic-row apic-row--8">
@@ -186,7 +182,6 @@ export default function ApiConsoleKeysPage() {
 							onKeyDown={(e) => {
 								if (e.key === "Enter") handleCreate();
 							}}
-							autoFocus
 						/>
 						<button
 							className="apic-btn apic-btn--primary"
@@ -272,13 +267,9 @@ export default function ApiConsoleKeysPage() {
 									<td>
 										<code
 											style={{
-												fontFamily:
-													"'JetBrains Mono', monospace",
+												fontFamily: "'JetBrains Mono', monospace",
 												fontSize: 12,
-												color:
-													key.status === "active"
-														? "#888"
-														: "#555",
+												color: key.status === "active" ? "#888" : "#555",
 											}}
 										>
 											{maskKey(key.key)}
@@ -298,9 +289,7 @@ export default function ApiConsoleKeysPage() {
 										{key.status === "active" && (
 											<button
 												className="apic-btn apic-btn--sm apic-btn--danger"
-												onClick={() =>
-													handleRevoke(key.id)
-												}
+												onClick={() => handleRevoke(key.id)}
 												type="button"
 											>
 												Revoke

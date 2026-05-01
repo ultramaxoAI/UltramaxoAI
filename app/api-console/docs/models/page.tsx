@@ -92,7 +92,9 @@ export default function DocsModelsPage() {
 				</h2>
 
 				{loading ? (
-					<p style={{ color: "var(--apic-text-dim)", fontSize: 13 }}>Loading models...</p>
+					<p style={{ color: "var(--apic-text-dim)", fontSize: 13 }}>
+						Loading models...
+					</p>
 				) : models.length === 0 ? (
 					<div className="apic-card">
 						<p style={{ color: "var(--apic-text-dim)", fontSize: 13 }}>

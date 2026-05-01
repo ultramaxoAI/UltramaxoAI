@@ -173,7 +173,9 @@ export function FileExplorer({
 	const [newFileName, setNewFileName] = useState("");
 	const [editingIndex, setEditingIndex] = useState<number | null>(null);
 	const [editingName, setEditingName] = useState("");
-	const [expandedDirectories, setExpandedDirectories] = useState<Record<string, boolean>>({});
+	const [expandedDirectories, setExpandedDirectories] = useState<
+		Record<string, boolean>
+	>({});
 	const fileTree = useMemo(() => buildFileTree(files), [files]);
 
 	const handleCreateFile = () => {

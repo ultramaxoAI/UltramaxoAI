@@ -3,14 +3,7 @@
 import { useGSAP } from "@gsap/react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
-import {
-	ArrowRight,
-	CheckCircle2,
-	ChevronRight,
-	Menu,
-	Play,
-	X,
-} from "lucide-react";
+import { ArrowRight, CheckCircle2, ChevronRight, Menu, X } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { HlsVideo } from "./hls-video";
@@ -1836,6 +1829,16 @@ export default function LandingPage() {
 										Contact
 									</a>
 								</li>
+								<li>
+									<a
+										href="https://t.me/+CQR8SWdH5nE2OTdk"
+										target="_blank"
+										rel="noreferrer"
+										className="text-white/70 hover:text-white text-sm font-body transition-colors"
+									>
+										Community
+									</a>
+								</li>
 							</ul>
 						</div>
 
@@ -1883,7 +1886,7 @@ export default function LandingPage() {
 										rel="noreferrer"
 										className="text-white/70 hover:text-white text-sm font-body transition-all duration-300 flex items-center gap-2 group"
 									>
-										Telegram
+										Community
 										<ArrowRight className="w-3 h-3 transition-transform duration-300 group-hover:translate-x-1" />
 									</a>
 								</li>

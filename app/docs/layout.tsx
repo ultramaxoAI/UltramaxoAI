@@ -62,7 +62,9 @@ export default function PublicDocsLayout({
 		<DocsContext.Provider value={{ lang, setLang, theme, setTheme }}>
 			<div className={`docs ${isDark ? "docs--dark" : "docs--light"}`}>
 				{/* Sidebar */}
-				<aside className={`docs-sidebar ${!sidebarOpen ? "docs-sidebar--collapsed" : ""}`}>
+				<aside
+					className={`docs-sidebar ${!sidebarOpen ? "docs-sidebar--collapsed" : ""}`}
+				>
 					<div className="docs-sidebar-head flex items-center justify-between w-full">
 						<div className="flex items-center gap-2">
 							<Link href="/" className="docs-logo">
@@ -185,7 +187,9 @@ export default function PublicDocsLayout({
 					</div>
 				)}
 
-				<main className={`docs-main ${!sidebarOpen ? "docs-main--expanded" : ""}`}>
+				<main
+					className={`docs-main ${!sidebarOpen ? "docs-main--expanded" : ""}`}
+				>
 					{children}
 				</main>
 			</div>

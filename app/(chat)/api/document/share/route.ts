@@ -1,5 +1,5 @@
-import { auth } from "@/app/(auth)/auth";
 import { getDocumentById, setDocumentSharingById } from "@backend/db/queries";
+import { auth } from "@/app/(auth)/auth";
 import { ChatSDKError } from "@/lib/errors";
 
 export async function POST(request: Request) {
@@ -14,7 +14,10 @@ export async function POST(request: Request) {
 	const isShared = Boolean(body.isShared);
 
 	if (!id) {
-		return new ChatSDKError("bad_request:api", "Document id is required").toResponse();
+		return new ChatSDKError(
+			"bad_request:api",
+			"Document id is required",
+		).toResponse();
 	}
 
 	const existingDocument = await getDocumentById({ id });

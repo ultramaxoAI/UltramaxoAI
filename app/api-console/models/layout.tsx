@@ -14,6 +14,8 @@ export const metadata: Metadata = {
 
 export default function ModelsLayout({
 	children,
-}: { children: React.ReactNode }) {
+}: {
+	children: React.ReactNode;
+}) {
 	return children;
 }

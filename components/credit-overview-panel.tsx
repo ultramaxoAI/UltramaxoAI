@@ -38,7 +38,10 @@ const costLabels: Array<{ key: string; label: string }> = [
 ];
 
 export function CreditOverviewPanel() {
-	const { data, isLoading } = useSWR<CreditResponse>("/api/user/credits", fetcher);
+	const { data, isLoading } = useSWR<CreditResponse>(
+		"/api/user/credits",
+		fetcher,
+	);
 
 	if (isLoading) {
 		return (
@@ -68,13 +71,17 @@ export function CreditOverviewPanel() {
 					</p>
 				</div>
 				<div className="rounded-2xl border border-zinc-200 bg-zinc-50/40 p-5 dark:border-white/5 dark:bg-[#101010]">
-					<p className="text-sm text-zinc-500 dark:text-zinc-400">Lifetime granted</p>
+					<p className="text-sm text-zinc-500 dark:text-zinc-400">
+						Lifetime granted
+					</p>
 					<p className="mt-2 text-3xl font-semibold tracking-tight text-zinc-900 dark:text-white">
 						{data?.account.lifetimeGranted ?? 0}
 					</p>
 				</div>
 				<div className="rounded-2xl border border-zinc-200 bg-zinc-50/40 p-5 dark:border-white/5 dark:bg-[#101010]">
-					<p className="text-sm text-zinc-500 dark:text-zinc-400">Lifetime spent</p>
+					<p className="text-sm text-zinc-500 dark:text-zinc-400">
+						Lifetime spent
+					</p>
 					<p className="mt-2 text-3xl font-semibold tracking-tight text-zinc-900 dark:text-white">
 						{data?.account.lifetimeSpent ?? 0}
 					</p>
@@ -82,16 +89,33 @@ export function CreditOverviewPanel() {
 			</div>
 
 			<div className="rounded-2xl border border-zinc-200 bg-zinc-50/40 p-5 text-sm text-zinc-600 dark:border-white/5 dark:bg-[#101010] dark:text-zinc-300">
-				You receive up to <span className="font-semibold text-zinc-900 dark:text-white">{data?.policy.allowance ?? 0} credits</span> every <span className="font-semibold text-zinc-900 dark:text-white">{data?.policy.resetWindowDays ?? 0} day{data?.policy.resetWindowDays === 1 ? "" : "s"}</span>. If you still have extra bonus credits above the allowance, they stay untouched.
+				You receive up to{" "}
+				<span className="font-semibold text-zinc-900 dark:text-white">
+					{data?.policy.allowance ?? 0} credits
+				</span>{" "}
+				every{" "}
+				<span className="font-semibold text-zinc-900 dark:text-white">
+					{data?.policy.resetWindowDays ?? 0} day
+					{data?.policy.resetWindowDays === 1 ? "" : "s"}
+				</span>
+				. If you still have extra bonus credits above the allowance, they stay
+				untouched.
 			</div>
 
 			<div className="grid gap-6 xl:grid-cols-[0.95fr_1.05fr]">
 				<div className="rounded-2xl border border-zinc-200 bg-white p-5 dark:border-white/5 dark:bg-[#101010]">
-					<h2 className="text-sm font-semibold text-zinc-900 dark:text-white">Action pricing</h2>
+					<h2 className="text-sm font-semibold text-zinc-900 dark:text-white">
+						Action pricing
+					</h2>
 					<div className="mt-4 space-y-3">
 						{costLabels.map((item) => (
-							<div className="flex items-center justify-between text-sm" key={item.key}>
-								<span className="text-zinc-500 dark:text-zinc-400">{item.label}</span>
+							<div
+								className="flex items-center justify-between text-sm"
+								key={item.key}
+							>
+								<span className="text-zinc-500 dark:text-zinc-400">
+									{item.label}
+								</span>
 								<span className="font-medium text-zinc-900 dark:text-white">
 									{data?.costs?.[item.key] ?? 0}
 								</span>
@@ -101,19 +125,30 @@ export function CreditOverviewPanel() {
 				</div>
 
 				<div className="rounded-2xl border border-zinc-200 bg-white p-5 dark:border-white/5 dark:bg-[#101010]">
-					<h2 className="text-sm font-semibold text-zinc-900 dark:text-white">Recent activity</h2>
+					<h2 className="text-sm font-semibold text-zinc-900 dark:text-white">
+						Recent activity
+					</h2>
 					<div className="mt-4 space-y-3">
 						{data?.transactions?.length ? (
 							data.transactions.map((transaction) => (
-								<div className="flex items-start justify-between rounded-xl border border-zinc-200/80 px-4 py-3 dark:border-white/6" key={transaction.id}>
+								<div
+									className="flex items-start justify-between rounded-xl border border-zinc-200/80 px-4 py-3 dark:border-white/6"
+									key={transaction.id}
+								>
 									<div>
-										<p className="text-sm font-medium text-zinc-900 dark:text-white">{transaction.reason}</p>
+										<p className="text-sm font-medium text-zinc-900 dark:text-white">
+											{transaction.reason}
+										</p>
 										<p className="mt-1 text-xs text-zinc-500 dark:text-zinc-400">
 											Balance after: {transaction.balanceAfter}
 										</p>
 									</div>
-									<div className={`text-sm font-semibold ${transaction.amount < 0 ? "text-rose-500" : "text-emerald-500"}`}>
-										{transaction.amount > 0 ? `+${transaction.amount}` : transaction.amount}
+									<div
+										className={`text-sm font-semibold ${transaction.amount < 0 ? "text-rose-500" : "text-emerald-500"}`}
+									>
+										{transaction.amount > 0
+											? `+${transaction.amount}`
+											: transaction.amount}
 									</div>
 								</div>
 							))

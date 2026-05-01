@@ -1,10 +1,10 @@
-import { auth } from "@/app/(auth)/auth";
 import {
 	createUserKnowledgeEntry,
 	deleteUserKnowledgeEntryById,
 	getUserKnowledgeEntriesByUserId,
 	updateUserKnowledgeEntryById,
 } from "@backend/db/queries";
+import { auth } from "@/app/(auth)/auth";
 
 type KnowledgeCategory = "project" | "product" | "brand" | "reference";
 
@@ -40,7 +40,8 @@ export async function POST(request: Request) {
 
 	const entry = await createUserKnowledgeEntry({
 		userId: session.user.id,
-		category: ((body.category as KnowledgeCategory) || "project") as KnowledgeCategory,
+		category: ((body.category as KnowledgeCategory) ||
+			"project") as KnowledgeCategory,
 		title: body.title.trim(),
 		content: body.content.trim(),
 		source: body.source?.trim() || null,

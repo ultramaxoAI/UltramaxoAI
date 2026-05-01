@@ -155,7 +155,8 @@ export default function DocsIntroPage() {
 						single endpoint.
 					</li>
 					<li>
-						<strong>Free tier</strong> — {DEFAULT_FREE_MODEL_ID} is available at no cost.
+						<strong>Free tier</strong> — {DEFAULT_FREE_MODEL_ID} is available at
+						no cost.
 					</li>
 					<li>
 						<strong>Balance & usage APIs</strong> — check balance and query

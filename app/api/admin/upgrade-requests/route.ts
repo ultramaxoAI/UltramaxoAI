@@ -1,8 +1,8 @@
+import { db, updatePurchaseRequestStatus } from "@backend/db/queries";
+import { purchaseRequest } from "@backend/db/schema";
 import { desc } from "drizzle-orm";
 import { NextResponse } from "next/server";
 import { auth } from "@/app/(auth)/auth";
-import { db, updatePurchaseRequestStatus } from "@backend/db/queries";
-import { purchaseRequest } from "@backend/db/schema";
 
 export async function GET(_request: Request) {
 	try {

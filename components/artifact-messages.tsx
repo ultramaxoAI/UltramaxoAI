@@ -1,9 +1,9 @@
 import type { UseChatHelpers } from "@ai-sdk/react";
+import type { Vote } from "@backend/db/schema";
 import equal from "fast-deep-equal";
 import { AnimatePresence, motion } from "framer-motion";
 import { memo } from "react";
 import { useMessages } from "@/hooks/use-messages";
-import type { Vote } from "@backend/db/schema";
 import type { ChatMessage } from "@/lib/types";
 import type { UIArtifact } from "./artifact";
 import { PreviewMessage, ThinkingMessage } from "./message";
@@ -61,9 +61,7 @@ function PureArtifactMessages({
 				return false;
 			}
 
-			return (
-				(part as { state?: string }).state === "approval-responded"
-			);
+			return (part as { state?: string }).state === "approval-responded";
 		}),
 	);
 

@@ -96,7 +96,9 @@ export function ChatOrganizationDialog({
 						</DialogTitle>
 						<DialogDescription className="text-[#5f6258] dark:text-[#9ea59f]">
 							Set a folder and tags for `
-							<span className="font-medium text-[#171717] dark:text-[#f3f4f1]">{title}</span>
+							<span className="font-medium text-[#171717] dark:text-[#f3f4f1]">
+								{title}
+							</span>
 							`.
 						</DialogDescription>
 					</DialogHeader>
@@ -127,7 +129,11 @@ export function ChatOrganizationDialog({
 									placeholder="security"
 									value={tagInput}
 								/>
-								<Button className="h-11 rounded-xl" onClick={addTag} type="button">
+								<Button
+									className="h-11 rounded-xl"
+									onClick={addTag}
+									type="button"
+								>
 									<Tag className="mr-2 h-4 w-4" />
 									Add
 								</Button>
@@ -160,11 +166,22 @@ export function ChatOrganizationDialog({
 					</div>
 
 					<DialogFooter className="mt-7">
-						<Button onClick={() => setOpen(false)} type="button" variant="outline">
+						<Button
+							onClick={() => setOpen(false)}
+							type="button"
+							variant="outline"
+						>
 							Cancel
 						</Button>
-						<Button className="bg-[#111315] text-[#f3f4f1] dark:bg-[#f3f4f1] dark:text-[#111315]" disabled={saving} onClick={handleSave} type="button">
-							{saving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+						<Button
+							className="bg-[#111315] text-[#f3f4f1] dark:bg-[#f3f4f1] dark:text-[#111315]"
+							disabled={saving}
+							onClick={handleSave}
+							type="button"
+						>
+							{saving ? (
+								<Loader2 className="mr-2 h-4 w-4 animate-spin" />
+							) : null}
 							Save changes
 						</Button>
 					</DialogFooter>

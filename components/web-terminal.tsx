@@ -234,10 +234,7 @@ function PureWebTerminal(
 					collapsed ? "h-0" : "h-[200px]",
 				)}
 			>
-				<div
-					ref={containerRef}
-					className="h-full w-full px-1"
-				/>
+				<div ref={containerRef} className="h-full w-full px-1" />
 			</div>
 		</div>
 	);

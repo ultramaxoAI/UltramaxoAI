@@ -1,5 +1,5 @@
-import { auth } from "@/app/(auth)/auth";
 import { getDashboardStats } from "@backend/db/queries";
+import { auth } from "@/app/(auth)/auth";
 
 export const dynamic = "force-dynamic";
 

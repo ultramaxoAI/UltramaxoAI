@@ -3,7 +3,6 @@
 import { Share2Icon } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
-import { Button } from "@/components/ui/button";
 import {
 	AlertDialog,
 	AlertDialogAction,
@@ -14,6 +13,7 @@ import {
 	AlertDialogHeader,
 	AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { Button } from "@/components/ui/button";
 
 export function ArtifactShareButton({
 	documentId,
@@ -82,7 +82,8 @@ export function ArtifactShareButton({
 					<AlertDialogHeader>
 						<AlertDialogTitle>Disable artifact sharing?</AlertDialogTitle>
 						<AlertDialogDescription>
-							Anyone with the current artifact link will lose access after this action.
+							Anyone with the current artifact link will lose access after this
+							action.
 						</AlertDialogDescription>
 					</AlertDialogHeader>
 					<AlertDialogFooter>

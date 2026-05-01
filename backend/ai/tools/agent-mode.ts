@@ -1,11 +1,11 @@
-import { z } from "zod";
-import { CREDIT_COSTS } from "@/lib/credits";
 import {
 	addAgentStep,
 	createAgentRun,
 	spendCreditsForUser,
 	updateAgentRunStatusById,
 } from "@backend/db/queries";
+import { z } from "zod";
+import { CREDIT_COSTS } from "@/lib/credits";
 
 export const startAgentTask = () => {
 	return startAgentTaskWithPersistence({});
@@ -80,12 +80,12 @@ export const startAgentTaskWithPersistence = ({
 				}
 
 				return {
-				mode,
-				goal,
-				plan,
-				deliverable,
-				runId: persistedRunId,
-				startedAt: new Date().toISOString(),
+					mode,
+					goal,
+					plan,
+					deliverable,
+					runId: persistedRunId,
+					startedAt: new Date().toISOString(),
 				};
 			})();
 		},
@@ -121,7 +121,9 @@ export const reportAgentStepWithPersistence = ({
 			command: z
 				.string()
 				.optional()
-				.describe("Virtual command or action label, for example npm install framer-motion"),
+				.describe(
+					"Virtual command or action label, for example npm install framer-motion",
+				),
 		}),
 		execute: ({
 			title,
@@ -158,14 +160,14 @@ export const reportAgentStepWithPersistence = ({
 				}
 
 				return {
-				title,
-				status,
-				detail,
-				files: files ?? [],
-				packages: packages ?? [],
-				command: command ?? null,
-				runId,
-				updatedAt: new Date().toISOString(),
+					title,
+					status,
+					detail,
+					files: files ?? [],
+					packages: packages ?? [],
+					command: command ?? null,
+					runId,
+					updatedAt: new Date().toISOString(),
 				};
 			})();
 		},

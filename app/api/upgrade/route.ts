@@ -1,5 +1,5 @@
-import { auth } from "@/app/(auth)/auth";
 import { createPurchaseRequest } from "@backend/db/queries";
+import { auth } from "@/app/(auth)/auth";
 
 // FIX #6: Tabel harga resmi server-side (harus cocok dengan frontend planId)
 const PRICING_TABLE: Record<string, Record<number, number>> = {
@@ -33,7 +33,9 @@ export async function POST(request: Request) {
 			return Response.json({ error: "Plan tidak valid" }, { status: 400 });
 		}
 		if (Number(price) !== validPrice) {
-			console.warn(`[Upgrade] Price mismatch! Client: ${price}, Server: ${validPrice}`);
+			console.warn(
+				`[Upgrade] Price mismatch! Client: ${price}, Server: ${validPrice}`,
+			);
 			return Response.json({ error: "Harga tidak sesuai" }, { status: 400 });
 		}
 

@@ -960,7 +960,11 @@ export const SparklesIcon = ({
 	size = 16,
 	className,
 	style,
-}: { size?: number; className?: string; style?: React.CSSProperties }) => (
+}: {
+	size?: number;
+	className?: string;
+	style?: React.CSSProperties;
+}) => (
 	<svg
 		className={className}
 		height={size}

@@ -4,8 +4,13 @@ const DEFAULT_FREE_MODEL_ID = "gpt-5.3-codex";
 
 export const metadata: Metadata = {
 	title: "API Documentation — Billing & Limits",
-	description: "Informasi billing, harga model, rate limits, dan sistem kredit Ultramaxo API. Pay-as-you-go tanpa langganan bulanan.",
-	openGraph: { title: "Ultramaxo API — Billing & Limits", description: "Harga model, rate limits, dan sistem kredit API.", url: "https://app.ultramaxo.tech/docs/billing" },
+	description:
+		"Informasi billing, harga model, rate limits, dan sistem kredit Ultramaxo API. Pay-as-you-go tanpa langganan bulanan.",
+	openGraph: {
+		title: "Ultramaxo API — Billing & Limits",
+		description: "Harga model, rate limits, dan sistem kredit API.",
+		url: "https://app.ultramaxo.tech/docs/billing",
+	},
 };
 
 export default function DocsBillingPage() {

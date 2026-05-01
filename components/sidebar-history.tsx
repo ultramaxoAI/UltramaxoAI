@@ -1,5 +1,6 @@
 "use client";
 
+import type { Chat } from "@backend/db/schema";
 import { isToday, isYesterday, subMonths, subWeeks } from "date-fns";
 import { motion } from "framer-motion";
 import { SearchIcon } from "lucide-react";
@@ -24,7 +25,6 @@ import {
 	SidebarMenu,
 	useSidebar,
 } from "@/components/ui/sidebar";
-import type { Chat } from "@backend/db/schema";
 import { fetcher } from "@/lib/utils";
 import { LoaderIcon } from "./icons";
 import { SidebarFolderManager } from "./sidebar-folder-manager";
@@ -129,9 +129,10 @@ export function SidebarHistory({ user }: { user: User | undefined }) {
 		? paginatedChatHistories.every((page) => page.chats.length === 0)
 		: false;
 
-	const chatsFromHistory = paginatedChatHistories?.flatMap(
-		(paginatedChatHistory) => paginatedChatHistory.chats,
-	) || [];
+	const chatsFromHistory =
+		paginatedChatHistories?.flatMap(
+			(paginatedChatHistory) => paginatedChatHistory.chats,
+		) || [];
 
 	const filteredChats = useMemo(() => {
 		const normalizedSearch = searchTerm.trim().toLowerCase();
@@ -155,7 +156,9 @@ export function SidebarHistory({ user }: { user: User | undefined }) {
 	}, [chatsFromHistory, folderFilter, searchTerm]);
 
 	const pinnedChats = filteredChats.filter((chat) => chat.isPinned);
-	const groupedChats = groupChatsByDate(filteredChats.filter((chat) => !chat.isPinned));
+	const groupedChats = groupChatsByDate(
+		filteredChats.filter((chat) => !chat.isPinned),
+	);
 	const chatCounts = useMemo(() => {
 		return chatsFromHistory.reduce<Record<string, number>>((acc, chat) => {
 			const key = chat.folder?.trim() || "uncategorized";
@@ -220,7 +223,9 @@ export function SidebarHistory({ user }: { user: User | undefined }) {
 			return;
 		}
 
-		toast.success(folder ? `Chat moved to ${folder}` : "Chat removed from folder");
+		toast.success(
+			folder ? `Chat moved to ${folder}` : "Chat removed from folder",
+		);
 		setDraggingChatId(null);
 		handleHistoryRefresh();
 	};

@@ -2,8 +2,8 @@ import { compare } from "bcrypt-ts";
 import { NextResponse } from "next/server";
 export const dynamic = "force-dynamic";
 
-import { auth } from "@/app/(auth)/auth";
 import { getUserById, updateUserPassword } from "@backend/db/queries";
+import { auth } from "@/app/(auth)/auth";
 
 export async function GET() {
 	const session = await auth();

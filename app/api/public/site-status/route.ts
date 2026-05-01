@@ -1,6 +1,5 @@
-import { NextResponse } from "next/server";
-
 import { getSiteSettings } from "@backend/db/queries-settings";
+import { NextResponse } from "next/server";
 
 export const dynamic = "force-dynamic";
 
@@ -10,8 +9,7 @@ export async function GET() {
 		return NextResponse.json(
 			{
 				maintenanceEnabled: settings?.maintenanceEnabled ?? false,
-				maintenanceTitle:
-					settings?.maintenanceTitle ?? "We'll be right back.",
+				maintenanceTitle: settings?.maintenanceTitle ?? "We'll be right back.",
 				maintenanceMessage:
 					settings?.maintenanceMessage ??
 					"Lagi ada update kecil. Sebentar lagi balik.",
@@ -19,7 +17,8 @@ export async function GET() {
 			},
 			{
 				headers: {
-					"cache-control": "no-store, no-cache, must-revalidate, proxy-revalidate, max-age=0",
+					"cache-control":
+						"no-store, no-cache, must-revalidate, proxy-revalidate, max-age=0",
 				},
 			},
 		);
@@ -29,8 +28,7 @@ export async function GET() {
 			{
 				maintenanceEnabled: false,
 				maintenanceTitle: "We'll be right back.",
-				maintenanceMessage:
-					"Lagi ada update kecil. Sebentar lagi balik.",
+				maintenanceMessage: "Lagi ada update kecil. Sebentar lagi balik.",
 				updatedAt: null,
 			},
 			{ status: 200 },

@@ -1,13 +1,13 @@
 import { NextResponse } from "next/server";
 export const dynamic = "force-dynamic";
 
-import { auth } from "@/app/(auth)/auth";
 import {
 	deleteUserApiKey,
 	getUserApiKeys,
 	upsertUserApiKey,
 } from "@backend/db/queries-settings";
 import { decryptData, encryptData, maskKey } from "@backend/encryption";
+import { auth } from "@/app/(auth)/auth";
 
 export async function GET() {
 	const session = await auth();
@@ -125,10 +125,7 @@ export async function PATCH(request: Request) {
 		return NextResponse.json({ success: true });
 	} catch (error) {
 		console.error("API Error (api-keys/PATCH):", error);
-		return NextResponse.json(
-			{ error: "Failed to update" },
-			{ status: 500 },
-		);
+		return NextResponse.json({ error: "Failed to update" }, { status: 500 });
 	}
 }
 

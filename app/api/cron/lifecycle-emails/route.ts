@@ -1,8 +1,8 @@
-import { NextResponse } from "next/server";
 import { db } from "@backend/db/queries";
 import { user } from "@backend/db/schema";
-import { eq, and, sql, isNotNull } from "drizzle-orm";
-import { sendProExpiringEmail, sendProExpiredEmail } from "@backend/email";
+import { sendProExpiredEmail, sendProExpiringEmail } from "@backend/email";
+import { and, eq, isNotNull, sql } from "drizzle-orm";
+import { NextResponse } from "next/server";
 
 export async function GET(request: Request) {
 	// Verify Vercel Cron authentication (bearer CRON_SECRET)
@@ -24,8 +24,8 @@ export async function GET(request: Request) {
 				and(
 					eq(user.isPro, true),
 					isNotNull(user.proExpiresAt),
-					sql`DATE(${user.proExpiresAt}) = CURRENT_DATE + INTERVAL '3 days'`
-				)
+					sql`DATE(${user.proExpiresAt}) = CURRENT_DATE + INTERVAL '3 days'`,
+				),
 			);
 
 		for (const u of expiringUsers) {
@@ -43,20 +43,19 @@ export async function GET(request: Request) {
 				and(
 					eq(user.isPro, true),
 					isNotNull(user.proExpiresAt),
-					sql`DATE(${user.proExpiresAt}) <= CURRENT_DATE`
-				)
+					sql`DATE(${user.proExpiresAt}) <= CURRENT_DATE`,
+				),
 			);
 
 		for (const u of expiredUsers) {
 			// Downgrade to free tier
-			await db
-				.update(user)
-				.set({ isPro: false })
-				.where(eq(user.id, u.id));
+			await db.update(user).set({ isPro: false }).where(eq(user.id, u.id));
 
 			if (u.email) {
 				await sendProExpiredEmail(u.email, u.name || "User");
-				console.info(`[CRON] Sent expired email to ${u.email} and downgraded to free`);
+				console.info(
+					`[CRON] Sent expired email to ${u.email} and downgraded to free`,
+				);
 			}
 		}
 
@@ -67,6 +66,9 @@ export async function GET(request: Request) {
 		});
 	} catch (error) {
 		console.error("[CRON] Lifecycle emails error:", error);
-		return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+		return NextResponse.json(
+			{ error: "Internal server error" },
+			{ status: 500 },
+		);
 	}
 }

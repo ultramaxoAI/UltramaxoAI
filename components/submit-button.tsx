@@ -3,9 +3,8 @@
 import { useFormStatus } from "react-dom";
 
 import { LoaderIcon } from "@/components/icons";
-
-import { Button } from "./ui/button";
 import { cn } from "@/lib/utils";
+import { Button } from "./ui/button";
 
 export function SubmitButton({
 	children,

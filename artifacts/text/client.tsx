@@ -1,3 +1,4 @@
+import type { Suggestion } from "@backend/db/schema";
 import { toast } from "sonner";
 import { Artifact } from "@/components/create-artifact";
 import { DiffView } from "@/components/diffview";
@@ -11,7 +12,6 @@ import {
 	UndoIcon,
 } from "@/components/icons";
 import { Editor } from "@/components/text-editor";
-import type { Suggestion } from "@backend/db/schema";
 import { getSuggestions } from "../actions";
 
 type TextArtifactMetadata = {

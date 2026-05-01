@@ -57,6 +57,27 @@ export function BillingPanel() {
 		load();
 	}, [load]);
 
+	useEffect(() => {
+		const intervalId = window.setInterval(() => {
+			void load();
+		}, 30_000);
+
+		const handleVisibilityChange = () => {
+			if (document.visibilityState === "visible") {
+				void load();
+			}
+		};
+
+		window.addEventListener("focus", load);
+		document.addEventListener("visibilitychange", handleVisibilityChange);
+
+		return () => {
+			window.clearInterval(intervalId);
+			window.removeEventListener("focus", load);
+			document.removeEventListener("visibilitychange", handleVisibilityChange);
+		};
+	}, [load]);
+
 	const handleTopup = async () => {
 		setLoading(true);
 		try {

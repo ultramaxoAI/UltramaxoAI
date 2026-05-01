@@ -1,6 +1,6 @@
-import { auth } from "@/app/(auth)/auth";
 import { getCreditSummaryByUserId } from "@backend/db/queries";
 import { NextResponse } from "next/server";
+import { auth } from "@/app/(auth)/auth";
 
 export async function GET() {
 	const session = await auth();
@@ -11,7 +11,10 @@ export async function GET() {
 	try {
 		const summary = await getCreditSummaryByUserId({ userId: session.user.id });
 		return NextResponse.json(summary);
-	} catch (error) {
-		return NextResponse.json({ error: "Failed to fetch credits" }, { status: 500 });
+	} catch (_error) {
+		return NextResponse.json(
+			{ error: "Failed to fetch credits" },
+			{ status: 500 },
+		);
 	}
 }

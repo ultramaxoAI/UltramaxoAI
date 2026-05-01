@@ -65,8 +65,8 @@ async function handleCredentialsSignIn({
 				result.error === "unverified"
 					? "Unverified"
 					: result.error === "OAuthAccountNotLinked" ||
-						  result.error === "OAuthCallback" ||
-						  result.error === "Configuration"
+							result.error === "OAuthCallback" ||
+							result.error === "Configuration"
 						? "CredentialsSignin"
 						: result.error;
 			const loginUrl = new URL("/login", request.url);

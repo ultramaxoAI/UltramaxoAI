@@ -1,11 +1,3 @@
-import { cookies } from "next/headers";
-import { notFound, redirect } from "next/navigation";
-import { Suspense } from "react";
-
-import { auth } from "@/app/(auth)/auth";
-import { Chat } from "@/components/chat";
-import { ChatRouteLoading } from "@/components/chat-route-loading";
-import { DataStreamHandler } from "@/components/data-stream-handler";
 import { DEFAULT_CHAT_MODEL } from "@backend/ai/models";
 import {
 	getChatById,
@@ -14,6 +6,13 @@ import {
 	getUserApiKeys,
 	getUserById,
 } from "@backend/db/queries";
+import { cookies } from "next/headers";
+import { notFound, redirect } from "next/navigation";
+import { Suspense } from "react";
+import { auth } from "@/app/(auth)/auth";
+import { Chat } from "@/components/chat";
+import { ChatRouteLoading } from "@/components/chat-route-loading";
+import { DataStreamHandler } from "@/components/data-stream-handler";
 import { convertToUIMessages } from "@/lib/utils";
 
 export default function Page(props: { params: Promise<{ id: string }> }) {

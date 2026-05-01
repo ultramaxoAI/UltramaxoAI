@@ -1,5 +1,10 @@
 "use client";
 
+import {
+	formatFileSize,
+	MAX_IMAGE_SIZE,
+	validateImage,
+} from "@backend/file-validation";
 import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { useState } from "react";
@@ -15,11 +20,6 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import {
-	formatFileSize,
-	MAX_IMAGE_SIZE,
-	validateImage,
-} from "@backend/file-validation";
 import { LoaderIcon, PencilIcon } from "./icons";
 
 export function ProfileEditDialog() {

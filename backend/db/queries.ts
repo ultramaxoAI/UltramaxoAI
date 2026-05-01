@@ -2738,7 +2738,8 @@ export async function updatePurchaseRequestStatus({
 		}
 
 		// Prevent re-approving a previously approved/paid request
-		const isCurrentlySuccess = requestRow.status === "approved" || requestRow.status === "paid";
+		const isCurrentlySuccess =
+			requestRow.status === "approved" || requestRow.status === "paid";
 		const isTargetSuccess = status === "approved" || status === "paid";
 
 		if (isCurrentlySuccess && isTargetSuccess) {

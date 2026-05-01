@@ -1,12 +1,9 @@
+import { db } from "@backend/db/queries";
+import { user } from "@backend/db/schema";
+import { sendCustomEmail, sendVerificationEmail } from "@backend/email";
 import { eq } from "drizzle-orm";
 import { NextResponse } from "next/server";
 import { auth } from "@/app/(auth)/auth";
-import { db } from "@backend/db/queries";
-import { user } from "@backend/db/schema";
-import {
-	sendCustomEmail,
-	sendVerificationEmail,
-} from "@backend/email";
 
 export async function POST(request: Request) {
 	try {
@@ -37,8 +34,13 @@ export async function POST(request: Request) {
 		}
 
 		// Function to send email to a single user
-		const sendToUser = async (targetEmail: string, targetName: string) => {
-			if (type === "custom" || type === "upgrade-reminder" || type === "announcement" || type === "welcome") {
+		const sendToUser = async (targetEmail: string, _targetName: string) => {
+			if (
+				type === "custom" ||
+				type === "upgrade-reminder" ||
+				type === "announcement" ||
+				type === "welcome"
+			) {
 				if (!subject || !message) {
 					throw new Error("Subject and message required");
 				}

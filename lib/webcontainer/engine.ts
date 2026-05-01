@@ -78,10 +78,7 @@ export async function mountFiles(files: WCFile[]): Promise<void> {
 /**
  * Write a single file (create or overwrite).
  */
-export async function writeFile(
-	path: string,
-	content: string,
-): Promise<void> {
+export async function writeFile(path: string, content: string): Promise<void> {
 	const wc = await bootWebContainer();
 
 	// Ensure parent directories exist
@@ -199,9 +196,7 @@ export async function installPackages(
 /**
  * Run npm install (all deps from package.json).
  */
-export async function npmInstall(
-	onOutput?: OutputCallback,
-): Promise<number> {
+export async function npmInstall(onOutput?: OutputCallback): Promise<number> {
 	return runCommand("npm", ["install"], onOutput);
 }
 

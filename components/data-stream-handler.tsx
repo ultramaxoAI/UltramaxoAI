@@ -131,8 +131,15 @@ export function DataStreamHandler() {
 				}
 			});
 		}
-	}, [dataStream, setArtifact, setMetadata, artifact, setDataStream, mutate, wc]);
+	}, [
+		dataStream,
+		setArtifact,
+		setMetadata,
+		artifact,
+		setDataStream,
+		mutate,
+		wc,
+	]);
 
 	return null;
 }
-

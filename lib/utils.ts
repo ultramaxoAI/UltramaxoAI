@@ -1,3 +1,4 @@
+import type { DBMessage, Document } from "@backend/db/schema";
 import type {
 	AssistantModelMessage,
 	ToolModelMessage,
@@ -7,7 +8,6 @@ import type {
 import { type ClassValue, clsx } from "clsx";
 import { formatISO } from "date-fns";
 import { twMerge } from "tailwind-merge";
-import type { DBMessage, Document } from "@backend/db/schema";
 import { ChatSDKError, type ErrorCode } from "./errors";
 import type { ChatMessage, ChatTools, CustomUIDataTypes } from "./types";
 
@@ -162,10 +162,7 @@ function sanitizeMessagePart(part: unknown) {
 		return part as UIMessagePart<CustomUIDataTypes, ChatTools>;
 	}
 
-	if (
-		part.type.startsWith("tool-") &&
-		typeof part.toolCallId === "string"
-	) {
+	if (part.type.startsWith("tool-") && typeof part.toolCallId === "string") {
 		return part as UIMessagePart<CustomUIDataTypes, ChatTools>;
 	}
 
@@ -199,15 +196,14 @@ export function getTextFromMessage(message: ChatMessage | UIMessage): string {
 
 export function sanitizeChatMessage(message: ChatMessage): ChatMessage {
 	const safeParts = Array.isArray(message.parts)
-		? message.parts.filter(
-			(part): part is ChatMessage["parts"][number] =>
+		? message.parts.filter((part): part is ChatMessage["parts"][number] =>
 				Boolean(
 					part &&
 						typeof part === "object" &&
 						"type" in part &&
 						typeof (part as { type?: unknown }).type === "string",
 				),
-		)
+			)
 		: [];
 
 	return {

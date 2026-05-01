@@ -94,7 +94,10 @@ export async function upsertSiteSettings(data: {
 
 export async function getUserApiKeys(userId: string) {
 	try {
-		return await db.select().from(userApiKeys).where(eq(userApiKeys.userId, userId));
+		return await db
+			.select()
+			.from(userApiKeys)
+			.where(eq(userApiKeys.userId, userId));
 	} catch (error) {
 		console.error("Database Error (getUserApiKeys):", error);
 		return [];

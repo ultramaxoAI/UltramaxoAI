@@ -97,13 +97,10 @@ export function useArtifact() {
 }
 
 export function useArtifactUiState() {
-	const { data: localUiState, mutate: setLocalUiState } = useSWR<ArtifactUiState>(
-		"artifact-ui-state",
-		null,
-		{
+	const { data: localUiState, mutate: setLocalUiState } =
+		useSWR<ArtifactUiState>("artifact-ui-state", null, {
 			fallbackData: initialArtifactUiState,
-		},
-	);
+		});
 
 	const uiState = useMemo(
 		() => localUiState || initialArtifactUiState,

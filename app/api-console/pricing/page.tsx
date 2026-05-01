@@ -41,8 +41,8 @@ export default function ApiPricingPage() {
 			<div>
 				<h1 className="apic-h1">API Pricing</h1>
 				<p className="apic-subtitle">
-					Harga Ultramaxo API dihitung per 1 juta token. Tidak ada
-					langganan bulanan.
+					Harga Ultramaxo API dihitung per 1 juta token. Tidak ada langganan
+					bulanan.
 				</p>
 			</div>
 
@@ -72,19 +72,31 @@ export default function ApiPricingPage() {
 			</div>
 
 			<div className="apic-grid apic-grid--3">
-				<Link href="/api-console/models" className="apic-card" style={{ textDecoration: "none" }}>
+				<Link
+					href="/api-console/models"
+					className="apic-card"
+					style={{ textDecoration: "none" }}
+				>
 					<div className="apic-h3">Model Catalog</div>
 					<p style={{ color: "var(--apic-text-muted)", marginTop: 6 }}>
 						Lihat harga input/output semua model.
 					</p>
 				</Link>
-				<Link href="/api-console/docs/billing" className="apic-card" style={{ textDecoration: "none" }}>
+				<Link
+					href="/api-console/docs/billing"
+					className="apic-card"
+					style={{ textDecoration: "none" }}
+				>
 					<div className="apic-h3">Billing & Limits</div>
 					<p style={{ color: "var(--apic-text-muted)", marginTop: 6 }}>
 						Detail sistem kredit, rate limit, dan saldo minimum.
 					</p>
 				</Link>
-				<Link href="/api-console/docs/models" className="apic-card" style={{ textDecoration: "none" }}>
+				<Link
+					href="/api-console/docs/models"
+					className="apic-card"
+					style={{ textDecoration: "none" }}
+				>
 					<div className="apic-h3">Docs: Models</div>
 					<p style={{ color: "var(--apic-text-muted)", marginTop: 6 }}>
 						Contoh response dan struktur data katalog model.

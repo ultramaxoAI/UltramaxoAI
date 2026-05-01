@@ -1,14 +1,14 @@
-import { type NextRequest, NextResponse } from "next/server";
-import { auth } from "@/app/(auth)/auth";
-import { generateTitleFromUserMessage } from "@/app/(chat)/actions";
-import type { VisibilityType } from "@/components/visibility-selector";
-import { CREDIT_COSTS } from "@/lib/credits";
 import {
 	getChatById,
 	saveChat,
 	saveMessages,
 	spendCreditsForUser,
 } from "@backend/db/queries";
+import { type NextRequest, NextResponse } from "next/server";
+import { auth } from "@/app/(auth)/auth";
+import { generateTitleFromUserMessage } from "@/app/(chat)/actions";
+import type { VisibilityType } from "@/components/visibility-selector";
+import { CREDIT_COSTS } from "@/lib/credits";
 
 const MAIA_API_URL = "https://api.maiarouter.ai/v1/images/generations";
 const MAIA_API_KEY = (
@@ -324,7 +324,7 @@ export async function POST(request: NextRequest) {
 			console.log("[generate-image] Using Pollinations fallback...");
 		}
 		const sanitizedPrompt = encodeURIComponent(
-			cleanPrompt + " detailed, masterpiece, high quality, 8k resolution",
+			`${cleanPrompt} detailed, masterpiece, high quality, 8k resolution`,
 		);
 		const seed = Math.floor(Math.random() * 1000000);
 		const pollinationsUrl = `${POLLINATIONS_URL}${sanitizedPrompt}?width=1024&height=1024&nofeed=yes&nologo=yes&seed=${seed}&model=flux`;

@@ -11,7 +11,10 @@ type CreditResponse = {
 };
 
 export function CreditBalanceBadge({ compact = false }: { compact?: boolean }) {
-	const { data, isLoading } = useSWR<CreditResponse>("/api/user/credits", fetcher);
+	const { data, isLoading } = useSWR<CreditResponse>(
+		"/api/user/credits",
+		fetcher,
+	);
 
 	if (isLoading) {
 		return (

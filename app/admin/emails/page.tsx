@@ -1,36 +1,49 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { MailIcon, SendIcon, EyeIcon, SearchIcon, UsersIcon, LayoutTemplateIcon, CheckCircle2Icon, Loader2 } from "lucide-react";
-import { toast } from "sonner";
 import { TEMPLATE_WRAPPER } from "@backend/email-templates";
+import {
+	CheckCircle2Icon,
+	EyeIcon,
+	LayoutTemplateIcon,
+	Loader2,
+	MailIcon,
+	SendIcon,
+	UsersIcon,
+} from "lucide-react";
+import { type ChangeEvent, useEffect, useState } from "react";
+import { toast } from "sonner";
 
 // Simple markdown parsing for admin templates
 function parseMarkdownToHtml(text: string) {
 	if (!text) return "";
-	
+
 	let html = text
 		.replace(/&/g, "&amp;")
 		.replace(/</g, "&lt;")
 		.replace(/>/g, "&gt;");
 
-	html = html.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
-	html = html.replace(/\*(.*?)\*/g, '<em>$1</em>');
-	html = html.replace(/\[(.*?)\]\((.*?)\)/g, '<a href="$2" style="color: #4f46e5; text-decoration: underline;">$1</a>');
-	
+	html = html.replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>");
+	html = html.replace(/\*(.*?)\*/g, "<em>$1</em>");
+	html = html.replace(
+		/\[(.*?)\]\((.*?)\)/g,
+		'<a href="$2" style="color: #4f46e5; text-decoration: underline;">$1</a>',
+	);
+
 	// Convert line breaks to paragraphs
 	const paragraphs = html.split(/\n\n+/);
-	html = paragraphs.map(p => {
-		const lines = p.split('\n').join('<br />');
-		return `<p style="margin: 0 0 20px; font-size: 16px; line-height: 1.6; color: #3f3f46;">${lines}</p>`;
-	}).join('');
-	
+	html = paragraphs
+		.map((p) => {
+			const lines = p.split("\n").join("<br />");
+			return `<p style="margin: 0 0 20px; font-size: 16px; line-height: 1.6; color: #3f3f46;">${lines}</p>`;
+		})
+		.join("");
+
 	return html;
 }
 
 export default function AdminEmailsPage() {
 	const [loading, setLoading] = useState(false);
-	
+
 	const [formData, setFormData] = useState({
 		recipientType: "single",
 		type: "pro_upgrade", // 'update', 'promo', 'newsletter', 'maintenance', 'feedback', 'pro_upgrade', 'pro_expiring'
@@ -38,90 +51,101 @@ export default function AdminEmailsPage() {
 		name: "",
 		subject: "Welcome to Ultramaxo PRO! 🚀",
 		headline: "You're officially PRO",
-		bodyText: "Thank you for upgrading! Your account has been successfully elevated to PRO status.\n\nYou now have unlimited access to our most advanced reasoning models, prioritized processing, and exclusive features.",
+		bodyText:
+			"Thank you for upgrading! Your account has been successfully elevated to PRO status.\n\nYou now have unlimited access to our most advanced reasoning models, prioritized processing, and exclusive features.",
 		ctaText: "Start Chatting Now",
-		ctaLink: "https://ultramaxo.tech/chat"
+		ctaLink: "https://ultramaxo.tech/chat",
 	});
 
 	// Synchronize defaults on type changes
 	useEffect(() => {
 		if (formData.type === "promo") {
-			setFormData(prev => ({
+			setFormData((prev) => ({
 				...prev,
 				subject: "Exclusive Offer for You",
 				headline: "Unlock Pro Power",
-				bodyText: "We're giving you an exclusive opportunity to upgrade your Ultramaxo AI experience today.\n\nTake your productivity to the next level with our premium reasoning models.",
+				bodyText:
+					"We're giving you an exclusive opportunity to upgrade your Ultramaxo AI experience today.\n\nTake your productivity to the next level with our premium reasoning models.",
 				ctaText: "Upgrade Account",
-				ctaLink: "https://ultramaxo.tech/pricing"
+				ctaLink: "https://ultramaxo.tech/pricing",
 			}));
 		} else if (formData.type === "update") {
-			setFormData(prev => ({
+			setFormData((prev) => ({
 				...prev,
 				subject: "Action Required / Important Update",
 				headline: "Important Update",
-				bodyText: "We wanted to let you know about a recent update to our platform.\n\nPlease review these changes at your earliest convenience.",
+				bodyText:
+					"We wanted to let you know about a recent update to our platform.\n\nPlease review these changes at your earliest convenience.",
 				ctaText: "View Details",
-				ctaLink: "https://ultramaxo.tech"
+				ctaLink: "https://ultramaxo.tech",
 			}));
 		} else if (formData.type === "newsletter") {
-			setFormData(prev => ({
+			setFormData((prev) => ({
 				...prev,
 				subject: "Ultramaxo Weekly Digest",
 				headline: "Your Weekly AI Insights",
-				bodyText: "Here are the top AI breakthroughs and platform news from this week.\n\n**1. Faster Inference**\nOur new infrastructure handles queries 40% faster.\n\n**2. New Agent Frameworks**\nBuild autonomous agents with our new SDK update.",
+				bodyText:
+					"Here are the top AI breakthroughs and platform news from this week.\n\n**1. Faster Inference**\nOur new infrastructure handles queries 40% faster.\n\n**2. New Agent Frameworks**\nBuild autonomous agents with our new SDK update.",
 				ctaText: "Read the Blog",
-				ctaLink: "https://ultramaxo.tech/blog"
+				ctaLink: "https://ultramaxo.tech/blog",
 			}));
 		} else if (formData.type === "maintenance") {
-			setFormData(prev => ({
+			setFormData((prev) => ({
 				...prev,
 				subject: "Scheduled Maintenance Notice",
 				headline: "Maintenance Notice",
-				bodyText: "We will be performing scheduled server maintenance this weekend to improve system reliability.\n\nExpected downtime is approximately 2 hours. We apologize for any inconvenience.",
+				bodyText:
+					"We will be performing scheduled server maintenance this weekend to improve system reliability.\n\nExpected downtime is approximately 2 hours. We apologize for any inconvenience.",
 				ctaText: "Check Status Page",
-				ctaLink: "https://ultramaxo.tech"
+				ctaLink: "https://ultramaxo.tech",
 			}));
 		} else if (formData.type === "feedback") {
-			setFormData(prev => ({
+			setFormData((prev) => ({
 				...prev,
 				subject: "How are we doing?",
 				headline: "We value your input",
-				bodyText: "Your feedback helps us build a better AI platform for everyone.\n\nCould you spare 2 minutes to answer a few quick questions about your experience?",
+				bodyText:
+					"Your feedback helps us build a better AI platform for everyone.\n\nCould you spare 2 minutes to answer a few quick questions about your experience?",
 				ctaText: "Take the Survey",
-				ctaLink: "https://ultramaxo.tech"
+				ctaLink: "https://ultramaxo.tech",
 			}));
 		} else if (formData.type === "pro_upgrade") {
-			setFormData(prev => ({
+			setFormData((prev) => ({
 				...prev,
 				subject: "Welcome to Ultramaxo PRO! 🚀",
 				headline: "You're officially PRO",
-				bodyText: "Thank you for upgrading! Your account has been successfully elevated to PRO status.\n\nYou now have unlimited access to our most advanced reasoning models, prioritized processing, and exclusive features.\n\nReceipt of your transaction is available in your account settings.",
+				bodyText:
+					"Thank you for upgrading! Your account has been successfully elevated to PRO status.\n\nYou now have unlimited access to our most advanced reasoning models, prioritized processing, and exclusive features.\n\nReceipt of your transaction is available in your account settings.",
 				ctaText: "Start Chatting Now",
-				ctaLink: "https://ultramaxo.tech/chat"
+				ctaLink: "https://ultramaxo.tech/chat",
 			}));
 		} else if (formData.type === "pro_expiring") {
-			setFormData(prev => ({
+			setFormData((prev) => ({
 				...prev,
 				subject: "Your Ultramaxo PRO plan is expiring soon",
 				headline: "Subscription Expiring",
-				bodyText: "We wanted to remind you that your Ultramaxo PRO subscription is scheduled to expire in **3 days**.\n\nTo ensure you don't lose access to unlimited queries and premium reasoning models, please verify your payment method.",
+				bodyText:
+					"We wanted to remind you that your Ultramaxo PRO subscription is scheduled to expire in **3 days**.\n\nTo ensure you don't lose access to unlimited queries and premium reasoning models, please verify your payment method.",
 				ctaText: "Manage Subscription",
-				ctaLink: "https://ultramaxo.tech/settings/billing"
+				ctaLink: "https://ultramaxo.tech/settings/billing",
 			}));
 		}
 	}, [formData.type]);
 
-	const handleChange = (e: any) => setFormData({ ...formData, [e.target.name]: e.target.value });
+	const handleChange = (
+		e: ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>,
+	) => setFormData({ ...formData, [e.target.name]: e.target.value });
 
 	// Compute internal HTML content
 	const getInternalContentHtml = () => {
 		const parsedBody = parseMarkdownToHtml(formData.bodyText);
-		
+
 		let ctaHtml = "";
 		if (formData.ctaText && formData.ctaLink) {
 			// Sleek black for everything for a more premium, professional feel
-			const btnColor = "background-color: #09090b; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);";
-			
+			const btnColor =
+				"background-color: #09090b; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);";
+
 			ctaHtml = `
 <div style="text-align: center; margin: 40px 0;">
     <a href="${formData.ctaLink}" style="display: inline-block; ${btnColor} color: #ffffff; text-decoration: none; font-size: 15px; font-weight: 600; padding: 14px 32px; border-radius: 8px; transition: opacity 0.2s;">${formData.ctaText}</a>
@@ -156,7 +180,7 @@ ${ctaHtml}
 			email: formData.email,
 			name: formData.name,
 			subject: formData.subject,
-			message: finalHtml
+			message: finalHtml,
 		};
 
 		try {
@@ -167,7 +191,9 @@ ${ctaHtml}
 			});
 			const data = await res.json();
 			if (data.success) {
-				const meta = data.meta ? `(Sent: ${data.meta.sent}, Failed: ${data.meta.failed})` : "";
+				const meta = data.meta
+					? `(Sent: ${data.meta.sent}, Failed: ${data.meta.failed})`
+					: "";
 				toast.success(`Broadcasting complete! ${meta}`);
 				if (formData.recipientType === "single") {
 					setFormData({ ...formData, email: "", name: "" });
@@ -175,7 +201,7 @@ ${ctaHtml}
 			} else {
 				toast.error(data.error || "Failed to dispatch email");
 			}
-		} catch (error) {
+		} catch (_error) {
 			toast.error("Network error. Could not reach server.");
 		} finally {
 			setLoading(false);
@@ -191,27 +217,36 @@ ${ctaHtml}
 					Email Studio
 				</h1>
 				<p className="text-sm text-zinc-500 dark:text-zinc-400 mt-1 max-w-xl">
-					Design, preview, and dispatch pixel-perfect marketing templates to your users. 
-                    Transactional emails (OTP, resets) are automatically handled by the system.
+					Design, preview, and dispatch pixel-perfect marketing templates to
+					your users. Transactional emails (OTP, resets) are automatically
+					handled by the system.
 				</p>
 			</div>
-			
+
 			<div className="flex-1 grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-				
 				{/* LEFT COLUMN: Configuration Form */}
 				<div className="lg:col-span-5 flex flex-col gap-6 pb-20">
-					
-					<form onSubmit={handleSubmit} className="flex flex-col gap-6" id="email-form">
+					<form
+						onSubmit={handleSubmit}
+						className="flex flex-col gap-6"
+						id="email-form"
+					>
 						{/* Card 1: Targeting */}
 						<div className="bg-white dark:bg-[#0a0a0a] border border-zinc-200 dark:border-white/10 rounded-2xl p-6 shadow-sm">
 							<h3 className="text-xs font-semibold text-zinc-400 dark:text-zinc-500 uppercase tracking-wider mb-5 flex items-center gap-1.5">
 								<UsersIcon size={14} /> Default Targeting
 							</h3>
-							
+
 							<div className="space-y-5">
 								<div className="space-y-2">
-									<label className="text-sm font-medium text-zinc-900 dark:text-zinc-300">Audience Group</label>
+									<label
+										htmlFor="recipientType"
+										className="text-sm font-medium text-zinc-900 dark:text-zinc-300"
+									>
+										Audience Group
+									</label>
 									<select
+										id="recipientType"
 										name="recipientType"
 										value={formData.recipientType}
 										onChange={handleChange}
@@ -227,8 +262,14 @@ ${ctaHtml}
 								{formData.recipientType === "single" && (
 									<div className="grid grid-cols-1 sm:grid-cols-2 gap-4 animate-in fade-in slide-in-from-top-2">
 										<div className="space-y-2">
-											<label className="text-sm font-medium text-zinc-900 dark:text-zinc-300">Email Address</label>
+											<label
+												htmlFor="email"
+												className="text-sm font-medium text-zinc-900 dark:text-zinc-300"
+											>
+												Email Address
+											</label>
 											<input
+												id="email"
 												name="email"
 												type="email"
 												required
@@ -239,8 +280,14 @@ ${ctaHtml}
 											/>
 										</div>
 										<div className="space-y-2">
-											<label className="text-sm font-medium text-zinc-900 dark:text-zinc-300">Name (Merge Tag)</label>
+											<label
+												htmlFor="name"
+												className="text-sm font-medium text-zinc-900 dark:text-zinc-300"
+											>
+												Name (Merge Tag)
+											</label>
 											<input
+												id="name"
 												name="name"
 												type="text"
 												value={formData.name}
@@ -262,24 +309,40 @@ ${ctaHtml}
 
 							<div className="space-y-5">
 								<div className="space-y-2">
-									<label className="text-sm font-medium text-zinc-900 dark:text-zinc-300">Template Style</label>
+									<label
+										htmlFor="type"
+										className="text-sm font-medium text-zinc-900 dark:text-zinc-300"
+									>
+										Template Style
+									</label>
 									<select
+										id="type"
 										name="type"
 										value={formData.type}
 										onChange={handleChange}
 										className="w-full h-10 px-3 bg-zinc-50 dark:bg-zinc-900 border border-zinc-200 dark:border-white/10 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-zinc-900 dark:focus:ring-white transition-colors dark:text-white"
 									>
-                                        <option value="update">Product Update / Announcement</option>
-                                        <option value="newsletter">Newsletter / Weekly Digest</option>
-                                        <option value="promo">Special Offer / Upgrade</option>
-                                        <option value="maintenance">Maintenance Notice</option>
-                                        <option value="feedback">Feedback / Survey Request</option>
+										<option value="update">
+											Product Update / Announcement
+										</option>
+										<option value="newsletter">
+											Newsletter / Weekly Digest
+										</option>
+										<option value="promo">Special Offer / Upgrade</option>
+										<option value="maintenance">Maintenance Notice</option>
+										<option value="feedback">Feedback / Survey Request</option>
 									</select>
 								</div>
 
 								<div className="space-y-2">
-									<label className="text-sm font-medium text-zinc-900 dark:text-zinc-300">Email Subject Line</label>
+									<label
+										htmlFor="subject"
+										className="text-sm font-medium text-zinc-900 dark:text-zinc-300"
+									>
+										Email Subject Line
+									</label>
 									<input
+										id="subject"
 										name="subject"
 										type="text"
 										required
@@ -289,12 +352,18 @@ ${ctaHtml}
 										placeholder="e.g. You've got an update..."
 									/>
 								</div>
-                                
-                                <div className="h-px bg-zinc-200 dark:bg-white/10 my-4" />
 
-                                <div className="space-y-2">
-									<label className="text-sm font-medium text-zinc-900 dark:text-zinc-300">Headline</label>
+								<div className="h-px bg-zinc-200 dark:bg-white/10 my-4" />
+
+								<div className="space-y-2">
+									<label
+										htmlFor="headline"
+										className="text-sm font-medium text-zinc-900 dark:text-zinc-300"
+									>
+										Headline
+									</label>
 									<input
+										id="headline"
 										name="headline"
 										type="text"
 										required
@@ -305,12 +374,18 @@ ${ctaHtml}
 									/>
 								</div>
 
-                                <div className="space-y-2">
-									<label className="text-sm font-medium text-zinc-900 dark:text-zinc-300 flex justify-between">
+								<div className="space-y-2">
+									<label
+										htmlFor="bodyText"
+										className="text-sm font-medium text-zinc-900 dark:text-zinc-300 flex justify-between"
+									>
 										<span>Body Message</span>
-										<span className="text-[10px] text-zinc-500 font-normal">Supports Basic Markdown</span>
+										<span className="text-[10px] text-zinc-500 font-normal">
+											Supports Basic Markdown
+										</span>
 									</label>
 									<textarea
+										id="bodyText"
 										name="bodyText"
 										required
 										rows={7}
@@ -321,33 +396,47 @@ ${ctaHtml}
 									/>
 								</div>
 
-                                <div className="grid grid-cols-2 gap-4">
-                                    <div className="space-y-2">
-                                        <label className="text-sm font-medium text-zinc-900 dark:text-zinc-300">Button Text</label>
-                                        <input
-                                            name="ctaText"
-                                            type="text"
-                                            value={formData.ctaText}
-                                            onChange={handleChange}
-                                            className="w-full h-10 px-3 bg-white dark:bg-[#0a0a0a] border border-zinc-200 dark:border-white/10 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-zinc-900 dark:focus:ring-white dark:text-white shadow-sm"
-                                            placeholder="Learn More"
-                                        />
-                                    </div>
-                                    <div className="space-y-2">
-                                        <label className="text-sm font-medium text-zinc-900 dark:text-zinc-300">Button URL</label>
-                                        <input
-                                            name="ctaLink"
-                                            type="url"
-                                            value={formData.ctaLink}
-                                            onChange={handleChange}
-                                            className="w-full h-10 px-3 bg-white dark:bg-[#0a0a0a] border border-zinc-200 dark:border-white/10 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-zinc-900 dark:focus:ring-white dark:text-white shadow-sm"
-                                            placeholder="https://..."
-                                        />
-                                    </div>
-                                </div>
-                                <p className="text-[11px] text-zinc-500 mt-1 leading-tight">
-                                    Leave Button Text blank to remove the button completely. Use merge tag {"{{"}NAME{"}}"} anywhere to insert the recipient's name.
-                                </p>
+								<div className="grid grid-cols-2 gap-4">
+									<div className="space-y-2">
+										<label
+											htmlFor="ctaText"
+											className="text-sm font-medium text-zinc-900 dark:text-zinc-300"
+										>
+											Button Text
+										</label>
+										<input
+											id="ctaText"
+											name="ctaText"
+											type="text"
+											value={formData.ctaText}
+											onChange={handleChange}
+											className="w-full h-10 px-3 bg-white dark:bg-[#0a0a0a] border border-zinc-200 dark:border-white/10 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-zinc-900 dark:focus:ring-white dark:text-white shadow-sm"
+											placeholder="Learn More"
+										/>
+									</div>
+									<div className="space-y-2">
+										<label
+											htmlFor="ctaLink"
+											className="text-sm font-medium text-zinc-900 dark:text-zinc-300"
+										>
+											Button URL
+										</label>
+										<input
+											id="ctaLink"
+											name="ctaLink"
+											type="url"
+											value={formData.ctaLink}
+											onChange={handleChange}
+											className="w-full h-10 px-3 bg-white dark:bg-[#0a0a0a] border border-zinc-200 dark:border-white/10 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-zinc-900 dark:focus:ring-white dark:text-white shadow-sm"
+											placeholder="https://..."
+										/>
+									</div>
+								</div>
+								<p className="text-[11px] text-zinc-500 mt-1 leading-tight">
+									Leave Button Text blank to remove the button completely. Use
+									merge tag {"{{"}NAME{"}}"} anywhere to insert the recipient's
+									name.
+								</p>
 							</div>
 						</div>
 
@@ -359,11 +448,14 @@ ${ctaHtml}
 								type="submit"
 								className="inline-flex items-center gap-2 px-8 py-3 bg-zinc-900 dark:bg-white text-white dark:text-black hover:bg-zinc-800 dark:hover:bg-zinc-200 disabled:opacity-50 disabled:cursor-not-allowed text-sm font-semibold rounded-xl transition-all shadow-sm"
 							>
-								{loading ? <Loader2 className="animate-spin" size={18} /> : <SendIcon size={18} />} 
+								{loading ? (
+									<Loader2 className="animate-spin" size={18} />
+								) : (
+									<SendIcon size={18} />
+								)}
 								{loading ? "Dispatching..." : "Send Campaign out"}
 							</button>
 						</div>
-
 					</form>
 				</div>
 
@@ -387,7 +479,6 @@ ${ctaHtml}
 
 					{/* Device Frame Wrapper */}
 					<div className="flex-1 min-h-[600px] border border-zinc-200 dark:border-white/10 rounded-2xl bg-[#f6f9fc] overflow-hidden shadow-sm flex flex-col relative group">
-						
 						{/* Browser-like Header */}
 						<div className="h-12 bg-white border-b border-zinc-200 flex items-center px-4 gap-4 shrink-0 shadow-sm z-10 w-full relative">
 							{/* Mac window dots */}
@@ -396,11 +487,13 @@ ${ctaHtml}
 								<div className="w-2.5 h-2.5 rounded-full bg-amber-400" />
 								<div className="w-2.5 h-2.5 rounded-full bg-green-400" />
 							</div>
-							
+
 							{/* Email Context Simulation */}
 							<div className="flex-1 flex items-center justify-between mx-4 bg-[#f1f3f4] rounded-md h-7 px-3 border border-zinc-100">
 								<div className="flex items-center gap-2 overflow-hidden">
-									<span className="text-[11px] font-medium text-zinc-500 shrink-0">Subject:</span>
+									<span className="text-[11px] font-medium text-zinc-500 shrink-0">
+										Subject:
+									</span>
 									<span className="text-[11px] font-semibold text-zinc-800 truncate">
 										{formData.subject || "No Subject"}
 									</span>
@@ -410,22 +503,21 @@ ${ctaHtml}
 
 						{/* Iframe Content Body */}
 						<div className="w-full flex-1 relative bg-[#f6f9fc] overflow-hidden">
-							<iframe 
+							<iframe
 								title="Email Template Preview"
 								srcDoc={generatePreviewHtml()}
 								className="w-full h-full border-none absolute inset-0 bg-[#f6f9fc]"
 								sandbox="allow-same-origin"
 							/>
 						</div>
-
 					</div>
 
 					<div className="mt-4 flex items-center justify-center gap-2 text-[11px] text-zinc-500">
 						<CheckCircle2Icon size={12} className="text-zinc-400" />
-						Visual framework is mobile-first and extensively tested across primary mail clients (Gmail, Apple Mail, Outlook).
+						Visual framework is mobile-first and extensively tested across
+						primary mail clients (Gmail, Apple Mail, Outlook).
 					</div>
 				</div>
-
 			</div>
 		</div>
 	);

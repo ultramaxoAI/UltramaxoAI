@@ -44,7 +44,9 @@ export function HlsVideo({ src, className = "", style }: HlsVideoProps) {
 
 		return () => {
 			if (hls) {
-				try { hls.destroy(); } catch {}
+				try {
+					hls.destroy();
+				} catch {}
 			}
 		};
 	}, [src]);
@@ -61,4 +63,3 @@ export function HlsVideo({ src, className = "", style }: HlsVideoProps) {
 		/>
 	);
 }
-

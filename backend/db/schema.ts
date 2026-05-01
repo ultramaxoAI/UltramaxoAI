@@ -3,8 +3,8 @@ import {
 	boolean,
 	foreignKey,
 	integer,
-	numeric,
 	json,
+	numeric,
 	pgTable,
 	primaryKey,
 	text,
@@ -342,9 +342,7 @@ export const siteSettings = pgTable("site_settings", {
 		.default("We will be right back."),
 	maintenanceMessage: text("maintenanceMessage")
 		.notNull()
-		.default(
-			"Lagi ada update kecil. Sebentar lagi balik.",
-		),
+		.default("Lagi ada update kecil. Sebentar lagi balik."),
 	updatedBy: uuid("updatedBy"),
 	createdAt: timestamp("createdAt").notNull().defaultNow(),
 	updatedAt: timestamp("updatedAt").notNull().defaultNow(),
@@ -532,7 +530,9 @@ export const platformApiKey = pgTable("platform_api_key", {
 		.references(() => user.id, { onDelete: "cascade" }),
 	key: text("key").notNull().unique(), // The 'ux_sk_...' string
 	name: text("name").notNull().default("Default Key"),
-	status: varchar("status", { enum: ["active", "revoked"] }).notNull().default("active"),
+	status: varchar("status", { enum: ["active", "revoked"] })
+		.notNull()
+		.default("active"),
 	createdAt: timestamp("createdAt").notNull().defaultNow(),
 	lastUsedAt: timestamp("lastUsedAt"),
 });
@@ -574,7 +574,9 @@ export const apiCreditTransaction = pgTable("api_credit_transaction", {
 	createdAt: timestamp("createdAt").notNull().defaultNow(),
 });
 
-export type ApiCreditTransaction = InferSelectModel<typeof apiCreditTransaction>;
+export type ApiCreditTransaction = InferSelectModel<
+	typeof apiCreditTransaction
+>;
 
 // ============================================================
 // Model Catalog (SwiftRouter)
@@ -611,5 +613,6 @@ export const modelCatalogRefreshLog = pgTable("model_catalog_refresh_log", {
 	count: integer("count").notNull().default(0),
 });
 
-export type ModelCatalogRefreshLog = InferSelectModel<typeof modelCatalogRefreshLog>;
-
+export type ModelCatalogRefreshLog = InferSelectModel<
+	typeof modelCatalogRefreshLog
+>;

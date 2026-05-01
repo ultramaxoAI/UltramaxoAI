@@ -215,31 +215,32 @@ export function Chat({
 			mutate(unstable_serialize(getChatHistoryPaginationKey));
 		},
 		onError: (error) => {
-			// Log detailed error on client side
-			console.error("=== CLIENT CHAT ERROR ===");
-			console.error(
-				"Error Type:",
-				error instanceof Error ? error.constructor.name : typeof error,
-			);
-			console.error(
-				"Error Message:",
-				error instanceof Error ? error.message : String(error),
-			);
-			console.error(
-				"Error Stack:",
-				error instanceof Error ? error.stack : "N/A",
-			);
-			console.error("Chat ID:", id);
-			console.error("Current Model:", currentModelId);
-			console.error("Messages Count:", messages.length);
-
-			if (error && typeof error === "object") {
-				console.error(
-					"Error Details:",
-					JSON.stringify(error, Object.getOwnPropertyNames(error), 2),
+			if (process.env.NODE_ENV === "development") {
+				console.groupCollapsed("[Chat] Client error");
+				console.log(
+					"Error Type:",
+					error instanceof Error ? error.constructor.name : typeof error,
 				);
+				console.log(
+					"Error Message:",
+					error instanceof Error ? error.message : String(error),
+				);
+				console.log(
+					"Error Stack:",
+					error instanceof Error ? error.stack : "N/A",
+				);
+				console.log("Chat ID:", id);
+				console.log("Current Model:", currentModelId);
+				console.log("Messages Count:", messages.length);
+
+				if (error && typeof error === "object") {
+					console.log(
+						"Error Details:",
+						JSON.stringify(error, Object.getOwnPropertyNames(error), 2),
+					);
+				}
+				console.groupEnd();
 			}
-			console.error("=== END CLIENT ERROR ===");
 
 			// Detect rate limit errors and trigger upgrade banner instead of just showing a toast
 			const errorMsg = error instanceof Error ? error.message : String(error);
@@ -385,7 +386,9 @@ export function Chat({
 										Apa yang ingin Anda buat?
 									</h1>
 									<p className="mt-4 text-sm leading-7 text-[#676c68] dark:text-[#9ba09b] sm:text-[15px]">
-										Mulai dari satu prompt. Tulis ide, bangun sesuatu, atau lanjutkan pekerjaan Anda dengan alur yang terasa ringan dan fokus.
+										Mulai dari satu prompt. Tulis ide, bangun sesuatu, atau
+										lanjutkan pekerjaan Anda dengan alur yang terasa ringan dan
+										fokus.
 									</p>
 								</div>
 

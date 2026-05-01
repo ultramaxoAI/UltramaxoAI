@@ -213,7 +213,9 @@ export default function ApiConsoleModelsPage() {
 											</button>
 										</div>
 									</td>
-									<td style={{ fontSize: 13, color: "var(--apic-text-muted)" }}>{m.provider}</td>
+									<td style={{ fontSize: 13, color: "var(--apic-text-muted)" }}>
+										{m.provider}
+									</td>
 									<td style={{ fontSize: 13, color: "var(--apic-text-muted)" }}>
 										{m.context ? Number(m.context).toLocaleString() : "—"}
 									</td>
@@ -228,10 +230,15 @@ export default function ApiConsoleModelsPage() {
 													fontFamily: "monospace",
 												}}
 											>
-												${Number(m.priceIn || 0).toFixed(2)} / ${Number(m.priceOut || 0).toFixed(2)}
+												${Number(m.priceIn || 0).toFixed(2)} / $
+												{Number(m.priceOut || 0).toFixed(2)}
 											</span>
 										) : (
-											<span style={{ fontSize: 12, color: "var(--apic-text-dim)" }}>—</span>
+											<span
+												style={{ fontSize: 12, color: "var(--apic-text-dim)" }}
+											>
+												—
+											</span>
 										)}
 									</td>
 								</tr>

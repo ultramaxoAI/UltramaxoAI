@@ -1,10 +1,10 @@
-import { auth } from "@/app/(auth)/auth";
-import type { ArtifactKind } from "@/components/artifact";
 import {
 	deleteDocumentsByIdAfterTimestamp,
 	getDocumentsById,
 	saveDocument,
 } from "@backend/db/queries";
+import { auth } from "@/app/(auth)/auth";
+import type { ArtifactKind } from "@/components/artifact";
 import { ChatSDKError } from "@/lib/errors";
 
 export async function GET(request: Request) {

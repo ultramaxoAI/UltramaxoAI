@@ -4,8 +4,13 @@ const DEFAULT_FREE_MODEL_ID = "gpt-5.3-codex";
 
 export const metadata: Metadata = {
 	title: "API Documentation — Authentication",
-	description: "Pelajari cara autentikasi API Ultramaxo menggunakan API key. Panduan Bearer token dan keamanan API key.",
-	openGraph: { title: "Ultramaxo API — Authentication Guide", description: "Panduan autentikasi API key untuk Ultramaxo API.", url: "https://app.ultramaxo.tech/docs/authentication" },
+	description:
+		"Pelajari cara autentikasi API Ultramaxo menggunakan API key. Panduan Bearer token dan keamanan API key.",
+	openGraph: {
+		title: "Ultramaxo API — Authentication Guide",
+		description: "Panduan autentikasi API key untuk Ultramaxo API.",
+		url: "https://app.ultramaxo.tech/docs/authentication",
+	},
 };
 
 export default function DocsAuthPage() {

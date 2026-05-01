@@ -11,9 +11,9 @@ const swiftRouterApiKey = (process.env.SWIFTROUTER_API_KEY || "").trim();
 // ============================================================
 // Model IDs
 // ============================================================
-const DEFAULT_MODEL = "moonshot/kimi-k2.5";
-const PRO_MODEL = "moonshot/kimi-k2.5";
-const FALLBACK_MODEL = "moonshot/kimi-k2.5";
+const DEFAULT_MODEL = "maia/gemini-2.0-flash-001";
+const PRO_MODEL = "maia/claude-3-5-sonnet";
+const FALLBACK_MODEL = "maia/gemini-2.0-flash-lite-001";
 
 export interface CustomKeyConfig {
 	provider: string;

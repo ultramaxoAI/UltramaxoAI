@@ -61,7 +61,9 @@ export function UsageOverviewPanel() {
 			<header>
 				<div className="flex items-center gap-2 text-zinc-900 dark:text-white">
 					<BarChart3Icon size={20} />
-					<h1 className="text-2xl font-semibold tracking-tight">Usage Overview</h1>
+					<h1 className="text-2xl font-semibold tracking-tight">
+						Usage Overview
+					</h1>
 				</div>
 				<p className="mt-2 text-sm text-zinc-500 dark:text-zinc-400">
 					Track how much of the workspace you are actively using.
@@ -70,8 +72,13 @@ export function UsageOverviewPanel() {
 
 			<div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
 				{metricCards.map((metric) => (
-					<div className="rounded-2xl border border-zinc-200 dark:border-white/5 bg-zinc-50/40 dark:bg-[#101010] p-5" key={metric.key}>
-						<p className="text-sm text-zinc-500 dark:text-zinc-400">{metric.label}</p>
+					<div
+						className="rounded-2xl border border-zinc-200 dark:border-white/5 bg-zinc-50/40 dark:bg-[#101010] p-5"
+						key={metric.key}
+					>
+						<p className="text-sm text-zinc-500 dark:text-zinc-400">
+							{metric.label}
+						</p>
 						<p className="mt-2 text-3xl font-semibold tracking-tight text-zinc-900 dark:text-white">
 							{usage?.[metric.key] ?? 0}
 						</p>
@@ -80,7 +87,9 @@ export function UsageOverviewPanel() {
 			</div>
 
 			<div className="rounded-2xl border border-zinc-200 dark:border-white/5 bg-white dark:bg-[#101010] p-5 text-sm text-zinc-600 dark:text-zinc-300 leading-7">
-				Your library, shared assets, and connected model providers are now visible from one place, so you can see whether the workspace is being used mainly for chat, artifacts, or reusable prompt operations.
+				Your library, shared assets, and connected model providers are now
+				visible from one place, so you can see whether the workspace is being
+				used mainly for chat, artifacts, or reusable prompt operations.
 			</div>
 		</div>
 	);

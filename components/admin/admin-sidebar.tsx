@@ -1,13 +1,22 @@
 "use client";
 
+import {
+	BarChart3,
+	ChevronLeft,
+	CreditCard,
+	Mail,
+	Receipt,
+	Settings2,
+	Users,
+} from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Settings2, Users, Receipt, Mail, BarChart3, ChevronLeft, CreditCard } from "lucide-react";
 
 export function AdminSidebar() {
 	const pathname = usePathname();
 
-	const matches = (path: string) => pathname === path || pathname.startsWith(path + "/");
+	const matches = (path: string) =>
+		pathname === path || pathname.startsWith(`${path}/`);
 
 	const navItems = [
 		{ name: "Overview", href: "/admin", icon: BarChart3 },
@@ -35,7 +44,10 @@ export function AdminSidebar() {
 
 				<nav className="flex-1 overflow-y-auto py-4 px-3 space-y-1">
 					{navItems.map((item) => {
-						const isActive = item.href === "/admin" ? pathname === "/admin" : matches(item.href);
+						const isActive =
+							item.href === "/admin"
+								? pathname === "/admin"
+								: matches(item.href);
 						return (
 							<Link
 								key={item.name}
@@ -46,7 +58,14 @@ export function AdminSidebar() {
 										: "text-gray-600 hover:bg-gray-50 hover:text-gray-900 dark:text-gray-400 dark:hover:bg-white/5 dark:hover:text-white"
 								}`}
 							>
-								<item.icon size={16} className={isActive ? "text-gray-900 dark:text-white" : "text-gray-500 dark:text-gray-400"} />
+								<item.icon
+									size={16}
+									className={
+										isActive
+											? "text-gray-900 dark:text-white"
+											: "text-gray-500 dark:text-gray-400"
+									}
+								/>
 								{item.name}
 							</Link>
 						);
@@ -67,7 +86,8 @@ export function AdminSidebar() {
 			{/* Mobile Bottom Nav */}
 			<nav className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-white dark:bg-[#0a0a0a] border-t border-gray-200 dark:border-white/10 flex items-center justify-around px-1 py-1.5 safe-bottom">
 				{navItems.map((item) => {
-					const isActive = item.href === "/admin" ? pathname === "/admin" : matches(item.href);
+					const isActive =
+						item.href === "/admin" ? pathname === "/admin" : matches(item.href);
 					return (
 						<Link
 							key={item.name}
@@ -79,7 +99,9 @@ export function AdminSidebar() {
 							}`}
 						>
 							<item.icon size={18} />
-							<span className="truncate">{item.name === "Email Studio" ? "Email" : item.name}</span>
+							<span className="truncate">
+								{item.name === "Email Studio" ? "Email" : item.name}
+							</span>
 						</Link>
 					);
 				})}

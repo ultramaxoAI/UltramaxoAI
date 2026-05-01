@@ -1,7 +1,5 @@
-import {
-	listModelCatalog,
-} from "@backend/models/model-catalog";
-import { MODEL_METADATA, enrichModel } from "@backend/models/model-metadata";
+import { listModelCatalog } from "@backend/models/model-catalog";
+import { enrichModel, MODEL_METADATA } from "@backend/models/model-metadata";
 import { type NextRequest, NextResponse } from "next/server";
 
 const CORS_HEADERS = {
@@ -47,8 +45,7 @@ function refreshFromDB() {
 						name: m.name || meta.displayName,
 						provider: meta.provider || m.provider,
 						capabilities:
-							m.capabilities?.length > 0 &&
-							m.capabilities[0] !== "text"
+							m.capabilities?.length > 0 && m.capabilities[0] !== "text"
 								? m.capabilities
 								: meta.capabilities,
 						context: m.context || meta.context,
@@ -77,7 +74,7 @@ function applyFilters(
 	let filtered = models;
 	if (filter.provider) {
 		filtered = filtered.filter(
-			(m) => m.provider.toLowerCase() === filter.provider!.toLowerCase(),
+			(m) => m.provider.toLowerCase() === filter.provider?.toLowerCase(),
 		);
 	}
 	if (filter.capability) {

@@ -1,6 +1,6 @@
+import { resolveExistingUserId, saveDocument } from "@backend/db/queries";
 import type { Session } from "next-auth";
 import { z } from "zod";
-import { resolveExistingUserId, saveDocument } from "@backend/db/queries";
 import { generateUUID } from "@/lib/utils";
 
 type CreateDocumentStreamChunk =

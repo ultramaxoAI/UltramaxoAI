@@ -1,10 +1,10 @@
-import { auth } from "@/app/(auth)/auth";
 import {
 	createChatFolder,
 	deleteChatFolder,
 	getChatFoldersByUserId,
 	renameChatFolder,
 } from "@backend/db/queries";
+import { auth } from "@/app/(auth)/auth";
 
 export async function GET() {
 	const session = await auth();
