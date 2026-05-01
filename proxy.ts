@@ -13,7 +13,7 @@ const SECURITY_HEADERS: Record<string, string> = {
 	"Strict-Transport-Security": "max-age=63072000; includeSubDomains; preload",
 };
 
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
 	const host = request.headers.get("host") || "";
 	const { pathname } = request.nextUrl;
 	const requestHeaders = new Headers(request.headers);
