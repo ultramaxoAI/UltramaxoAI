@@ -1,4 +1,4 @@
-import { getSiteSettings } from "@backend/db/queries-settings";
+import { getMaintenanceSettings } from "@backend/db/queries-settings";
 import { GeistMono } from "geist/font/mono";
 import { GeistSans } from "geist/font/sans";
 import type { Metadata } from "next";
@@ -98,6 +98,7 @@ const geistMono = GeistMono;
 const LIGHT_THEME_COLOR = "hsl(0 0% 100%)";
 const DARK_THEME_COLOR = "#18181b";
 const API_SUBDOMAIN = "api.";
+const CHAT_MAINTENANCE_PATH_PREFIXES = ["/chat", "/settings", "/redeem"];
 const MAINTENANCE_BYPASS_PATHS = [
 	"/maintenance",
 	"/login",
@@ -159,15 +160,26 @@ async function shouldRedirectToMaintenance() {
 		headerStore.get("host") ||
 		"";
 
-	if (
-		host.startsWith(API_SUBDOMAIN) ||
-		isStaticRequest(pathname) ||
-		isMaintenanceBypassPath(pathname)
-	) {
+	if (host.startsWith(API_SUBDOMAIN) || isStaticRequest(pathname)) {
 		return false;
 	}
 
-	const [session, settings] = await Promise.all([auth(), getSiteSettings()]);
+	if (isMaintenanceBypassPath(pathname)) {
+		return false;
+	}
+
+	const isChatMaintenancePath = CHAT_MAINTENANCE_PATH_PREFIXES.some(
+		(prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`),
+	);
+
+	if (!isChatMaintenancePath) {
+		return false;
+	}
+
+	const [session, settings] = await Promise.all([
+		auth(),
+		getMaintenanceSettings("chat"),
+	]);
 
 	return (
 		settings?.maintenanceEnabled === true && session?.user?.role !== "admin"
@@ -180,7 +192,7 @@ export default async function RootLayout({
 	children: React.ReactNode;
 }>) {
 	if (await shouldRedirectToMaintenance()) {
-		redirect("/maintenance");
+		redirect("/maintenance?scope=chat");
 	}
 
 	return (

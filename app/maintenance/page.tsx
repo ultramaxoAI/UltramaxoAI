@@ -1,4 +1,7 @@
-import { getSiteSettings } from "@backend/db/queries-settings";
+import {
+	getMaintenanceSettings,
+	type MaintenanceScope,
+} from "@backend/db/queries-settings";
 import type { Metadata } from "next";
 import {
 	AuroraTemplate,
@@ -18,8 +21,15 @@ export const metadata: Metadata = {
 	},
 };
 
-export default async function MaintenancePage() {
-	const settings = await getSiteSettings();
+export default async function MaintenancePage({
+	searchParams,
+}: {
+	searchParams?: Promise<{ scope?: string }>;
+}) {
+	const resolvedSearchParams = searchParams ? await searchParams : undefined;
+	const scope: MaintenanceScope =
+		resolvedSearchParams?.scope === "api" ? "api" : "chat";
+	const settings = await getMaintenanceSettings(scope);
 	const template = settings?.maintenanceTemplate ?? "minimal";
 	const title = settings?.maintenanceTitle ?? "We'll be right back.";
 	const message =

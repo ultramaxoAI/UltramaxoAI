@@ -1,8 +1,33 @@
 import "server-only";
 
-import { and, eq } from "drizzle-orm";
+import { and, eq, inArray } from "drizzle-orm";
 import { db } from "./queries";
 import { siteSettings, userApiKeys, userSettings } from "./schema";
+
+export const MAINTENANCE_SCOPES = ["chat", "api"] as const;
+export type MaintenanceScope = (typeof MAINTENANCE_SCOPES)[number];
+
+export type MaintenanceSettingsRecord = {
+	key: string;
+	maintenanceEnabled: boolean;
+	maintenanceTemplate: string;
+	maintenanceTitle: string;
+	maintenanceMessage: string;
+	updatedBy?: string | null;
+	createdAt?: Date;
+	updatedAt?: Date;
+};
+
+export const DEFAULT_MAINTENANCE_SETTINGS: Omit<
+	MaintenanceSettingsRecord,
+	"key"
+> = {
+	maintenanceEnabled: false,
+	maintenanceTemplate: "minimal",
+	maintenanceTitle: "We will be right back.",
+	maintenanceMessage: "Lagi ada update kecil. Sebentar lagi balik.",
+	updatedBy: null,
+};
 
 // ============================================================
 // User Settings (Personalization)
@@ -47,12 +72,12 @@ export async function upsertUserSettings(
 // Site Settings (Global)
 // ============================================================
 
-export async function getSiteSettings() {
+export async function getSiteSettings(key = "global") {
 	try {
 		const result = await db
 			.select()
 			.from(siteSettings)
-			.where(eq(siteSettings.key, "global"));
+			.where(eq(siteSettings.key, key));
 
 		return result[0] || null;
 	} catch (error) {
@@ -61,14 +86,82 @@ export async function getSiteSettings() {
 	}
 }
 
-export async function upsertSiteSettings(data: {
-	maintenanceEnabled?: boolean;
-	maintenanceTemplate?: string;
-	maintenanceTitle?: string;
-	maintenanceMessage?: string;
-	updatedBy?: string | null;
-}) {
-	const existing = await getSiteSettings();
+export async function listSiteSettings(keys?: string[]) {
+	try {
+		if (keys?.length) {
+			return await db
+				.select()
+				.from(siteSettings)
+				.where(inArray(siteSettings.key, keys));
+		}
+		return await db.select().from(siteSettings);
+	} catch (error) {
+		console.error("Database Error (listSiteSettings):", error);
+		return [];
+	}
+}
+
+export async function getMaintenanceSettings(scope: MaintenanceScope) {
+	const [scopedSettings, globalSettings] = await Promise.all([
+		getSiteSettings(scope),
+		getSiteSettings("global"),
+	]);
+
+	return {
+		key: scope,
+		...DEFAULT_MAINTENANCE_SETTINGS,
+		...(globalSettings
+			? {
+					maintenanceTemplate: globalSettings.maintenanceTemplate,
+					maintenanceTitle: globalSettings.maintenanceTitle,
+					maintenanceMessage: globalSettings.maintenanceMessage,
+				}
+			: {}),
+		...(scopedSettings ?? {}),
+	} satisfies MaintenanceSettingsRecord;
+}
+
+export async function listMaintenanceSettings() {
+	const settingsRows = await listSiteSettings([
+		...MAINTENANCE_SCOPES,
+		"global",
+	]);
+	const rowsByKey = new Map(settingsRows.map((row) => [row.key, row]));
+	const globalSettings = rowsByKey.get("global");
+
+	return Object.fromEntries(
+		MAINTENANCE_SCOPES.map((scope) => {
+			const scopedSettings = rowsByKey.get(scope);
+			return [
+				scope,
+				{
+					key: scope,
+					...DEFAULT_MAINTENANCE_SETTINGS,
+					...(globalSettings
+						? {
+								maintenanceTemplate: globalSettings.maintenanceTemplate,
+								maintenanceTitle: globalSettings.maintenanceTitle,
+								maintenanceMessage: globalSettings.maintenanceMessage,
+							}
+						: {}),
+					...(scopedSettings ?? {}),
+				} satisfies MaintenanceSettingsRecord,
+			];
+		}),
+	) as Record<MaintenanceScope, MaintenanceSettingsRecord>;
+}
+
+export async function upsertSiteSettings(
+	key: string,
+	data: {
+		maintenanceEnabled?: boolean;
+		maintenanceTemplate?: string;
+		maintenanceTitle?: string;
+		maintenanceMessage?: string;
+		updatedBy?: string | null;
+	},
+) {
+	const existing = await getSiteSettings(key);
 	const normalizedData = {
 		...data,
 		updatedAt: new Date(),
@@ -78,13 +171,13 @@ export async function upsertSiteSettings(data: {
 		return db
 			.update(siteSettings)
 			.set(normalizedData)
-			.where(eq(siteSettings.key, "global"))
+			.where(eq(siteSettings.key, key))
 			.returning();
 	}
 
 	return db
 		.insert(siteSettings)
-		.values({ key: "global", ...normalizedData })
+		.values({ key, ...normalizedData })
 		.returning();
 }
 

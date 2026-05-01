@@ -1,4 +1,7 @@
+import { getMaintenanceSettings } from "@backend/db/queries-settings";
 import type { Metadata } from "next";
+import { redirect } from "next/navigation";
+import { auth } from "@/app/(auth)/auth";
 import { ApiConsoleClientLayout } from "@/components/api-console/client-layout";
 
 export const metadata: Metadata = {
@@ -80,6 +83,15 @@ export default async function ApiConsoleLayout({
 }: {
 	children: React.ReactNode;
 }) {
+	const [session, settings] = await Promise.all([
+		auth(),
+		getMaintenanceSettings("api"),
+	]);
+
+	if (settings.maintenanceEnabled && session?.user?.role !== "admin") {
+		redirect("/maintenance?scope=api");
+	}
+
 	return (
 		<ApiConsoleClientLayout navItems={navItems}>
 			{children}
