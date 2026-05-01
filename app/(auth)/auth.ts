@@ -16,7 +16,10 @@ import {
 	user as userTable,
 	verificationToken as verificationTokenTable,
 } from "@backend/db/schema";
-import { generateDummyPassword, generateHashedPassword } from "@backend/db/utils";
+import {
+	generateDummyPassword,
+	generateHashedPassword,
+} from "@backend/db/utils";
 import { compare } from "bcrypt-ts";
 import { and, eq, sql } from "drizzle-orm";
 import NextAuth, { type DefaultSession } from "next-auth";
@@ -112,6 +115,84 @@ function mapDbUserToAdapterUser(dbUser: typeof userTable.$inferSelect) {
 	};
 }
 
+async function upsertOAuthAccountForUser({
+	userId,
+	account,
+}: {
+	userId: string;
+	account: {
+		type: string;
+		provider: string;
+		providerAccountId: string;
+		refresh_token?: string | null;
+		access_token?: string | null;
+		expires_at?: number | null;
+		token_type?: string | null;
+		scope?: string | null;
+		id_token?: string | null;
+		session_state?: unknown;
+	};
+}) {
+	await db
+		.insert(accountTable)
+		.values({
+			userId,
+			type: account.type,
+			provider: account.provider,
+			providerAccountId: account.providerAccountId,
+			refresh_token: account.refresh_token ?? null,
+			access_token: account.access_token ?? null,
+			expires_at: account.expires_at ?? null,
+			token_type: account.token_type ?? null,
+			scope: account.scope ?? null,
+			id_token: account.id_token ?? null,
+			session_state:
+				typeof account.session_state === "string"
+					? account.session_state
+					: null,
+		})
+		.onConflictDoUpdate({
+			target: [accountTable.provider, accountTable.providerAccountId],
+			set: {
+				userId,
+				type: account.type,
+				refresh_token: account.refresh_token ?? null,
+				access_token: account.access_token ?? null,
+				expires_at: account.expires_at ?? null,
+				token_type: account.token_type ?? null,
+				scope: account.scope ?? null,
+				id_token: account.id_token ?? null,
+				session_state:
+					typeof account.session_state === "string"
+						? account.session_state
+						: null,
+			},
+		});
+}
+
+async function syncOAuthProfileToUser({
+	existingUser,
+	profile,
+}: {
+	existingUser: typeof userTable.$inferSelect;
+	profile?: unknown;
+}) {
+	if (!existingUser.emailVerified) {
+		await setEmailVerifiedById(existingUser.id);
+	}
+
+	const displayName =
+		(profile as { name?: string; login?: string } | undefined)?.name ??
+		(profile as { login?: string } | undefined)?.login;
+
+	if (displayName && !existingUser.name) {
+		await db
+			.update(userTable)
+			.set({ name: displayName })
+			.where(eq(userTable.id, existingUser.id));
+	}
+}
+
 function getEnvAdminConfig() {
 	const email = normalizeEmail(process.env.ADMIN_EMAIL);
 	const username = process.env.ADMIN_USERNAME?.trim() || "admin";
@@ -138,7 +219,9 @@ function isAdminUser({
 	const normalizedEmail = normalizeEmail(email);
 	const adminEmail = normalizeEmail(process.env.ADMIN_EMAIL);
 
-	return role === "admin" || Boolean(adminEmail && normalizedEmail === adminEmail);
+	return (
+		role === "admin" || Boolean(adminEmail && normalizedEmail === adminEmail)
+	);
 }
 
 async function syncEnvAdminUser({
@@ -339,41 +422,10 @@ export const {
 			return mapDbUserToAdapterUser(linkedAccount.linkedUser);
 		},
 		async linkAccount(accountData) {
-			await db
-				.insert(accountTable)
-				.values({
-					userId: accountData.userId,
-					type: accountData.type,
-					provider: accountData.provider,
-					providerAccountId: accountData.providerAccountId,
-					refresh_token: accountData.refresh_token ?? null,
-					access_token: accountData.access_token ?? null,
-					expires_at: accountData.expires_at ?? null,
-					token_type: accountData.token_type ?? null,
-					scope: accountData.scope ?? null,
-					id_token: accountData.id_token ?? null,
-					session_state:
-						typeof accountData.session_state === "string"
-							? accountData.session_state
-							: null,
-				})
-				.onConflictDoUpdate({
-					target: [accountTable.provider, accountTable.providerAccountId],
-					set: {
-						userId: accountData.userId,
-						type: accountData.type,
-						refresh_token: accountData.refresh_token ?? null,
-						access_token: accountData.access_token ?? null,
-						expires_at: accountData.expires_at ?? null,
-						token_type: accountData.token_type ?? null,
-						scope: accountData.scope ?? null,
-						id_token: accountData.id_token ?? null,
-						session_state:
-							typeof accountData.session_state === "string"
-								? accountData.session_state
-								: null,
-					},
-				});
+			await upsertOAuthAccountForUser({
+				userId: accountData.userId,
+				account: accountData,
+			});
 
 			return accountData;
 		},
@@ -591,6 +643,10 @@ export const {
 			) {
 				const oauthEmail = normalizeEmail(profile?.email ?? user?.email);
 				if (!oauthEmail) {
+					console.warn("[Auth.js][OAuth] Missing email in OAuth profile", {
+						provider: account.provider,
+						providerAccountId: account.providerAccountId,
+					});
 					return true;
 				}
 
@@ -600,6 +656,10 @@ export const {
 						profile,
 					})
 				) {
+					console.warn("[Auth.js][OAuth] Unverified OAuth email blocked", {
+						provider: account.provider,
+						email: oauthEmail,
+					});
 					return false;
 				}
 
@@ -611,10 +671,12 @@ export const {
 					.limit(1);
 
 				if (existingUser) {
-					// Check if this OAuth account is already linked
+					// Reconcile legacy or mis-linked OAuth rows to the canonical user for
+					// this verified email before Auth.js continues the callback flow.
 					const [existingAccount] = await db
 						.select()
 						.from(accountTable)
+						.leftJoin(userTable, eq(accountTable.userId, userTable.id))
 						.where(
 							and(
 								eq(accountTable.provider, account.provider),
@@ -623,48 +685,45 @@ export const {
 						)
 						.limit(1);
 
-					if (!existingAccount) {
-						// Auto-link: insert the OAuth account for the existing user
+					if (
+						!existingAccount ||
+						existingAccount.account.userId !== existingUser.id
+					) {
 						try {
-							await db
-								.insert(accountTable)
-								.values({
-									userId: existingUser.id,
-									type: account.type,
-									provider: account.provider,
-									providerAccountId: account.providerAccountId,
-									refresh_token: account.refresh_token ?? null,
-									access_token: account.access_token ?? null,
-									expires_at: account.expires_at ?? null,
-									token_type: account.token_type ?? null,
-									scope: account.scope ?? null,
-									id_token: account.id_token ?? null,
-									session_state:
-										typeof account.session_state === "string"
-											? account.session_state
-											: null,
-								})
-								.onConflictDoNothing();
-
-							// Also mark email as verified since OAuth provider verified it
-							if (!existingUser.emailVerified) {
-								await setEmailVerifiedById(existingUser.id);
-							}
-
-							// Sync name from OAuth profile if user doesn't have one
-							const displayName =
-								(profile as { name?: string; login?: string })?.name ??
-								(profile as { login?: string })?.login;
-							if (displayName && !existingUser.name) {
-								await db
-									.update(userTable)
-									.set({ name: displayName })
-									.where(eq(userTable.id, existingUser.id));
-							}
+							console.info("[Auth.js][OAuth] Reconciling account link", {
+								provider: account.provider,
+								email: oauthEmail,
+								targetUserId: existingUser.id,
+								previousUserId: existingAccount?.account.userId ?? null,
+							});
+							await upsertOAuthAccountForUser({
+								userId: existingUser.id,
+								account,
+							});
+							await syncOAuthProfileToUser({
+								existingUser,
+								profile,
+							});
 						} catch (linkError) {
-							console.error("[Auth.js] Auto-link failed:", linkError);
-							// Still allow sign in even if linking fails
+							console.error(
+								"[Auth.js] Auto-link reconciliation failed:",
+								{
+									provider: account.provider,
+									email: oauthEmail,
+									targetUserId: existingUser.id,
+									error: linkError,
+								},
+							);
+							return false;
 						}
+					} else if (
+						!existingAccount.user?.emailVerified ||
+						!existingAccount.user?.name
+					) {
+						await syncOAuthProfileToUser({
+							existingUser,
+							profile,
+						});
 					}
 				}
 			}
@@ -674,7 +733,15 @@ export const {
 	},
 	logger: {
 		error(error) {
-			console.error("[Auth.js][error]", error);
+			const authError = error as
+				| (Error & { type?: string; cause?: unknown })
+				| undefined;
+			console.error("[Auth.js][error]", {
+				type: authError?.type,
+				name: authError?.name,
+				message: authError?.message,
+				cause: authError?.cause,
+			});
 		},
 		warn(code) {
 			console.warn("[Auth.js][warn]", code);
