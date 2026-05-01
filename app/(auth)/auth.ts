@@ -114,16 +114,16 @@ function mapDbUserToAdapterUser(dbUser: typeof userTable.$inferSelect) {
 
 function getEnvAdminConfig() {
 	const email = normalizeEmail(process.env.ADMIN_EMAIL);
-	const username = process.env.ADMIN_USERNAME?.trim();
+	const username = process.env.ADMIN_USERNAME?.trim() || "admin";
 	const password = process.env.ADMIN_PASSWORD;
 
-	if (!email || !password) {
+	if (!password) {
 		return null;
 	}
 
 	return {
 		email,
-		username: username || "admin",
+		username,
 		password,
 	};
 }
@@ -156,15 +156,19 @@ async function syncEnvAdminUser({
 
 	const normalizedIdentifier = identifier.trim().toLowerCase();
 	const matchesIdentifier =
-		normalizedIdentifier === adminConfig.email ||
+		(adminConfig.email && normalizedIdentifier === adminConfig.email) ||
 		normalizedIdentifier === adminConfig.username.toLowerCase();
 
 	if (!matchesIdentifier || password !== adminConfig.password) {
 		return null;
 	}
 
+	const resolvedAdminEmail =
+		adminConfig.email ??
+		`${adminConfig.username.toLowerCase()}@admin.ultramaxo.local`;
+
 	const adminValues = {
-		email: adminConfig.email,
+		email: resolvedAdminEmail,
 		username: adminConfig.username,
 		name: adminConfig.username,
 		password: generateHashedPassword(adminConfig.password),
@@ -173,11 +177,17 @@ async function syncEnvAdminUser({
 		isPro: true,
 	};
 
-	const [existingAdminUser] = await db
+	const existingAdminUsers = await db
 		.select()
 		.from(userTable)
-		.where(eq(userTable.email, adminConfig.email))
+		.where(
+			adminConfig.email
+				? sql`lower(${userTable.email}) = ${resolvedAdminEmail} or lower(${userTable.username}) = ${adminConfig.username.toLowerCase()}`
+				: sql`lower(${userTable.username}) = ${adminConfig.username.toLowerCase()}`,
+		)
 		.limit(1);
+
+	const [existingAdminUser] = existingAdminUsers;
 
 	if (existingAdminUser) {
 		const [updatedAdminUser] = await db

@@ -53,13 +53,11 @@ export default function LoginClient() {
 			return;
 		}
 
-		// OAuthAccountNotLinked: the account exists but was created with a different method.
-		// Auto-link it by calling the link endpoint and suggest the user try again.
 		if (error === "OAuthAccountNotLinked") {
 			toast({
 				type: "error",
 				description:
-					"Your account exists but was created with a different sign-in method. Please try signing in again — it should work now.",
+					"Sign in failed. If you're logging in with username/password, double-check the admin credentials on the server and try again.",
 			});
 			return;
 		}
