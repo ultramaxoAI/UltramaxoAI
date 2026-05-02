@@ -45,12 +45,14 @@ import {
 	promptPreset,
 	purchaseRequest,
 	redeemCode,
+	redeemCodeClaim,
 	type Suggestion,
 	session,
 	stream,
 	suggestion,
 	type User,
 	user,
+	userFeedback,
 	userApiKeys,
 	userKnowledgeEntry,
 	userMemory,
@@ -62,6 +64,18 @@ import {
 import { generateHashedPassword } from "./utils";
 
 export { getUserApiKeys } from "./queries-settings";
+
+export type FeedbackSource = "timed_prompt";
+export type FeedbackStatus = "new" | "reviewed";
+
+function isMissingFeedbackTableError(error: unknown) {
+	return (
+		typeof error === "object" &&
+		error !== null &&
+		"code" in error &&
+		error.code === "42P01"
+	);
+}
 
 // Optionally, if not using email/pass login, you can
 // use the Drizzle adapter for Auth.js / NextAuth
@@ -173,6 +187,122 @@ export async function createGuestUser() {
 		throw new ChatSDKError(
 			"bad_request:database",
 			"Failed to create guest user",
+		);
+	}
+}
+
+export async function createUserFeedback({
+	userId,
+	message,
+	source,
+}: {
+	userId: string;
+	message: string;
+	source: FeedbackSource;
+}) {
+	try {
+		const normalizedMessage = message.trim();
+
+		if (!normalizedMessage) {
+			throw new ChatSDKError(
+				"bad_request:api",
+				"Feedback message is required",
+			);
+		}
+
+		const [feedback] = await db
+			.insert(userFeedback)
+			.values({
+				userId,
+				message: normalizedMessage,
+				source,
+			})
+			.returning();
+
+		return feedback;
+	} catch (error) {
+		if (error instanceof ChatSDKError) {
+			throw error;
+		}
+
+		if (isMissingFeedbackTableError(error)) {
+			throw new ChatSDKError(
+				"bad_request:database",
+				"Feedback storage is not ready yet. Run the latest database migration first.",
+			);
+		}
+
+		console.error("Database Error (createUserFeedback):", error);
+		throw new ChatSDKError(
+			"bad_request:database",
+			"Failed to create user feedback",
+		);
+	}
+}
+
+export async function listUserFeedback() {
+	try {
+		return await db
+			.select({
+				id: userFeedback.id,
+				userId: userFeedback.userId,
+				message: userFeedback.message,
+				source: userFeedback.source,
+				status: userFeedback.status,
+				createdAt: userFeedback.createdAt,
+				updatedAt: userFeedback.updatedAt,
+				userName: user.name,
+				userEmail: user.email,
+			})
+			.from(userFeedback)
+			.innerJoin(user, eq(userFeedback.userId, user.id))
+			.orderBy(desc(userFeedback.createdAt));
+	} catch (error) {
+		if (isMissingFeedbackTableError(error)) {
+			throw new ChatSDKError(
+				"bad_request:database",
+				"Feedback storage is not ready yet. Run the latest database migration first.",
+			);
+		}
+
+		console.error("Database Error (listUserFeedback):", error);
+		throw new ChatSDKError(
+			"bad_request:database",
+			"Failed to list user feedback",
+		);
+	}
+}
+
+export async function updateUserFeedbackStatus({
+	id,
+	status,
+}: {
+	id: string;
+	status: FeedbackStatus;
+}) {
+	try {
+		const [feedback] = await db
+			.update(userFeedback)
+			.set({
+				status,
+				updatedAt: new Date(),
+			})
+			.where(eq(userFeedback.id, id))
+			.returning();
+
+		return feedback ?? null;
+	} catch (error) {
+		if (isMissingFeedbackTableError(error)) {
+			throw new ChatSDKError(
+				"bad_request:database",
+				"Feedback storage is not ready yet. Run the latest database migration first.",
+			);
+		}
+
+		console.error("Database Error (updateUserFeedbackStatus):", error);
+		throw new ChatSDKError(
+			"bad_request:database",
+			"Failed to update feedback status",
 		);
 	}
 }
@@ -1298,87 +1428,253 @@ export async function redeemVoucher({
 	userId: string;
 	code: string;
 }) {
+	const normalizedCode = code.trim().toUpperCase();
+
 	try {
-		const [voucher] = await db
-			.select()
-			.from(redeemCode)
-			.where(and(eq(redeemCode.code, code), eq(redeemCode.isUsed, false)));
+		return await db.transaction(async (tx) => {
+			const [voucher] = await tx
+				.select()
+				.from(redeemCode)
+				.where(eq(redeemCode.code, normalizedCode))
+				.limit(1);
 
-		if (!voucher) {
-			return { error: "Voucher tidak valid atau sudah digunakan." };
-		}
-
-		if (voucher.expiresAt && voucher.expiresAt < new Date()) {
-			return { error: "Voucher sudah kadaluarsa." };
-		}
-
-		const [currentUser] = await db
-			.select()
-			.from(user)
-			.where(eq(user.id, userId));
-		if (!currentUser) {
-			return { error: "User tidak ditemukan." };
-		}
-
-		const updates: Partial<User> = {};
-		if (voucher.type === "PRO") {
-			const months = voucher.durationMonths || 1;
-			const currentExpiry = currentUser.proExpiresAt
-				? new Date(currentUser.proExpiresAt)
-				: new Date();
-			const nextExpiry = new Date(
-				Math.max(currentExpiry.getTime(), Date.now()),
-			);
-			nextExpiry.setMonth(nextExpiry.getMonth() + months);
-
-			updates.isPro = true;
-			updates.limitCount = 99_999;
-			updates.proExpiresAt = nextExpiry;
-		} else {
-			const add = voucher.value || 0;
-			if (add > 0) {
-				await grantCreditsToUser({
-					userId,
-					amount: add,
-					reason: "voucher redemption",
-					type: "bonus",
-					metadata: { code: voucher.code },
-				});
+			if (!voucher) {
+				return { error: "Invalid code." };
 			}
-		}
 
-		if (Object.keys(updates).length > 0) {
-			await db.update(user).set(updates).where(eq(user.id, userId));
+			const now = new Date();
+			const isExpiredByDate = voucher.expiresAt && voucher.expiresAt < now;
+			const isExhausted =
+				voucher.maxClaims !== null && voucher.claimedCount >= voucher.maxClaims;
 
+			if (isExpiredByDate) {
+				return { error: "Code expired." };
+			}
+
+			if (isExhausted) {
+				return { error: "Code quota reached." };
+			}
+
+			const [currentUser] = await tx
+				.select()
+				.from(user)
+				.where(eq(user.id, userId))
+				.limit(1);
+
+			if (!currentUser) {
+				return { error: "User not found." };
+			}
+
+			try {
+				await tx.insert(redeemCodeClaim).values({
+					redeemCodeId: voucher.id,
+					userId,
+					createdAt: now,
+				});
+			} catch (error) {
+				if (
+					error &&
+					typeof error === "object" &&
+					"code" in error &&
+					error.code === "23505"
+				) {
+					return { error: "Already claimed by this account." };
+				}
+				throw error;
+			}
+
+			const [updatedVoucher] = await tx
+				.update(redeemCode)
+				.set({
+					claimedCount: sql`${redeemCode.claimedCount} + 1`,
+				})
+				.where(
+					voucher.maxClaims === null
+						? eq(redeemCode.id, voucher.id)
+						: and(
+								eq(redeemCode.id, voucher.id),
+								sql`${redeemCode.claimedCount} < ${redeemCode.maxClaims}`,
+							),
+				)
+				.returning();
+
+			if (!updatedVoucher) {
+				throw new ChatSDKError("bad_request:database", "Code quota reached.");
+			}
+
+			const isNowExhausted =
+				updatedVoucher.maxClaims !== null &&
+				updatedVoucher.claimedCount >= updatedVoucher.maxClaims;
+
+			if (
+				updatedVoucher.isUsed !== isNowExhausted ||
+				updatedVoucher.usedBy !== (isNowExhausted ? userId : null)
+			) {
+				await tx
+					.update(redeemCode)
+					.set({
+						isUsed: isNowExhausted,
+						usedBy: isNowExhausted ? userId : null,
+						usedAt: isNowExhausted ? now : null,
+					})
+					.where(eq(redeemCode.id, updatedVoucher.id));
+			}
+
+			const updates: Partial<User> = {};
 			if (voucher.type === "PRO") {
+				const months = voucher.durationMonths || 1;
+				const currentExpiry = currentUser.proExpiresAt
+					? new Date(currentUser.proExpiresAt)
+					: new Date();
+				const nextExpiry = new Date(
+					Math.max(currentExpiry.getTime(), Date.now()),
+				);
+				nextExpiry.setMonth(nextExpiry.getMonth() + months);
+
+				updates.isPro = true;
+				updates.limitCount = 99_999;
+				updates.proExpiresAt = nextExpiry;
+
+				await tx.update(user).set(updates).where(eq(user.id, userId));
+
 				const proAllowance = getStartingCredits({
 					isPro: true,
 					role: currentUser.role,
 				});
-				const currentAccount = await ensureCreditAccountForUser({ userId });
+				const [currentAccount] = await tx
+					.select()
+					.from(creditAccount)
+					.where(eq(creditAccount.userId, userId))
+					.limit(1);
 
-				if (currentAccount.balance < proAllowance) {
-					await grantCreditsToUser({
+				if (!currentAccount) {
+					await tx.insert(creditAccount).values({
 						userId,
-						amount: proAllowance - currentAccount.balance,
-						reason: "pro upgrade top-up",
+						balance: proAllowance,
+						lifetimeGranted: proAllowance,
+						lifetimeSpent: 0,
+						lastRefillAt: now,
+						createdAt: now,
+						updatedAt: now,
+					});
+
+					await tx.insert(creditTransaction).values({
+						userId,
+						amount: proAllowance,
+						balanceAfter: proAllowance,
 						type: "grant",
+						reason: "pro voucher activation",
 						metadata: { source: "voucher", code: voucher.code },
+						createdAt: now,
+					});
+				} else if (currentAccount.balance < proAllowance) {
+					const topUpAmount = proAllowance - currentAccount.balance;
+					const nextBalance = currentAccount.balance + topUpAmount;
+
+					await tx
+						.update(creditAccount)
+						.set({
+							balance: nextBalance,
+							lifetimeGranted: currentAccount.lifetimeGranted + topUpAmount,
+							updatedAt: now,
+						})
+						.where(eq(creditAccount.userId, userId));
+
+					await tx.insert(creditTransaction).values({
+						userId,
+						amount: topUpAmount,
+						balanceAfter: nextBalance,
+						type: "grant",
+						reason: "pro voucher top-up",
+						metadata: { source: "voucher", code: voucher.code },
+						createdAt: now,
 					});
 				}
-			}
-		}
-		await db
-			.update(redeemCode)
-			.set({
-				isUsed: true,
-				usedBy: userId,
-				usedAt: new Date(),
-			})
-			.where(eq(redeemCode.id, voucher.id));
+			} else {
+				const add = voucher.value || 0;
 
-		return { success: true, ...updates };
+				if (add > 0) {
+					const startingCredits = getStartingCredits({
+						isPro: currentUser.isPro,
+						role: currentUser.role,
+					});
+					const [currentAccount] = await tx
+						.select()
+						.from(creditAccount)
+						.where(eq(creditAccount.userId, userId))
+						.limit(1);
+
+					if (!currentAccount) {
+						const nextBalance = startingCredits + add;
+
+						await tx.insert(creditAccount).values({
+							userId,
+							balance: nextBalance,
+							lifetimeGranted: nextBalance,
+							lifetimeSpent: 0,
+							lastRefillAt: now,
+							createdAt: now,
+							updatedAt: now,
+						});
+
+						if (startingCredits > 0) {
+							await tx.insert(creditTransaction).values({
+								userId,
+								amount: startingCredits,
+								balanceAfter: startingCredits,
+								type: "grant",
+								reason:
+									currentUser.role === "admin"
+										? "admin bootstrap"
+										: "initial allocation",
+								metadata: { isPro: currentUser.isPro },
+								createdAt: now,
+							});
+						}
+
+						await tx.insert(creditTransaction).values({
+							userId,
+							amount: add,
+							balanceAfter: nextBalance,
+							type: "bonus",
+							reason: "voucher redemption",
+							metadata: { code: voucher.code },
+							createdAt: now,
+						});
+					} else {
+						const nextBalance = currentAccount.balance + add;
+						await tx
+							.update(creditAccount)
+							.set({
+								balance: nextBalance,
+								lifetimeGranted: currentAccount.lifetimeGranted + add,
+								updatedAt: now,
+							})
+							.where(eq(creditAccount.userId, userId));
+
+						await tx.insert(creditTransaction).values({
+							userId,
+							amount: add,
+							balanceAfter: nextBalance,
+							type: "bonus",
+							reason: "voucher redemption",
+							metadata: { code: voucher.code },
+							createdAt: now,
+						});
+					}
+				}
+			}
+
+			return { success: true, ...updates };
+		});
 	} catch (error) {
+		if (
+			error instanceof ChatSDKError &&
+			error.message === "Code quota reached."
+		) {
+			return { error: "Code quota reached." };
+		}
+
 		console.error("Redeem voucher error:", error);
 		throw new ChatSDKError("bad_request:database", "Failed to redeem voucher");
 	}
@@ -1390,11 +1686,13 @@ export async function createVoucher(data: {
 	value?: number;
 	durationMonths?: number;
 	expiresAt?: Date | null;
+	maxClaims?: number | null;
 }) {
 	try {
 		await db.insert(redeemCode).values({
 			...data,
 			isUsed: false,
+			claimedCount: 0,
 			createdAt: new Date(),
 		});
 		return { success: true };
@@ -2875,6 +3173,8 @@ export async function deleteUserById(id: string) {
 				.update(redeemCode)
 				.set({ usedBy: null })
 				.where(eq(redeemCode.usedBy, id));
+
+			await tx.delete(redeemCodeClaim).where(eq(redeemCodeClaim.userId, id));
 
 			// 1b. Remove verification tokens tied to this email (if any)
 			if (targetUser.email) {

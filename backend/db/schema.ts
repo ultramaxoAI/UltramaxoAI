@@ -274,8 +274,26 @@ export const redeemCode = pgTable("redeem_codes", {
 	usedBy: uuid("usedBy").references(() => user.id),
 	usedAt: timestamp("usedAt"),
 	expiresAt: timestamp("expiresAt"),
+	maxClaims: integer("maxClaims"),
+	claimedCount: integer("claimedCount").notNull().default(0),
 	createdAt: timestamp("createdAt").notNull().defaultNow(),
 });
+
+export const redeemCodeClaim = pgTable(
+	"redeem_code_claims",
+	{
+		redeemCodeId: uuid("redeemCodeId")
+			.notNull()
+			.references(() => redeemCode.id, { onDelete: "cascade" }),
+		userId: uuid("userId")
+			.notNull()
+			.references(() => user.id, { onDelete: "cascade" }),
+		createdAt: timestamp("createdAt").notNull().defaultNow(),
+	},
+	(table) => ({
+		pk: primaryKey({ columns: [table.redeemCodeId, table.userId] }),
+	}),
+);
 
 export const purchaseRequest = pgTable("purchase_requests", {
 	id: uuid("id").primaryKey().notNull().defaultRandom(),
@@ -343,12 +361,37 @@ export const siteSettings = pgTable("site_settings", {
 	maintenanceMessage: text("maintenanceMessage")
 		.notNull()
 		.default("Lagi ada update kecil. Sebentar lagi balik."),
+	chatAnnouncementEnabled: boolean("chatAnnouncementEnabled")
+		.notNull()
+		.default(false),
+	chatAnnouncementTitle: text("chatAnnouncementTitle").notNull().default(""),
+	chatAnnouncementMessage: text("chatAnnouncementMessage")
+		.notNull()
+		.default(""),
 	updatedBy: uuid("updatedBy"),
 	createdAt: timestamp("createdAt").notNull().defaultNow(),
 	updatedAt: timestamp("updatedAt").notNull().defaultNow(),
 });
 
 export type SiteSettings = InferSelectModel<typeof siteSettings>;
+
+export const userFeedback = pgTable("user_feedback", {
+	id: uuid("id").primaryKey().notNull().defaultRandom(),
+	userId: uuid("userId")
+		.notNull()
+		.references(() => user.id, { onDelete: "cascade" }),
+	message: text("message").notNull(),
+	source: varchar("source", { enum: ["timed_prompt"] })
+		.notNull()
+		.default("timed_prompt"),
+	status: varchar("status", { enum: ["new", "reviewed"] })
+		.notNull()
+		.default("new"),
+	createdAt: timestamp("createdAt").notNull().defaultNow(),
+	updatedAt: timestamp("updatedAt").notNull().defaultNow(),
+});
+
+export type UserFeedback = InferSelectModel<typeof userFeedback>;
 
 export const chatFolder = pgTable("chat_folder", {
 	id: uuid("id").primaryKey().notNull().defaultRandom(),

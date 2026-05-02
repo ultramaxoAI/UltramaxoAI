@@ -2,9 +2,11 @@
 
 import {
 	BarChart3,
+	BellRing,
 	ChevronLeft,
 	CreditCard,
 	Mail,
+	MessageSquareQuote,
 	Receipt,
 	Settings2,
 	Users,
@@ -22,6 +24,8 @@ export function AdminSidebar() {
 		{ name: "Overview", href: "/admin", icon: BarChart3 },
 		{ name: "Users", href: "/admin/users", icon: Users },
 		{ name: "Vouchers", href: "/admin/vouchers", icon: Receipt },
+		{ name: "Announcement", href: "/admin/announcement", icon: BellRing },
+		{ name: "Feedback", href: "/admin/feedback", icon: MessageSquareQuote },
 		{ name: "API Billing", href: "/admin/api-billing", icon: CreditCard },
 		{ name: "Email Studio", href: "/admin/emails", icon: Mail },
 		{ name: "Settings", href: "/admin/settings", icon: Settings2 },

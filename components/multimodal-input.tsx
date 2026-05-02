@@ -524,7 +524,7 @@ function PureMultimodalInput({
 			/>
 
 			<PromptInput
-				className="mx-auto w-full max-w-4xl rounded-[2rem] border border-black/7 bg-[linear-gradient(180deg,rgba(255,255,255,0.92),rgba(248,244,237,0.88))] p-1 text-[#171717] outline-none shadow-[0_20px_50px_rgba(18,20,22,0.08)] transition-all focus-within:border-black/10 focus-within:shadow-[0_24px_60px_rgba(18,20,22,0.12)] dark:border-white/8 dark:bg-[linear-gradient(180deg,rgba(20,24,29,0.98),rgba(15,18,22,0.98))] dark:text-[#f3f4f1] dark:shadow-[0_22px_60px_rgba(0,0,0,0.34)] dark:focus-within:border-white/12"
+				className="mx-auto w-full max-w-4xl rounded-[2rem] border border-black/7 bg-[linear-gradient(180deg,rgba(255,255,255,0.96),rgba(246,241,233,0.92))] p-1.5 text-[#171717] outline-none shadow-[0_18px_50px_rgba(18,20,22,0.07)] transition-all focus-within:border-black/12 focus-within:shadow-[0_24px_64px_rgba(18,20,22,0.12)] dark:border-white/8 dark:bg-[linear-gradient(180deg,rgba(19,22,27,0.98),rgba(15,18,22,0.98))] dark:text-[#f3f4f1] dark:shadow-[0_22px_60px_rgba(0,0,0,0.32)] dark:focus-within:border-white/12"
 				onSubmit={(event) => {
 					event.preventDefault();
 					if (!input.trim() && attachments.length === 0) {
@@ -572,7 +572,7 @@ function PureMultimodalInput({
 				)}
 				{/* Active Mode Chips — like Gemini */}
 				{activeModeCount > 0 ? (
-					<div className="flex flex-row flex-wrap gap-1.5 px-3 pt-3">
+					<div className="flex flex-row flex-wrap gap-1.5 px-4 pt-4">
 						{deepThinkingEnabled ? (
 							<span className="inline-flex items-center gap-1 rounded-full border border-blue-500/18 bg-blue-500/10 px-2.5 py-1 text-[11px] font-medium text-blue-700 dark:border-blue-400/20 dark:bg-blue-500/10 dark:text-blue-300">
 								<CpuIcon className="size-3" />
@@ -601,12 +601,12 @@ function PureMultimodalInput({
 				) : null}
 				<div
 					className={cn(
-						"flex flex-row items-start px-3 pb-0 pt-1.5",
+						"flex flex-row items-start px-4 pb-0 pt-1.5",
 						status !== "ready" && "pointer-events-none opacity-50",
 					)}
 				>
 					<PromptInputTextarea
-						className="grow resize-none border-0! bg-transparent px-1 py-2.5 text-[15px] leading-7 text-[#171717] dark:text-[#f3f4f1] outline-none ring-0 [-ms-overflow-style:none] [scrollbar-width:none] placeholder:text-[#727772] dark:placeholder:text-[#8f9790] focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 [&::-webkit-scrollbar]:hidden"
+						className="grow resize-none border-0! bg-transparent px-0 py-3 text-[15px] leading-7 text-[#171717] dark:text-[#f3f4f1] outline-none ring-0 [-ms-overflow-style:none] [scrollbar-width:none] placeholder:text-[#727772] dark:placeholder:text-[#8f9790] focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 [&::-webkit-scrollbar]:hidden"
 						data-testid="multimodal-input"
 						disableAutoResize={true}
 						disabled={status !== "ready"}
@@ -616,20 +616,20 @@ function PureMultimodalInput({
 						placeholder={
 							status !== "ready"
 								? "Wait for AI to finish..."
-								: "Message UltraAgent"
+								: "Jelaskan apa yang ingin Anda kerjakan"
 						}
 						ref={textareaRef}
 						rows={1}
 						value={input}
 					/>
 				</div>
-				<PromptInputToolbar className="relative flex items-center justify-between px-3 pb-3 pt-1.5">
+				<PromptInputToolbar className="relative flex items-center justify-between border-t border-black/6 px-4 pb-3.5 pt-3 dark:border-white/6">
 					<PromptInputTools className="flex items-center gap-1">
 						{/* Primary tools */}
 						<DropdownMenu>
 							<DropdownMenuTrigger asChild>
 								<Button
-									className="size-10 rounded-full p-2 text-[#676d67] transition-colors hover:bg-black/5 hover:text-[#171717] dark:text-[#8f9790] dark:hover:bg-white/7 dark:hover:text-[#f3f4f1]"
+									className="size-10 rounded-full border border-transparent p-2 text-[#676d67] transition-colors hover:border-black/6 hover:bg-black/[0.03] hover:text-[#171717] dark:text-[#8f9790] dark:hover:border-white/8 dark:hover:bg-white/7 dark:hover:text-[#f3f4f1]"
 									data-testid="all-options-button"
 									title="Tools"
 									variant="ghost"
@@ -756,12 +756,12 @@ function PureMultimodalInput({
 						) : (
 							<PromptInputSubmit
 								className={cn(
-									"flex size-10 rounded-full items-center justify-center transition-all duration-200",
+									"flex size-10 rounded-full items-center justify-center border border-transparent transition-all duration-200",
 									!input.trim() &&
 										uploadQueue.length === 0 &&
 										attachments.length === 0
 										? "bg-zinc-100 text-zinc-400 dark:bg-white/5 dark:text-zinc-600"
-										: "bg-[#171b20] text-white hover:bg-[#111418] dark:bg-[#f0ebe3] dark:text-[#101317] dark:hover:bg-[#ffffff]",
+										: "border-black/8 bg-[#171b20] text-white hover:bg-[#111418] dark:border-white/10 dark:bg-[#f0ebe3] dark:text-[#101317] dark:hover:bg-[#ffffff]",
 								)}
 								data-testid="send-button"
 								disabled={

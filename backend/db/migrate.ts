@@ -13,7 +13,19 @@ const runMigrate = async () => {
 		process.exit(0);
 	}
 
-	const connection = postgres(process.env.POSTGRES_URL, { max: 1 });
+	const url = new URL(process.env.POSTGRES_URL);
+	const originalHost = url.hostname;
+	url.hostname = "18.215.6.120";
+
+	const connection = postgres(url.toString(), {
+		max: 1,
+		prepare: false,
+		ssl: { servername: originalHost, rejectUnauthorized: true },
+		connect_timeout: 10,
+		idle_timeout: 60,
+		max_lifetime: 60 * 10,
+		keep_alive: 30,
+	});
 	const db = drizzle(connection);
 
 	console.log("⏳ Running migrations...");

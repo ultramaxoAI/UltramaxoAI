@@ -30,6 +30,13 @@ import { MultimodalInput } from "./multimodal-input";
 import { getChatHistoryPaginationKey } from "./sidebar-history";
 import { toast } from "./toast";
 import { Button } from "./ui/button";
+import {
+	Dialog,
+	DialogContent,
+	DialogDescription,
+	DialogHeader,
+	DialogTitle,
+} from "./ui/dialog";
 import type { VisibilityType } from "./visibility-selector";
 
 export function Chat({
@@ -40,6 +47,7 @@ export function Chat({
 	isReadonly,
 	isAtLimit,
 	autoResume,
+	chatAnnouncement,
 	user,
 	customModels,
 }: {
@@ -50,10 +58,24 @@ export function Chat({
 	isReadonly: boolean;
 	isAtLimit?: boolean;
 	autoResume: boolean;
+	chatAnnouncement?: {
+		enabled: boolean;
+		title: string;
+		message: string;
+	};
 	user?: User;
 	customModels?: Array<{ id: string; name: string; provider: string }>;
 }) {
 	const router = useRouter();
+
+	const hasApprovalContinuationPart = (parts: ChatMessage["parts"] = []) =>
+		parts.some((part) => {
+			const state =
+				part && typeof part === "object"
+					? (part as { state?: string }).state
+					: undefined;
+			return state === "approval-responded" || state === "output-denied";
+		});
 
 	const { visibilityType } = useChatVisibility({
 		chatId: id,
@@ -83,6 +105,7 @@ export function Chat({
 	const [webSearchEnabled, setWebSearchEnabled] = useState(true);
 	const [fullstackModeEnabled, setFullstackModeEnabled] = useState(false);
 	const [mobileModeEnabled, setMobileModeEnabled] = useState(false);
+	const [isAnnouncementOpen, setIsAnnouncementOpen] = useState(false);
 	const currentModelIdRef = useRef(currentModelId);
 	const activeDocumentId = useArtifactSelector((state) => state.documentId);
 	const togglesRef = useRef({
@@ -116,6 +139,33 @@ export function Chat({
 		visibilityType,
 		activeDocumentId,
 	]);
+
+	useEffect(() => {
+		if (
+			!chatAnnouncement?.enabled ||
+			!chatAnnouncement.title ||
+			!chatAnnouncement.message
+		) {
+			setIsAnnouncementOpen(false);
+			return;
+		}
+
+		const storageKey = `chat-announcement:${chatAnnouncement.title}:${chatAnnouncement.message}`;
+		const hasDismissed =
+			typeof window !== "undefined" &&
+			window.sessionStorage.getItem(storageKey) === "dismissed";
+
+		setIsAnnouncementOpen(!hasDismissed);
+	}, [chatAnnouncement]);
+
+	const handleAnnouncementOpenChange = (open: boolean) => {
+		if (!open && chatAnnouncement?.enabled) {
+			const storageKey = `chat-announcement:${chatAnnouncement.title}:${chatAnnouncement.message}`;
+			window.sessionStorage.setItem(storageKey, "dismissed");
+		}
+
+		setIsAnnouncementOpen(open);
+	};
 
 	useEffect(() => {
 		setArtifactUiState((currentState) => {
@@ -171,23 +221,17 @@ export function Chat({
 				const lastMessage = request.messages.at(-1);
 				const isToolApprovalContinuation =
 					lastMessage?.role !== "user" ||
-					request.messages.some((msg) =>
-						msg.parts?.some((part) => {
-							const state =
-								part && typeof part === "object"
-									? (part as { state?: string }).state
-									: undefined;
-							return (
-								state === "approval-responded" || state === "output-denied"
-							);
-						}),
-					);
+					request.messages.some((msg) => hasApprovalContinuationPart(msg.parts));
+
+				const approvalPatchMessages = request.messages.filter((msg) =>
+					hasApprovalContinuationPart(msg.parts),
+				);
 
 				return {
 					body: {
 						id: request.id,
 						...(isToolApprovalContinuation
-							? { messages: request.messages }
+							? { messages: approvalPatchMessages }
 							: { message: lastMessage }),
 						selectedChatModel: currentModelIdRef.current,
 						selectedVisibilityType: togglesRef.current.visibilityType,
@@ -330,6 +374,37 @@ export function Chat({
 
 	return (
 		<>
+			<Dialog
+				onOpenChange={handleAnnouncementOpenChange}
+				open={isAnnouncementOpen}
+			>
+				<DialogContent className="border-[#171717]/8 bg-[#f8f6f1] p-0 text-[#171717] shadow-[0_24px_70px_rgba(17,19,21,0.15)] dark:border-white/10 dark:bg-[#111315] dark:text-[#f3f4f1] sm:max-w-md sm:rounded-[28px]">
+					<div className="space-y-5 px-6 py-6 sm:px-7 sm:py-7">
+						<div className="inline-flex items-center rounded-full border border-black/7 bg-white/70 px-3 py-1 text-[11px] font-medium uppercase tracking-[0.18em] text-[#6b6e69] shadow-[0_10px_24px_rgba(16,18,20,0.05)] dark:border-white/10 dark:bg-white/[0.04] dark:text-[#8f948e] dark:shadow-none">
+							Chat update
+						</div>
+						<DialogHeader className="space-y-2 text-left">
+							<DialogTitle className="text-[1.35rem] leading-tight tracking-[-0.03em] text-[#171717] dark:text-[#f3f4f1]">
+								{chatAnnouncement?.title}
+							</DialogTitle>
+							<DialogDescription className="text-sm leading-6 text-[#5f6258] dark:text-[#9ea59f]">
+								{chatAnnouncement?.message}
+							</DialogDescription>
+						</DialogHeader>
+						<div className="flex justify-end">
+							<Button
+								className="rounded-full"
+								onClick={() => handleAnnouncementOpenChange(false)}
+								size="sm"
+								type="button"
+							>
+								Got it
+							</Button>
+						</div>
+					</div>
+				</DialogContent>
+			</Dialog>
+
 			<div
 				className={cn(
 					"relative flex h-dvh min-w-0 max-w-full flex-col overflow-hidden bg-transparent text-[#171717] transition-all duration-300 ease-in-out dark:text-[#f3f4f1]",
@@ -377,19 +452,48 @@ export function Chat({
 
 					{messages.length === 0 && (
 						<div className="flex w-full flex-1 items-center justify-center px-3 pb-4 sm:px-4">
-							<div className="mx-auto w-full max-w-4xl space-y-6 text-center">
-								<div className="mx-auto max-w-2xl">
-									<div className="mb-4 inline-flex items-center rounded-full border border-black/7 bg-white/68 px-3 py-1 text-[11px] font-medium uppercase tracking-[0.18em] text-[#6b6e69] shadow-[0_10px_24px_rgba(16,18,20,0.05)] backdrop-blur-xl dark:border-white/8 dark:bg-white/[0.04] dark:text-[#8f948e] dark:shadow-none">
-										Ultramaxo Workspace
+							<div className="mx-auto grid w-full max-w-5xl gap-8 lg:grid-cols-[minmax(0,1.1fr)_minmax(320px,0.9fr)] lg:items-center">
+								<div className="space-y-7 text-center lg:text-left">
+									<div className="space-y-4">
+										<div className="inline-flex items-center rounded-full border border-black/7 bg-white/70 px-3.5 py-1.5 text-[11px] font-medium uppercase tracking-[0.18em] text-[#626660] shadow-[0_10px_24px_rgba(16,18,20,0.05)] backdrop-blur-xl dark:border-white/8 dark:bg-white/[0.04] dark:text-[#8f948e] dark:shadow-none">
+											Ultramaxo Workspace
+										</div>
+										<h1 className="max-w-3xl text-balance text-[2.35rem] font-semibold leading-[0.98] tracking-[-0.06em] text-[#171717] dark:text-[#f4f1ec] sm:text-[3.65rem]">
+											Buat pekerjaan yang terasa rapi sejak prompt pertama.
+										</h1>
+										<p className="max-w-2xl text-sm leading-7 text-[#666b66] dark:text-[#99a09a] sm:text-[15px]">
+											Mulai dengan satu instruksi yang jelas. Tulis ide,
+											susun dokumen, eksplorasi kode, atau lanjutkan alur kerja
+											tanpa harus berpindah tempat.
+										</p>
 									</div>
-									<h1 className="text-balance text-[2.1rem] font-semibold leading-[1.02] tracking-[-0.055em] text-[#171717] dark:text-[#f4f1ec] sm:text-[3.25rem]">
-										Apa yang ingin Anda buat?
-									</h1>
-									<p className="mt-4 text-sm leading-7 text-[#676c68] dark:text-[#9ba09b] sm:text-[15px]">
-										Mulai dari satu prompt. Tulis ide, bangun sesuatu, atau
-										lanjutkan pekerjaan Anda dengan alur yang terasa ringan dan
-										fokus.
-									</p>
+
+									<div className="grid gap-3 sm:grid-cols-3">
+										<div className="rounded-[24px] border border-black/6 bg-white/58 px-4 py-4 text-left shadow-[0_14px_36px_rgba(18,20,22,0.05)] backdrop-blur-xl dark:border-white/8 dark:bg-white/[0.03] dark:shadow-none">
+											<p className="text-[11px] font-medium uppercase tracking-[0.16em] text-[#7b807a] dark:text-[#7f857f]">
+												Research
+											</p>
+											<p className="mt-2 text-sm leading-6 text-[#2a2d2f] dark:text-[#ece7df]">
+												Ringkas topik, cari arah, lalu ubah jadi output yang siap dipakai.
+											</p>
+										</div>
+										<div className="rounded-[24px] border border-black/6 bg-white/58 px-4 py-4 text-left shadow-[0_14px_36px_rgba(18,20,22,0.05)] backdrop-blur-xl dark:border-white/8 dark:bg-white/[0.03] dark:shadow-none">
+											<p className="text-[11px] font-medium uppercase tracking-[0.16em] text-[#7b807a] dark:text-[#7f857f]">
+												Build
+											</p>
+											<p className="mt-2 text-sm leading-6 text-[#2a2d2f] dark:text-[#ece7df]">
+												Tulis flow, bantu coding, dan rapikan detail teknis tanpa ribet.
+											</p>
+										</div>
+										<div className="rounded-[24px] border border-black/6 bg-white/58 px-4 py-4 text-left shadow-[0_14px_36px_rgba(18,20,22,0.05)] backdrop-blur-xl dark:border-white/8 dark:bg-white/[0.03] dark:shadow-none">
+											<p className="text-[11px] font-medium uppercase tracking-[0.16em] text-[#7b807a] dark:text-[#7f857f]">
+												Refine
+											</p>
+											<p className="mt-2 text-sm leading-6 text-[#2a2d2f] dark:text-[#ece7df]">
+												Pertajam jawaban, cek ulang nada, dan buat hasil akhir terasa matang.
+											</p>
+										</div>
+									</div>
 								</div>
 
 								{isReadonly ? (
@@ -428,10 +532,26 @@ export function Chat({
 										</div>
 									</div>
 								) : (
-									<div className="mx-auto w-full max-w-4xl">
-										<MultimodalInput
-											attachments={attachments}
-											chatId={id}
+									<div className="relative">
+										<div className="pointer-events-none absolute inset-x-8 -top-5 h-24 rounded-full bg-[radial-gradient(circle,rgba(227,214,187,0.25)_0%,rgba(227,214,187,0)_70%)] blur-3xl dark:bg-[radial-gradient(circle,rgba(162,176,197,0.12)_0%,rgba(162,176,197,0)_70%)]" />
+										<div className="rounded-[34px] border border-black/7 bg-[linear-gradient(180deg,rgba(255,255,255,0.76),rgba(246,241,233,0.68))] p-3 shadow-[0_24px_80px_rgba(18,20,22,0.08)] backdrop-blur-2xl dark:border-white/8 dark:bg-[linear-gradient(180deg,rgba(18,21,25,0.95),rgba(15,18,22,0.92))] dark:shadow-[0_24px_80px_rgba(0,0,0,0.28)]">
+											<div className="mb-4 flex items-center justify-between rounded-[24px] border border-black/6 bg-white/60 px-4 py-3 dark:border-white/7 dark:bg-white/[0.03]">
+												<div>
+													<p className="text-[11px] font-medium uppercase tracking-[0.18em] text-[#7b807a] dark:text-[#7f857f]">
+														Quick start
+													</p>
+													<p className="mt-1 text-sm text-[#2a2d2f] dark:text-[#ece7df]">
+														Tulis apa yang ingin dikerjakan. Composer siap untuk chat, file, dan mode kerja lanjutan.
+													</p>
+												</div>
+												<div className="hidden rounded-full border border-black/6 bg-black/[0.03] px-3 py-1 text-[11px] font-medium text-[#5f6460] dark:border-white/8 dark:bg-white/[0.04] dark:text-[#9aa09b] sm:block">
+													Workspace ready
+												</div>
+											</div>
+											<div className="mx-auto w-full max-w-4xl">
+											<MultimodalInput
+												attachments={attachments}
+												chatId={id}
 											deepThinkingEnabled={deepThinkingEnabled}
 											input={input}
 											messages={messages}
@@ -453,9 +573,11 @@ export function Chat({
 											stop={stop}
 											user={user}
 											webSearchEnabled={webSearchEnabled}
-											wormgptEnabled={wormgptEnabled}
-											customModels={customModels}
-										/>
+												wormgptEnabled={wormgptEnabled}
+												customModels={customModels}
+											/>
+											</div>
+										</div>
 									</div>
 								)}
 							</div>

@@ -141,6 +141,27 @@
 			"when": 1773582295262,
 			"tag": "0019_dry_sabra",
 			"breakpoints": true
+		},
+		{
+			"idx": 20,
+			"version": "7",
+			"when": 1773585000000,
+			"tag": "0020_model_catalog_and_api_credits",
+			"breakpoints": true
+		},
+		{
+			"idx": 21,
+			"version": "7",
+			"when": 1773585600000,
+			"tag": "0021_redeem_limits_and_chat_announcement",
+			"breakpoints": true
+		},
+		{
+			"idx": 22,
+			"version": "7",
+			"when": 1773662400000,
+			"tag": "0022_user_feedback",
+			"breakpoints": true
 		}
 	]
 }
