@@ -119,7 +119,7 @@ export function SidebarUserNav({
 					<DropdownMenuTrigger asChild>
 						{status === "loading" ? (
 							<div
-								className={`flex items-center gap-3 rounded-[24px] border border-black/6 bg-white/58 p-4 shadow-[0_12px_30px_rgba(17,19,21,0.04)] transition-colors hover:bg-black/4 dark:border-white/10 dark:bg-white/[0.03] dark:hover:bg-white/6 dark:shadow-none ${isCollapsed ? "w-full justify-center" : "w-full"}`}
+								className={`flex items-center gap-3 rounded-[20px] p-3 transition-colors hover:bg-black/4 dark:hover:bg-white/6 ${isCollapsed ? "w-full justify-center" : "w-full"}`}
 							>
 								<div className="size-10 animate-pulse rounded-full bg-zinc-200 dark:bg-zinc-500/30 shrink-0" />
 								{!isCollapsed && (
@@ -138,7 +138,7 @@ export function SidebarUserNav({
 							<Tooltip>
 								<TooltipTrigger asChild>
 									<button
-										className="flex w-full items-center justify-center rounded-[22px] border border-black/6 bg-white/58 p-2.5 shadow-[0_12px_30px_rgba(17,19,21,0.04)] transition-colors cursor-pointer group hover:bg-black/4 dark:border-white/10 dark:bg-white/[0.03] dark:hover:bg-white/6 dark:shadow-none"
+										className="flex w-full items-center justify-center rounded-[18px] p-2.5 transition-colors cursor-pointer group hover:bg-black/4 dark:hover:bg-white/6"
 										data-testid="user-nav-button"
 										type="button"
 									>
@@ -170,7 +170,7 @@ export function SidebarUserNav({
 							</Tooltip>
 						) : (
 							<button
-								className="flex flex-1 items-center gap-3 rounded-[24px] border border-black/6 bg-white/58 p-4 shadow-[0_12px_30px_rgba(17,19,21,0.04)] transition-colors cursor-pointer group hover:bg-black/4 dark:border-white/10 dark:bg-white/[0.03] dark:hover:bg-white/6 dark:shadow-none"
+								className="flex flex-1 items-center gap-3 rounded-[20px] p-3 transition-colors cursor-pointer group hover:bg-black/4 dark:hover:bg-white/6"
 								data-testid="user-nav-button"
 								type="button"
 							>

@@ -89,14 +89,9 @@ export function AppSidebar({ user }: { user: User | undefined }) {
 											href="/chat"
 											onClick={() => setOpenMobile(false)}
 										>
-											<div>
-												<span className="block text-[1.5rem] font-serif tracking-[-0.045em] text-[#16181b] dark:text-[#f4f1ec]">
-													Ultramaxo
-												</span>
-												<span className="mt-0.5 block text-[10px] font-medium uppercase tracking-[0.22em] text-[#7d7b73] dark:text-[#8c928d]">
-													Workspace
-												</span>
-											</div>
+											<span className="block text-[1.5rem] font-serif tracking-[-0.045em] text-[#16181b] dark:text-[#f4f1ec]">
+												Ultramaxo
+											</span>
 										</Link>
 									)}
 
@@ -129,13 +124,7 @@ export function AppSidebar({ user }: { user: User | undefined }) {
 									</Tooltip>
 								</div>
 
-								<div className="rounded-[26px] border border-black/6 bg-white/55 p-1.5 shadow-[0_12px_30px_rgba(17,19,21,0.04)] backdrop-blur-xl dark:border-white/7 dark:bg-white/[0.03] dark:shadow-none">
-									<div className="mb-2 px-2 pt-2">
-										<p className="text-[10px] font-medium uppercase tracking-[0.2em] text-[#7d7b73] dark:text-[#8c928d]">
-											Workspace
-										</p>
-									</div>
-									<div className="flex w-full flex-col gap-1">
+								<div className="flex w-full flex-col gap-1">
 									<Tooltip>
 										<TooltipTrigger asChild>
 											<Button
@@ -237,7 +226,6 @@ export function AppSidebar({ user }: { user: User | undefined }) {
 											</TooltipContent>
 										)}
 									</Tooltip>
-									</div>
 								</div>
 							</div>
 						</TooltipProvider>

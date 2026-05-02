@@ -108,7 +108,7 @@ function PureChatContextHeader({
 	};
 
 	return (
-		<div className="flex items-center justify-between gap-3 rounded-[22px] border border-[#171717]/6 bg-[rgba(255,255,255,0.76)] px-2.5 py-2 shadow-[0_14px_34px_rgba(18,20,22,0.05)] backdrop-blur-xl dark:border-white/7 dark:bg-[rgba(18,21,25,0.82)] dark:shadow-[0_18px_40px_rgba(0,0,0,0.18)]">
+		<div className="flex items-center justify-between gap-3 rounded-[20px] border border-[#171717]/6 bg-[rgba(255,255,255,0.72)] px-2.5 py-2 shadow-[0_10px_22px_rgba(18,20,22,0.04)] backdrop-blur-xl dark:border-white/7 dark:bg-[rgba(18,21,25,0.8)] dark:shadow-[0_12px_26px_rgba(0,0,0,0.14)]">
 			<div className="flex items-center gap-2">
 				{isMobile && (
 					<Button
@@ -124,7 +124,7 @@ function PureChatContextHeader({
 				{user && user.type !== "pro" && (
 					<Link href="/plan">
 						<Button
-							className="h-9 rounded-full border border-black/7 bg-white/72 px-4 text-xs font-semibold text-[#171717] shadow-[0_8px_20px_rgba(17,19,21,0.06)] hover:bg-white dark:border-white/8 dark:bg-white/[0.06] dark:text-[#f3f4f1] dark:hover:bg-white/[0.1] dark:shadow-none"
+							className="h-9 rounded-full border border-black/7 bg-transparent px-4 text-xs font-semibold text-[#4f544f] hover:bg-black/[0.03] dark:border-white/8 dark:text-[#c4cbc5] dark:hover:bg-white/[0.05]"
 							size="sm"
 							variant="ghost"
 						>
@@ -136,11 +136,9 @@ function PureChatContextHeader({
 			</div>
 
 			<div className="min-w-0 flex-1 text-center">
-				<div className="mx-auto inline-flex max-w-full items-center rounded-full border border-black/6 bg-black/[0.02] px-4 py-2 dark:border-white/8 dark:bg-white/[0.03]">
-					<h2 className="truncate text-sm font-medium tracking-[-0.02em] text-[#4f544f] dark:text-[#c4cbc5]">
-						{chatTitle}
-					</h2>
-				</div>
+				<h2 className="truncate px-3 text-sm font-medium tracking-[-0.02em] text-[#4f544f] dark:text-[#c4cbc5]">
+					{chatTitle}
+				</h2>
 			</div>
 
 			{!isReadonly && (
