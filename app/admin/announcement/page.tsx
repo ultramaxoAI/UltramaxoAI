@@ -146,15 +146,16 @@ export default function AdminAnnouncementPage() {
 		<div className="mx-auto max-w-6xl space-y-8 p-8">
 			<div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
 				<div className="max-w-2xl">
-					<div className="inline-flex items-center rounded-full border border-gray-200 bg-white px-3 py-1 text-[11px] font-medium uppercase tracking-[0.18em] text-gray-500 dark:border-white/10 dark:bg-white/[0.03] dark:text-gray-400">
+					<div className="inline-flex items-center rounded-full border border-gray-200 bg-white px-3 py-1 text-[11px] font-medium uppercase tracking-[0.18em] text-gray-500 shadow-sm dark:border-white/10 dark:bg-white/[0.03] dark:text-gray-400">
 						Announcement Studio
 					</div>
 					<h1 className="mt-4 text-3xl font-semibold tracking-[-0.04em] text-gray-900 dark:text-white">
-						Publish a clear chat announcement
+						Tulis announcement yang terasa resmi, singkat, dan langsung jelas.
 					</h1>
 					<p className="mt-3 text-sm leading-7 text-gray-500 dark:text-gray-400">
-						Siapkan update singkat yang muncul saat user masuk ke chat. Fokus
-						pada informasi yang penting, tenang, dan langsung terbaca.
+						Halaman ini dipakai untuk update yang benar-benar penting saat user
+						masuk ke chat. Nada tulisannya sebaiknya tenang, spesifik, dan tidak
+						terdengar seperti promo.
 					</p>
 				</div>
 
@@ -176,21 +177,32 @@ export default function AdminAnnouncementPage() {
 					<p className="mt-3 text-lg font-semibold text-gray-900 dark:text-white">
 						{announcement.enabled ? "Active" : "Draft"}
 					</p>
+					<p className="mt-1 text-xs leading-6 text-gray-500 dark:text-gray-400">
+						{announcement.enabled
+							? "Announcement sedang tayang untuk user chat."
+							: "Masih tersimpan dan belum tampil ke user."}
+					</p>
 				</div>
 				<div className="rounded-[24px] border border-gray-200 bg-white px-5 py-4 shadow-sm dark:border-white/10 dark:bg-[#0a0a0a]">
 					<p className="text-[11px] font-medium uppercase tracking-[0.16em] text-gray-500 dark:text-gray-400">
-						Surface
+						Audience
 					</p>
 					<p className="mt-3 text-lg font-semibold text-gray-900 dark:text-white">
-						Chat workspace
+						Chat visitors
+					</p>
+					<p className="mt-1 text-xs leading-6 text-gray-500 dark:text-gray-400">
+						Muncul ketika user membuka workspace chat.
 					</p>
 				</div>
 				<div className="rounded-[24px] border border-gray-200 bg-white px-5 py-4 shadow-sm dark:border-white/10 dark:bg-[#0a0a0a]">
 					<p className="text-[11px] font-medium uppercase tracking-[0.16em] text-gray-500 dark:text-gray-400">
-						Behavior
+						Delivery
 					</p>
 					<p className="mt-3 text-lg font-semibold text-gray-900 dark:text-white">
 						Once per session
+					</p>
+					<p className="mt-1 text-xs leading-6 text-gray-500 dark:text-gray-400">
+						User bisa dismiss, lalu tidak melihatnya lagi di sesi yang sama.
 					</p>
 				</div>
 			</div>
@@ -237,8 +249,8 @@ export default function AdminAnnouncementPage() {
 									: "Announcement masih disimpan sebagai draft"}
 							</p>
 							<p className="mt-1 text-xs leading-6 text-gray-500">
-								Production mode aktif normal: user bisa dismiss announcement
-								sekali per sesi browser.
+								Gunakan announcement untuk perubahan penting seperti update
+								flow, maintenance ringan, atau informasi perilaku baru.
 							</p>
 						</div>
 
@@ -256,7 +268,7 @@ export default function AdminAnnouncementPage() {
 											title: event.target.value,
 										}))
 									}
-									placeholder="Example: Redeem flow is now cleaner"
+									placeholder="Contoh: Redeem code kini lebih cepat"
 									className="w-full rounded-[18px] border border-gray-200 bg-[#faf9f6] px-4 py-3 text-sm text-gray-900 outline-none transition-colors focus:border-gray-900 dark:border-white/10 dark:bg-white/[0.04] dark:text-white dark:focus:border-white/30"
 								/>
 							</label>
@@ -274,7 +286,7 @@ export default function AdminAnnouncementPage() {
 											message: event.target.value,
 										}))
 									}
-									placeholder="Write a short, calm update for users entering chat."
+									placeholder="Tulis update singkat yang langsung menjelaskan apa yang berubah atau perlu diketahui user."
 									className="w-full resize-none rounded-[20px] border border-gray-200 bg-[#faf9f6] px-4 py-3 text-sm leading-7 text-gray-900 outline-none transition-colors focus:border-gray-900 dark:border-white/10 dark:bg-white/[0.04] dark:text-white dark:focus:border-white/30"
 								/>
 							</label>
@@ -307,6 +319,10 @@ export default function AdminAnnouncementPage() {
 								{announcement.message.trim() ||
 									"Write a clear update here so users instantly understand what changed, what to expect, or what is new in the workspace."}
 							</p>
+							<div className="mt-5 rounded-[20px] border border-black/6 bg-white/55 px-4 py-3 text-xs leading-6 text-[#666a64] dark:border-white/8 dark:bg-white/[0.03] dark:text-[#8f948e]">
+								Tip: announcement yang paling efektif biasanya bisa dibaca
+								kurang dari 10 detik dan langsung menjawab “apa yang berubah?”
+							</div>
 							<div className="mt-6 flex justify-end">
 								<button
 									type="button"

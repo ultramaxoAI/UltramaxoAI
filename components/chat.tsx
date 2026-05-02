@@ -459,39 +459,75 @@ export function Chat({
 											Ultramaxo Workspace
 										</div>
 										<h1 className="max-w-3xl text-balance text-[2.35rem] font-semibold leading-[0.98] tracking-[-0.06em] text-[#171717] dark:text-[#f4f1ec] sm:text-[3.65rem]">
-											Buat pekerjaan yang terasa rapi sejak prompt pertama.
+											Mulai pekerjaan dengan ruang yang terasa tenang, fokus,
+											dan siap kirim.
 										</h1>
 										<p className="max-w-2xl text-sm leading-7 text-[#666b66] dark:text-[#99a09a] sm:text-[15px]">
-											Mulai dengan satu instruksi yang jelas. Tulis ide,
-											susun dokumen, eksplorasi kode, atau lanjutkan alur kerja
-											tanpa harus berpindah tempat.
+											Tulis satu arahan yang jelas, lalu lanjutkan riset,
+											eksekusi, dan revisi di tempat yang sama tanpa terasa
+											ramai seperti landing page AI.
 										</p>
 									</div>
 
 									<div className="grid gap-3 sm:grid-cols-3">
 										<div className="rounded-[24px] border border-black/6 bg-white/58 px-4 py-4 text-left shadow-[0_14px_36px_rgba(18,20,22,0.05)] backdrop-blur-xl dark:border-white/8 dark:bg-white/[0.03] dark:shadow-none">
 											<p className="text-[11px] font-medium uppercase tracking-[0.16em] text-[#7b807a] dark:text-[#7f857f]">
-												Research
+												Direction
 											</p>
 											<p className="mt-2 text-sm leading-6 text-[#2a2d2f] dark:text-[#ece7df]">
-												Ringkas topik, cari arah, lalu ubah jadi output yang siap dipakai.
+												Ubah brief mentah jadi arah kerja yang lebih jelas dan
+												bisa dijalankan.
 											</p>
 										</div>
 										<div className="rounded-[24px] border border-black/6 bg-white/58 px-4 py-4 text-left shadow-[0_14px_36px_rgba(18,20,22,0.05)] backdrop-blur-xl dark:border-white/8 dark:bg-white/[0.03] dark:shadow-none">
 											<p className="text-[11px] font-medium uppercase tracking-[0.16em] text-[#7b807a] dark:text-[#7f857f]">
-												Build
+												Execution
 											</p>
 											<p className="mt-2 text-sm leading-6 text-[#2a2d2f] dark:text-[#ece7df]">
-												Tulis flow, bantu coding, dan rapikan detail teknis tanpa ribet.
+												Teruskan ke drafting, coding, atau problem solving tanpa
+												ganti konteks.
 											</p>
 										</div>
 										<div className="rounded-[24px] border border-black/6 bg-white/58 px-4 py-4 text-left shadow-[0_14px_36px_rgba(18,20,22,0.05)] backdrop-blur-xl dark:border-white/8 dark:bg-white/[0.03] dark:shadow-none">
 											<p className="text-[11px] font-medium uppercase tracking-[0.16em] text-[#7b807a] dark:text-[#7f857f]">
-												Refine
+												Polish
 											</p>
 											<p className="mt-2 text-sm leading-6 text-[#2a2d2f] dark:text-[#ece7df]">
-												Pertajam jawaban, cek ulang nada, dan buat hasil akhir terasa matang.
+												Rapikan hasil akhir sampai nadanya pas dan keluarannya
+												terasa siap dipakai.
 											</p>
+										</div>
+									</div>
+
+									<div className="rounded-[28px] border border-black/6 bg-white/46 px-5 py-5 text-left shadow-[0_16px_44px_rgba(18,20,22,0.04)] backdrop-blur-xl dark:border-white/8 dark:bg-white/[0.025] dark:shadow-none">
+										<div className="grid gap-4 sm:grid-cols-3">
+											<div>
+												<p className="text-[11px] font-medium uppercase tracking-[0.16em] text-[#7b807a] dark:text-[#7f857f]">
+													Best for
+												</p>
+												<p className="mt-2 text-sm leading-6 text-[#2a2d2f] dark:text-[#ece7df]">
+													Product notes, code tasks, prompt drafting, dan revisi
+													cepat.
+												</p>
+											</div>
+											<div>
+												<p className="text-[11px] font-medium uppercase tracking-[0.16em] text-[#7b807a] dark:text-[#7f857f]">
+													Flow
+												</p>
+												<p className="mt-2 text-sm leading-6 text-[#2a2d2f] dark:text-[#ece7df]">
+													Mulai dari instruksi singkat, lalu iterasi sampai
+													hasilnya mantap.
+												</p>
+											</div>
+											<div>
+												<p className="text-[11px] font-medium uppercase tracking-[0.16em] text-[#7b807a] dark:text-[#7f857f]">
+													Surface
+												</p>
+												<p className="mt-2 text-sm leading-6 text-[#2a2d2f] dark:text-[#ece7df]">
+													Composer, file, dan mode kerja sengaja dibikin dekat
+													biar ritmenya enak.
+												</p>
+											</div>
 										</div>
 									</div>
 								</div>
@@ -535,47 +571,55 @@ export function Chat({
 									<div className="relative">
 										<div className="pointer-events-none absolute inset-x-8 -top-5 h-24 rounded-full bg-[radial-gradient(circle,rgba(227,214,187,0.25)_0%,rgba(227,214,187,0)_70%)] blur-3xl dark:bg-[radial-gradient(circle,rgba(162,176,197,0.12)_0%,rgba(162,176,197,0)_70%)]" />
 										<div className="rounded-[34px] border border-black/7 bg-[linear-gradient(180deg,rgba(255,255,255,0.76),rgba(246,241,233,0.68))] p-3 shadow-[0_24px_80px_rgba(18,20,22,0.08)] backdrop-blur-2xl dark:border-white/8 dark:bg-[linear-gradient(180deg,rgba(18,21,25,0.95),rgba(15,18,22,0.92))] dark:shadow-[0_24px_80px_rgba(0,0,0,0.28)]">
-											<div className="mb-4 flex items-center justify-between rounded-[24px] border border-black/6 bg-white/60 px-4 py-3 dark:border-white/7 dark:bg-white/[0.03]">
-												<div>
-													<p className="text-[11px] font-medium uppercase tracking-[0.18em] text-[#7b807a] dark:text-[#7f857f]">
-														Quick start
-													</p>
-													<p className="mt-1 text-sm text-[#2a2d2f] dark:text-[#ece7df]">
-														Tulis apa yang ingin dikerjakan. Composer siap untuk chat, file, dan mode kerja lanjutan.
-													</p>
-												</div>
-												<div className="hidden rounded-full border border-black/6 bg-black/[0.03] px-3 py-1 text-[11px] font-medium text-[#5f6460] dark:border-white/8 dark:bg-white/[0.04] dark:text-[#9aa09b] sm:block">
-													Workspace ready
+											<div className="mb-4 rounded-[24px] border border-black/6 bg-white/60 px-4 py-4 dark:border-white/7 dark:bg-white/[0.03]">
+												<div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+													<div>
+														<p className="text-[11px] font-medium uppercase tracking-[0.18em] text-[#7b807a] dark:text-[#7f857f]">
+															New conversation
+														</p>
+														<p className="mt-1 text-sm text-[#2a2d2f] dark:text-[#ece7df]">
+															Masukkan konteks seperlunya, lalu biarkan workspace
+															ini jadi meja kerja utamamu.
+														</p>
+													</div>
+													<div className="flex flex-wrap gap-2">
+														<div className="rounded-full border border-black/6 bg-black/[0.03] px-3 py-1 text-[11px] font-medium text-[#5f6460] dark:border-white/8 dark:bg-white/[0.04] dark:text-[#9aa09b]">
+															Workspace ready
+														</div>
+														<div className="rounded-full border border-black/6 bg-black/[0.03] px-3 py-1 text-[11px] font-medium text-[#5f6460] dark:border-white/8 dark:bg-white/[0.04] dark:text-[#9aa09b]">
+															Low-noise layout
+														</div>
+													</div>
 												</div>
 											</div>
 											<div className="mx-auto w-full max-w-4xl">
-											<MultimodalInput
-												attachments={attachments}
-												chatId={id}
-											deepThinkingEnabled={deepThinkingEnabled}
-											input={input}
-											messages={messages}
-											onModelChange={setCurrentModelId}
-											selectedModelId={currentModelId}
-											selectedVisibilityType={visibilityType}
-											sendMessage={sendMessage}
-											setAttachments={setAttachments}
-											setDeepThinkingEnabled={setDeepThinkingEnabled}
-											setInput={setInput}
-											setMessages={setMessages}
-											setWebSearchEnabled={setWebSearchEnabled}
-											setWormgptEnabled={setWormgptEnabled}
-											fullstackModeEnabled={fullstackModeEnabled}
-											setFullstackModeEnabled={setFullstackModeEnabled}
-											mobileModeEnabled={mobileModeEnabled}
-											setMobileModeEnabled={setMobileModeEnabled}
-											status={status}
-											stop={stop}
-											user={user}
-											webSearchEnabled={webSearchEnabled}
-												wormgptEnabled={wormgptEnabled}
-												customModels={customModels}
-											/>
+												<MultimodalInput
+													attachments={attachments}
+													chatId={id}
+													deepThinkingEnabled={deepThinkingEnabled}
+													input={input}
+													messages={messages}
+													onModelChange={setCurrentModelId}
+													selectedModelId={currentModelId}
+													selectedVisibilityType={visibilityType}
+													sendMessage={sendMessage}
+													setAttachments={setAttachments}
+													setDeepThinkingEnabled={setDeepThinkingEnabled}
+													setInput={setInput}
+													setMessages={setMessages}
+													setWebSearchEnabled={setWebSearchEnabled}
+													setWormgptEnabled={setWormgptEnabled}
+													fullstackModeEnabled={fullstackModeEnabled}
+													setFullstackModeEnabled={setFullstackModeEnabled}
+													mobileModeEnabled={mobileModeEnabled}
+													setMobileModeEnabled={setMobileModeEnabled}
+													status={status}
+													stop={stop}
+													user={user}
+													webSearchEnabled={webSearchEnabled}
+													wormgptEnabled={wormgptEnabled}
+													customModels={customModels}
+												/>
 											</div>
 										</div>
 									</div>
