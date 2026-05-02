@@ -452,36 +452,19 @@ export function Chat({
 
 					{messages.length === 0 && (
 						<div className="flex w-full flex-1 items-center justify-center px-3 pb-4 sm:px-4">
-							<div className="mx-auto w-full max-w-4xl">
-								<div className="space-y-8">
-									<div className="space-y-3 text-center">
-										<p className="text-xs font-medium uppercase tracking-[0.2em] text-[#6e746d] dark:text-[#878e87]">
-											New chat
-										</p>
-										<h1 className="text-balance text-[2rem] font-semibold tracking-[-0.05em] text-[#171717] dark:text-[#f4f1ec] sm:text-[2.8rem]">
-											Apa yang ingin Anda kerjakan?
-										</h1>
-										<p className="mx-auto max-w-2xl text-sm leading-7 text-[#666b66] dark:text-[#99a09a] sm:text-[15px]">
-											Mulai dari prompt singkat. Tulis konteks seperlunya, lalu
-											lanjutkan percakapan sampai hasilnya siap dipakai.
-										</p>
-									</div>
-
-									<div className="flex flex-wrap justify-center gap-2.5">
-										<div className="rounded-full border border-black/7 bg-white/56 px-3.5 py-2 text-sm text-[#4f544f] dark:border-white/8 dark:bg-white/[0.03] dark:text-[#bcc3bd]">
-											Riset cepat
-										</div>
-										<div className="rounded-full border border-black/7 bg-white/56 px-3.5 py-2 text-sm text-[#4f544f] dark:border-white/8 dark:bg-white/[0.03] dark:text-[#bcc3bd]">
-											Bantu coding
-										</div>
-										<div className="rounded-full border border-black/7 bg-white/56 px-3.5 py-2 text-sm text-[#4f544f] dark:border-white/8 dark:bg-white/[0.03] dark:text-[#bcc3bd]">
-											Rapikan tulisan
-										</div>
-									</div>
+							<div className="mx-auto w-full max-w-3xl">
+								<div className="space-y-3 text-center">
+									<h1 className="text-balance text-[1.9rem] font-medium text-[#171717] dark:text-[#f4f1ec] sm:text-[2.35rem]">
+										Apa yang ingin Anda buat?
+									</h1>
+									<p className="mx-auto max-w-xl text-sm leading-6 text-[#6f746f] dark:text-[#929992]">
+										Tulis prompt, lampirkan file bila perlu, lalu lanjutkan dari
+										satu tempat.
+									</p>
 								</div>
 
 								{isReadonly ? (
-									<div className="mt-8 rounded-[26px] border border-dashed border-black/7 bg-white/52 px-6 py-5 text-center shadow-[0_18px_50px_rgba(18,20,22,0.06)] backdrop-blur-xl dark:border-white/10 dark:bg-white/4 dark:shadow-none">
+									<div className="mt-7 rounded-lg border border-dashed border-black/10 bg-white/45 px-6 py-5 text-center dark:border-white/10 dark:bg-white/[0.03]">
 										<p className="text-sm text-[#5f6258] dark:text-[#a6aca6]">
 											Masuk dulu untuk mulai ngobrol dan buka workspace penuh
 											Ultramaxo AI.
@@ -501,7 +484,7 @@ export function Chat({
 										</div>
 									</div>
 								) : isAtLimit ? (
-									<div className="mt-8 rounded-[26px] border border-dashed border-black/7 bg-white/52 px-6 py-5 text-center shadow-[0_18px_50px_rgba(18,20,22,0.06)] backdrop-blur-xl dark:border-white/10 dark:bg-white/4 dark:shadow-none">
+									<div className="mt-7 rounded-lg border border-dashed border-black/10 bg-white/45 px-6 py-5 text-center dark:border-white/10 dark:bg-white/[0.03]">
 										<p className="text-sm font-medium text-[#171717] dark:text-[#f3f4f1]">
 											You have reached your free daily limit of 10 messages.
 										</p>
@@ -516,7 +499,7 @@ export function Chat({
 										</div>
 									</div>
 								) : (
-									<div className="mt-8">
+									<div className="mt-7">
 										<div className="mx-auto w-full max-w-4xl">
 											<MultimodalInput
 												attachments={attachments}

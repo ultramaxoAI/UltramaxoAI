@@ -119,7 +119,7 @@ export function SidebarUserNav({
 					<DropdownMenuTrigger asChild>
 						{status === "loading" ? (
 							<div
-								className={`flex items-center gap-3 rounded-[20px] p-3 transition-colors hover:bg-black/4 dark:hover:bg-white/6 ${isCollapsed ? "w-full justify-center" : "w-full"}`}
+								className={`flex items-center gap-3 rounded-lg p-3 transition-colors hover:bg-black/4 dark:hover:bg-white/6 ${isCollapsed ? "w-full justify-center" : "w-full"}`}
 							>
 								<div className="size-10 animate-pulse rounded-full bg-zinc-200 dark:bg-zinc-500/30 shrink-0" />
 								{!isCollapsed && (
@@ -138,7 +138,7 @@ export function SidebarUserNav({
 							<Tooltip>
 								<TooltipTrigger asChild>
 									<button
-										className="flex w-full items-center justify-center rounded-[18px] p-2.5 transition-colors cursor-pointer group hover:bg-black/4 dark:hover:bg-white/6"
+										className="flex w-full items-center justify-center rounded-lg p-2.5 transition-colors cursor-pointer group hover:bg-black/4 dark:hover:bg-white/6"
 										data-testid="user-nav-button"
 										type="button"
 									>
@@ -170,7 +170,7 @@ export function SidebarUserNav({
 							</Tooltip>
 						) : (
 							<button
-								className="flex flex-1 items-center gap-3 rounded-[20px] p-3 transition-colors cursor-pointer group hover:bg-black/4 dark:hover:bg-white/6"
+								className="flex flex-1 items-center gap-3 rounded-lg p-3 transition-colors cursor-pointer group hover:bg-black/4 dark:hover:bg-white/6"
 								data-testid="user-nav-button"
 								type="button"
 							>
@@ -192,10 +192,9 @@ export function SidebarUserNav({
 													user?.email?.split("@")[0] ||
 													"User"}
 										</div>
-										{/* Dynamic Plan Badge */}
 										{!isGuest && (
 											<span
-												className={`shrink-0 rounded-full border px-2 py-0.5 text-[10px] font-bold ${
+												className={`shrink-0 rounded-md border px-1.5 py-0.5 text-[10px] font-bold ${
 													user?.type === "pro"
 														? "border-[#d4a06e]/30 bg-[#d4a06e]/12 text-[#9f6440] dark:border-[#d4a06e]/30 dark:bg-[#d4a06e]/12 dark:text-[#f0c499]"
 														: "border-black/8 bg-transparent text-[#8a7869] dark:border-white/10 dark:text-[#9a8979]"

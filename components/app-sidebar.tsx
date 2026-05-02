@@ -89,7 +89,7 @@ export function AppSidebar({ user }: { user: User | undefined }) {
 											href="/chat"
 											onClick={() => setOpenMobile(false)}
 										>
-											<span className="block text-[1.5rem] font-serif tracking-[-0.045em] text-[#16181b] dark:text-[#f4f1ec]">
+											<span className="block text-[1.45rem] font-serif text-[#16181b] dark:text-[#f4f1ec]">
 												Ultramaxo
 											</span>
 										</Link>
@@ -131,8 +131,8 @@ export function AppSidebar({ user }: { user: User | undefined }) {
 												className={cn(
 													"cursor-pointer font-normal text-[#1b1e21] transition-all hover:bg-black/5 dark:text-[#f4f1ec] dark:hover:bg-white/6",
 													isSidebarOpen
-														? "h-11 w-full justify-start gap-3 rounded-[18px] px-3"
-														: "mx-auto h-9 w-9 rounded-2xl p-0",
+														? "h-10 w-full justify-start gap-3 rounded-lg px-3"
+														: "mx-auto h-9 w-9 rounded-lg p-0",
 												)}
 												onClick={() => {
 													setOpenMobile(false);
@@ -167,8 +167,8 @@ export function AppSidebar({ user }: { user: User | undefined }) {
 												className={cn(
 													"cursor-pointer font-normal text-[#1b1e21] transition-all hover:bg-black/5 dark:text-[#f4f1ec] dark:hover:bg-white/6",
 													isSidebarOpen
-														? "h-10 w-full justify-start gap-3 rounded-[18px] px-3"
-														: "mx-auto h-9 w-9 rounded-2xl p-0",
+														? "h-10 w-full justify-start gap-3 rounded-lg px-3"
+														: "mx-auto h-9 w-9 rounded-lg p-0",
 												)}
 												type="button"
 												variant="ghost"
@@ -198,8 +198,8 @@ export function AppSidebar({ user }: { user: User | undefined }) {
 												className={cn(
 													"cursor-pointer font-normal text-[#1b1e21] transition-all hover:bg-black/5 dark:text-[#f4f1ec] dark:hover:bg-white/6",
 													isSidebarOpen
-														? "h-10 w-full justify-start gap-3 rounded-[18px] px-3"
-														: "mx-auto h-9 w-9 rounded-2xl p-0",
+														? "h-10 w-full justify-start gap-3 rounded-lg px-3"
+														: "mx-auto h-9 w-9 rounded-lg p-0",
 												)}
 												onClick={() => {
 													setOpenMobile(false);

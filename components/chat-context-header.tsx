@@ -108,7 +108,7 @@ function PureChatContextHeader({
 	};
 
 	return (
-		<div className="flex items-center justify-between gap-3 rounded-[20px] border border-[#171717]/6 bg-[rgba(255,255,255,0.72)] px-2.5 py-2 shadow-[0_10px_22px_rgba(18,20,22,0.04)] backdrop-blur-xl dark:border-white/7 dark:bg-[rgba(18,21,25,0.8)] dark:shadow-[0_12px_26px_rgba(0,0,0,0.14)]">
+		<div className="flex items-center justify-between gap-3 rounded-lg border border-[#171717]/8 bg-[rgba(255,255,255,0.72)] px-2 py-1.5 shadow-[0_8px_18px_rgba(18,20,22,0.04)] backdrop-blur-xl dark:border-white/8 dark:bg-[rgba(18,21,25,0.78)] dark:shadow-none">
 			<div className="flex items-center gap-2">
 				{isMobile && (
 					<Button
@@ -124,7 +124,7 @@ function PureChatContextHeader({
 				{user && user.type !== "pro" && (
 					<Link href="/plan">
 						<Button
-							className="h-9 rounded-full border border-black/7 bg-transparent px-4 text-xs font-semibold text-[#4f544f] hover:bg-black/[0.03] dark:border-white/8 dark:text-[#c4cbc5] dark:hover:bg-white/[0.05]"
+							className="h-8 rounded-md border border-black/8 bg-transparent px-3 text-xs font-medium text-[#4f544f] hover:bg-black/[0.03] dark:border-white/8 dark:text-[#c4cbc5] dark:hover:bg-white/[0.05]"
 							size="sm"
 							variant="ghost"
 						>
