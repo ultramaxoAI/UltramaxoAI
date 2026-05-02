@@ -236,7 +236,7 @@ export function SidebarHistory({ user }: { user: User | undefined }) {
 		}
 
 		return (
-			<div>
+			<div className="space-y-1.5">
 				<div className="px-3 py-1.5 text-[10px] font-semibold tracking-[0.18em] uppercase text-[#7c7369] dark:text-[#828882]">
 					{label}
 				</div>
@@ -263,7 +263,7 @@ export function SidebarHistory({ user }: { user: User | undefined }) {
 		return (
 			<SidebarGroup>
 				<SidebarGroupContent>
-					<div className="flex w-full flex-row items-center justify-center gap-2 px-3 py-4 text-sm text-[#6f746f] dark:text-[#9ca39d]">
+					<div className="mx-3 mt-3 flex w-auto flex-row items-center justify-center rounded-[22px] border border-black/6 bg-white/55 px-4 py-4 text-sm text-[#6f746f] shadow-[0_12px_30px_rgba(17,19,21,0.04)] dark:border-white/7 dark:bg-white/[0.03] dark:text-[#9ca39d] dark:shadow-none">
 						Login to save and revisit previous chats!
 					</div>
 				</SidebarGroupContent>
@@ -304,7 +304,7 @@ export function SidebarHistory({ user }: { user: User | undefined }) {
 		return (
 			<SidebarGroup>
 				<SidebarGroupContent>
-					<div className="flex w-full flex-row items-center justify-center gap-2 px-3 py-4 text-sm text-[#6f746f] dark:text-[#9ca39d]">
+					<div className="mx-3 mt-3 flex w-auto flex-row items-center justify-center rounded-[22px] border border-black/6 bg-white/55 px-4 py-4 text-sm text-[#6f746f] shadow-[0_12px_30px_rgba(17,19,21,0.04)] dark:border-white/7 dark:bg-white/[0.03] dark:text-[#9ca39d] dark:shadow-none">
 						Your conversations will appear here once you start chatting!
 					</div>
 				</SidebarGroupContent>
@@ -328,7 +328,7 @@ export function SidebarHistory({ user }: { user: User | undefined }) {
 						<div className="relative">
 							<SearchIcon className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#858278] dark:text-[#838982]" />
 							<input
-								className="h-11 w-full rounded-2xl border border-black/6 bg-white/70 pl-9 pr-3 text-sm text-[#1d1f22] shadow-[0_8px_18px_rgba(16,18,20,0.04)] outline-none placeholder:text-[#7d817b] dark:border-white/7 dark:bg-white/[0.03] dark:text-[#ece4d8] dark:shadow-none dark:placeholder:text-[#7f8781]"
+								className="h-11 w-full rounded-[20px] border border-black/6 bg-white/72 pl-9 pr-3 text-sm text-[#1d1f22] shadow-[0_10px_22px_rgba(16,18,20,0.04)] outline-none placeholder:text-[#7d817b] dark:border-white/7 dark:bg-white/[0.03] dark:text-[#ece4d8] dark:shadow-none dark:placeholder:text-[#7f8781]"
 								onChange={(e) => setSearchTerm(e.target.value)}
 								placeholder="Search chats"
 								value={searchTerm}
@@ -336,7 +336,7 @@ export function SidebarHistory({ user }: { user: User | undefined }) {
 						</div>
 					</div>
 					<SidebarMenu>
-						<div className="flex flex-col gap-5">
+						<div className="flex flex-col gap-5 px-1">
 							{renderChatSection("Pinned", pinnedChats)}
 							{renderChatSection("Today", groupedChats.today)}
 							{renderChatSection("Yesterday", groupedChats.yesterday)}
@@ -344,7 +344,7 @@ export function SidebarHistory({ user }: { user: User | undefined }) {
 							{renderChatSection("Last 30 days", groupedChats.lastMonth)}
 							{renderChatSection("Older than last month", groupedChats.older)}
 							{filteredChats.length === 0 ? (
-								<div className="px-3 py-4 text-sm text-[#6f746f] dark:text-[#9d9388]">
+								<div className="mx-2 rounded-[20px] border border-black/6 bg-white/55 px-4 py-4 text-sm text-[#6f746f] shadow-[0_12px_30px_rgba(17,19,21,0.04)] dark:border-white/7 dark:bg-white/[0.03] dark:text-[#9d9388] dark:shadow-none">
 									No chats match the current filters.
 								</div>
 							) : null}

@@ -70,34 +70,36 @@ export function AppSidebar({ user }: { user: User | undefined }) {
 	return (
 		<>
 			<Sidebar
-				className="z-30 border-r border-white/6 bg-[linear-gradient(180deg,rgba(250,247,240,0.97),rgba(242,236,226,0.98))] backdrop-blur-2xl dark:bg-[linear-gradient(180deg,rgba(11,13,16,0.98),rgba(15,18,22,0.985))]"
+				className="z-30 border-r border-black/6 bg-[linear-gradient(180deg,rgba(248,244,237,0.985),rgba(242,236,226,0.985))] backdrop-blur-2xl dark:border-white/6 dark:bg-[linear-gradient(180deg,rgba(11,13,16,0.985),rgba(15,18,22,0.99))]"
 				collapsible="icon"
 			>
 				<SidebarHeader className="border-b border-black/6 dark:border-white/6">
 					<SidebarMenu>
 						<TooltipProvider delayDuration={0}>
-							<div className="flex flex-col gap-3 px-3 py-4">
-								{/* Toggle + Title Row */}
+							<div className="flex flex-col gap-4 px-3 py-4">
 								<div
 									className={cn(
 										"mb-1 flex items-center",
 										isSidebarOpen ? "justify-between" : "justify-center",
 									)}
 								>
-									{/* App Title - show when open */}
 									{isSidebarOpen && (
 										<Link
-											className="ml-2 flex flex-1 items-center transition-opacity hover:opacity-80"
+											className="ml-1 flex flex-1 items-center transition-opacity hover:opacity-80"
 											href="/chat"
 											onClick={() => setOpenMobile(false)}
 										>
-											<span className="text-[1.55rem] font-serif tracking-[-0.045em] text-[#16181b] dark:text-[#f4f1ec]">
-												Ultramaxo
-											</span>
+											<div>
+												<span className="block text-[1.5rem] font-serif tracking-[-0.045em] text-[#16181b] dark:text-[#f4f1ec]">
+													Ultramaxo
+												</span>
+												<span className="mt-0.5 block text-[10px] font-medium uppercase tracking-[0.22em] text-[#7d7b73] dark:text-[#8c928d]">
+													Workspace
+												</span>
+											</div>
 										</Link>
 									)}
 
-									{/* Toggle Button */}
 									<Tooltip>
 										<TooltipTrigger asChild>
 											<Button
@@ -127,15 +129,20 @@ export function AppSidebar({ user }: { user: User | undefined }) {
 									</Tooltip>
 								</div>
 
-								<div className="flex w-full flex-col gap-0.5">
-									{/* New Chat Button */}
+								<div className="rounded-[26px] border border-black/6 bg-white/55 p-1.5 shadow-[0_12px_30px_rgba(17,19,21,0.04)] backdrop-blur-xl dark:border-white/7 dark:bg-white/[0.03] dark:shadow-none">
+									<div className="mb-2 px-2 pt-2">
+										<p className="text-[10px] font-medium uppercase tracking-[0.2em] text-[#7d7b73] dark:text-[#8c928d]">
+											Workspace
+										</p>
+									</div>
+									<div className="flex w-full flex-col gap-1">
 									<Tooltip>
 										<TooltipTrigger asChild>
 											<Button
 												className={cn(
 													"cursor-pointer font-normal text-[#1b1e21] transition-all hover:bg-black/5 dark:text-[#f4f1ec] dark:hover:bg-white/6",
 													isSidebarOpen
-														? "h-11 w-full justify-start gap-3 rounded-2xl px-3"
+														? "h-11 w-full justify-start gap-3 rounded-[18px] px-3"
 														: "mx-auto h-9 w-9 rounded-2xl p-0",
 												)}
 												onClick={() => {
@@ -165,14 +172,13 @@ export function AppSidebar({ user }: { user: User | undefined }) {
 										)}
 									</Tooltip>
 
-									{/* Search Placeholder */}
 									<Tooltip>
 										<TooltipTrigger asChild>
 											<Button
 												className={cn(
 													"cursor-pointer font-normal text-[#1b1e21] transition-all hover:bg-black/5 dark:text-[#f4f1ec] dark:hover:bg-white/6",
 													isSidebarOpen
-														? "h-10 w-full justify-start gap-3 rounded-2xl px-3"
+														? "h-10 w-full justify-start gap-3 rounded-[18px] px-3"
 														: "mx-auto h-9 w-9 rounded-2xl p-0",
 												)}
 												type="button"
@@ -197,14 +203,13 @@ export function AppSidebar({ user }: { user: User | undefined }) {
 										)}
 									</Tooltip>
 
-									{/* Settings / Personalization */}
 									<Tooltip>
 										<TooltipTrigger asChild>
 											<Button
 												className={cn(
 													"cursor-pointer font-normal text-[#1b1e21] transition-all hover:bg-black/5 dark:text-[#f4f1ec] dark:hover:bg-white/6",
 													isSidebarOpen
-														? "h-10 w-full justify-start gap-3 rounded-2xl px-3"
+														? "h-10 w-full justify-start gap-3 rounded-[18px] px-3"
 														: "mx-auto h-9 w-9 rounded-2xl p-0",
 												)}
 												onClick={() => {
@@ -232,6 +237,7 @@ export function AppSidebar({ user }: { user: User | undefined }) {
 											</TooltipContent>
 										)}
 									</Tooltip>
+									</div>
 								</div>
 							</div>
 						</TooltipProvider>

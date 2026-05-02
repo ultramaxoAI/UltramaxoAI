@@ -114,12 +114,12 @@ export function SidebarUserNav({
 
 	return (
 		<SidebarMenu>
-			<SidebarMenuItem className="relative flex w-full flex-row items-center border-t border-black/6 dark:border-white/10 group">
+			<SidebarMenuItem className="group relative flex w-full flex-row items-center border-t border-black/6 px-2 py-2 dark:border-white/10">
 				<DropdownMenu>
 					<DropdownMenuTrigger asChild>
 						{status === "loading" ? (
 							<div
-								className={`mx-2 flex items-center gap-3 rounded-2xl border-t border-black/6 p-4 transition-colors cursor-pointer hover:bg-black/4 dark:border-white/10 dark:hover:bg-white/6 ${isCollapsed ? "justify-center" : ""}`}
+								className={`flex items-center gap-3 rounded-[24px] border border-black/6 bg-white/58 p-4 shadow-[0_12px_30px_rgba(17,19,21,0.04)] transition-colors hover:bg-black/4 dark:border-white/10 dark:bg-white/[0.03] dark:hover:bg-white/6 dark:shadow-none ${isCollapsed ? "w-full justify-center" : "w-full"}`}
 							>
 								<div className="size-10 animate-pulse rounded-full bg-zinc-200 dark:bg-zinc-500/30 shrink-0" />
 								{!isCollapsed && (
@@ -138,7 +138,7 @@ export function SidebarUserNav({
 							<Tooltip>
 								<TooltipTrigger asChild>
 									<button
-										className="flex w-full items-center justify-center border-t border-black/6 p-2 transition-colors cursor-pointer group hover:bg-black/4 dark:border-white/10 dark:hover:bg-white/6"
+										className="flex w-full items-center justify-center rounded-[22px] border border-black/6 bg-white/58 p-2.5 shadow-[0_12px_30px_rgba(17,19,21,0.04)] transition-colors cursor-pointer group hover:bg-black/4 dark:border-white/10 dark:bg-white/[0.03] dark:hover:bg-white/6 dark:shadow-none"
 										data-testid="user-nav-button"
 										type="button"
 									>
@@ -170,7 +170,7 @@ export function SidebarUserNav({
 							</Tooltip>
 						) : (
 							<button
-								className="flex flex-1 items-center gap-3 rounded-2xl p-4 transition-colors cursor-pointer group hover:bg-black/4 dark:hover:bg-white/6"
+								className="flex flex-1 items-center gap-3 rounded-[24px] border border-black/6 bg-white/58 p-4 shadow-[0_12px_30px_rgba(17,19,21,0.04)] transition-colors cursor-pointer group hover:bg-black/4 dark:border-white/10 dark:bg-white/[0.03] dark:hover:bg-white/6 dark:shadow-none"
 								data-testid="user-nav-button"
 								type="button"
 							>
@@ -184,7 +184,7 @@ export function SidebarUserNav({
 									/>
 								</div>
 								<div className="flex-1 min-w-0 text-left">
-									<div className="flex items-center gap-2 mb-0.5">
+									<div className="mb-0.5 flex items-center gap-2">
 										<div className="truncate text-sm font-semibold text-[#241a12] dark:text-[#f5efe8]">
 											{isGuest
 												? "Guest User"
@@ -209,7 +209,7 @@ export function SidebarUserNav({
 										{isGuest ? "Not logged in" : user?.email}
 									</div>
 									{!isGuest ? (
-										<div className="mt-2">
+										<div className="mt-2.5">
 											<CreditBalanceBadge compact />
 										</div>
 									) : null}
@@ -220,7 +220,7 @@ export function SidebarUserNav({
 					</DropdownMenuTrigger>
 					<DropdownMenuContent
 						align="end"
-						className="w-(--radix-popper-anchor-width) min-w-50 bg-white dark:bg-zinc-900 border-zinc-200 dark:border-zinc-800 rounded-xl shadow-lg"
+						className="w-(--radix-popper-anchor-width) min-w-50 rounded-2xl border border-zinc-200 bg-white/98 shadow-[0_20px_44px_rgba(18,20,22,0.12)] backdrop-blur-xl dark:border-zinc-800 dark:bg-zinc-900/98"
 						data-testid="user-nav-menu"
 						side="top"
 					>
@@ -346,7 +346,7 @@ export function SidebarUserNav({
 							<button
 								type="button"
 								onClick={handleInstallClick}
-								className="absolute right-12 top-1/2 -translate-y-1/2 h-8 w-8 flex items-center justify-center rounded-lg hover:bg-zinc-200 dark:hover:bg-zinc-700 text-zinc-500 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-white transition-colors cursor-pointer"
+								className="absolute right-12 top-1/2 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-xl text-zinc-500 transition-colors hover:bg-zinc-200 hover:text-zinc-900 cursor-pointer dark:text-zinc-400 dark:hover:bg-zinc-700 dark:hover:text-white"
 							>
 								<Download className="h-4 w-4" />
 							</button>
