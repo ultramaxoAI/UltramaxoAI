@@ -14,7 +14,7 @@ import {
 	CpuIcon,
 	FileTextIcon,
 	ImageIcon,
-	PlusIcon,
+	Paperclip,
 	Wand2Icon,
 } from "lucide-react";
 import { nanoid } from "nanoid";
@@ -123,6 +123,7 @@ function PureMultimodalInput({
 	const { width } = useWindowSize();
 	const [imageGenerationOpen, setImageGenerationOpen] = useState(false);
 	const [imageGenerationMode, setImageGenerationMode] = useState(false);
+	const inputDisabled = status === "submitted" || status === "streaming";
 
 	// Grant image gen access to PRO users and admins
 	const isPro =
@@ -250,8 +251,8 @@ function PureMultimodalInput({
 				{
 					id: loadingMessageId,
 					role: "assistant",
-					content: "Generating your image... 🎨",
-					parts: [{ type: "text", text: "Generating your image... 🎨" }],
+					content: "Generating your image...",
+					parts: [{ type: "text", text: "Generating your image..." }],
 				},
 			]);
 
@@ -301,11 +302,11 @@ function PureMultimodalInput({
 						m.id === loadingMessageId
 							? {
 									...m,
-									content: "❌ Failed to generate image. Please try again.",
+									content: "Failed to generate image. Please try again.",
 									parts: [
 										{
 											type: "text",
-											text: "❌ Failed to generate image. Please try again.",
+											text: "Failed to generate image. Please try again.",
 										},
 									],
 								}
@@ -513,7 +514,12 @@ function PureMultimodalInput({
 	}, [handlePaste]);
 
 	return (
-		<div className={cn("relative flex w-full flex-col gap-3", className)}>
+		<div
+			className={cn(
+				"relative mx-auto flex w-full max-w-[820px] shrink-0 flex-col px-6 pt-3 pb-6",
+				className,
+			)}
+		>
 			<input
 				className="pointer-events-none fixed -top-4 -left-4 size-0.5 opacity-0"
 				multiple
@@ -524,13 +530,13 @@ function PureMultimodalInput({
 			/>
 
 			<PromptInput
-				className="mx-auto w-full max-w-4xl rounded-xl border border-black/10 bg-white/80 p-1 text-[#171717] outline-none shadow-[0_10px_28px_rgba(18,20,22,0.05)] transition-colors focus-within:border-black/20 dark:border-white/10 dark:bg-[#14171a] dark:text-[#f3f4f1] dark:shadow-none dark:focus-within:border-white/20"
+				className="w-full rounded-[20px] border border-white/[0.08] bg-[#141518] p-0 text-white/85 outline-none transition-colors duration-150 hover:border-white/[0.12] focus-within:border-white/[0.15]"
 				onSubmit={(event) => {
 					event.preventDefault();
 					if (!input.trim() && attachments.length === 0) {
 						return;
 					}
-					if (status !== "ready") {
+					if (inputDisabled) {
 						toast.error("Please wait for the model to finish its response!");
 					} else {
 						submitForm();
@@ -570,89 +576,89 @@ function PureMultimodalInput({
 						))}
 					</div>
 				)}
-				{activeModeCount > 0 ? (
-					<div className="flex flex-row flex-wrap gap-1.5 px-3 pt-3">
-						{deepThinkingEnabled ? (
-							<span className="inline-flex items-center gap-1 rounded-md border border-blue-500/18 bg-blue-500/8 px-2 py-1 text-[11px] font-medium text-blue-700 dark:border-blue-400/20 dark:bg-blue-500/10 dark:text-blue-300">
-								<CpuIcon className="size-3" />
-								Deep Thinking
-							</span>
-						) : null}
-						{fullstackModeEnabled ? (
-							<span className="inline-flex items-center gap-1 rounded-md border border-orange-500/18 bg-orange-500/8 px-2 py-1 text-[11px] font-medium text-orange-700 dark:border-orange-400/20 dark:bg-orange-500/10 dark:text-orange-300">
-								<FileTextIcon className="size-3" />
-								Fullstack
-							</span>
-						) : null}
-						{mobileModeEnabled ? (
-							<span className="inline-flex items-center gap-1 rounded-md border border-pink-500/18 bg-pink-500/8 px-2 py-1 text-[11px] font-medium text-pink-700 dark:border-pink-400/20 dark:bg-pink-500/10 dark:text-pink-300">
-								<CheckIcon className="size-3" />
-								Mobile Dev
-							</span>
-						) : null}
-						{imageGenerationMode ? (
-							<span className="inline-flex items-center gap-1 rounded-md border border-violet-500/18 bg-violet-500/8 px-2 py-1 text-[11px] font-medium text-violet-700 dark:border-violet-400/20 dark:bg-violet-500/10 dark:text-violet-300">
-								<Wand2Icon className="size-3" />
-								Image Gen
-							</span>
+					{activeModeCount > 0 ? (
+						<div className="flex flex-row flex-wrap gap-1.5 px-4 pt-4">
+							{deepThinkingEnabled ? (
+								<span className="inline-flex items-center gap-1 rounded-md border border-white/[0.08] bg-white/[0.04] px-2 py-1 text-[11px] font-medium text-white/55">
+									<CpuIcon className="size-3" />
+									Deep Thinking
+								</span>
+							) : null}
+							{fullstackModeEnabled ? (
+								<span className="inline-flex items-center gap-1 rounded-md border border-white/[0.08] bg-white/[0.04] px-2 py-1 text-[11px] font-medium text-white/55">
+									<FileTextIcon className="size-3" />
+									Fullstack
+								</span>
+							) : null}
+							{mobileModeEnabled ? (
+								<span className="inline-flex items-center gap-1 rounded-md border border-white/[0.08] bg-white/[0.04] px-2 py-1 text-[11px] font-medium text-white/55">
+									<CheckIcon className="size-3" />
+									Mobile Dev
+								</span>
+							) : null}
+							{imageGenerationMode ? (
+								<span className="inline-flex items-center gap-1 rounded-md border border-white/[0.08] bg-white/[0.04] px-2 py-1 text-[11px] font-medium text-white/55">
+									<Wand2Icon className="size-3" />
+									Image Gen
+								</span>
 						) : null}
 					</div>
 				) : null}
-				<div
-					className={cn(
-						"flex flex-row items-start px-3 pb-0 pt-1",
-						status !== "ready" && "pointer-events-none opacity-50",
-					)}
-				>
-					<PromptInputTextarea
-						className="grow resize-none border-0! bg-transparent px-0 py-3 text-[15px] leading-7 text-[#171717] outline-none ring-0 [-ms-overflow-style:none] [scrollbar-width:none] placeholder:text-[#80857f] focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 dark:text-[#f3f4f1] dark:placeholder:text-[#858c85] [&::-webkit-scrollbar]:hidden"
-						data-testid="multimodal-input"
-						disableAutoResize={true}
-						disabled={status !== "ready"}
-						maxHeight={208}
-						minHeight={44}
-						onChange={handleInput}
-						placeholder={
-							status !== "ready"
-								? "Wait for AI to finish..."
-								: "Jelaskan apa yang ingin Anda kerjakan"
-						}
+						<div
+							className={cn(
+							"flex flex-row items-start px-5 pt-0 pb-0",
+							inputDisabled && "opacity-70",
+						)}
+					>
+						<PromptInputTextarea
+							className="grow resize-none border-0! bg-transparent px-0 pt-5 pb-3 text-[14.5px] leading-relaxed text-white/80 outline-none ring-0 [-ms-overflow-style:none] [scrollbar-width:none] placeholder:text-white/22 focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 [&::-webkit-scrollbar]:hidden"
+							data-testid="multimodal-input"
+							disableAutoResize={true}
+							disabled={inputDisabled}
+							maxHeight={260}
+							minHeight={64}
+							onChange={handleInput}
+							placeholder={
+								inputDisabled
+									? "Tunggu sampai respons selesai..."
+									: "Ketik sesuatu..."
+							}
 						ref={textareaRef}
 						rows={1}
 						value={input}
 					/>
 				</div>
-				<PromptInputToolbar className="relative flex items-center justify-between border-t border-black/8 px-3 pb-3 pt-2.5 dark:border-white/8">
+				<PromptInputToolbar className="relative flex items-center justify-between px-4 pt-1 pb-4">
 					<PromptInputTools className="flex items-center gap-1">
 						<DropdownMenu>
 							<DropdownMenuTrigger asChild>
 								<Button
-									className="size-9 rounded-lg border border-transparent p-2 text-[#676d67] transition-colors hover:border-black/8 hover:bg-black/[0.03] hover:text-[#171717] dark:text-[#8f9790] dark:hover:border-white/8 dark:hover:bg-white/7 dark:hover:text-[#f3f4f1]"
+									className="flex h-8 w-8 items-center justify-center rounded-xl border border-transparent px-0 text-white/25 transition-all hover:bg-white/[0.05] hover:text-white/55"
 									data-testid="all-options-button"
 									title="Tools"
 									variant="ghost"
 								>
-									<PlusIcon size={19} />
+									<Paperclip className="h-[14px] w-[14px]" />
 								</Button>
 							</DropdownMenuTrigger>
-							<DropdownMenuContent
-								align="start"
-								className="w-56 rounded-2xl border border-black/6 bg-white/98 text-[#171717] shadow-[0_20px_40px_rgba(18,20,22,0.12)] backdrop-blur-xl dark:border-white/10 dark:bg-[#181c22]/98 dark:text-[#cfd4cf]"
-							>
+								<DropdownMenuContent
+									align="start"
+									className="w-56 rounded-xl border border-white/[0.08] bg-[#111111] text-white/75 shadow-[0_20px_40px_rgba(0,0,0,0.35)]"
+								>
 								{/* File Upload Options */}
 								<DropdownMenuItem
-									className="cursor-pointer rounded-xl hover:bg-black/5 focus:bg-black/5 dark:hover:bg-white/7 dark:focus:bg-white/7"
-									disabled={status !== "ready"}
-									onClick={() => fileInputRef.current?.click()}
-								>
+										className="cursor-pointer rounded-lg hover:bg-white/[0.04] focus:bg-white/[0.04]"
+										disabled={inputDisabled}
+										onClick={() => fileInputRef.current?.click()}
+									>
 									<FileTextIcon className="mr-2 h-4 w-4" />
 									<span>Upload files</span>
 								</DropdownMenuItem>
 								<DropdownMenuItem
-									className="cursor-pointer rounded-xl hover:bg-black/5 focus:bg-black/5 dark:hover:bg-white/7 dark:focus:bg-white/7"
-									disabled={status !== "ready"}
-									onClick={() => {
-										if (fileInputRef.current && status === "ready") {
+										className="cursor-pointer rounded-lg hover:bg-white/[0.04] focus:bg-white/[0.04]"
+										disabled={inputDisabled}
+										onClick={() => {
+											if (fileInputRef.current && !inputDisabled) {
 											fileInputRef.current.accept = "image/*";
 											fileInputRef.current.click();
 											setTimeout(() => {
@@ -667,48 +673,48 @@ function PureMultimodalInput({
 									<span>Photos</span>
 								</DropdownMenuItem>
 
-								<DropdownMenuSeparator className="bg-white/10" />
-								<DropdownMenuItem
-									className="cursor-pointer rounded-xl hover:bg-black/5 focus:bg-black/5 dark:hover:bg-white/7 dark:focus:bg-white/7"
-									onClick={() => setDeepThinkingEnabled(!deepThinkingEnabled)}
-								>
+									<DropdownMenuSeparator className="bg-white/[0.08]" />
+									<DropdownMenuItem
+										className="cursor-pointer rounded-lg hover:bg-white/[0.04] focus:bg-white/[0.04]"
+										onClick={() => setDeepThinkingEnabled(!deepThinkingEnabled)}
+									>
 									<CpuIcon className="mr-2 h-4 w-4" />
 									<span>Deep Thinking</span>
 									{deepThinkingEnabled ? (
-										<CheckIcon className="ml-auto h-4 w-4 text-blue-500" />
-									) : null}
-								</DropdownMenuItem>
-								<DropdownMenuItem
-									className="cursor-pointer rounded-xl hover:bg-black/5 focus:bg-black/5 dark:hover:bg-white/7 dark:focus:bg-white/7"
-									onClick={toggleFullstackMode}
-								>
+											<CheckIcon className="ml-auto h-4 w-4 text-white/65" />
+										) : null}
+									</DropdownMenuItem>
+									<DropdownMenuItem
+										className="cursor-pointer rounded-lg hover:bg-white/[0.04] focus:bg-white/[0.04]"
+										onClick={toggleFullstackMode}
+									>
 									<FileTextIcon className="mr-2 h-4 w-4" />
 									<span>
 										Fullstack Web
 										{isFullstackModeInMaintenance ? " (Maintenance)" : ""}
 									</span>
 									{fullstackModeEnabled ? (
-										<CheckIcon className="ml-auto h-4 w-4 text-orange-500" />
-									) : null}
-								</DropdownMenuItem>
-								<DropdownMenuItem
-									className="cursor-pointer rounded-xl hover:bg-black/5 focus:bg-black/5 dark:hover:bg-white/7 dark:focus:bg-white/7"
-									onClick={toggleMobileMode}
-								>
+											<CheckIcon className="ml-auto h-4 w-4 text-white/65" />
+										) : null}
+									</DropdownMenuItem>
+									<DropdownMenuItem
+										className="cursor-pointer rounded-lg hover:bg-white/[0.04] focus:bg-white/[0.04]"
+										onClick={toggleMobileMode}
+									>
 									<CheckIcon className="mr-2 h-4 w-4" />
 									<span>
 										Mobile Dev
 										{isMobileModeInMaintenance ? " (Maintenance)" : ""}
 									</span>
 									{mobileModeEnabled ? (
-										<CheckIcon className="ml-auto h-4 w-4 text-pink-500" />
-									) : null}
-								</DropdownMenuItem>
-								<DropdownMenuItem
-									className={cn(
-										"cursor-pointer rounded-xl hover:bg-black/5 focus:bg-black/5 dark:hover:bg-white/7 dark:focus:bg-white/7",
-										!isPro && "cursor-not-allowed opacity-40",
-									)}
+											<CheckIcon className="ml-auto h-4 w-4 text-white/65" />
+										) : null}
+									</DropdownMenuItem>
+									<DropdownMenuItem
+										className={cn(
+											"cursor-pointer rounded-lg hover:bg-white/[0.04] focus:bg-white/[0.04]",
+											!isPro && "cursor-not-allowed opacity-40",
+										)}
 									disabled={!isPro}
 									onClick={() => {
 										if (isPro) {
@@ -717,11 +723,11 @@ function PureMultimodalInput({
 									}}
 								>
 									<Wand2Icon className="mr-2 h-4 w-4" />
-									<span>Image Gen (Pro)</span>
-									{imageGenerationMode && (
-										<CheckIcon className="ml-auto h-4 w-4 text-purple-500" />
-									)}
-								</DropdownMenuItem>
+										<span>Image Gen (Pro)</span>
+										{imageGenerationMode && (
+											<CheckIcon className="ml-auto h-4 w-4 text-white/65" />
+										)}
+									</DropdownMenuItem>
 							</DropdownMenuContent>
 						</DropdownMenu>
 
@@ -744,22 +750,22 @@ function PureMultimodalInput({
 							customModels={customModels}
 						/>
 
-						{status === "submitted" || status === "streaming" ? (
+						{inputDisabled ? (
 							<StopButton
-								className="size-9"
+								className="size-8 rounded-xl"
 								setMessages={setMessages}
 								stop={stop}
 							/>
 						) : (
 							<PromptInputSubmit
 								className={cn(
-									"flex size-9 items-center justify-center rounded-lg border border-transparent transition-colors",
-									!input.trim() &&
+									"flex h-8 w-8 items-center justify-center rounded-xl border border-transparent transition-all",
+										!input.trim() &&
 										uploadQueue.length === 0 &&
 										attachments.length === 0
-										? "bg-zinc-100 text-zinc-400 dark:bg-white/5 dark:text-zinc-600"
-										: "border-black/8 bg-[#171b20] text-white hover:bg-[#111418] dark:border-white/10 dark:bg-[#f0ebe3] dark:text-[#101317] dark:hover:bg-[#ffffff]",
-								)}
+											? "cursor-not-allowed bg-white/[0.05] text-white/18"
+											: "bg-white text-black hover:bg-white/90",
+									)}
 								data-testid="send-button"
 								disabled={
 									!input.trim() &&
@@ -768,12 +774,17 @@ function PureMultimodalInput({
 								}
 								status={status}
 							>
-								<ArrowUpIcon size={20} />
+								<ArrowUpIcon size={14} />
 							</PromptInputSubmit>
 						)}
 					</div>
 				</PromptInputToolbar>
 			</PromptInput>
+
+			<p className="mx-auto mt-3 max-w-xl text-center text-[11px] text-white/18">
+				Ultramaxo dapat membuat kesalahan. Verifikasi informasi penting sebelum
+				digunakan.
+			</p>
 
 			<ImageGenerationDialog
 				onClose={() => setImageGenerationOpen(false)}
@@ -858,8 +869,6 @@ function PureModelSelectorCompact({
 			? fallbackModel
 			: rawSelectedModel;
 
-	const [provider] = selectedModel.id.split("/");
-
 	// Provider display names
 	const providerNames: Record<string, string> = {
 		anthropic: "Anthropic",
@@ -898,29 +907,22 @@ function PureModelSelectorCompact({
 		rawSelectedModel,
 	]);
 
-	return (
-		<DropdownMenu onOpenChange={setOpen} open={open}>
-			<DropdownMenuTrigger asChild>
-				<Button
-					className="h-9 min-w-0 max-w-56 justify-between gap-2 rounded-lg border border-black/8 bg-white/80 px-3 text-[#171717] shadow-none transition-colors hover:bg-white dark:border-white/10 dark:bg-[#1a1f25] dark:text-[#e7e8e4] dark:hover:border-white/16 dark:hover:bg-[#20262d]"
-					variant="ghost"
-				>
-					<div className="flex min-w-0 items-center gap-2">
-						<div className="flex size-4 items-center justify-center rounded bg-black/5 ring-1 ring-black/10 dark:bg-white/6 dark:ring-white/8">
-							{provider && (
-								<ModelSelectorLogo
-									className="size-2.5 opacity-90 dark:invert-0"
-									provider={provider}
-								/>
-							)}
+		return (
+			<DropdownMenu onOpenChange={setOpen} open={open}>
+				<DropdownMenuTrigger asChild>
+					<Button
+						className="h-8 min-w-0 justify-between gap-1.5 rounded-xl border border-transparent bg-transparent px-3 text-[12.5px] font-medium text-white/30 shadow-none transition-all hover:bg-white/[0.05] hover:text-white/60"
+						variant="ghost"
+					>
+						<div className="flex min-w-0 items-center gap-2">
+							<div className="h-1.5 w-1.5 shrink-0 rounded-full bg-white/28" />
+							<span className="truncate text-left text-[12.5px] font-medium">
+								{selectedModel.name}
+							</span>
 						</div>
-						<span className="truncate text-left text-[12.5px] font-medium text-[#171717] dark:text-[#eceee9]">
-							{selectedModel.name}
-						</span>
-					</div>
 					<ChevronDownIcon
 						className={cn(
-							"size-3.5 shrink-0 text-[#5f6258] transition-transform duration-200 dark:text-[#8f9790]",
+							"size-3.5 shrink-0 text-white/30 transition-transform duration-200",
 							open && "rotate-180",
 						)}
 					/>
@@ -1053,7 +1055,7 @@ function PureStopButton({
 	return (
 		<Button
 			className={cn(
-				"size-7 rounded-lg bg-foreground p-1 text-background transition-colors duration-200 hover:bg-foreground/90 disabled:bg-muted disabled:text-muted-foreground",
+				"size-7 rounded-lg bg-white p-1 text-black transition-colors duration-200 hover:bg-white/90 disabled:bg-white/8 disabled:text-white/25",
 				className,
 			)}
 			data-testid="stop-button"
@@ -1062,6 +1064,7 @@ function PureStopButton({
 				stop();
 				setMessages((messages: ChatMessage[]) => messages);
 			}}
+			type="button"
 		>
 			<StopIcon size={14} />
 		</Button>

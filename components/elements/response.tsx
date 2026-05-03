@@ -20,21 +20,19 @@ export function Response({
 		<Streamdown
 			className={cn(
 				"size-full [&>*:first-child]:mt-0 [&>*:last-child]:mb-0",
-				// Grok-like typography styling
-				"text-sm leading-[1.65] md:text-[15px] md:leading-relaxed",
-				"tracking-[-0.01em] text-zinc-900 dark:text-zinc-100", // Clean, bright text
-				"[&_p]:my-4",
-				"[&_ul]:my-4 [&_ul]:list-disc [&_ul]:pl-6 [&_ul_ul]:my-1",
-				"[&_ol]:my-4 [&_ol]:list-decimal [&_ol]:pl-6 [&_ol_ol]:my-1",
-				"[&_li]:mt-1.5 [&_li]:pl-1",
-				"[&_h1]:text-2xl [&_h1]:font-semibold [&_h1]:mt-8 [&_h1]:mb-4 [&_h1]:tracking-tight [&_h1]:text-zinc-900 dark:[&_h1]:text-zinc-100",
-				"[&_h2]:text-xl [&_h2]:font-semibold [&_h2]:mt-8 [&_h2]:mb-4 [&_h2]:tracking-tight [&_h2]:text-zinc-900 dark:[&_h2]:text-zinc-100",
-				"[&_h3]:text-lg [&_h3]:font-semibold [&_h3]:mt-6 [&_h3]:mb-3 [&_h3]:text-zinc-900 dark:[&_h3]:text-zinc-100",
-				"[&_h4]:text-[15px] [&_h4]:font-semibold [&_h4]:mt-6 [&_h4]:mb-2 [&_h4]:text-zinc-900 dark:[&_h4]:text-zinc-100",
-				"[&_strong]:font-semibold [&_strong]:text-zinc-900 dark:[&_strong]:text-white",
-				"[&_a]:text-blue-500 dark:[&_a]:text-blue-400 [&_a]:underline [&_a]:underline-offset-2 [&_a]:decoration-blue-500/50 dark:[&_a]:decoration-blue-400/50 hover:[&_a]:decoration-blue-500 dark:hover:[&_a]:decoration-blue-400",
-				"[&_blockquote]:border-l-4 [&_blockquote]:border-zinc-300 dark:[&_blockquote]:border-zinc-700 [&_blockquote]:pl-4 [&_blockquote]:italic [&_blockquote]:text-zinc-600 dark:[&_blockquote]:text-zinc-400 [&_blockquote]:my-4",
-				"[&_hr]:my-8 [&_hr]:border-zinc-200 dark:[&_hr]:border-zinc-800",
+				"text-[14.5px] leading-[1.8] tracking-[-0.01em] text-white/75",
+				"[&_p]:mb-4 [&_p]:mt-0",
+				"[&_ul]:mb-4 [&_ul]:mt-0 [&_ul]:list-disc [&_ul]:pl-6 [&_ul_ul]:my-1",
+				"[&_ol]:mb-4 [&_ol]:mt-0 [&_ol]:list-decimal [&_ol]:pl-6 [&_ol_ol]:my-1",
+				"[&_li]:mt-1.5 [&_li]:pl-1 [&_li]:text-white/65",
+				"[&_h1]:mb-2 [&_h1]:mt-5 [&_h1]:text-[15px] [&_h1]:font-semibold [&_h1]:tracking-tight [&_h1]:text-white/90",
+				"[&_h2]:mb-2 [&_h2]:mt-5 [&_h2]:text-[15px] [&_h2]:font-semibold [&_h2]:tracking-tight [&_h2]:text-white/90",
+				"[&_h3]:mb-2 [&_h3]:mt-5 [&_h3]:text-[15px] [&_h3]:font-semibold [&_h3]:text-white/90",
+				"[&_h4]:mb-2 [&_h4]:mt-5 [&_h4]:text-[15px] [&_h4]:font-semibold [&_h4]:text-white/90",
+				"[&_strong]:font-semibold [&_strong]:text-white/85",
+				"[&_a]:text-indigo-300/85 [&_a]:underline [&_a]:underline-offset-2 [&_a]:decoration-indigo-300/35 hover:[&_a]:decoration-indigo-300/70",
+				"[&_blockquote]:my-4 [&_blockquote]:border-l-2 [&_blockquote]:border-white/20 [&_blockquote]:pl-4 [&_blockquote]:italic [&_blockquote]:text-white/50",
+				"[&_hr]:my-8 [&_hr]:border-white/5",
 				"[&_code]:whitespace-pre-wrap [&_code]:break-words [&_pre]:max-w-full [&_pre]:overflow-x-auto",
 				className,
 			)}
@@ -98,7 +96,7 @@ export function Response({
 						return (
 							<code
 								className={cn(
-									"bg-muted px-1.5 py-0.5 rounded-md font-mono text-sm",
+									"rounded bg-white/6 px-1.5 py-0.5 font-mono text-[12px] text-white/80",
 									className,
 								)}
 								{...props}

@@ -10,7 +10,6 @@ import {
 	FileEditIcon,
 	FileTextIcon,
 	LightbulbIcon,
-	LoaderIcon,
 	SparklesIcon as LucideSparklesIcon,
 	MonitorSmartphoneIcon,
 	PackageIcon,
@@ -23,7 +22,6 @@ import {
 import { useState } from "react";
 import type { ChatMessage } from "@/lib/types";
 import { cn, sanitizeText } from "@/lib/utils";
-import { useDataStream } from "./data-stream-provider";
 import { DocumentToolCall, DocumentToolResult } from "./document";
 import { MessageContent } from "./elements/message";
 import { Response } from "./elements/response";
@@ -34,10 +32,13 @@ import {
 	ToolInput,
 	ToolOutput,
 } from "./elements/tool";
-import { SparklesIcon } from "./icons";
 import { MessageActions } from "./message-actions";
 import { MessageEditor } from "./message-editor";
-import { MessageReasoning } from "./message-reasoning";
+import {
+	AgentThinkingPanel,
+	type AgentThinkingStep,
+	MessageReasoning,
+} from "./message-reasoning";
 import { PreviewAttachment } from "./preview-attachment";
 import { ResponseViewer } from "./response-viewer";
 import { Weather, type WeatherAtLocation } from "./weather";
@@ -55,9 +56,28 @@ type DocumentToolResultData = {
 	error?: unknown;
 };
 
+type ToolHeaderState =
+	| "input-streaming"
+	| "input-available"
+	| "approval-requested"
+	| "approval-responded"
+	| "output-available"
+	| "output-error"
+	| "output-denied";
+
 function isRecord(value: unknown): value is Record<string, unknown> {
 	return typeof value === "object" && value !== null;
 }
+
+type GenericToolPart = {
+	type?: string;
+	toolName?: string;
+	toolCallId?: string;
+	state?: string;
+	input?: unknown;
+	output?: unknown;
+	approval?: { id?: string; approved?: boolean };
+};
 
 function getStringValue(value: unknown, fallback = "") {
 	return typeof value === "string" ? value : fallback;
@@ -80,6 +100,161 @@ function isValidMessagePart(
 			"type" in part &&
 			typeof (part as { type?: unknown }).type === "string",
 	);
+}
+
+function getPartState(part: unknown) {
+	if (!part || typeof part !== "object" || !("state" in part)) {
+		return undefined;
+	}
+
+	return typeof (part as { state?: unknown }).state === "string"
+		? ((part as { state?: string }).state ?? undefined)
+		: undefined;
+}
+
+function getNormalizedPartType(part: unknown) {
+	if (!part || typeof part !== "object" || !("type" in part)) {
+		return "";
+	}
+
+	const rawType =
+		typeof (part as { type?: unknown }).type === "string"
+			? ((part as { type?: string }).type ?? "")
+			: "";
+
+	if (
+		(rawType === "dynamic-tool" || rawType === "tool-invocation") &&
+		typeof (part as { toolName?: unknown }).toolName === "string"
+	) {
+		const toolName = (part as { toolName?: string }).toolName ?? "";
+		return toolName ? `tool-${toolName}` : rawType;
+	}
+
+	return rawType;
+}
+
+function asToolPart(part: unknown): GenericToolPart {
+	return isRecord(part) ? (part as GenericToolPart) : {};
+}
+
+function getSafeToolState(state?: string): ToolHeaderState {
+	switch (state) {
+		case "input-streaming":
+		case "input-available":
+		case "approval-requested":
+		case "approval-responded":
+		case "output-available":
+		case "output-error":
+		case "output-denied":
+			return state;
+		default:
+			return "input-available";
+	}
+}
+
+function stringifyCompact(value: unknown) {
+	if (value === undefined || value === null || value === "") {
+		return "";
+	}
+
+	if (typeof value === "string") {
+		return value.length > 120 ? `${value.slice(0, 117)}...` : value;
+	}
+
+	try {
+		const text = JSON.stringify(value);
+		return text.length > 140 ? `${text.slice(0, 137)}...` : text;
+	} catch {
+		return String(value);
+	}
+}
+
+function formatMessageTimestamp(message: ChatMessage) {
+	const createdAt = message.metadata?.createdAt;
+	if (!createdAt) {
+		return "";
+	}
+
+	const date = new Date(createdAt);
+	if (Number.isNaN(date.getTime())) {
+		return "";
+	}
+
+	return new Intl.DateTimeFormat("id-ID", {
+		day: "2-digit",
+		hour: "2-digit",
+		minute: "2-digit",
+		month: "short",
+	}).format(date);
+}
+
+function getToolStatus(state?: string): AgentThinkingStep["status"] {
+	if (!state) {
+		return "pending";
+	}
+
+	if (state.includes("denied") || state.includes("error")) {
+		return "error";
+	}
+
+	if (state.includes("output") || state === "approval-responded") {
+		return "done";
+	}
+
+	if (state.includes("input") || state.includes("approval")) {
+		return "running";
+	}
+
+	return "pending";
+}
+
+function getAgentThinkingSteps(parts: ChatMessage["parts"]) {
+	const steps: AgentThinkingStep[] = [];
+
+	for (const [index, part] of parts.entries()) {
+		if (!isValidMessagePart(part)) {
+			continue;
+		}
+
+		if (part.type === "reasoning" && part.text?.trim()) {
+			for (const [lineIndex, line] of part.text
+				.split("\n")
+				.map((item) => item.trim())
+				.filter(Boolean)
+				.slice(0, 6)
+				.entries()) {
+				steps.push({
+					id: `thought-${index}-${lineIndex}`,
+					type: "thought",
+					label: line.replace(/^[-*>]\s*/, ""),
+					status:
+						getPartState(part) === "streaming" && lineIndex === 0
+							? "running"
+							: "done",
+				});
+			}
+		}
+
+		const normalizedType = getNormalizedPartType(part);
+
+		if (normalizedType.startsWith("tool-")) {
+			const payload = asToolPart(part);
+			const label = normalizedType.replace(/^tool-/, "");
+			const args = stringifyCompact(payload.input);
+			const result = stringifyCompact(payload.output);
+
+			steps.push({
+				id: payload.toolCallId ?? `tool-${index}`,
+				type: "tool_call",
+				label,
+				args: args ? `(${args})` : "",
+				result,
+				status: getToolStatus(payload.state),
+			});
+		}
+	}
+
+	return steps;
 }
 
 // ============================================================
@@ -109,22 +284,22 @@ function MessageTextPart({
 		<div>
 			<MessageContent
 				className={cn("w-full", {
-					"wrap-break-word ml-auto w-fit max-w-[85%] sm:max-w-[70%] rounded-3xl rounded-br-lg md:rounded-br-xl bg-[#f4f4f4] px-4 py-2.5 text-left text-[#171717] shadow-none dark:bg-[#2f2f2f] dark:text-white":
+					"wrap-break-word ml-auto w-fit max-w-[75%] rounded-2xl bg-white/[0.07] px-5 py-3.5 text-left text-[15px] leading-[1.8] text-white/88 shadow-none":
 						messageRole === "user",
-					"w-full bg-transparent px-0 py-1 text-left prose-zinc dark:prose-invert prose-p:leading-7":
+					"w-full bg-transparent px-0 py-0 text-left text-[15px] leading-[1.8] text-white/75":
 						messageRole === "assistant",
 				})}
 				data-testid="message-content"
 			>
 				{messageRole === "assistant" ? (
 					<ResponseViewer
-						className={isLoading ? "streaming-cursor" : ""}
+						className={cn(isLoading && "streaming-cursor")}
 						hideCodeBlocks={hasAnyArtifact}
 						text={displayText}
 						isLoading={isLoading}
 					/>
 				) : (
-					<Response className="text-[14px] leading-relaxed">
+					<Response className="text-[15px] leading-[1.8] text-white/88 [&_p]:mb-0">
 						{displayText}
 					</Response>
 				)}
@@ -132,12 +307,12 @@ function MessageTextPart({
 			{isHuge && !expanded && (
 				<div className="mt-2 text-center">
 					<button
-						className="rounded-full border border-white/8 bg-[#1a1d20] px-4 py-2 text-xs text-[#f3f4f1] transition-colors hover:bg-[#22262a] dark:border-black/8 dark:bg-[#eceee9] dark:text-[#111315] dark:hover:bg-[#e1e4de]"
+						className="rounded-full border border-white/8 bg-white/6 px-4 py-2 text-xs text-white/70 transition-colors hover:bg-white/10"
 						onClick={() => setExpanded(true)}
 						type="button"
 					>
-						⚠️ Pesan ini sangat panjang ({(rawText.length / 1000).toFixed(0)}KB).
-						Klik untuk tampilkan semua
+						Pesan ini sangat panjang ({(rawText.length / 1000).toFixed(0)}KB).
+						Klik untuk tampilkan semua.
 					</button>
 				</div>
 			)}
@@ -167,9 +342,17 @@ const PurePreviewMessage = ({
 	requiresScrollPadding: boolean;
 }) => {
 	const [mode, setMode] = useState<"view" | "edit">("view");
+	if (!message || !message.id) {
+		return null;
+	}
+
 	const messageParts = Array.isArray(message.parts)
 		? message.parts.filter(isValidMessagePart)
 		: [];
+	const fallbackContent =
+		typeof (message as { content?: unknown }).content === "string"
+			? ((message as { content?: string }).content ?? "")
+			: "";
 
 	const attachmentsFromMessage = messageParts.filter(
 		(part) => part.type === "file",
@@ -178,8 +361,8 @@ const PurePreviewMessage = ({
 	const hasAnyArtifact =
 		messageParts.some(
 			(part) =>
-				part.type === "tool-createDocument" ||
-				part.type === "tool-updateDocument",
+				getNormalizedPartType(part) === "tool-createDocument" ||
+				getNormalizedPartType(part) === "tool-updateDocument",
 		) ||
 		message.annotations?.some((annotation) => {
 			const parsed =
@@ -192,8 +375,70 @@ const PurePreviewMessage = ({
 			);
 		}) ||
 		false;
+	const agentThinkingSteps = getAgentThinkingSteps(messageParts);
+	const hasAgentThinkingPanel =
+		message.role === "assistant" && agentThinkingSteps.length > 0;
+	const hasRunningAgentStep = agentThinkingSteps.some(
+		(step) => step.status === "running" || step.status === "pending",
+	);
+	const agentPanelStatus = agentThinkingSteps.some(
+		(step) => step.status === "error",
+	)
+		? "error"
+		: hasRunningAgentStep &&
+				agentThinkingSteps.some((step) => step.type === "tool_call")
+			? "executing"
+			: hasRunningAgentStep || isLoading
+				? "thinking"
+				: "done";
+	const timestamp = formatMessageTimestamp(message);
+	const hasRenderablePart = messageParts.some((part) => {
+		const normalizedType = getNormalizedPartType(part);
 
-	useDataStream();
+		if (normalizedType === "text") {
+			return Boolean(sanitizeText((part as { text?: string }).text ?? "").trim());
+		}
+
+		if (normalizedType === "reasoning") {
+			return (
+				!hasAgentThinkingPanel &&
+				Boolean((part as { text?: string }).text?.trim())
+			);
+		}
+
+		if (normalizedType === "file") {
+			return true;
+		}
+
+		return normalizedType.startsWith("tool-");
+	});
+	const hasTextPart = messageParts.some(
+		(part) =>
+			getNormalizedPartType(part) === "text" &&
+			Boolean(sanitizeText((part as { text?: string }).text ?? "").trim()),
+	);
+	const hasRenderableAnnotation = Boolean(
+		message.annotations?.some((annotation) => {
+			const parsed =
+				typeof annotation === "object" && annotation !== null
+					? (annotation as Record<string, unknown>)
+					: null;
+
+			return (
+				parsed?.type === "create-document" || parsed?.type === "update-document"
+			);
+		}),
+	);
+
+	if (
+		message.role === "assistant" &&
+		!hasRenderablePart &&
+		!fallbackContent.trim() &&
+		!hasAgentThinkingPanel &&
+		!hasRenderableAnnotation
+	) {
+		return null;
+	}
 
 	return (
 		<div
@@ -203,48 +448,27 @@ const PurePreviewMessage = ({
 		>
 			<div
 				className={cn(
-					"mx-auto flex w-full max-w-3xl flex-col gap-4",
-					message.role === "user" ? "" : "group-data-[top=true]:mt-[6vh]",
+					"mx-auto flex w-full max-w-[820px]",
+					message.role === "user"
+						? "justify-end"
+						: "items-start gap-3 group-data-[top=true]:mt-[6vh]",
 				)}
 			>
 				{message.role === "assistant" && (
-					<div
-						className={cn(
-							"mt-0.5 flex size-6 shrink-0 items-center justify-center rounded-full transition-colors duration-300",
-							isLoading
-								? "text-violet-500 dark:text-violet-400"
-								: "text-[#6f746f] dark:text-[#8f9790]",
-						)}
-					>
-						{isLoading ? (
-							<div className="relative flex items-center justify-center">
-								<span className="absolute inline-flex size-4 animate-ping rounded-full bg-violet-400/25 dark:bg-violet-500/15" />
-								<SparklesIcon
-									size={14}
-									className="relative animate-spin"
-									style={{ animationDuration: "3s" }}
-								/>
-							</div>
-						) : (
-							<SparklesIcon size={14} />
-						)}
+					<div className="mt-1 flex h-7 w-7 shrink-0 items-center justify-center rounded-full border border-white/[0.10] bg-white/[0.08] text-[11px] font-semibold text-white/55">
+						U
 					</div>
 				)}
 
 				<div
 					className={cn("flex flex-col min-w-0", {
-						"gap-1 md:gap-2": messageParts.some(
-							(p) => p.type === "text" && p.text?.trim(),
+						"gap-2": messageParts.some(
+							(p) =>
+								getNormalizedPartType(p) === "text" &&
+								Boolean((p as { text?: string }).text?.trim()),
 						),
-						"w-full":
-							(message.role === "assistant" &&
-								(messageParts.some(
-									(p) => p.type === "text" && p.text?.trim(),
-								) ||
-									messageParts.some((p) => p.type.startsWith("tool-")))) ||
-							mode === "edit",
-						"max-w-[calc(100%-1.75rem)] sm:max-w-[min(fit-content,68%)]":
-							message.role === "user" && mode !== "edit",
+						"w-full": message.role === "assistant" || mode === "edit",
+						"items-end max-w-[75%]": message.role === "user" && mode !== "edit",
 					})}
 				>
 					{attachmentsFromMessage.length > 0 && (
@@ -265,28 +489,47 @@ const PurePreviewMessage = ({
 						</div>
 					)}
 
-					{/* Render message parts */}
-					{messageParts.map((part, index) => {
-						const { type } = part;
-						const key = `message-${message.id}-part-${index}`;
+					{hasAgentThinkingPanel && (
+						<AgentThinkingPanel
+							status={agentPanelStatus}
+							steps={agentThinkingSteps}
+						/>
+					)}
 
-						if (type === "reasoning") {
-							const hasContent = part.text?.trim().length > 0;
-							const isStreaming = "state" in part && part.state === "streaming";
+					{/* Render message parts */}
+						{messageParts.map((part, index) => {
+							if (!isValidMessagePart(part)) {
+								return null;
+							}
+
+							const { type } = part;
+							const normalizedType = getNormalizedPartType(part);
+							const key = `message-${message.id}-part-${index}`;
+
+							try {
+
+							if (normalizedType === "reasoning") {
+								const reasoningPart = part as { text?: string };
+								if (hasAgentThinkingPanel) {
+									return null;
+							}
+							const hasContent = (reasoningPart.text?.trim().length ?? 0) > 0;
+							const isStreaming = getPartState(part) === "streaming";
 							if (hasContent || isStreaming) {
 								return (
 									<MessageReasoning
 										isLoading={isLoading || isStreaming}
 										key={key}
-										reasoning={part.text || ""}
+										reasoning={reasoningPart.text || ""}
 									/>
 								);
 							}
 						}
 
-						if (type === "text") {
+						if (normalizedType === "text") {
+							const textPart = part as { text?: string };
 							if (mode === "view") {
-								const rawText = sanitizeText(part.text);
+								const rawText = sanitizeText(textPart.text ?? "");
 								const MAX_MSG_CHARS = 15_000;
 								const isHuge = rawText.length > MAX_MSG_CHARS;
 
@@ -324,22 +567,21 @@ const PurePreviewMessage = ({
 							}
 						}
 
-						if (type === "tool-getWeather") {
-							const { toolCallId, state } = part;
-							const approvalId = (part as { approval?: { id: string } })
-								.approval?.id;
+						if (normalizedType === "tool-getWeather") {
+							const toolPart = asToolPart(part);
+							const { toolCallId, state } = toolPart;
+							const approvalId = toolPart.approval?.id;
 							const isDenied =
 								state === "output-denied" ||
 								(state === "approval-responded" &&
-									(part as { approval?: { approved?: boolean } }).approval
-										?.approved === false);
+									toolPart.approval?.approved === false);
 							const widthClass = "w-[min(100%,450px)]";
 
 							if (state === "output-available") {
 								return (
 									<div className={widthClass} key={toolCallId}>
 										<Weather
-											weatherAtLocation={part.output as WeatherAtLocation}
+											weatherAtLocation={toolPart.output as WeatherAtLocation}
 										/>
 									</div>
 								);
@@ -372,7 +614,7 @@ const PurePreviewMessage = ({
 									<div className={widthClass} key={toolCallId}>
 										<Tool className="w-full" defaultOpen={true}>
 											<ToolHeader
-												state={state}
+												state={getSafeToolState(state)}
 												type="tool-getWeather"
 												title="Memeriksa cuaca..."
 												icon={
@@ -380,7 +622,7 @@ const PurePreviewMessage = ({
 												}
 											/>
 											<ToolContent>
-												<ToolInput input={part.input} />
+												<ToolInput input={toolPart.input} />
 											</ToolContent>
 										</Tool>
 									</div>
@@ -389,10 +631,10 @@ const PurePreviewMessage = ({
 
 							return (
 								<div className={widthClass} key={toolCallId}>
-									<Tool className="w-full" defaultOpen={true}>
-										<ToolHeader
-											state={state}
-											type="tool-getWeather"
+										<Tool className="w-full" defaultOpen={true}>
+											<ToolHeader
+												state={getSafeToolState(state)}
+												type="tool-getWeather"
 											title="Memeriksa cuaca..."
 											icon={
 												<CloudRainIcon className="size-4 shrink-0 text-muted-foreground" />
@@ -401,7 +643,7 @@ const PurePreviewMessage = ({
 										<ToolContent>
 											{(state === "input-available" ||
 												state === "approval-requested") && (
-												<ToolInput input={part.input} />
+												<ToolInput input={toolPart.input} />
 											)}
 											{state === "approval-requested" && approvalId && (
 												<div className="flex items-center justify-end gap-2 border-t px-4 py-3">
@@ -438,28 +680,63 @@ const PurePreviewMessage = ({
 							);
 						}
 
+						if (normalizedType === "tool-requestClarification") {
+							const clarificationPart = part as {
+								toolCallId?: string;
+								state?: string;
+								input?: unknown;
+								output?: unknown;
+							};
+							const toolCallId = clarificationPart.toolCallId ?? key;
+							const state = clarificationPart.state;
+							const payload =
+								state === "output-available"
+									? clarificationPart.output
+									: clarificationPart.input;
+							const clarification = isRecord(payload) ? payload : {};
+							const question = getStringValue(
+								clarification.question,
+								"Bisa share detail yang kurang dulu?",
+							);
+
+							return (
+								<div
+									className="flex w-full max-w-[820px] items-start gap-3"
+									key={toolCallId}
+								>
+									<div className="mt-1 flex h-7 w-7 shrink-0 items-center justify-center rounded-full border border-white/[0.10] bg-white/[0.08] text-[11px] font-semibold text-white/55">
+										U
+									</div>
+									<p className="pt-0.5 text-[15px] leading-[1.8] text-white/75">
+										{question}
+									</p>
+								</div>
+							);
+						}
+
 						if (
-							type === "tool-createDocument" ||
-							type === "tool-updateDocument"
+							normalizedType === "tool-createDocument" ||
+							normalizedType === "tool-updateDocument"
 						) {
-							const { toolCallId, state } = part;
+							const toolPart = asToolPart(part);
+							const { toolCallId, state } = toolPart;
 							const toolType =
-								type === "tool-createDocument" ? "create" : "update";
-							const args = part.input as DocumentToolCallArgs;
+								normalizedType === "tool-createDocument" ? "create" : "update";
+							const args = toolPart.input as DocumentToolCallArgs;
 							const title = args && "title" in args ? args.title : "dokumen";
 
 							return (
 								<Tool defaultOpen={true} key={toolCallId}>
 									<ToolHeader
-										state={state}
-										type={type}
+										state={getSafeToolState(state)}
+										type={normalizedType as `tool-${string}`}
 										title={
-											type === "tool-createDocument"
+											normalizedType === "tool-createDocument"
 												? `Membuat dokumen: ${title}`
 												: `Memperbarui dokumen: ${title}`
 										}
 										icon={
-											type === "tool-createDocument" ? (
+											normalizedType === "tool-createDocument" ? (
 												<FileTextIcon className="size-4 shrink-0 text-muted-foreground" />
 											) : (
 												<FileEditIcon className="size-4 shrink-0 text-muted-foreground" />
@@ -471,7 +748,7 @@ const PurePreviewMessage = ({
 											state === "input-available") && (
 											<DocumentToolCall
 												type={toolType}
-												args={part.input as DocumentToolCallArgs}
+												args={toolPart.input as DocumentToolCallArgs}
 												isReadonly={isReadonly}
 											/>
 										)}
@@ -479,7 +756,7 @@ const PurePreviewMessage = ({
 											<DocumentToolResult
 												type={toolType}
 												result={
-													part.output as {
+													toolPart.output as {
 														id: string;
 														title: string;
 														kind: "image" | "text" | "code" | "sheet";
@@ -494,20 +771,21 @@ const PurePreviewMessage = ({
 							);
 						}
 
-						if (type === "tool-startAgentTask") {
-							const { toolCallId, state } = part;
+						if (normalizedType === "tool-startAgentTask") {
+							const toolPart = asToolPart(part);
+							const { toolCallId, state } = toolPart;
 							const payload =
-								state === "output-available" ? part.output : part.input;
+								state === "output-available" ? toolPart.output : toolPart.input;
 							const agentTask = isRecord(payload) ? payload : {};
 							const agentMode =
 								agentTask.mode === "mobile" ? "mobile" : "fullstack";
 							const agentPlan = getStringArray(agentTask.plan);
 
-							return (
-								<Tool defaultOpen={true} key={toolCallId}>
-									<ToolHeader
-										state={state}
-										type="tool-startAgentTask"
+								return (
+									<Tool defaultOpen={true} key={toolCallId}>
+										<ToolHeader
+											state={getSafeToolState(state)}
+											type={"tool-startAgentTask" as `tool-${string}`}
 										title={`Menjalankan tugas agen: ${getStringValue(agentTask.goal, "Analisis")}`}
 										icon={
 											<BotIcon className="size-4 shrink-0 text-muted-foreground" />
@@ -572,10 +850,11 @@ const PurePreviewMessage = ({
 							);
 						}
 
-						if (type === "tool-reportAgentStep") {
-							const { toolCallId, state } = part;
+						if (normalizedType === "tool-reportAgentStep") {
+							const toolPart = asToolPart(part);
+							const { toolCallId, state } = toolPart;
 							const payload =
-								state === "output-available" ? part.output : part.input;
+								state === "output-available" ? toolPart.output : toolPart.input;
 							const step = isRecord(payload) ? payload : {};
 							const stepStatus =
 								step.status === "completed" ? "completed" : "in_progress";
@@ -584,11 +863,11 @@ const PurePreviewMessage = ({
 							const stepCommand =
 								typeof step.command === "string" ? step.command : "";
 
-							return (
-								<Tool defaultOpen={true} key={toolCallId}>
-									<ToolHeader
-										state={state}
-										type="tool-reportAgentStep"
+								return (
+									<Tool defaultOpen={true} key={toolCallId}>
+										<ToolHeader
+											state={getSafeToolState(state)}
+											type={"tool-reportAgentStep" as `tool-${string}`}
 										title={`Langkah agen: ${getStringValue(step.title, "Proses")}`}
 										icon={
 											<PlayIcon className="size-4 shrink-0 text-muted-foreground" />
@@ -674,27 +953,52 @@ const PurePreviewMessage = ({
 						}
 
 						if (
-							type === "tool-listCodeFiles" ||
-							type === "tool-createCodeFile" ||
-							type === "tool-updateCodeFile" ||
-							type === "tool-deleteCodeFile" ||
-							type === "tool-runWorkspaceCommand"
+							normalizedType === "tool-listCodeFiles" ||
+							normalizedType === "tool-listFiles" ||
+							normalizedType === "tool-createCodeFile" ||
+							normalizedType === "tool-createFile" ||
+							normalizedType === "tool-createFolder" ||
+							normalizedType === "tool-updateCodeFile" ||
+							normalizedType === "tool-editFile" ||
+							normalizedType === "tool-deleteCodeFile" ||
+							normalizedType === "tool-readFile" ||
+							normalizedType === "tool-runWorkspaceCommand" ||
+							normalizedType === "tool-runCommand" ||
+							normalizedType === "tool-executeTerminalCommand" ||
+							normalizedType === "tool-installPackage" ||
+							normalizedType === "tool-installDependency"
 						) {
-							const { toolCallId, state } = part;
+							const toolPart = asToolPart(part);
+							const { toolCallId, state } = toolPart;
 							const payload =
-								state === "output-available" ? part.output : part.input;
+								state === "output-available" ? toolPart.output : toolPart.input;
 
-							if (type === "tool-runWorkspaceCommand") {
+							if (
+								normalizedType === "tool-runWorkspaceCommand" ||
+								normalizedType === "tool-runCommand" ||
+								normalizedType === "tool-executeTerminalCommand" ||
+								normalizedType === "tool-installPackage" ||
+								normalizedType === "tool-installDependency" ||
+								normalizedType === "tool-createFolder"
+							) {
 								const commandResult: Record<string, unknown> = isRecord(payload)
 									? payload
 									: {};
+								const packages = getStringArray(commandResult.packages);
+								const commandTitle =
+									normalizedType === "tool-installPackage" ||
+									normalizedType === "tool-installDependency"
+										? `Menginstall: ${packages.join(", ") || "package"}`
+										: normalizedType === "tool-createFolder"
+											? `Membuat folder: ${getStringValue(commandResult.path, "folder")}`
+											: `Menjalankan perintah: ${getStringValue(commandResult.command, "Terminal Command")}`;
 
-								return (
-									<Tool defaultOpen={true} key={toolCallId}>
+									return (
+										<Tool defaultOpen={true} key={toolCallId}>
 										<ToolHeader
-											state={state}
-											type={type}
-											title={`Menjalankan perintah: ${getStringValue(commandResult.command, "Virtual Command")}`}
+											state={getSafeToolState(state)}
+											type={normalizedType as `tool-${string}`}
+										title={commandTitle}
 											icon={
 												<TerminalIcon className="size-4 shrink-0 text-muted-foreground" />
 											}
@@ -708,7 +1012,9 @@ const PurePreviewMessage = ({
 													</div>
 													{getStringValue(
 														commandResult.command,
-														"Unavailable command",
+														packages.length
+															? `npm install ${packages.join(" ")}`
+															: "Unavailable command",
 													)}
 												</div>
 												<div className="rounded-xl border bg-muted/40 p-3 text-sm text-foreground">
@@ -744,39 +1050,55 @@ const PurePreviewMessage = ({
 
 							const titleMap: Record<string, string> = {
 								"tool-listCodeFiles": "Membaca file workspace",
+								"tool-listFiles": "Membaca file workspace",
 								"tool-createCodeFile": "Membuat file baru",
+								"tool-createFile": "Membuat file baru",
 								"tool-updateCodeFile": "Memperbarui file",
+								"tool-editFile": "Memperbarui file",
 								"tool-deleteCodeFile": "Menghapus file",
+								"tool-readFile": "Membaca file",
 							};
 
 							const iconMap: Record<string, React.ReactNode> = {
 								"tool-listCodeFiles": (
 									<FileCodeIcon className="size-4 shrink-0 text-muted-foreground" />
 								),
+								"tool-listFiles": (
+									<FileCodeIcon className="size-4 shrink-0 text-muted-foreground" />
+								),
 								"tool-createCodeFile": (
+									<FileTextIcon className="size-4 shrink-0 text-muted-foreground" />
+								),
+								"tool-createFile": (
 									<FileTextIcon className="size-4 shrink-0 text-muted-foreground" />
 								),
 								"tool-updateCodeFile": (
 									<FileEditIcon className="size-4 shrink-0 text-muted-foreground" />
 								),
+								"tool-editFile": (
+									<FileEditIcon className="size-4 shrink-0 text-muted-foreground" />
+								),
 								"tool-deleteCodeFile": (
 									<TrashIcon className="size-4 shrink-0 text-muted-foreground" />
 								),
+								"tool-readFile": (
+									<FileCodeIcon className="size-4 shrink-0 text-muted-foreground" />
+								),
 							};
 
-							return (
-								<Tool defaultOpen={true} key={toolCallId}>
-									<ToolHeader
-										state={state}
-										type={type}
-										title={titleMap[type] ?? "Aksi Workspace"}
-										icon={iconMap[type]}
+								return (
+									<Tool defaultOpen={true} key={toolCallId}>
+										<ToolHeader
+											state={getSafeToolState(state)}
+											type={normalizedType as `tool-${string}`}
+										title={titleMap[normalizedType] ?? "Aksi Workspace"}
+										icon={iconMap[normalizedType]}
 									/>
 									<ToolContent>
 										<div className="space-y-3 px-4 py-4">
 											<div className="flex items-center gap-2 text-sm font-medium text-foreground">
 												<LucideSparklesIcon className="size-4 text-cyan-500" />
-												<span>{titleMap[type] ?? "Workspace Action"}</span>
+												<span>{titleMap[normalizedType] ?? "Workspace Action"}</span>
 											</div>
 
 											{typeof workspacePayload.path === "string" && (
@@ -820,13 +1142,14 @@ const PurePreviewMessage = ({
 							);
 						}
 
-						if (type === "tool-requestSuggestions") {
-							const { toolCallId, state } = part;
+						if (normalizedType === "tool-requestSuggestions") {
+							const toolPart = asToolPart(part);
+							const { toolCallId, state } = toolPart;
 
 							return (
 								<Tool defaultOpen={true} key={toolCallId}>
 									<ToolHeader
-										state={state}
+										state={getSafeToolState(state)}
 										type="tool-requestSuggestions"
 										title="Mencari saran perbaikan..."
 										icon={
@@ -835,12 +1158,12 @@ const PurePreviewMessage = ({
 									/>
 									<ToolContent>
 										{state === "input-available" && (
-											<ToolInput input={part.input} />
+											<ToolInput input={toolPart.input} />
 										)}
 										{state === "output-available" &&
 											(() => {
 												const suggestionOutput =
-													part.output as DocumentToolResultData;
+													toolPart.output as DocumentToolResultData;
 
 												return (
 													<ToolOutput
@@ -864,10 +1187,30 @@ const PurePreviewMessage = ({
 									</ToolContent>
 								</Tool>
 							);
-						}
+							}
 
-						return null;
-					})}
+							return null;
+							} catch (error) {
+								console.error("[PreviewMessage] Failed to render part", {
+									error,
+									messageId: message.id,
+									part,
+									partIndex: index,
+								});
+								return null;
+							}
+						})}
+
+					{!hasTextPart && fallbackContent.trim() ? (
+						<MessageTextPart
+							rawText={sanitizeText(fallbackContent)}
+							isHuge={fallbackContent.length > 15_000}
+							maxChars={15_000}
+							messageRole={message.role}
+							isLoading={isLoading}
+							hasAnyArtifact={hasAnyArtifact}
+						/>
+					) : null}
 
 					{/* Render tool events injected via message annotations */}
 					{message.annotations?.map((annotation, index) => {
@@ -931,12 +1274,24 @@ const PurePreviewMessage = ({
 						return null;
 					})}
 
+					{timestamp ? (
+						<div
+							className={cn(
+								"mt-1 text-[10px] text-white/20 opacity-0 transition-opacity duration-200 group-hover/message:opacity-100 group-focus-within/message:opacity-100",
+								message.role === "user" ? "text-right" : "text-left",
+							)}
+						>
+							{timestamp}
+						</div>
+					) : null}
+
 					{!isReadonly && (
 						<MessageActions
 							chatId={chatId}
 							isLoading={isLoading}
 							key={`action-${message.id}`}
 							message={message}
+							regenerate={regenerate}
 							setMode={setMode}
 							vote={vote}
 						/>
@@ -956,21 +1311,44 @@ export const ThinkingMessage = () => {
 			data-role="assistant"
 			data-testid="message-assistant-loading"
 		>
-			<div className="mx-auto flex w-full max-w-3xl flex-col gap-4">
-				<div className="mt-0.5 flex size-6 shrink-0 items-center justify-center rounded-full text-violet-500 dark:text-violet-400">
-					<div className="relative flex items-center justify-center">
-						<span className="absolute inline-flex size-4 animate-ping rounded-full bg-violet-400/25 dark:bg-violet-500/15" />
-						<SparklesIcon
-							size={14}
-							className="relative animate-spin"
-							style={{ animationDuration: "3s" }}
-						/>
-					</div>
+			<div className="mx-auto flex w-full max-w-[680px] items-start gap-3">
+				<div className="mt-0.5 flex size-6 shrink-0 items-center justify-center rounded-full bg-white/[0.08] text-[10px] font-medium text-white/55">
+					U
 				</div>
 
-				<div className="flex items-center gap-2 text-xs text-muted-foreground">
-					<LoaderIcon className="size-3.5 animate-spin" />
-					<span className="font-medium">Thinking...</span>
+				<div className="min-w-0 flex-1">
+					<AgentThinkingPanel
+						status="thinking"
+						steps={[
+							{
+								id: "analyze",
+								type: "thought",
+								label: "Menganalisis permintaan",
+								status: "running",
+							},
+							{
+								id: "context",
+								type: "thought",
+								label: "Memeriksa konteks sebelumnya",
+								status: "pending",
+							},
+							{
+								id: "plan",
+								type: "thought",
+								label: "Menyusun rencana eksekusi",
+								status: "pending",
+							},
+						]}
+					/>
+					<div className="mt-3 flex items-center gap-1.5 pl-1 text-white/25">
+						{[0, 1, 2].map((dot) => (
+							<span
+								className="size-1.5 animate-[typing-dot_1s_ease-in-out_infinite] rounded-full bg-white/35"
+								key={dot}
+								style={{ animationDelay: `${dot * 0.16}s` }}
+							/>
+						))}
+					</div>
 				</div>
 			</div>
 		</div>

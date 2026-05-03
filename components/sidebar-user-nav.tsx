@@ -7,13 +7,11 @@ import {
 	LogOut,
 	MessageCircle,
 	Moon,
-	MoreVertical,
 	Settings,
 	Smartphone,
 	Sun,
 	User as UserIcon,
 } from "lucide-react";
-import Image from "next/image";
 import { useRouter } from "next/navigation";
 import type { User } from "next-auth";
 import { signOut, useSession } from "next-auth/react";
@@ -33,7 +31,6 @@ import {
 	TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { guestRegex } from "@/lib/constants";
-import { CreditBalanceBadge } from "./credit-balance-badge";
 import { LoaderIcon } from "./icons";
 import { ProfileEditDialog } from "./profile-edit-dialog";
 import { toast } from "./toast";
@@ -114,21 +111,21 @@ export function SidebarUserNav({
 
 	return (
 		<SidebarMenu>
-			<SidebarMenuItem className="group relative flex w-full flex-row items-center border-t border-black/6 px-2 py-2 dark:border-white/10">
+			<SidebarMenuItem className="group relative flex w-full flex-row items-center border-t border-white/[0.06] px-2 py-2">
 				<DropdownMenu>
 					<DropdownMenuTrigger asChild>
 						{status === "loading" ? (
 							<div
-								className={`flex items-center gap-3 rounded-lg p-3 transition-colors hover:bg-black/4 dark:hover:bg-white/6 ${isCollapsed ? "w-full justify-center" : "w-full"}`}
+								className={`flex items-center gap-3 rounded-lg p-3 transition-colors hover:bg-white/6 ${isCollapsed ? "w-full justify-center" : "w-full"}`}
 							>
-								<div className="size-10 animate-pulse rounded-full bg-zinc-200 dark:bg-zinc-500/30 shrink-0" />
+								<div className="size-9 animate-pulse rounded-full bg-white/10 shrink-0" />
 								{!isCollapsed && (
 									<>
 										<div className="flex-1 min-w-0">
-											<div className="h-4 w-24 animate-pulse rounded bg-zinc-200 dark:bg-zinc-500/30 mb-1" />
-											<div className="h-3 w-32 animate-pulse rounded bg-zinc-200 dark:bg-zinc-500/30" />
+											<div className="mb-1 h-4 w-24 animate-pulse rounded bg-white/10" />
+											<div className="h-3 w-32 animate-pulse rounded bg-white/10" />
 										</div>
-										<div className="animate-spin text-zinc-400 dark:text-zinc-500 shrink-0">
+										<div className="shrink-0 animate-spin text-white/35">
 											<LoaderIcon />
 										</div>
 									</>
@@ -138,18 +135,14 @@ export function SidebarUserNav({
 							<Tooltip>
 								<TooltipTrigger asChild>
 									<button
-										className="flex w-full items-center justify-center rounded-lg p-2.5 transition-colors cursor-pointer group hover:bg-black/4 dark:hover:bg-white/6"
+										className="group flex w-full cursor-pointer items-center justify-center rounded-md p-2 transition-colors hover:bg-white/[0.04]"
 										data-testid="user-nav-button"
 										type="button"
 									>
-										<div className="relative shrink-0">
-											<Image
-												alt={user.email ?? "User Avatar"}
-												className="rounded-full ring-2 ring-zinc-200 dark:ring-white/10"
-												height={40}
-												src={`https://ui-avatars.com/api/?name=${user.email}&background=random`}
-												width={40}
-											/>
+										<div className="flex size-7 shrink-0 items-center justify-center rounded-full bg-white/10 text-[10px] font-medium text-white/55">
+											{(data?.user?.name || user?.email || "U")
+												.charAt(0)
+												.toUpperCase()}
 										</div>
 									</button>
 								</TooltipTrigger>
@@ -170,74 +163,52 @@ export function SidebarUserNav({
 							</Tooltip>
 						) : (
 							<button
-								className="flex flex-1 items-center gap-3 rounded-lg p-3 transition-colors cursor-pointer group hover:bg-black/4 dark:hover:bg-white/6"
+								className="group flex flex-1 cursor-pointer items-center gap-2.5 rounded-md p-2.5 transition-colors hover:bg-white/[0.04]"
 								data-testid="user-nav-button"
 								type="button"
 							>
-								<div className="relative shrink-0">
-									<Image
-										alt={user.email ?? "User Avatar"}
-										className="rounded-full ring-2 ring-zinc-200 dark:ring-white/10"
-										height={40}
-										src={`https://ui-avatars.com/api/?name=${user.email}&background=random`}
-										width={40}
-									/>
+								<div className="flex size-6 shrink-0 items-center justify-center rounded-full bg-white/10 text-[10px] font-medium text-white/55">
+									{(data?.user?.name || user?.email || "U")
+										.charAt(0)
+										.toUpperCase()}
 								</div>
 								<div className="flex-1 min-w-0 text-left">
-									<div className="mb-0.5 flex items-center gap-2">
-										<div className="truncate text-sm font-semibold text-[#241a12] dark:text-[#f5efe8]">
-											{isGuest
-												? "Guest User"
-												: data?.user?.name ||
-													user?.email?.split("@")[0] ||
-													"User"}
-										</div>
-										{!isGuest && (
-											<span
-												className={`shrink-0 rounded-md border px-1.5 py-0.5 text-[10px] font-bold ${
-													user?.type === "pro"
-														? "border-[#d4a06e]/30 bg-[#d4a06e]/12 text-[#9f6440] dark:border-[#d4a06e]/30 dark:bg-[#d4a06e]/12 dark:text-[#f0c499]"
-														: "border-black/8 bg-transparent text-[#8a7869] dark:border-white/10 dark:text-[#9a8979]"
-												}`}
-											>
-												{user?.type === "pro" ? "PRO" : "FREE"}
-											</span>
-										)}
+									<div className="mb-0.5 truncate text-[12px] font-medium text-white/58">
+										{isGuest
+											? "Guest User"
+											: data?.user?.name ||
+												user?.email?.split("@")[0] ||
+												"User"}
 									</div>
-									<div className="truncate text-xs text-[#8a7869] dark:text-[#9a8979]">
+									<div className="truncate text-[12px] text-white/38">
 										{isGuest ? "Not logged in" : user?.email}
 									</div>
-									{!isGuest ? (
-										<div className="mt-2.5">
-											<CreditBalanceBadge compact />
-										</div>
-									) : null}
 								</div>
-								<MoreVertical className="h-5 w-5 shrink-0 text-[#8a7869] transition-colors group-hover:text-[#241a12] dark:text-[#9a8979] dark:group-hover:text-[#f5efe8]" />
+								<Settings className="h-3.5 w-3.5 shrink-0 text-white/22 transition-colors group-hover:text-white/50" />
 							</button>
 						)}
 					</DropdownMenuTrigger>
 					<DropdownMenuContent
 						align="end"
-						className="w-(--radix-popper-anchor-width) min-w-50 rounded-2xl border border-zinc-200 bg-white/98 shadow-[0_20px_44px_rgba(18,20,22,0.12)] backdrop-blur-xl dark:border-zinc-800 dark:bg-zinc-900/98"
+						className="w-(--radix-popper-anchor-width) min-w-50 rounded-xl border border-white/[0.08] bg-[#111111] p-1 text-white/78 shadow-[0_18px_40px_rgba(0,0,0,0.35)]"
 						data-testid="user-nav-menu"
 						side="top"
 					>
 						{isAdmin && (
 							<>
 								<DropdownMenuItem
-									className="cursor-pointer gap-2 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-lg focus:bg-zinc-100 dark:focus:bg-zinc-800"
+									className="cursor-pointer gap-2 rounded-md text-white/72 focus:bg-white/[0.06] focus:text-white hover:bg-white/[0.06] hover:text-white"
 									onSelect={() => router.push("/admin")}
 								>
 									<LayoutDashboard className="h-4 w-4" />
 									Admin Panel
 								</DropdownMenuItem>
-								<DropdownMenuSeparator className="bg-zinc-200 dark:bg-zinc-800" />
+								<DropdownMenuSeparator className="bg-white/[0.06]" />
 							</>
 						)}
 
 						<DropdownMenuItem
-							className="cursor-pointer gap-2 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-lg focus:bg-zinc-100 dark:focus:bg-zinc-800"
+							className="cursor-pointer gap-2 rounded-md text-white/72 focus:bg-white/[0.06] focus:text-white hover:bg-white/[0.06] hover:text-white"
 							onSelect={() => window.open("/app-release.apk", "_blank")}
 						>
 							<Smartphone className="h-4 w-4" />
@@ -245,7 +216,7 @@ export function SidebarUserNav({
 						</DropdownMenuItem>
 
 						<DropdownMenuItem
-							className="cursor-pointer gap-2 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-lg focus:bg-zinc-100 dark:focus:bg-zinc-800"
+							className="cursor-pointer gap-2 rounded-md text-white/72 focus:bg-white/[0.06] focus:text-white hover:bg-white/[0.06] hover:text-white"
 							onSelect={() => window.open(apiConsoleUrl, "_blank")}
 						>
 							<KeyRound className="h-4 w-4" />
@@ -255,7 +226,7 @@ export function SidebarUserNav({
 						{!isGuest && <ProfileEditDialog />}
 
 						<DropdownMenuItem
-							className="cursor-pointer gap-2 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-lg focus:bg-zinc-100 dark:focus:bg-zinc-800"
+							className="cursor-pointer gap-2 rounded-md text-white/72 focus:bg-white/[0.06] focus:text-white hover:bg-white/[0.06] hover:text-white"
 							onSelect={() => router.push("/settings")}
 						>
 							<Settings className="h-4 w-4" />
@@ -263,7 +234,7 @@ export function SidebarUserNav({
 						</DropdownMenuItem>
 
 						<DropdownMenuItem
-							className="cursor-pointer gap-2 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-lg focus:bg-zinc-100 dark:focus:bg-zinc-800"
+							className="cursor-pointer gap-2 rounded-md text-white/72 focus:bg-white/[0.06] focus:text-white hover:bg-white/[0.06] hover:text-white"
 							data-testid="user-nav-item-theme"
 							onSelect={() =>
 								setTheme(resolvedTheme === "dark" ? "light" : "dark")
@@ -278,7 +249,7 @@ export function SidebarUserNav({
 						</DropdownMenuItem>
 
 						<DropdownMenuItem
-							className="cursor-pointer gap-2 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-lg focus:bg-zinc-100 dark:focus:bg-zinc-800"
+							className="cursor-pointer gap-2 rounded-md text-white/72 focus:bg-white/[0.06] focus:text-white hover:bg-white/[0.06] hover:text-white"
 							onSelect={() =>
 								window.open("https://t.me/+CQR8SWdH5nE2OTdk", "_blank")
 							}
@@ -345,7 +316,7 @@ export function SidebarUserNav({
 							<button
 								type="button"
 								onClick={handleInstallClick}
-								className="absolute right-12 top-1/2 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-xl text-zinc-500 transition-colors hover:bg-zinc-200 hover:text-zinc-900 cursor-pointer dark:text-zinc-400 dark:hover:bg-zinc-700 dark:hover:text-white"
+								className="absolute top-1/2 right-12 flex h-8 w-8 -translate-y-1/2 cursor-pointer items-center justify-center rounded-lg text-white/35 transition-colors hover:bg-white/6 hover:text-white/75"
 							>
 								<Download className="h-4 w-4" />
 							</button>

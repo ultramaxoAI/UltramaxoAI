@@ -106,13 +106,13 @@ const PureChatItem = ({
 			>
 				<SidebarMenuButton
 					asChild
-					className="rounded-[1.15rem] text-[#41453f] transition-all hover:bg-white/76 hover:text-[#171717] data-[active=true]:bg-white/88 data-[active=true]:text-[#171717] data-[active=true]:shadow-[0_12px_28px_rgba(18,20,22,0.05)] dark:text-[#b8beb8] dark:hover:bg-white/5 dark:hover:text-[#f3f4f1] dark:data-[active=true]:bg-[#1a1f25] dark:data-[active=true]:text-[#f3f4f1] dark:data-[active=true]:shadow-[inset_0_1px_0_rgba(255,255,255,0.03)]"
+					className="rounded-lg text-white/55 transition-colors hover:bg-white/5 hover:text-white/80 data-[active=true]:bg-white/6 data-[active=true]:text-white/85"
 					isActive={isActive}
 				>
 					<Link href={`/chat/${chat.id}`} onClick={() => setOpenMobile(false)}>
 						<div className="flex min-w-0 flex-col gap-1 py-1">
 							<div className="flex items-center gap-1.5">
-								<span className="truncate text-[13.5px] font-medium">
+								<span className="truncate text-[13px] font-medium">
 									{chat.title}
 								</span>
 								{chat.isPinned ? (
@@ -121,16 +121,16 @@ const PureChatItem = ({
 							</div>
 							{chat.folder ||
 							(Array.isArray(chat.tags) && chat.tags.length > 0) ? (
-								<div className="flex min-w-0 flex-wrap gap-1 text-[10px] text-[#7a807a] dark:text-[#8f9790]">
+								<div className="flex min-w-0 flex-wrap gap-1 text-[10px] text-white/30">
 									{chat.folder ? (
-										<span className="rounded-full bg-black/5 px-2 py-0.5 dark:bg-white/7">
+										<span className="rounded-full bg-white/5 px-2 py-0.5">
 											{chat.folder}
 										</span>
 									) : null}
 									{Array.isArray(chat.tags)
 										? chat.tags.slice(0, 2).map((tag) => (
 												<span
-													className="rounded-full bg-black/5 px-2 py-0.5 dark:bg-white/7"
+													className="rounded-full bg-white/5 px-2 py-0.5"
 													key={tag}
 												>
 													#{tag}
@@ -146,7 +146,7 @@ const PureChatItem = ({
 				<DropdownMenu modal={true}>
 					<DropdownMenuTrigger asChild>
 						<SidebarMenuAction
-							className="mr-0.5 rounded-xl data-[state=open]:bg-white/70 data-[state=open]:text-[#171717] dark:data-[state=open]:bg-white/7 dark:data-[state=open]:text-[#f3f4f1]"
+							className="mr-0.5 rounded-lg text-white/35 data-[state=open]:bg-white/7 data-[state=open]:text-white/85"
 							showOnHover={!isActive}
 						>
 							<MoreHorizontalIcon />

@@ -9,14 +9,11 @@ import {
 	resolveExistingUserId,
 	saveDocument,
 } from "@backend/db/queries";
+import type { UIMessageStreamWriter } from "ai";
 import type { Session } from "next-auth";
 import { z } from "zod";
 import { ChatSDKError } from "@/lib/errors";
-
-type WorkspaceStreamChunk =
-	| { type: "data-clear"; data: null }
-	| { type: "data-codeDelta"; data: string }
-	| { type: "data-finish"; data: null };
+import type { ChatMessage } from "@/lib/types";
 
 const isDevelopment = process.env.NODE_ENV === "development";
 
@@ -50,10 +47,51 @@ async function streamCodeSnapshot(
 
 type ToolContext = {
 	session: Session | null;
-	dataStream: { write: (chunk: any) => void };
+	dataStream: Pick<UIMessageStreamWriter<ChatMessage>, "write">;
 	getDocumentId?: () => string | undefined;
 	setDocumentId?: (id: string) => void;
 };
+
+type LoadedCodeDocument = Awaited<ReturnType<typeof loadCodeDocument>>;
+type FallbackCodeDocument = { title: string; content: string };
+
+function emitAgentToolStart(
+	dataStream: ToolContext["dataStream"],
+	tool: string,
+	input: unknown,
+	id = `${tool}-${Date.now()}`,
+) {
+	dataStream.write({
+		type: "data-agent-tool_start",
+		data: {
+			id,
+			tool,
+			label: tool,
+			input,
+		},
+	});
+}
+
+function emitAgentToolDone(
+	dataStream: ToolContext["dataStream"],
+	tool: string,
+	input: unknown,
+	output: unknown,
+	status: "done" | "error" = "done",
+	id = `${tool}-${Date.now()}`,
+) {
+	dataStream.write({
+		type: "data-agent-tool_done",
+		data: {
+			id,
+			tool,
+			label: tool,
+			input,
+			output,
+			status,
+		},
+	});
+}
 
 async function getEffectiveSessionUserId(session: Session | null) {
 	if (!session?.user) {
@@ -70,7 +108,7 @@ async function getOrAutoCreateDocumentId(
 	documentId: string | undefined,
 	getDocumentId: (() => string | undefined) | undefined,
 	setDocumentId: ((id: string) => void) | undefined,
-	dataStream: { write: (chunk: any) => void },
+	dataStream: ToolContext["dataStream"],
 	userId: string,
 ): Promise<string> {
 	let idToUse = documentId || getDocumentId?.();
@@ -91,7 +129,6 @@ async function getOrAutoCreateDocumentId(
 		dataStream.write({ type: "data-id", data: idToUse });
 		dataStream.write({ type: "data-title", data: "Workspace" });
 		dataStream.write({ type: "data-kind", data: "code" });
-		await streamCodeSnapshot(dataStream, "");
 	}
 	return idToUse;
 }
@@ -175,7 +212,7 @@ export const listCodeFiles = ({
 			);
 			console.log("[Tool listCodeFiles] Evaluated idToUse:", idToUse);
 
-			let document;
+			let document: LoadedCodeDocument | FallbackCodeDocument;
 			try {
 				document = await loadCodeDocument(idToUse, effectiveUserId);
 				console.log(
@@ -269,7 +306,7 @@ export const createCodeFile = ({
 			);
 			console.log("[Tool createCodeFile] Evaluated idToUse:", idToUse);
 
-			let document;
+			let document: LoadedCodeDocument | FallbackCodeDocument;
 			try {
 				document = await loadCodeDocument(idToUse, effectiveUserId);
 				console.log(
@@ -374,7 +411,7 @@ export const updateCodeFile = ({
 			);
 			console.log("[Tool updateCodeFile] Evaluated idToUse:", idToUse);
 
-			let document;
+			let document: LoadedCodeDocument | FallbackCodeDocument;
 			try {
 				document = await loadCodeDocument(idToUse, effectiveUserId);
 				console.log(
@@ -461,7 +498,7 @@ export const deleteCodeFile = ({
 			);
 			console.log("[Tool deleteCodeFile] Evaluated idToUse:", idToUse);
 
-			let document;
+			let document: LoadedCodeDocument | FallbackCodeDocument;
 			try {
 				document = await loadCodeDocument(idToUse, effectiveUserId);
 				console.log(
@@ -530,20 +567,33 @@ export const executeTerminalCommand = ({
 		command: string;
 		purpose: string;
 	}) => {
+		const stepId = `run_command-${Date.now()}`;
+		emitAgentToolStart(dataStream, "run_command", { command, purpose }, stepId);
 		// Emit the command to the frontend data stream
-		(dataStream as { write: (chunk: any) => void }).write({
+		dataStream.write({
 			type: "data-terminal-command",
 			data: JSON.stringify({ command, purpose }),
 		});
 
-		return {
+		const output = {
 			command,
 			purpose,
 			status: "dispatched",
 			note: "Command sent to WebContainer for execution. Output will appear in the terminal.",
 		};
+		emitAgentToolDone(
+			dataStream,
+			"run_command",
+			{ command, purpose },
+			output,
+			"done",
+			stepId,
+		);
+		return output;
 	},
 });
+
+export const runCommand = executeTerminalCommand;
 
 /**
  * Install npm packages in the WebContainer.
@@ -570,17 +620,121 @@ export const installDependency = ({
 		packages: string[];
 		purpose: string;
 	}) => {
-		(dataStream as { write: (chunk: any) => void }).write({
+		const stepId = `install_package-${Date.now()}`;
+		emitAgentToolStart(
+			dataStream,
+			"install_package",
+			{ packages, purpose },
+			stepId,
+		);
+		dataStream.write({
 			type: "data-install-package",
 			data: JSON.stringify({ packages, purpose }),
 		});
 
-		return {
+		const output = {
 			packages,
 			purpose,
 			status: "dispatched",
 			note: "Package installation sent to WebContainer.",
 		};
+		emitAgentToolDone(
+			dataStream,
+			"install_package",
+			{ packages, purpose },
+			output,
+			"done",
+			stepId,
+		);
+		return output;
+	},
+});
+
+export const installPackage = installDependency;
+
+export const createFile = createCodeFile;
+export const editFile = updateCodeFile;
+export const listFiles = listCodeFiles;
+
+export const readFile = ({
+	session,
+	dataStream,
+	getDocumentId,
+	setDocumentId,
+}: ToolContext) => ({
+	description: "Read a file from the current virtual workspace artifact.",
+	inputSchema: z.object({
+		documentId: z.string().nullish().describe("Workspace document id"),
+		path: z.string().min(1).describe("File path to read"),
+	}),
+	execute: async ({
+		documentId,
+		path,
+	}: {
+		documentId?: string | null;
+		path: string;
+	}) => {
+		const stepId = `read_file-${Date.now()}`;
+		emitAgentToolStart(dataStream, "read_file", { documentId, path }, stepId);
+		const effectiveUserId = await getEffectiveSessionUserId(session);
+		if (!effectiveUserId) {
+			throw new ChatSDKError("unauthorized:document");
+		}
+		const idToUse = await getOrAutoCreateDocumentId(
+			documentId || undefined,
+			getDocumentId,
+			setDocumentId,
+			dataStream,
+			effectiveUserId,
+		);
+		const document = await loadCodeDocument(idToUse, effectiveUserId);
+		const file = parseArtifactCodeFiles(document.content ?? "").find(
+			(item) => item.name === path,
+		);
+		const output = {
+			documentId: idToUse,
+			path,
+			content: file?.content ?? "",
+			found: Boolean(file),
+		};
+		emitAgentToolDone(
+			dataStream,
+			"read_file",
+			{ documentId, path },
+			output,
+			"done",
+			stepId,
+		);
+		return output;
+	},
+});
+
+export const createFolder = ({
+	dataStream,
+}: Pick<ToolContext, "dataStream">) => ({
+	description:
+		"Create a folder in the WebContainer terminal. Use before shell-based project setup when needed.",
+	inputSchema: z.object({
+		path: z.string().min(1).describe("Folder path to create"),
+	}),
+	execute: async ({ path }: { path: string }) => {
+		const command = `mkdir -p ${JSON.stringify(path)}`;
+		const stepId = `create_folder-${Date.now()}`;
+		emitAgentToolStart(dataStream, "create_folder", { path }, stepId);
+		dataStream.write({
+			type: "data-terminal-command",
+			data: JSON.stringify({ command, purpose: `Create folder ${path}` }),
+		});
+		const output = { path, command, status: "dispatched" };
+		emitAgentToolDone(
+			dataStream,
+			"create_folder",
+			{ path },
+			output,
+			"done",
+			stepId,
+		);
+		return output;
 	},
 });
 
@@ -597,7 +751,7 @@ export const startPreviewServer = ({
 		purpose: z.string().min(1).describe("Why the dev server is being started"),
 	}),
 	execute: async ({ purpose }: { purpose: string }) => {
-		(dataStream as { write: (chunk: any) => void }).write({
+		dataStream.write({
 			type: "data-start-dev-server",
 			data: JSON.stringify({ purpose }),
 		});

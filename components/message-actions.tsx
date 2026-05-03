@@ -1,12 +1,14 @@
+import type { UseChatHelpers } from "@ai-sdk/react";
 import type { Vote } from "@backend/db/schema";
 import equal from "fast-deep-equal";
+import { Copy, RefreshCw, ThumbsDown, ThumbsUp } from "lucide-react";
 import { memo } from "react";
 import { toast } from "sonner";
 import { useSWRConfig } from "swr";
 import { useCopyToClipboard } from "usehooks-ts";
 import type { ChatMessage } from "@/lib/types";
 import { Action, Actions } from "./elements/actions";
-import { CopyIcon, PencilEditIcon, ThumbDownIcon, ThumbUpIcon } from "./icons";
+import { CopyIcon, PencilEditIcon } from "./icons";
 
 export function PureMessageActions({
 	chatId,
@@ -14,12 +16,14 @@ export function PureMessageActions({
 	vote,
 	isLoading,
 	setMode,
+	regenerate,
 }: {
 	chatId: string;
 	message: ChatMessage;
 	vote: Vote | undefined;
 	isLoading: boolean;
 	setMode?: (mode: "view" | "edit") => void;
+	regenerate?: UseChatHelpers<ChatMessage>["regenerate"];
 }) {
 	const { mutate } = useSWRConfig();
 	const [_, copyToClipboard] = useCopyToClipboard();
@@ -91,12 +95,9 @@ export function PureMessageActions({
 	}
 
 	return (
-		<Actions className="-ml-0.5 mt-1 opacity-100 md:opacity-0 md:transition-opacity md:group-hover/message:opacity-100 md:focus-within:opacity-100">
-			<Action onClick={handleCopy} tooltip="Copy">
-				<CopyIcon />
-			</Action>
-
-			<Action
+		<div className="mt-2 flex flex-wrap items-center gap-1 opacity-100 transition-opacity duration-200 md:opacity-0 md:group-hover/message:opacity-100 md:focus-within:opacity-100">
+			<button
+				className="inline-flex items-center gap-1.5 rounded-full px-2 py-1 text-[11px] text-white/30 transition-colors hover:bg-white/6 hover:text-white/60 disabled:opacity-40"
 				data-testid="message-upvote"
 				disabled={vote?.isUpvoted}
 				onClick={() => {
@@ -140,12 +141,14 @@ export function PureMessageActions({
 						error: "Failed to upvote response.",
 					});
 				}}
-				tooltip="Upvote Response"
+				type="button"
 			>
-				<ThumbUpIcon />
-			</Action>
+				<ThumbsUp className="size-3" />
+				Helpful
+			</button>
 
-			<Action
+			<button
+				className="inline-flex items-center gap-1.5 rounded-full px-2 py-1 text-[11px] text-white/30 transition-colors hover:bg-white/6 hover:text-white/60 disabled:opacity-40"
 				data-testid="message-downvote"
 				disabled={vote && !vote.isUpvoted}
 				onClick={() => {
@@ -189,11 +192,32 @@ export function PureMessageActions({
 						error: "Failed to downvote response.",
 					});
 				}}
-				tooltip="Downvote Response"
+				type="button"
 			>
-				<ThumbDownIcon />
-			</Action>
-		</Actions>
+				<ThumbsDown className="size-3" />
+				Not helpful
+			</button>
+
+			<button
+				className="inline-flex items-center gap-1.5 rounded-full px-2 py-1 text-[11px] text-white/30 transition-colors hover:bg-white/6 hover:text-white/60"
+				onClick={handleCopy}
+				type="button"
+			>
+				<Copy className="size-3" />
+				Copy
+			</button>
+
+			{regenerate ? (
+				<button
+					className="inline-flex items-center gap-1.5 rounded-full px-2 py-1 text-[11px] text-white/30 transition-colors hover:bg-white/6 hover:text-white/60"
+					onClick={() => regenerate()}
+					type="button"
+				>
+					<RefreshCw className="size-3" />
+					Regenerate
+				</button>
+			) : null}
+		</div>
 	);
 }
 

@@ -32,7 +32,7 @@ export const postRequestBodySchema = z.object({
 	id: z.string().uuid(),
 	// Either a single new message or all messages (for tool approvals)
 	message: userMessageSchema.optional(),
-	messages: z.array(messageSchema).optional(),
+	messages: z.array(messageSchema).max(8).optional(),
 	selectedChatModel: z.string(),
 	selectedVisibilityType: z.enum(["public", "private"]),
 	wormgptEnabled: z.boolean().optional(),

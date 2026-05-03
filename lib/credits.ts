@@ -8,8 +8,8 @@ export const CREDIT_COSTS = {
 	agentExecution: 12,
 } as const;
 
-export const FREE_CREDIT_ALLOWANCE = 10;
-export const PRO_CREDIT_ALLOWANCE = 120;
+export const FREE_CREDIT_ALLOWANCE = 30;
+export const PRO_CREDIT_ALLOWANCE = 500;
 export const FREE_CREDIT_RESET_DAYS = 2;
 export const PRO_CREDIT_RESET_DAYS = 1;
 

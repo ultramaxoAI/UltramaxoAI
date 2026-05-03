@@ -1,15 +1,6 @@
 "use client";
 
-import {
-	Edit3,
-	Menu,
-	MoreVertical,
-	Share2,
-	Sparkles,
-	Trash2,
-} from "lucide-react";
-import Link from "next/link";
-import type { User } from "next-auth";
+import { Edit3, MoreHorizontal, PanelLeft, Share2, Trash2 } from "lucide-react";
 import { memo, useState } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -29,13 +20,12 @@ function PureChatContextHeader({
 	selectedVisibilityType,
 	isReadonly,
 	chatTitle = "Untitled Chat",
-	user,
 }: {
 	chatId: string;
 	selectedVisibilityType: VisibilityType;
 	isReadonly: boolean;
 	chatTitle?: string;
-	user?: User;
+	user?: { id?: string };
 }) {
 	const [isMenuOpen, setIsMenuOpen] = useState(false);
 	const { setOpenMobile, isMobile, openMobile } = useSidebar();
@@ -108,93 +98,90 @@ function PureChatContextHeader({
 	};
 
 	return (
-		<div className="flex items-center justify-between gap-3 rounded-lg border border-[#171717]/8 bg-[rgba(255,255,255,0.72)] px-2 py-1.5 shadow-[0_8px_18px_rgba(18,20,22,0.04)] backdrop-blur-xl dark:border-white/8 dark:bg-[rgba(18,21,25,0.78)] dark:shadow-none">
-			<div className="flex items-center gap-2">
-				{isMobile && (
-					<Button
-						className="h-9 w-9 rounded-full bg-transparent p-0 text-[#5f6258] hover:bg-black/4 hover:text-[#171717] dark:text-[#a6aca6] dark:hover:bg-white/6 dark:hover:text-[#f3f4f1]"
-						onClick={handleToggleSidebar}
-						size="sm"
-						variant="ghost"
-					>
-						<Menu className="h-5 w-5" />
-						<span className="sr-only">Open sidebar</span>
-					</Button>
-				)}
-				{user && user.type !== "pro" && (
-					<Link href="/plan">
+		<div className="h-14 border-white/6 border-b bg-[#0b0d10]/92 px-3 backdrop-blur-xl sm:px-4">
+			<div className="mx-auto flex h-full w-full max-w-6xl items-center justify-between gap-3">
+				<div className="flex min-w-0 items-center gap-2">
+					{isMobile && (
 						<Button
-							className="h-8 rounded-md border border-black/8 bg-transparent px-3 text-xs font-medium text-[#4f544f] hover:bg-black/[0.03] dark:border-white/8 dark:text-[#c4cbc5] dark:hover:bg-white/[0.05]"
+							className="h-8 w-8 rounded-lg border border-white/7 bg-transparent p-0 text-white/45 hover:bg-white/6 hover:text-white/80"
+							onClick={handleToggleSidebar}
 							size="sm"
 							variant="ghost"
 						>
-							<Sparkles className="mr-1.5 h-3.5 w-3.5" />
-							Upgrade Pro
+							<PanelLeft className="h-5 w-5" />
+							<span className="sr-only">Open sidebar</span>
 						</Button>
-					</Link>
-				)}
-			</div>
-
-			<div className="min-w-0 flex-1 text-center">
-				<h2 className="truncate px-3 text-sm font-medium tracking-[-0.02em] text-[#4f544f] dark:text-[#c4cbc5]">
-					{chatTitle}
-				</h2>
-			</div>
-
-			{!isReadonly && (
-				<DropdownMenu onOpenChange={setIsMenuOpen} open={isMenuOpen}>
-					<DropdownMenuTrigger asChild>
-						<Button
-							className="h-9 w-9 rounded-full bg-transparent p-0 text-[#5f6258] hover:bg-black/4 hover:text-[#171717] dark:text-[#a6aca6] dark:hover:bg-white/6 dark:hover:text-[#f3f4f1]"
-							size="sm"
-							variant="ghost"
-						>
-							<MoreVertical className="h-4 w-4" />
-							<span className="sr-only">Chat actions</span>
-						</Button>
-					</DropdownMenuTrigger>
-					<DropdownMenuContent
-						align="end"
-						className="z-50 w-56 rounded-2xl border border-black/8 bg-white/98 shadow-[0_20px_44px_rgba(18,20,22,0.12)] backdrop-blur-xl dark:border-white/8 dark:bg-[#17181a]/98"
-					>
-						<div className="px-2 py-1.5">
-							<div className="mb-2 text-xs font-medium text-muted-foreground">
-								Chat Visibility
-							</div>
-							<VisibilitySelector
-								chatId={chatId}
-								selectedVisibilityType={selectedVisibilityType}
-							/>
+					)}
+					<div className="min-w-0">
+						<div className="flex items-center gap-2">
+							<h2 className="truncate text-[13px] font-medium text-white/85">
+								{chatTitle}
+							</h2>
+							<span className="hidden items-center gap-1.5 rounded-full border border-white/7 px-2 py-0.5 text-[10px] font-medium text-white/45 sm:inline-flex">
+								<span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
+								Live workspace
+							</span>
 						</div>
+					</div>
+				</div>
 
-						<DropdownMenuSeparator />
+				<div className="flex shrink-0 items-center gap-2">
+					{!isReadonly && (
+						<DropdownMenu onOpenChange={setIsMenuOpen} open={isMenuOpen}>
+							<DropdownMenuTrigger asChild>
+								<Button
+									className="h-8 w-8 rounded-lg border border-white/7 bg-transparent p-0 text-white/45 hover:bg-white/6 hover:text-white/80"
+									size="sm"
+									variant="ghost"
+								>
+									<MoreHorizontal className="h-4 w-4" />
+									<span className="sr-only">Chat actions</span>
+								</Button>
+							</DropdownMenuTrigger>
+							<DropdownMenuContent
+								align="end"
+								className="z-50 w-56 rounded-2xl border border-black/8 bg-white/98 shadow-[0_20px_44px_rgba(18,20,22,0.12)] backdrop-blur-xl dark:border-white/8 dark:bg-[#17181a]/98"
+							>
+								<div className="px-2 py-1.5">
+									<div className="mb-2 text-xs font-medium text-muted-foreground">
+										Chat Visibility
+									</div>
+									<VisibilitySelector
+										chatId={chatId}
+										selectedVisibilityType={selectedVisibilityType}
+									/>
+								</div>
 
-						<ChatExportButton asMenuItem chatId={chatId} />
-						<DropdownMenuItem
-							className="cursor-pointer gap-2"
-							onClick={handleShareChat}
-						>
-							<Share2 className="h-4 w-4" />
-							Share Chat Link
-						</DropdownMenuItem>
-						<DropdownMenuItem
-							className="cursor-pointer gap-2"
-							onClick={handleRenameChat}
-						>
-							<Edit3 className="h-4 w-4" />
-							Rename Chat
-						</DropdownMenuItem>
-						<DropdownMenuSeparator />
-						<DropdownMenuItem
-							className="cursor-pointer gap-2 text-red-500 focus:text-red-500 focus:bg-red-500/10"
-							onClick={handleDeleteChat}
-						>
-							<Trash2 className="h-4 w-4" />
-							Delete Chat
-						</DropdownMenuItem>
-					</DropdownMenuContent>
-				</DropdownMenu>
-			)}
+								<DropdownMenuSeparator />
+
+								<ChatExportButton asMenuItem chatId={chatId} />
+								<DropdownMenuItem
+									className="cursor-pointer gap-2"
+									onClick={handleShareChat}
+								>
+									<Share2 className="h-4 w-4" />
+									Share Chat Link
+								</DropdownMenuItem>
+								<DropdownMenuItem
+									className="cursor-pointer gap-2"
+									onClick={handleRenameChat}
+								>
+									<Edit3 className="h-4 w-4" />
+									Rename Chat
+								</DropdownMenuItem>
+								<DropdownMenuSeparator />
+								<DropdownMenuItem
+									className="cursor-pointer gap-2 text-red-500 focus:text-red-500 focus:bg-red-500/10"
+									onClick={handleDeleteChat}
+								>
+									<Trash2 className="h-4 w-4" />
+									Delete Chat
+								</DropdownMenuItem>
+							</DropdownMenuContent>
+						</DropdownMenu>
+					)}
+				</div>
+			</div>
 		</div>
 	);
 }

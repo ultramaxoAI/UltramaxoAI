@@ -8,16 +8,29 @@ const CHAT_URL =
 		? "https://chat.ultramaxo.tech/chat"
 		: "/chat";
 
-export default async function Page() {
+function getSafeCallbackUrl(callbackUrl?: string) {
+	if (!callbackUrl) return CHAT_URL;
+	if (!callbackUrl.startsWith("/") || callbackUrl.startsWith("//"))
+		return CHAT_URL;
+	return callbackUrl;
+}
+
+export default async function Page({
+	searchParams,
+}: {
+	searchParams?: Promise<{ callbackUrl?: string }>;
+}) {
 	const session = await auth();
+	const resolvedSearchParams = await searchParams;
+	const callbackUrl = getSafeCallbackUrl(resolvedSearchParams?.callbackUrl);
 
 	if (session?.user?.id) {
-		redirect(CHAT_URL);
+		redirect(callbackUrl);
 	}
 
 	return (
 		<Suspense fallback={null}>
-			<LoginClient />
+			<LoginClient callbackUrl={callbackUrl} />
 		</Suspense>
 	);
 }

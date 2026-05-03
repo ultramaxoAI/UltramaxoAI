@@ -4,9 +4,19 @@ import type {
 } from "@backend/ai/tools/agent-mode";
 import type {
 	createCodeFile,
+	createFile,
+	createFolder,
 	deleteCodeFile,
+	editFile,
+	executeTerminalCommand,
+	installDependency,
+	installPackage,
 	listCodeFiles,
+	listFiles,
+	readFile,
+	runCommand,
 	runWorkspaceCommand,
+	startPreviewServer,
 	updateCodeFile,
 } from "@backend/ai/tools/code-workspace";
 import type { createDocument } from "@backend/ai/tools/create-document";
@@ -38,8 +48,22 @@ type startAgentTaskTool = InferUITool<ReturnType<typeof startAgentTask>>;
 type reportAgentStepTool = InferUITool<ReturnType<typeof reportAgentStep>>;
 type listCodeFilesTool = InferUITool<ReturnType<typeof listCodeFiles>>;
 type createCodeFileTool = InferUITool<ReturnType<typeof createCodeFile>>;
+type createFileTool = InferUITool<ReturnType<typeof createFile>>;
+type createFolderTool = InferUITool<ReturnType<typeof createFolder>>;
 type updateCodeFileTool = InferUITool<ReturnType<typeof updateCodeFile>>;
+type editFileTool = InferUITool<ReturnType<typeof editFile>>;
 type deleteCodeFileTool = InferUITool<ReturnType<typeof deleteCodeFile>>;
+type readFileTool = InferUITool<ReturnType<typeof readFile>>;
+type listFilesTool = InferUITool<ReturnType<typeof listFiles>>;
+type runCommandTool = InferUITool<ReturnType<typeof runCommand>>;
+type executeTerminalCommandTool = InferUITool<
+	ReturnType<typeof executeTerminalCommand>
+>;
+type installPackageTool = InferUITool<ReturnType<typeof installPackage>>;
+type installDependencyTool = InferUITool<ReturnType<typeof installDependency>>;
+type startPreviewServerTool = InferUITool<
+	ReturnType<typeof startPreviewServer>
+>;
 type runWorkspaceCommandTool = InferUITool<
 	ReturnType<typeof runWorkspaceCommand>
 >;
@@ -54,8 +78,18 @@ export type ChatTools = {
 	reportAgentStep: reportAgentStepTool;
 	listCodeFiles: listCodeFilesTool;
 	createCodeFile: createCodeFileTool;
+	createFile: createFileTool;
+	createFolder: createFolderTool;
 	updateCodeFile: updateCodeFileTool;
+	editFile: editFileTool;
 	deleteCodeFile: deleteCodeFileTool;
+	readFile: readFileTool;
+	listFiles: listFilesTool;
+	runCommand: runCommandTool;
+	executeTerminalCommand: executeTerminalCommandTool;
+	installPackage: installPackageTool;
+	installDependency: installDependencyTool;
+	startPreviewServer: startPreviewServerTool;
 	runWorkspaceCommand: runWorkspaceCommandTool;
 };
 
@@ -72,6 +106,39 @@ export type CustomUIDataTypes = {
 	clear: null;
 	finish: null;
 	"chat-title": string;
+	"agent-thinking": {
+		id?: string;
+		label?: string;
+		status?: string;
+		duration?: number;
+	};
+	"agent-tool_start": {
+		id?: string;
+		toolCallId?: string;
+		label?: string;
+		tool?: string;
+		args?: string;
+		input?: unknown;
+	};
+	"agent-tool_done": {
+		id?: string;
+		toolCallId?: string;
+		label?: string;
+		tool?: string;
+		args?: string;
+		input?: unknown;
+		result?: string;
+		output?: unknown;
+		status?: string;
+		duration?: number;
+	};
+	"agent-done": {
+		status?: string;
+		duration?: number;
+	};
+	"terminal-command": string;
+	"install-package": string;
+	"start-dev-server": string;
 	"create-document": {
 		type: "create-document";
 		id: string;

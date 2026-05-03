@@ -211,3 +211,202 @@ Mitigation:
 - surface explicit status labels in admin vouchers page
 - keep modal lightweight and dismissible
 
+## Detailed Product Decisions
+
+### Redeem Limits
+
+- `maxClaims` must accept positive integers only
+- `0` should be rejected rather than interpreted as unlimited
+- existing redeem codes migrate as `maxClaims = null`; `claimedCount` should default to `0` and be backfilled from historical successful claims if that data already exists
+- `claimedCount` reflects successful claims only
+- existing claim records, if present in the system, remain the source of truth for duplicate-user checks
+
+This keeps admin behavior simple:
+
+- empty field means unlimited
+- any filled value means a hard cap
+- there is no special sentinel value to memorize
+
+### Chat Announcement
+
+- only one announcement payload is active at a time
+- dismiss state is client-local and session-scoped
+- a full page reload may show the same announcement again
+- if announcement is disabled, chat should not reserve layout space for it
+- if title or message is missing while enabled, the server should treat the announcement as invalid and not render it
+
+This intentionally favors a lightweight product notice instead of a persistent notification system.
+
+## User Flows
+
+### Redeem Flow
+
+1. user submits a code from the redeem surface
+2. server normalizes the code using current project conventions
+3. server loads the redeem code and validates expiry
+4. server checks whether the current user already claimed the code
+5. server checks whether quota is already exhausted
+6. server applies the entitlement or voucher effect
+7. server records the user claim and increments `claimedCount`
+8. client receives success state and refreshes any balance or entitlement UI
+
+Failure cases:
+
+- unknown code -> `invalid code`
+- expired by date -> `code expired`
+- exhausted by quota -> `code quota reached`
+- duplicate user claim -> `already claimed by this account`
+
+### Announcement Flow
+
+1. admin enables announcement and saves title + message
+2. chat entry surface fetches the current announcement state during existing bootstrapping
+3. if enabled and valid, modal opens once on entry
+4. user closes modal
+5. client stores local dismiss flag for the current browser session
+6. modal stays closed until reload or a fresh session
+
+## Data And Contract Shape
+
+### Redeem Code Shape
+
+Recommended server shape:
+
+```ts
+type RedeemCode = {
+  id: string
+  code: string
+  expiresAt: Date | null
+  maxClaims: number | null
+  claimedCount: number
+}
+```
+
+The code is redeemable only when:
+
+```ts
+const isNotExpiredByDate = !expiresAt || expiresAt > now
+const isNotExhausted = maxClaims == null || claimedCount < maxClaims
+const isRedeemable = isNotExpiredByDate && isNotExhausted
+```
+
+### Announcement Settings Shape
+
+Recommended settings payload:
+
+```ts
+type ChatAnnouncementSettings = {
+  chatAnnouncementEnabled: boolean
+  chatAnnouncementTitle: string
+  chatAnnouncementMessage: string
+}
+```
+
+Client-facing shape can be trimmed to:
+
+```ts
+type ChatAnnouncement = {
+  enabled: boolean
+  title: string
+  message: string
+}
+```
+
+This keeps the admin settings schema aligned with existing storage while allowing chat to consume a smaller, explicit payload.
+
+## Validation Rules
+
+### Admin Redeem Form
+
+- `maxClaims` optional
+- if provided, it must be an integer
+- minimum valid value is `1`
+- editing an existing code must not allow setting `maxClaims` below `claimedCount`
+
+### Admin Announcement Form
+
+- when disabled, title and message may remain stored but are ignored
+- when enabled, title is required after trimming
+- when enabled, message is required after trimming
+- title should stay short enough for modal layout
+- message should support plain text only in this pass
+
+### Server Enforcement
+
+- never trust client-side quota or duplicate-claim checks
+- duplicate-claim protection must happen on the server even if admin UI already shows counts
+- announcement response should return disabled if the stored payload is incomplete
+
+## Concurrency And Integrity
+
+Redeem quota correctness matters more than perfect admin count freshness.
+
+Recommended integrity rules:
+
+- enforce duplicate-claim uniqueness using the existing claim table if one exists, or add a unique `(userId, redeemCodeId)` constraint if needed
+- perform quota validation and count increment in the same transaction
+- derive failure from the write result rather than assuming pre-checks stayed true during contention
+
+Preferred implementation shape:
+
+1. open transaction
+2. verify redeem code is still redeemable
+3. create claim record for `(userId, redeemCodeId)`
+4. increment `claimedCount`
+5. commit only if both operations succeed
+
+If two users redeem near the cap at the same moment, exactly one claim should win the final slot and the other should receive a clean quota-reached failure.
+
+## UI Notes
+
+### Admin Vouchers Page
+
+- keep the current table structure if it already exists
+- add usage visibility without making the row visually noisy
+- `used up` status should be visually distinct from `expired`
+- unlimited codes should still show momentum through `claimedCount`
+
+Suggested display:
+
+- `3 / 10`
+- `17 / unlimited`
+
+### Chat Modal
+
+- use the same modal primitive and motion style already present in chat or app surfaces
+- width should stay compact and readable on desktop
+- mobile should prioritize comfortable padding and a clearly reachable close action
+- do not add illustrations, banners, or secondary CTA buttons in this pass
+
+## Testing Strategy
+
+### Redeem
+
+- create unlimited code and confirm multiple users can claim it
+- create limited code with cap `1` and confirm second user is rejected
+- confirm same user cannot claim the same unlimited code twice
+- confirm expired code still fails before quota logic matters
+- confirm admin cannot save `maxClaims = 0`
+- confirm editing cannot reduce cap below current `claimedCount`
+- run a concurrent redemption check around the final remaining slot
+
+### Announcement
+
+- save enabled announcement and confirm it appears on chat entry
+- close modal and confirm it stays closed for the current session
+- reload page and confirm it may reappear
+- disable announcement and confirm chat opens without modal
+- save incomplete payload while disabled and confirm no chat regression
+
+## Rollout Notes
+
+- existing redeem codes should remain valid without manual admin action
+- migration should be backward-compatible and default-safe
+- if historical claim rows exist, run a one-time backfill so `claimedCount` matches distinct successful claims per code
+- announcement settings should default to disabled
+- no user-facing migration message is needed
+
+## Open Questions Resolved
+
+- guest support should follow current chat access behavior; this feature should not introduce a separate guest-only rule
+- announcement delivery should reuse existing settings infrastructure unless a missing public read path forces a tiny dedicated endpoint

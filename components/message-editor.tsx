@@ -79,28 +79,33 @@ export function MessageEditor({
 					disabled={isSubmitting}
 					onClick={async () => {
 						setIsSubmitting(true);
+						try {
+							await deleteTrailingMessages({
+								id: message.id,
+							});
 
-						await deleteTrailingMessages({
-							id: message.id,
-						});
+							setMessages((messages) => {
+								const index = messages.findIndex((m) => m.id === message.id);
 
-						setMessages((messages) => {
-							const index = messages.findIndex((m) => m.id === message.id);
+								if (index !== -1) {
+									const updatedMessage: ChatMessage = {
+										...message,
+										parts: [{ type: "text", text: draftContent }],
+									};
 
-							if (index !== -1) {
-								const updatedMessage: ChatMessage = {
-									...message,
-									parts: [{ type: "text", text: draftContent }],
-								};
+									return [...messages.slice(0, index), updatedMessage];
+								}
 
-								return [...messages.slice(0, index), updatedMessage];
-							}
+								return messages;
+							});
 
-							return messages;
-						});
-
-						setMode("view");
-						regenerate();
+							setMode("view");
+							regenerate();
+						} catch (error) {
+							console.error("Failed to edit message:", error);
+						} finally {
+							setIsSubmitting(false);
+						}
 					}}
 					variant="default"
 				>

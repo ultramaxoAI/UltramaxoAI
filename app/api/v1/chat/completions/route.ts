@@ -5,7 +5,7 @@ import {
 } from "@backend/db/queries";
 import { platformApiKey } from "@backend/db/schema";
 import { getModelCatalogById } from "@backend/models/model-catalog";
-import { checkRateLimit } from "@backend/rateLimiter";
+import { checkRateLimit, getClientIp } from "@backend/rateLimiter";
 import { eq } from "drizzle-orm";
 import { type NextRequest, NextResponse } from "next/server";
 import { calculateCostCents, estimateTokens } from "@/lib/api-billing";
@@ -15,6 +15,8 @@ const MIN_BALANCE_CENTS = 200;
 const FREE_RPM_LIMIT = 5;
 const PAID_RPM_LIMIT = 60;
 const WINDOW_MS = 60_000;
+const FREE_IP_RPM_LIMIT = 20;
+const PAID_IP_RPM_LIMIT = 180;
 const MODEL_ID_ALIASES: Record<string, string> = {
 	"gpt-5.3": "gpt-5.3-codex",
 };
@@ -252,9 +254,13 @@ export async function POST(req: NextRequest) {
 
 		// Rate limiting
 		const rateLimitKey = `api:${keyRecord.id}:rpm`;
+		const clientIp = getClientIp(req);
+		const ipRateLimitKey = `api-ip:${clientIp}:rpm`;
 		const limit = isFreeModel ? FREE_RPM_LIMIT : PAID_RPM_LIMIT;
+		const ipLimit = isFreeModel ? FREE_IP_RPM_LIMIT : PAID_IP_RPM_LIMIT;
 		const rate = checkRateLimit(rateLimitKey, limit, WINDOW_MS);
-		if (!rate.allowed) {
+		const ipRate = checkRateLimit(ipRateLimitKey, ipLimit, WINDOW_MS);
+		if (!rate.allowed || !ipRate.allowed) {
 			return NextResponse.json(
 				{
 					error: {

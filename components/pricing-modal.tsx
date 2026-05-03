@@ -50,7 +50,7 @@ const pricingPlans = [
 		features: [
 			"AI Chat (UltraAgent Pro)",
 			"All Free features",
-			"Unlimited chat",
+			"500 daily credits for serious chat",
 			"Permanent chat history",
 			"Complete code workspace",
 			"Full artifacts system",

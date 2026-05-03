@@ -1,6 +1,6 @@
 "use client";
 
-import { PanelLeftClose, PanelLeftOpen } from "lucide-react";
+import { Menu, PanelLeftClose, PanelLeftOpen } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -45,22 +45,19 @@ export default function PublicDocsLayout({
 	useEffect(() => {
 		const saved = localStorage.getItem("docs-lang");
 		if (saved === "id" || saved === "en") setLang(saved);
-		const savedTheme = localStorage.getItem("docs-theme");
-		if (savedTheme === "light" || savedTheme === "dark") setTheme(savedTheme);
+		setTheme("dark");
 	}, []);
 
 	useEffect(() => {
 		localStorage.setItem("docs-lang", lang);
 	}, [lang]);
 	useEffect(() => {
-		localStorage.setItem("docs-theme", theme);
-	}, [theme]);
-
-	const isDark = theme === "dark";
+		localStorage.setItem("docs-theme", "dark");
+	}, []);
 
 	return (
 		<DocsContext.Provider value={{ lang, setLang, theme, setTheme }}>
-			<div className={`docs ${isDark ? "docs--dark" : "docs--light"}`}>
+			<div className="docs docs--dark">
 				{/* Sidebar */}
 				<aside
 					className={`docs-sidebar ${!sidebarOpen ? "docs-sidebar--collapsed" : ""}`}
@@ -111,14 +108,6 @@ export default function PublicDocsLayout({
 							>
 								ID
 							</button>
-							<span className="docs-ctrl-sep" />
-							<button
-								type="button"
-								className="docs-ctrl-btn"
-								onClick={() => setTheme(isDark ? "light" : "dark")}
-							>
-								{isDark ? "☀" : "●"}
-							</button>
 						</div>
 						<Link
 							href="/api-console"
@@ -158,16 +147,9 @@ export default function PublicDocsLayout({
 						<button
 							type="button"
 							className="docs-ctrl-btn"
-							onClick={() => setTheme(isDark ? "light" : "dark")}
-						>
-							{isDark ? "☀" : "●"}
-						</button>
-						<button
-							type="button"
-							className="docs-ctrl-btn"
 							onClick={() => setMobileNav(!mobileNav)}
 						>
-							☰
+							<Menu size={16} />
 						</button>
 					</div>
 				</div>

@@ -1,5 +1,5 @@
 import { Check, Code2, Copy, Download } from "lucide-react";
-import { memo, useEffect, useState } from "react";
+import { memo, useState } from "react";
 import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
 import { oneDark } from "react-syntax-highlighter/dist/esm/styles/prism";
 import { Button } from "@/components/ui/button";
@@ -27,15 +27,6 @@ function PureCodeBlock({
 	const [copied, setCopied] = useState(false);
 	const [showFull, setShowFull] = useState(false);
 	const { setArtifact } = useArtifact();
-	const [debouncedChildren, setDebouncedChildren] = useState(children);
-
-	// Debounce children to prevent freezing the browser during rapid AI streaming
-	useEffect(() => {
-		const timer = setTimeout(() => {
-			setDebouncedChildren(children);
-		}, 150);
-		return () => clearTimeout(timer);
-	}, [children]);
 
 	// Extract language if not provided, fallback to text
 	const lang =
@@ -44,17 +35,16 @@ function PureCodeBlock({
 		"text";
 
 	// Determine rendering strategy
-	const lineCount = debouncedChildren.split("\n").length;
+	const lineCount = children.split("\n").length;
 	const isTooLargeForHighlight =
-		debouncedChildren.length > MAX_HIGHLIGHT_CHARS ||
-		lineCount > MAX_HIGHLIGHT_LINES;
-	const isTooLargeForDisplay = debouncedChildren.length > MAX_DISPLAY_CHARS;
+		children.length > MAX_HIGHLIGHT_CHARS || lineCount > MAX_HIGHLIGHT_LINES;
+	const isTooLargeForDisplay = children.length > MAX_DISPLAY_CHARS;
 
 	// Truncate if necessary
 	const displayContent =
 		isTooLargeForDisplay && !showFull
-			? `${debouncedChildren.slice(0, MAX_DISPLAY_CHARS)}\n\n... (${(debouncedChildren.length / 1000).toFixed(0)}KB total, click "Show All" to expand)`
-			: debouncedChildren;
+			? `${children.slice(0, MAX_DISPLAY_CHARS)}\n\n... (${(children.length / 1000).toFixed(0)}KB total, click "Show All" to expand)`
+			: children;
 
 	const handleCopy = async () => {
 		await navigator.clipboard.writeText(children); // Always copy full content
@@ -92,15 +82,14 @@ function PureCodeBlock({
 	};
 
 	return (
-		<div className="group/code relative my-4 rounded-lg border bg-zinc-950 font-mono text-sm max-w-[calc(100vw-2rem)] md:max-w-full">
-			{/* Language label + action buttons header */}
-			<div className="flex items-center justify-between px-4 py-2 border-b border-zinc-800">
-				<span className="text-xs text-zinc-500 uppercase tracking-wider">
+		<div className="group/code relative my-4 max-w-[calc(100vw-2rem)] overflow-hidden rounded-xl border border-white/8 bg-white/[0.04] font-mono text-[13px] md:max-w-full">
+			<div className="flex items-center justify-between border-white/8 border-b px-4 py-2">
+				<span className="text-[10px] uppercase tracking-[0.18em] text-white/25">
 					{lang}
 				</span>
 				<div className="flex gap-1">
 					<Button
-						className="size-7 text-zinc-400 hover:text-zinc-100"
+						className="size-7 text-white/30 hover:bg-white/6 hover:text-white/70"
 						onClick={handleOpenInEditor}
 						size="icon"
 						title="Open in Editor"
@@ -109,7 +98,7 @@ function PureCodeBlock({
 						<Code2 className="size-3.5" />
 					</Button>
 					<Button
-						className="size-7 text-zinc-400 hover:text-zinc-100"
+						className="size-7 text-white/30 hover:bg-white/6 hover:text-white/70"
 						onClick={handleCopy}
 						size="icon"
 						title={copied ? "Copied!" : "Copy code"}
@@ -122,7 +111,7 @@ function PureCodeBlock({
 						)}
 					</Button>
 					<Button
-						className="size-7 text-zinc-400 hover:text-zinc-100"
+						className="size-7 text-white/30 hover:bg-white/6 hover:text-white/70"
 						onClick={handleDownload}
 						size="icon"
 						title="Download code"
@@ -132,11 +121,11 @@ function PureCodeBlock({
 					</Button>
 				</div>
 			</div>
-			<div className="overflow-x-auto overflow-y-auto max-h-[500px]">
+			<div className="max-h-[500px] overflow-x-auto overflow-y-auto">
 				{isTooLargeForHighlight || isLoading ? (
 					/* Plain text fallback for large code or when streaming - no Prism = no OOM/Freeze */
 					<pre
-						className="p-5 text-[0.8rem] leading-[1.6] text-zinc-300 whitespace-pre"
+						className="whitespace-pre p-5 text-[13px] leading-[1.65] text-white/65"
 						style={{ minWidth: "fit-content" }}
 					>
 						{displayContent}
@@ -146,7 +135,7 @@ function PureCodeBlock({
 						codeTagProps={{
 							style: {
 								fontSize: "0.8rem",
-								fontFamily: "var(--font-mono)",
+								fontFamily: "'Geist Mono', Menlo, monospace",
 								lineHeight: "1.6",
 							},
 						}}
@@ -154,7 +143,7 @@ function PureCodeBlock({
 							margin: 0,
 							padding: "1.25rem",
 							background: "transparent",
-							fontSize: "0.8rem",
+							fontSize: "13px",
 							minWidth: "fit-content",
 						}}
 						language={lang}
@@ -165,7 +154,7 @@ function PureCodeBlock({
 						lineNumberStyle={{
 							minWidth: "2.5em",
 							paddingRight: "1em",
-							color: "#4a4a5a",
+							color: "rgba(255,255,255,0.22)",
 							userSelect: "none",
 						}}
 					>
@@ -174,13 +163,13 @@ function PureCodeBlock({
 				)}
 			</div>
 			{isTooLargeForDisplay && !showFull && (
-				<div className="border-t border-zinc-800 px-4 py-2 text-center">
+				<div className="border-white/8 border-t px-4 py-2 text-center">
 					<button
-						className="text-xs text-blue-400 hover:text-blue-300 transition-colors"
+						className="text-xs text-indigo-300/70 transition-colors hover:text-indigo-200"
 						onClick={() => setShowFull(true)}
 						type="button"
 					>
-						Show All ({(debouncedChildren.length / 1000).toFixed(0)}KB)
+						Show All ({(children.length / 1000).toFixed(0)}KB)
 					</button>
 				</div>
 			)}

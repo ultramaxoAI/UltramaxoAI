@@ -5,17 +5,23 @@ import { useSWRConfig } from "swr";
 import { unstable_serialize } from "swr/infinite";
 import type { ArtifactKind } from "@/components/artifact";
 import { initialArtifactData, useArtifact } from "@/hooks/use-artifact";
+import type { AgentThinkingStep } from "./agent-thinking-panel";
 import { artifactDefinitions } from "./artifact";
 import { useDataStream } from "./data-stream-provider";
 import { getChatHistoryPaginationKey } from "./sidebar-history";
 import { useWebContainerOptional } from "./webcontainer-provider";
 
 export function DataStreamHandler() {
-	const { dataStream, setDataStream } = useDataStream();
+	const { dataStream, setDataStream, setAgentStream } = useDataStream();
 	const { mutate } = useSWRConfig();
 	const wc = useWebContainerOptional();
 
 	const { artifact, setArtifact, setMetadata } = useArtifact();
+	const artifactVisibilityTypes = [
+		"data-textDelta",
+		"data-imageDelta",
+		"data-sheetDelta",
+	];
 
 	useEffect(() => {
 		if (!dataStream?.length) {
@@ -25,7 +31,7 @@ export function DataStreamHandler() {
 		const newDeltas = dataStream.slice();
 		setDataStream([]);
 
-		let currentKind = artifact.kind;
+		let currentKind = artifact?.kind ?? initialArtifactData.kind;
 
 		for (const delta of newDeltas) {
 			// Cast for custom event type comparisons
@@ -35,6 +41,82 @@ export function DataStreamHandler() {
 			// Handle chat title updates
 			if (deltaType === "data-chat-title") {
 				mutate(unstable_serialize(getChatHistoryPaginationKey));
+				continue;
+			}
+
+			if (
+				deltaType.startsWith("data-agent-") ||
+				deltaType.startsWith("agent:")
+			) {
+				setAgentStream((current) => {
+					const now = Date.now();
+					const data =
+						typeof deltaData === "string"
+							? safeJsonParse(deltaData)
+							: isRecord(deltaData)
+								? deltaData
+								: {};
+					const eventName = deltaType.startsWith("agent:")
+						? deltaType
+						: deltaType.replace(/^data-agent-/, "agent:");
+
+					if (eventName === "agent:thinking") {
+						return {
+							status: "thinking",
+							startedAt: current.startedAt ?? now,
+							endedAt: null,
+							steps: [
+								...current.steps,
+								normalizeAgentStep(data, current.steps.length, "thought"),
+							],
+						};
+					}
+
+					if (eventName === "agent:tool_start") {
+						const nextStep = normalizeAgentStep(
+							data,
+							current.steps.length,
+							"tool_call",
+							"running",
+						);
+						return {
+							...current,
+							status: "executing",
+							startedAt: current.startedAt ?? now,
+							endedAt: null,
+							steps: upsertAgentStep(current.steps, nextStep),
+						};
+					}
+
+					if (eventName === "agent:tool_done") {
+						const nextStep = normalizeAgentStep(
+							data,
+							current.steps.length,
+							"tool_call",
+							data.status === "error" ? "error" : "done",
+						);
+						return {
+							...current,
+							status: nextStep.status === "error" ? "error" : "executing",
+							steps: upsertAgentStep(current.steps, nextStep),
+						};
+					}
+
+					if (eventName === "agent:done") {
+						return {
+							...current,
+							status: data.status === "error" ? "error" : "done",
+							endedAt: now,
+						};
+					}
+
+					return current;
+				});
+				window.dispatchEvent(
+					new CustomEvent("ultramaxo-agent-stream", {
+						detail: { type: deltaType, data: deltaData },
+					}),
+				);
 				continue;
 			}
 
@@ -75,61 +157,75 @@ export function DataStreamHandler() {
 			);
 
 			if (artifactDefinition?.onStreamPart) {
-				artifactDefinition.onStreamPart({
-					streamPart: delta,
-					setArtifact,
-					setMetadata,
-				});
+				try {
+					artifactDefinition.onStreamPart({
+						streamPart: delta,
+						setArtifact,
+						setMetadata,
+					});
+				} catch (error) {
+					console.error("Failed to handle artifact stream part:", error, delta);
+				}
 			}
 
-			setArtifact((draftArtifact) => {
-				if (!draftArtifact) {
-					return { ...initialArtifactData, status: "streaming" };
-				}
+			try {
+				setArtifact((draftArtifact) => {
+					if (!draftArtifact) {
+						return { ...initialArtifactData, status: "streaming" };
+					}
+					const shouldForceVisible = artifactVisibilityTypes.includes(delta.type);
 
-				switch (delta.type) {
-					case "data-id":
-						return {
-							...draftArtifact,
-							documentId: delta.data,
-							isVisible: true,
-							status: "streaming",
-						};
+					switch (delta.type) {
+						case "data-id":
+							return {
+								...draftArtifact,
+								documentId: delta.data,
+								status: "streaming",
+							};
 
-					case "data-title":
-						return {
-							...draftArtifact,
-							title: delta.data,
-							isVisible: true,
-							status: "streaming",
-						};
+						case "data-title":
+							return {
+								...draftArtifact,
+								title: delta.data,
+								status: "streaming",
+							};
 
-					case "data-kind":
-						return {
-							...draftArtifact,
-							kind: delta.data,
-							isVisible: true,
-							status: "streaming",
-						};
+						case "data-kind":
+							return {
+								...draftArtifact,
+								kind: delta.data,
+								status: "streaming",
+							};
 
-					case "data-clear":
-						return {
-							...draftArtifact,
-							content: "",
-							isVisible: true,
-							status: "streaming",
-						};
+						case "data-clear":
+							return {
+								...draftArtifact,
+								content: "",
+								status: "streaming",
+							};
 
-					case "data-finish":
-						return {
-							...draftArtifact,
-							status: "idle",
-						};
+						case "data-finish":
+							return {
+								...draftArtifact,
+								isVisible:
+									draftArtifact.isVisible ||
+									shouldForceVisible ||
+									Boolean(draftArtifact.content?.trim()),
+								status: "idle",
+							};
 
-					default:
-						return draftArtifact;
-				}
-			});
+						default:
+							return shouldForceVisible
+								? {
+										...draftArtifact,
+										isVisible: true,
+								  }
+								: draftArtifact;
+					}
+				});
+			} catch (error) {
+				console.error("Failed to create artifact:", error, delta);
+			}
 		}
 	}, [
 		dataStream,
@@ -137,9 +233,105 @@ export function DataStreamHandler() {
 		setMetadata,
 		artifact,
 		setDataStream,
+		setAgentStream,
 		mutate,
 		wc,
 	]);
 
 	return null;
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+	return typeof value === "object" && value !== null;
+}
+
+function safeJsonParse(value: string) {
+	try {
+		const parsed = JSON.parse(value);
+		return isRecord(parsed) ? parsed : {};
+	} catch {
+		return {};
+	}
+}
+
+function normalizeAgentStep(
+	data: Record<string, unknown>,
+	index: number,
+	type: AgentThinkingStep["type"],
+	status?: AgentThinkingStep["status"],
+): AgentThinkingStep {
+	const id =
+		typeof data.id === "string"
+			? data.id
+			: typeof data.toolCallId === "string"
+				? data.toolCallId
+				: `${type}-${index}`;
+	const label =
+		typeof data.label === "string"
+			? data.label
+			: typeof data.tool === "string"
+				? data.tool
+				: typeof data.title === "string"
+					? data.title
+					: type === "tool_call"
+						? "tool_call"
+						: "Menganalisis permintaan";
+	const args =
+		typeof data.args === "string"
+			? data.args
+			: data.input !== undefined
+				? stringifyCompact(data.input)
+				: undefined;
+	const result =
+		typeof data.result === "string"
+			? data.result
+			: data.output !== undefined
+				? stringifyCompact(data.output)
+				: undefined;
+	const duration =
+		typeof data.duration === "number" ? data.duration : undefined;
+
+	return {
+		id,
+		type,
+		label,
+		args,
+		result,
+		status:
+			status ??
+			(data.status === "pending" ||
+			data.status === "running" ||
+			data.status === "done" ||
+			data.status === "error"
+				? data.status
+				: "running"),
+		duration,
+	};
+}
+
+function stringifyCompact(value: unknown) {
+	if (typeof value === "string") {
+		return value.length > 120 ? `${value.slice(0, 117)}...` : value;
+	}
+
+	try {
+		const text = JSON.stringify(value);
+		return text.length > 140 ? `${text.slice(0, 137)}...` : text;
+	} catch {
+		return String(value);
+	}
+}
+
+function upsertAgentStep(
+	steps: AgentThinkingStep[],
+	nextStep: AgentThinkingStep,
+) {
+	const existingIndex = steps.findIndex((step) => step.id === nextStep.id);
+	if (existingIndex === -1) {
+		return [...steps, nextStep];
+	}
+
+	return steps.map((step, index) =>
+		index === existingIndex ? { ...step, ...nextStep } : step,
+	);
 }

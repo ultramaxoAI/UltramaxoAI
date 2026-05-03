@@ -56,19 +56,19 @@ function getFileIcon(filename: string, size = 16) {
 		case "py":
 		case "html":
 		case "css":
-			return <FileCodeIcon className="text-cyan-300" size={size} />;
+			return <FileCodeIcon className="text-indigo-300/75" size={size} />;
 		case "json":
-			return <FileJsonIcon className="text-amber-300" size={size} />;
+			return <FileJsonIcon className="text-amber-300/75" size={size} />;
 		case "md":
-			return <FileTextIcon className="text-zinc-300" size={size} />;
+			return <FileTextIcon className="text-white/45" size={size} />;
 		case "png":
 		case "jpg":
 		case "jpeg":
 		case "gif":
 		case "svg":
-			return <ImageIcon className="text-pink-300" size={size} />;
+			return <ImageIcon className="text-fuchsia-300/70" size={size} />;
 		default:
-			return <FileIcon className="text-gray-400" size={size} />;
+			return <FileIcon className="text-white/35" size={size} />;
 	}
 }
 
@@ -232,16 +232,16 @@ export function FileExplorer({
 				<Fragment key={node.path}>
 					<button
 						type="button"
-						className="flex w-full items-center gap-2 py-1.5 pr-2 text-left text-sm text-zinc-300 transition-colors hover:bg-zinc-800/40"
+						className="mx-1 flex min-h-8 w-[calc(100%-0.5rem)] items-center gap-1.5 rounded-md py-1.5 pr-2 text-left text-[12px] text-white/55 transition-colors hover:bg-white/[0.03] hover:text-white/75"
 						style={{ paddingLeft: `${depth * 14 + 8}px` }}
 						onClick={() => toggleDirectory(node.path)}
 					>
 						{isDirectoryExpanded ? (
-							<ChevronDownIcon size={14} className="text-zinc-500" />
+							<ChevronDownIcon size={14} className="text-white/25" />
 						) : (
-							<ChevronRightIcon size={14} className="text-zinc-500" />
+							<ChevronRightIcon size={14} className="text-white/25" />
 						)}
-						<FolderIcon size={14} className="text-cyan-300" />
+						<FolderIcon size={14} className="text-yellow-300/60" />
 						<span className="truncate">{node.name}</span>
 					</button>
 					{isDirectoryExpanded &&
@@ -256,10 +256,10 @@ export function FileExplorer({
 		return (
 			<div
 				className={cn(
-					"flex items-center justify-between group py-1.5 pr-2 cursor-pointer transition-colors",
+					"group mx-1 flex min-h-8 cursor-pointer items-center justify-between rounded-md py-1.5 pr-2 transition-colors",
 					activeFileIndex === index
-						? "bg-zinc-800 text-white"
-						: "text-gray-400 hover:bg-zinc-800/50 hover:text-gray-300",
+						? "bg-white/[0.06] text-white/85 shadow-[inset_0_0_0_1px_rgba(255,255,255,0.04)]"
+						: "text-white/45 hover:bg-white/[0.03] hover:text-white/70",
 				)}
 				key={node.path}
 				onClick={() => onFileSelect(index)}
@@ -268,7 +268,7 @@ export function FileExplorer({
 				{editingIndex === index ? (
 					<Input
 						autoFocus
-						className="h-6 text-sm bg-zinc-700 border-zinc-600"
+						className="h-7 border-white/[0.08] bg-[#181c22] text-[12px] text-white/80 placeholder:text-white/25 focus-visible:ring-indigo-400/30"
 						onBlur={() => {
 							if (editingName.trim()) {
 								handleRenameFile(index);
@@ -292,10 +292,10 @@ export function FileExplorer({
 					/>
 				) : (
 					<>
-						<div className="flex items-center gap-2 flex-1 min-w-0">
+						<div className="flex min-w-0 flex-1 items-center gap-2">
 							{getFileIcon(file.name, 14)}
 							<span
-								className="text-sm truncate"
+								className="truncate text-[12px]"
 								onDoubleClick={(event) => {
 									event.stopPropagation();
 									if (onFileRename) {
@@ -310,7 +310,7 @@ export function FileExplorer({
 
 						{onFileDelete && files.length > 1 && (
 							<Button
-								className="h-5 w-5 opacity-0 group-hover:opacity-100"
+								className="h-5 w-5 rounded-md border border-transparent bg-transparent text-white/25 opacity-0 transition-all hover:border-red-400/15 hover:bg-red-400/10 hover:text-red-300/80 group-hover:opacity-100"
 								onClick={(event) => {
 									event.stopPropagation();
 									onFileDelete(index);
@@ -331,13 +331,13 @@ export function FileExplorer({
 	return (
 		<div
 			className={cn(
-				"flex flex-col bg-zinc-900 border-r border-zinc-800",
+				"flex h-full flex-col border-white/[0.06] border-r bg-[#111318] text-white/70",
 				className,
 			)}
 		>
-			<div className="flex items-center justify-between p-2 border-b border-zinc-800">
+			<div className="flex items-center justify-between border-white/[0.06] border-b px-3 py-2.5">
 				<button
-					className="flex items-center gap-1 text-sm font-semibold text-gray-300 hover:text-white"
+					className="flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-[0.16em] text-white/35 transition-colors hover:text-white/60"
 					onClick={() => setIsExpanded(!isExpanded)}
 					type="button"
 				>
@@ -346,14 +346,14 @@ export function FileExplorer({
 					) : (
 						<ChevronRightIcon size={16} />
 					)}
-					<FolderIcon size={16} />
+					<FolderIcon size={14} className="text-yellow-300/60" />
 					<span>Files</span>
 				</button>
 
 				<div className="flex gap-1">
 					{onFileAdd && (
 						<Button
-							className="h-6 w-6"
+							className="h-6 w-6 rounded-md bg-transparent text-white/30 hover:bg-white/[0.06] hover:text-white/65"
 							onClick={() => setIsCreating(true)}
 							size="icon"
 							title="New File"
@@ -363,7 +363,7 @@ export function FileExplorer({
 						</Button>
 					)}
 					<Button
-						className="h-6 w-6"
+						className="h-6 w-6 rounded-md bg-transparent text-white/30 hover:bg-white/[0.06] hover:text-white/65"
 						onClick={handleDownloadProject}
 						size="icon"
 						title="Download Project"
@@ -375,12 +375,12 @@ export function FileExplorer({
 			</div>
 
 			{isExpanded && (
-				<div className="flex-1 overflow-y-auto">
+				<div className="flex-1 overflow-y-auto py-1">
 					{isCreating && (
-						<div className="p-2 border-b border-zinc-800">
+						<div className="border-white/[0.06] border-b p-2">
 							<Input
 								autoFocus
-								className="h-7 text-sm bg-zinc-800 border-zinc-700"
+								className="h-8 border-white/[0.08] bg-[#181c22] text-[12px] text-white/80 placeholder:text-white/25 focus-visible:ring-indigo-400/30"
 								onBlur={() => {
 									if (newFileName.trim()) {
 										handleCreateFile();
@@ -407,7 +407,7 @@ export function FileExplorer({
 					{fileTree.length > 0 ? (
 						fileTree.map((node) => renderNode(node))
 					) : (
-						<div className="px-3 py-4 text-sm text-zinc-500">
+						<div className="px-3 py-4 text-[12px] text-white/30">
 							Workspace files will appear here.
 						</div>
 					)}

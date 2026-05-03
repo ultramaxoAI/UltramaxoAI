@@ -3,7 +3,21 @@
 import { useGSAP } from "@gsap/react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
-import { ArrowRight, CheckCircle2, ChevronRight, Menu, X } from "lucide-react";
+import {
+	ArrowRight,
+	CheckCircle2,
+	ChevronDown,
+	ChevronRight,
+	Clapperboard,
+	Globe2,
+	Menu,
+	Palette,
+	Plus,
+	Presentation,
+	RefreshCw,
+	Smartphone,
+	X,
+} from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { HlsVideo } from "./hls-video";
@@ -20,13 +34,23 @@ const navigationItems = [
 	{ label: "FAQ", href: "#faq" },
 ];
 
-const capabilityChips = [
-	"UltraAgent chat",
-	"Code, text, image artifacts",
-	"File upload & analysis",
-	"Custom models & BYOK",
-	"History & export",
-	"PWA install",
+const buildTypes = [
+	{ label: "Website", icon: Globe2 },
+	{ label: "Mobile", icon: Smartphone },
+	{ label: "Design", icon: Palette },
+	{ label: "Slides", icon: Presentation },
+	{ label: "Animation", icon: Clapperboard },
+];
+
+const heroSignals = [
+	"Prompt to workspace",
+	"Artifacts",
+	"Files",
+	"Code",
+	"Research",
+	"Mobile",
+	"Deploy-ready",
+	"History",
 ];
 
 const narrativeBlocks = [
@@ -145,7 +169,7 @@ const pricingPlans = [
 		description: "Limited offer. (Normal price: Rp 30.000).",
 		features: [
 			"Everything in Free",
-			"Unlimited conversations",
+			"500 daily credits for serious chat",
 			"Expanded artifact workflows",
 			"Full code workspace experience",
 			"Priority support",
@@ -281,6 +305,7 @@ function GSAPSplitText({
 		() => {
 			if (!animate || !containerRef.current || hasAnimated.current) return;
 			const words = containerRef.current.querySelectorAll(".split-word");
+			if (!words.length) return;
 			gsap.fromTo(
 				words,
 				{ opacity: 0, y: 40, filter: "blur(12px)" },
@@ -335,10 +360,13 @@ function GSAPSplitText({
 export default function LandingPage() {
 	const router = useRouter();
 	const [mobileNavOpen, setMobileNavOpen] = useState(false);
+	const [isHeaderScrolled, setIsHeaderScrolled] = useState(false);
 	const [openFaq, setOpenFaq] = useState<string | null>(
 		faqItems[0]?.question ?? null,
 	);
-	const [heroTilt, setHeroTilt] = useState({ x: 0, y: 0 });
+	const [heroPrompt, setHeroPrompt] = useState(
+		"Create a 7-day launch plan for a local AI product",
+	);
 	const [apiModels, setApiModels] = useState<ApiModel[]>(defaultApiModels);
 
 	const mainRef = useRef<HTMLDivElement>(null);
@@ -356,6 +384,17 @@ export default function LandingPage() {
 	const ctaRef = useRef<HTMLDivElement>(null);
 	const mobileSidebarRef = useRef<HTMLDivElement>(null);
 	const mobileOverlayRef = useRef<HTMLDivElement>(null);
+
+	useEffect(() => {
+		const handleScroll = () => {
+			setIsHeaderScrolled(window.scrollY > 12);
+		};
+
+		handleScroll();
+		window.addEventListener("scroll", handleScroll, { passive: true });
+
+		return () => window.removeEventListener("scroll", handleScroll);
+	}, []);
 
 	useEffect(() => {
 		const loadModels = async () => {
@@ -399,17 +438,13 @@ export default function LandingPage() {
 		}
 	};
 
-	const handleHeroPointerMove = (event: React.MouseEvent<HTMLDivElement>) => {
-		const bounds = event.currentTarget.getBoundingClientRect();
-		const pointerX = (event.clientX - bounds.left) / bounds.width;
-		const pointerY = (event.clientY - bounds.top) / bounds.height;
-		setHeroTilt({
-			x: (pointerY - 0.5) * -10,
-			y: (pointerX - 0.5) * 12,
-		});
+	const startPromptFromHero = () => {
+		const prompt =
+			heroPrompt.trim() ||
+			"Help me start a clear Ultramaxo workspace from one prompt.";
+		const callbackUrl = `/chat?query=${encodeURIComponent(prompt)}`;
+		router.push(`/login?callbackUrl=${encodeURIComponent(callbackUrl)}`);
 	};
-
-	const resetHeroPointer = () => setHeroTilt({ x: 0, y: 0 });
 
 	/* ─── GSAP - Simple Reveal + Product PIN ─── */
 	useGSAP(
@@ -420,72 +455,110 @@ export default function LandingPage() {
 			if (prefersReduced || window.innerWidth < 768) return;
 
 			const ctx = gsap.context(() => {
+				const select = gsap.utils.selector(mainRef);
+				const toArray = (selector: string): Element[] =>
+					Array.from(select(selector) as ArrayLike<Element>);
+				const first = (selector: string) => toArray(selector)[0] ?? null;
+				const animateFromTo = (
+					targets: Element | Element[] | null,
+					fromVars: gsap.TweenVars,
+					toVars: gsap.TweenVars,
+					position?: string,
+					timeline?: gsap.core.Timeline,
+				) => {
+					const normalizedTargets = Array.isArray(targets)
+						? targets
+						: targets
+							? [targets]
+							: [];
+					if (!normalizedTargets.length) {
+						return;
+					}
+
+					if (timeline) {
+						timeline.fromTo(normalizedTargets, fromVars, toVars, position);
+						return;
+					}
+
+					gsap.fromTo(normalizedTargets, fromVars, toVars);
+				};
+
 				/* 1. Hero entrance */
-				gsap
-					.timeline({ defaults: { ease: "power3.out" } })
-					.fromTo(
-						navRef.current,
-						{ y: -40, opacity: 0 },
-						{ y: 0, opacity: 1, duration: 0.8 },
-					)
-					.fromTo(
-						".hero-badge",
-						{ y: 20, opacity: 0 },
-						{ y: 0, opacity: 1, duration: 0.6 },
-						"-=0.4",
-					)
-					.fromTo(
-						".hero-headline .split-word",
-						{ y: 60, opacity: 0, filter: "blur(16px)" },
-						{
-							y: 0,
-							opacity: 1,
-							filter: "blur(0px)",
-							duration: 0.9,
-							stagger: 0.05,
-						},
-						"-=0.3",
-					)
-					.fromTo(
-						".hero-subtitle",
-						{ y: 30, opacity: 0 },
-						{ y: 0, opacity: 1, duration: 0.7 },
-						"-=0.6",
-					)
-					.fromTo(
-						".hero-buttons",
-						{ y: 30, opacity: 0 },
-						{ y: 0, opacity: 1, duration: 0.6 },
-						"-=0.4",
-					)
-					.fromTo(
-						".hero-chips",
-						{ y: 20, opacity: 0 },
-						{ y: 0, opacity: 1, duration: 0.5 },
-						"-=0.3",
-					)
-					.fromTo(
-						heroMockupRef.current,
-						{ scale: 0.88, opacity: 0 },
-						{ scale: 1, opacity: 1, duration: 1.2 },
-						"-=0.8",
-					);
+				const heroTimeline = gsap.timeline({
+					defaults: { ease: "power3.out" },
+				});
+				animateFromTo(
+					navRef.current,
+					{ y: -40, opacity: 0 },
+					{ y: 0, opacity: 1, duration: 0.8 },
+					undefined,
+					heroTimeline,
+				);
+				animateFromTo(
+					toArray(".hero-badge"),
+					{ y: 20, opacity: 0 },
+					{ y: 0, opacity: 1, duration: 0.6 },
+					"-=0.4",
+					heroTimeline,
+				);
+				animateFromTo(
+					toArray(".hero-headline .split-word"),
+					{ y: 60, opacity: 0, filter: "blur(16px)" },
+					{
+						y: 0,
+						opacity: 1,
+						filter: "blur(0px)",
+						duration: 0.9,
+						stagger: 0.05,
+					},
+					"-=0.3",
+					heroTimeline,
+				);
+				animateFromTo(
+					toArray(".hero-subtitle"),
+					{ y: 30, opacity: 0 },
+					{ y: 0, opacity: 1, duration: 0.7 },
+					"-=0.6",
+					heroTimeline,
+				);
+				animateFromTo(
+					toArray(".hero-buttons"),
+					{ y: 30, opacity: 0 },
+					{ y: 0, opacity: 1, duration: 0.6 },
+					"-=0.4",
+					heroTimeline,
+				);
+				animateFromTo(
+					toArray(".hero-chips"),
+					{ y: 20, opacity: 0 },
+					{ y: 0, opacity: 1, duration: 0.5 },
+					"-=0.3",
+					heroTimeline,
+				);
+				animateFromTo(
+					heroMockupRef.current,
+					{ scale: 0.88, opacity: 0 },
+					{ scale: 1, opacity: 1, duration: 1.2 },
+					"-=0.8",
+					heroTimeline,
+				);
 
 				/* Navbar blur on scroll */
-				ScrollTrigger.create({
-					trigger: heroRef.current,
-					start: "top top",
-					end: "bottom top",
-					onUpdate: (self) => {
-						if (navRef.current) {
+				const navElement = navRef.current?.querySelector("nav");
+				if (heroRef.current && navElement) {
+					ScrollTrigger.create({
+						trigger: heroRef.current,
+						start: "top top",
+						end: "bottom top",
+						onUpdate: (self) => {
 							const progress = self.progress;
-							gsap.set(navRef.current?.querySelector("nav"), {
-								backgroundColor: `rgba(10,10,10,${0.4 + progress * 0.4})`,
+							gsap.set(navElement, {
+								backgroundColor: `rgba(8,10,13,${0.72 + progress * 0.18})`,
 								backdropFilter: `blur(${12 + progress * 8}px)`,
 							});
-						}
-					},
-				});
+						},
+					});
+				}
 
 				/* Product - Viewport reveal (no pin, no blank gaps) */
 				gsap.utils
@@ -547,171 +620,197 @@ export default function LandingPage() {
 					});
 
 				/* All other sections - simple reveal, NO PIN */
-				gsap.fromTo(
-					".video-headline",
-					{ y: 30, opacity: 0 },
-					{
-						y: 0,
-						opacity: 1,
-						duration: 0.5,
-						ease: "power2.out",
-						scrollTrigger: {
-							trigger: videoRef.current,
-							start: "top 80%",
-							toggleActions: "play none none reverse",
+				if (videoRef.current && toArray(".video-headline").length) {
+					gsap.fromTo(
+						toArray(".video-headline"),
+						{ y: 30, opacity: 0 },
+						{
+							y: 0,
+							opacity: 1,
+							duration: 0.5,
+							ease: "power2.out",
+							scrollTrigger: {
+								trigger: videoRef.current,
+								start: "top 80%",
+								toggleActions: "play none none reverse",
+							},
 						},
-					},
-				);
+					);
+				}
 
-				gsap.fromTo(
-					".showcase-left, .showcase-right",
-					{ y: 30, opacity: 0 },
-					{
-						y: 0,
-						opacity: 1,
-						duration: 0.5,
-						stagger: 0.1,
-						ease: "power2.out",
-						scrollTrigger: {
-							trigger: showcaseRef.current,
-							start: "top 80%",
-							toggleActions: "play none none reverse",
+				if (
+					showcaseRef.current &&
+					toArray(".showcase-left, .showcase-right").length
+				) {
+					gsap.fromTo(
+						toArray(".showcase-left, .showcase-right"),
+						{ y: 30, opacity: 0 },
+						{
+							y: 0,
+							opacity: 1,
+							duration: 0.5,
+							stagger: 0.1,
+							ease: "power2.out",
+							scrollTrigger: {
+								trigger: showcaseRef.current,
+								start: "top 80%",
+								toggleActions: "play none none reverse",
+							},
 						},
-					},
-				);
+					);
+				}
 
-				gsap.fromTo(
-					".showcase-bubble",
-					{ y: 15, opacity: 0 },
-					{
-						y: 0,
-						opacity: 1,
-						duration: 0.3,
-						stagger: 0.06,
-						ease: "power2.out",
-						scrollTrigger: {
-							trigger: ".showcase-bubble-wrapper",
-							start: "top 85%",
-							toggleActions: "play none none reverse",
+				const showcaseBubbleWrapper = first(".showcase-bubble-wrapper");
+				if (showcaseBubbleWrapper && toArray(".showcase-bubble").length) {
+					gsap.fromTo(
+						toArray(".showcase-bubble"),
+						{ y: 15, opacity: 0 },
+						{
+							y: 0,
+							opacity: 1,
+							duration: 0.3,
+							stagger: 0.06,
+							ease: "power2.out",
+							scrollTrigger: {
+								trigger: showcaseBubbleWrapper,
+								start: "top 85%",
+								toggleActions: "play none none reverse",
+							},
 						},
-					},
-				);
+					);
+				}
 
-				gsap.fromTo(
-					".usecase-card",
-					{ y: 30, opacity: 0 },
-					{
-						y: 0,
-						opacity: 1,
-						duration: 0.5,
-						stagger: 0.1,
-						ease: "power2.out",
-						scrollTrigger: {
-							trigger: useCasesRef.current,
-							start: "top 80%",
-							toggleActions: "play none none reverse",
+				if (useCasesRef.current && toArray(".usecase-card").length) {
+					gsap.fromTo(
+						toArray(".usecase-card"),
+						{ y: 30, opacity: 0 },
+						{
+							y: 0,
+							opacity: 1,
+							duration: 0.5,
+							stagger: 0.1,
+							ease: "power2.out",
+							scrollTrigger: {
+								trigger: useCasesRef.current,
+								start: "top 80%",
+								toggleActions: "play none none reverse",
+							},
 						},
-					},
-				);
+					);
+				}
 
-				gsap.fromTo(
-					".api-element",
-					{ y: 30, opacity: 0 },
-					{
-						y: 0,
-						opacity: 1,
-						duration: 0.5,
-						stagger: 0.1,
-						ease: "power2.out",
-						scrollTrigger: {
-							trigger: apiPlatformRef.current,
-							start: "top 80%",
-							toggleActions: "play none none reverse",
+				if (apiPlatformRef.current && toArray(".api-element").length) {
+					gsap.fromTo(
+						toArray(".api-element"),
+						{ y: 30, opacity: 0 },
+						{
+							y: 0,
+							opacity: 1,
+							duration: 0.5,
+							stagger: 0.1,
+							ease: "power2.out",
+							scrollTrigger: {
+								trigger: apiPlatformRef.current,
+								start: "top 80%",
+								toggleActions: "play none none reverse",
+							},
 						},
-					},
-				);
+					);
+				}
 
-				gsap.fromTo(
-					".pricing-card",
-					{ y: 30, opacity: 0, scale: 0.95 },
-					{
-						y: 0,
-						opacity: 1,
-						scale: 1,
-						duration: 0.5,
-						stagger: 0.1,
-						ease: "power2.out",
-						scrollTrigger: {
-							trigger: pricingRef.current,
-							start: "top 80%",
-							toggleActions: "play none none reverse",
+				if (pricingRef.current && toArray(".pricing-card").length) {
+					gsap.fromTo(
+						toArray(".pricing-card"),
+						{ y: 30, opacity: 0, scale: 0.95 },
+						{
+							y: 0,
+							opacity: 1,
+							scale: 1,
+							duration: 0.5,
+							stagger: 0.1,
+							ease: "power2.out",
+							scrollTrigger: {
+								trigger: pricingRef.current,
+								start: "top 80%",
+								toggleActions: "play none none reverse",
+							},
 						},
-					},
-				);
+					);
+				}
 
-				gsap.fromTo(
-					".faq-item",
-					{ y: 20, opacity: 0 },
-					{
-						y: 0,
-						opacity: 1,
-						duration: 0.4,
-						stagger: 0.08,
-						ease: "power2.out",
-						scrollTrigger: {
-							trigger: faqRef.current,
-							start: "top 85%",
-							toggleActions: "play none none reverse",
+				if (faqRef.current && toArray(".faq-item").length) {
+					gsap.fromTo(
+						toArray(".faq-item"),
+						{ y: 20, opacity: 0 },
+						{
+							y: 0,
+							opacity: 1,
+							duration: 0.4,
+							stagger: 0.08,
+							ease: "power2.out",
+							scrollTrigger: {
+								trigger: faqRef.current,
+								start: "top 85%",
+								toggleActions: "play none none reverse",
+							},
 						},
-					},
-				);
+					);
+				}
 
-				gsap.fromTo(
-					".cta-headline",
-					{ y: 30, opacity: 0 },
-					{
-						y: 0,
-						opacity: 1,
-						duration: 0.6,
-						ease: "power2.out",
-						scrollTrigger: {
-							trigger: ctaRef.current,
-							start: "top 80%",
-							toggleActions: "play none none reverse",
+				if (ctaRef.current && toArray(".cta-headline").length) {
+					gsap.fromTo(
+						toArray(".cta-headline"),
+						{ y: 30, opacity: 0 },
+						{
+							y: 0,
+							opacity: 1,
+							duration: 0.6,
+							ease: "power2.out",
+							scrollTrigger: {
+								trigger: ctaRef.current,
+								start: "top 80%",
+								toggleActions: "play none none reverse",
+							},
 						},
-					},
-				);
-				gsap.fromTo(
-					".cta-buttons",
-					{ y: 20, opacity: 0 },
-					{
-						y: 0,
-						opacity: 1,
-						duration: 0.4,
-						ease: "power2.out",
-						scrollTrigger: {
-							trigger: ctaRef.current,
-							start: "top 85%",
-							toggleActions: "play none none reverse",
-						},
-					},
-				);
+					);
+				}
 
-				gsap.fromTo(
-					".footer-content",
-					{ y: 15, opacity: 0 },
-					{
-						y: 0,
-						opacity: 1,
-						duration: 0.3,
-						ease: "power2.out",
-						scrollTrigger: {
-							trigger: ".footer-content",
-							start: "top 95%",
-							toggleActions: "play none none reverse",
+				if (ctaRef.current && toArray(".cta-buttons").length) {
+					gsap.fromTo(
+						toArray(".cta-buttons"),
+						{ y: 20, opacity: 0 },
+						{
+							y: 0,
+							opacity: 1,
+							duration: 0.4,
+							ease: "power2.out",
+							scrollTrigger: {
+								trigger: ctaRef.current,
+								start: "top 85%",
+								toggleActions: "play none none reverse",
+							},
 						},
-					},
-				);
+					);
+				}
+
+				const footerContent = first(".footer-content");
+				if (footerContent) {
+					gsap.fromTo(
+						footerContent,
+						{ y: 30, opacity: 0 },
+						{
+							y: 0,
+							opacity: 1,
+							duration: 0.3,
+							ease: "power2.out",
+							scrollTrigger: {
+								trigger: footerContent,
+								start: "top 95%",
+								toggleActions: "play none none reverse",
+							},
+						},
+					);
+				}
 			}, mainRef);
 
 			return () => ctx.revert();
@@ -812,68 +911,84 @@ export default function LandingPage() {
 			{/* ══════ 1. NAVBAR ══════ */}
 			<header
 				ref={navRef}
-				className="fixed top-3 right-0 left-0 z-50 flex justify-center px-3 opacity-100 sm:top-4 sm:px-4 md:opacity-0"
+				className={`fixed top-0 right-0 left-0 z-50 h-[74px] border-white/8 bg-[#080a0d]/88 opacity-100 transition-[background-color,border-color,box-shadow,backdrop-filter] duration-300 md:opacity-0 ${
+					isHeaderScrolled
+						? "border-b bg-[#080a0d]/96 shadow-[0_16px_44px_rgba(0,0,0,0.36)] backdrop-blur-xl"
+						: "border-b border-transparent backdrop-blur-none"
+				}`}
 			>
-				<nav className="liquid-glass-strong flex w-full max-w-4xl items-center justify-between gap-2 rounded-full px-3 py-2 sm:gap-6 sm:px-4 sm:py-2.5">
+				<nav className="mx-auto flex h-full w-full max-w-[1640px] items-center gap-3 px-5 sm:px-8 lg:px-10">
 					<button
-						className="flex items-center gap-3 mix-blend-screen"
+						className="flex shrink-0 items-center gap-3 rounded-xl pr-3 transition-colors hover:bg-black/[0.035]"
 						onClick={() => scrollToSection("#home")}
 						type="button"
 					>
-						<UltramaxoLogo size={32} />
-						<div className="text-left hidden sm:block">
-							<div className="text-sm font-semibold tracking-tight font-body text-white">
+						<span className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#ff3d12] font-body text-[15px] font-bold text-white">
+							U
+						</span>
+						<div className="text-left">
+							<div className="font-body text-[24px] font-semibold leading-6 tracking-[-0.04em] text-white">
 								Ultramaxo
 							</div>
-							<div className="text-[10px] text-white/50 font-body uppercase tracking-wider">
-								AI workspace
+							<div className="hidden font-body text-[9px] uppercase leading-3 tracking-widest text-white/35 sm:block">
+								CHAT WORKSPACE.
 							</div>
 						</div>
 					</button>
 
-					<div className="hidden md:flex items-center gap-6">
+					<div className="ml-4 hidden items-center gap-1 lg:flex">
 						{navigationItems.map((item) => (
 							<button
 								key={item.label}
 								onClick={() => scrollToSection(item.href)}
-								className="text-sm font-medium text-white/70 hover:text-white transition-colors font-body"
+								className="inline-flex h-10 items-center gap-1.5 rounded-xl bg-white/[0.045] px-3 font-body text-[15px] font-medium text-white/58 transition-colors hover:bg-white/[0.08] hover:text-white"
 								type="button"
 							>
 								{item.label}
+								{["Product", "Features", "Use Cases"].includes(item.label) ? (
+									<ChevronDown className="h-3.5 w-3.5 text-white/35" />
+								) : null}
 							</button>
 						))}
-					</div>
-
-					<div className="flex items-center gap-3">
 						<button
-							className="hidden md:inline-flex rounded-full px-4 py-2 text-sm font-medium text-white/70 hover:text-white transition-colors font-body"
+							className="inline-flex h-10 items-center rounded-xl bg-white/[0.045] px-3 font-body text-[15px] font-medium text-white/58 transition-colors hover:bg-white/[0.08] hover:text-white"
 							onClick={() => window.open("/app-release.apk", "_blank")}
 							type="button"
 						>
 							Download App
 						</button>
+					</div>
+
+					<div className="flex-1" />
+
+					<div className="flex items-center gap-2">
 						<button
-							className="hidden md:inline-flex rounded-full px-4 py-2 text-sm font-medium text-white/70 hover:text-white transition-colors font-body"
+							className="hidden h-10 rounded-xl px-3 font-body text-[15px] font-medium text-white/58 transition-colors hover:bg-white/[0.06] hover:text-white xl:inline-flex xl:items-center"
+							onClick={() => router.push("/contact")}
+							type="button"
+						>
+							Contact sales
+						</button>
+						<button
+							className="hidden h-10 rounded-xl bg-white/[0.06] px-4 font-body text-[15px] font-medium text-white/72 transition-colors hover:bg-white/[0.1] hover:text-white md:inline-flex md:items-center"
 							onClick={() => router.push("/login")}
 							type="button"
 						>
-							Sign in
+							Log in
 						</button>
 						<button
 							onClick={() => router.push("/register")}
-							className="inline-flex shrink-0 items-center gap-1.5 rounded-full bg-white px-4 py-2.5 font-body font-medium text-black text-sm transition-transform hover:scale-[1.02] sm:px-5"
+							className="hidden h-11 shrink-0 items-center gap-1.5 rounded-[22px] bg-white px-6 font-body text-[15px] font-semibold text-[#080a0d] transition-colors hover:bg-[#ff3d12] hover:text-white md:inline-flex"
 							type="button"
 						>
-							<span className="sm:hidden">Start</span>
-							<span className="hidden sm:inline">Start free</span>
-							<ArrowRight className="h-4 w-4" />
+							Create account
 						</button>
 						<button
-							className="md:hidden liquid-glass rounded-full p-2.5"
+							className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-white/10 bg-white/[0.06] text-white/76 transition-colors hover:bg-white/[0.1] hover:text-white md:hidden"
 							onClick={() => setMobileNavOpen(true)}
 							type="button"
 						>
-							<Menu className="w-5 h-5 text-white" />
+							<Menu className="h-5 w-5" />
 						</button>
 					</div>
 				</nav>
@@ -889,16 +1004,21 @@ export default function LandingPage() {
 					/>
 					<div
 						ref={mobileSidebarRef}
-						className="fixed top-0 right-0 bottom-0 z-[70] flex w-[min(300px,calc(100vw-2.5rem))] translate-x-full flex-col border-white/10 border-l bg-[#0a0a0a] p-5 sm:p-6"
+						className="fixed top-0 right-0 bottom-0 z-[70] flex w-[min(320px,calc(100vw-2.5rem))] translate-x-full flex-col border-white/10 border-l bg-[#0b0d10] p-5 text-white sm:p-6"
 					>
 						<div className="flex justify-between items-center mb-8">
-							<UltramaxoLogo size={32} />
+							<div className="flex items-center gap-3">
+								<span className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#ff3d12] font-body text-sm font-bold text-white">
+									U
+								</span>
+								<span className="text-xl font-semibold">Ultramaxo</span>
+							</div>
 							<button
 								onClick={closeMobileNav}
-								className="p-2 rounded-full hover:bg-white/10 transition-colors"
+								className="rounded-full p-2 transition-colors hover:bg-white/8"
 								type="button"
 							>
-								<X className="w-5 h-5 text-white" />
+								<X className="h-5 w-5 text-white/72" />
 							</button>
 						</div>
 						<div className="flex flex-col gap-4 font-body">
@@ -906,7 +1026,7 @@ export default function LandingPage() {
 								<button
 									key={item.label}
 									onClick={() => scrollToSection(item.href)}
-									className="text-left text-lg font-medium text-white/80 hover:text-white py-2 border-b border-white/5"
+									className="border-white/8 border-b py-2 text-left text-lg font-medium text-white/70 hover:text-white"
 									type="button"
 								>
 									{item.label}
@@ -915,25 +1035,25 @@ export default function LandingPage() {
 						</div>
 						<div className="mt-auto flex flex-col gap-3">
 							<button
-								className="w-full rounded-full border border-white/20 py-3 text-sm font-medium text-white font-body"
+								className="w-full rounded-full border border-white/12 py-3 font-body text-sm font-medium text-white/72"
 								onClick={() => window.open("/app-release.apk", "_blank")}
 								type="button"
 							>
 								Download App
 							</button>
 							<button
-								className="w-full rounded-full border border-white/20 py-3 text-sm font-medium text-white font-body"
+								className="w-full rounded-full border border-white/12 py-3 font-body text-sm font-medium text-white/72"
 								onClick={() => router.push("/login")}
 								type="button"
 							>
-								Sign in
+								Log in
 							</button>
 							<button
-								className="w-full rounded-full bg-white text-black py-3 text-sm font-semibold font-body"
+								className="w-full rounded-full bg-white py-3 font-body text-sm font-semibold text-[#080a0d]"
 								onClick={() => router.push("/register")}
 								type="button"
 							>
-								Start free
+								Create account
 							</button>
 						</div>
 					</div>
@@ -944,184 +1064,105 @@ export default function LandingPage() {
 			<section
 				id="home"
 				ref={heroRef}
-				className="relative flex min-h-[100svh] items-start justify-start px-4 pt-28 pb-14 sm:items-center sm:justify-center sm:px-6 sm:pt-32 sm:pb-20"
+				className="relative flex min-h-[100svh] flex-col items-center justify-center overflow-hidden bg-[#050608] px-4 pt-28 pb-10 text-white sm:px-6 lg:px-10"
 			>
-				<div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(255,255,255,0.08),transparent_48%),radial-gradient(circle_at_70%_35%,rgba(255,255,255,0.05),transparent_38%)] pointer-events-none" />
-				<video
-					className="pointer-events-none absolute hidden h-[120%] w-full object-cover opacity-40 mix-blend-screen md:block"
-					autoPlay
-					loop
-					muted
-					playsInline
-					poster="/images/demo-thumbnail.png"
-					preload="none"
+				<div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_50%_16%,rgba(255,61,18,0.17),transparent_30%),radial-gradient(circle_at_18%_72%,rgba(255,255,255,0.06),transparent_24%),linear-gradient(180deg,#050608_0%,#080a0d_54%,#020304_100%)]" />
+				<div className="pointer-events-none absolute inset-x-0 top-0 h-40 bg-[linear-gradient(180deg,rgba(255,255,255,0.05),transparent)]" />
+				<div
+					ref={heroMockupRef}
+					className="relative z-10 mx-auto flex w-full max-w-5xl flex-1 flex-col items-center justify-center opacity-100 md:opacity-0"
 				>
-					<source
-						src="https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260307_083826_e938b29f-a43a-41ec-a153-3d4730578ab8.mp4"
-						type="video/mp4"
-					/>
-				</video>
-
-				<div className="absolute inset-0 bg-gradient-to-b from-transparent via-black/50 to-black z-0" />
-
-				<div className="relative z-10 mx-auto grid w-full max-w-7xl items-center gap-8 sm:mt-8 sm:gap-9 lg:grid-cols-[1fr_1fr] lg:gap-12">
-					<div
-						ref={heroContentRef}
-						className="flex max-w-2xl flex-col items-start text-left"
-					>
-						<div className="hero-badge">
-							<span className="liquid-glass inline-flex max-w-full items-center gap-2 rounded-full py-1 pr-3 pl-1 sm:pr-4">
-								<span className="bg-white text-black rounded-full px-3 py-1 text-[10px] font-bold uppercase tracking-wider font-body">
-									Ultramaxo UltraAgent
-								</span>
-								<span className="truncate font-body font-medium text-white/80 text-xs">
-									The intelligent workspace
-								</span>
-							</span>
-						</div>
-
-						<div className="hero-headline mt-7 sm:mt-8">
+					<div ref={heroContentRef} className="w-full text-center">
+						<div className="hero-headline">
 							<GSAPSplitText
-								text="One AI workspace for chat, artifacts, files, and execution."
-								className="font-heading text-[2.55rem] text-white italic leading-[0.92] tracking-tight sm:text-5xl md:text-6xl lg:text-[5rem] lg:leading-[0.85]"
-								delay={0.6}
+								text="Start with a prompt. Ship real work."
+								className="font-body text-[3.1rem] font-medium leading-[0.93] tracking-[-0.075em] text-white sm:text-7xl md:text-[5.1rem] lg:text-[5.8rem]"
+								delay={0.35}
 								animate
 							/>
 						</div>
 
-						<p className="hero-subtitle mt-5 max-w-xl font-body font-light text-base text-white/65 leading-relaxed sm:mt-8 md:text-lg">
-							Ultramaxo brings UltraAgent chat, code and document artifacts,
-							file uploads, workspace modes, and reusable history into one
-							elegant product. Built for real work.
+						<p className="hero-subtitle mx-auto mt-6 max-w-2xl font-body text-base leading-7 text-white/52 sm:text-lg">
+							Ultramaxo is not another template builder. Describe what you need,
+							continue in chat, and refine the result in one workspace.
 						</p>
 
-						<div className="hero-buttons mt-6 flex w-full flex-col items-stretch gap-3 sm:mt-10 sm:w-auto sm:flex-row sm:flex-wrap sm:items-center sm:gap-4">
-							<button
-								type="button"
-								onClick={() => router.push("/register")}
-								className="inline-flex justify-center gap-2 rounded-full bg-white px-7 py-3.5 font-body font-semibold text-black text-sm shadow-[0_0_40px_rgba(255,255,255,0.3)] transition-transform hover:scale-[1.03]"
-							>
-								Start free <ArrowRight className="w-4 h-4" />
-							</button>
-							<button
-								type="button"
-								onClick={() => window.open("/app-release.apk", "_blank")}
-								className="liquid-glass-strong inline-flex justify-center gap-2 rounded-full border border-white/20 px-7 py-3.5 font-body font-medium text-sm text-white transition-colors hover:text-white"
-							>
-								Download App
-							</button>
-							<button
-								type="button"
-								onClick={() => scrollToSection("#product")}
-								className="liquid-glass-strong inline-flex justify-center gap-2 rounded-full px-7 py-3.5 font-body font-medium text-sm text-white transition-colors hover:text-white"
-							>
-								See the workspace <ChevronRight className="w-4 h-4" />
-							</button>
-						</div>
-
-						<div className="hero-chips mt-7 flex flex-wrap gap-2.5 sm:mt-12 sm:gap-3">
-							{capabilityChips.slice(0, 3).map((chip) => (
-								<div
-									key={chip}
-									className="liquid-glass rounded-full px-3.5 py-1.5 text-xs font-medium text-white/70 font-body inline-flex items-center gap-2"
-								>
-									<CheckCircle2 className="w-3.5 h-3.5 text-white/50" />
-									{chip}
-								</div>
-							))}
-						</div>
-					</div>
-
-					{/* 3D Tilted Hero Mockup Element */}
-					<div
-						ref={heroMockupRef}
-						className="relative perspective-[1600px] hidden lg:block opacity-0"
-						onMouseLeave={resetHeroPointer}
-						onMouseMove={handleHeroPointerMove}
-					>
-						<div
-							className="relative overflow-hidden rounded-[40px] border border-white/10 bg-[#0a0a0a]/80 backdrop-blur-xl p-4 shadow-[0_32px_90px_rgba(255,255,255,0.05)] transition-transform duration-300 ease-out"
-							style={{
-								transform: `rotateX(${heroTilt.x}deg) rotateY(${heroTilt.y}deg)`,
-								transformStyle: "preserve-3d",
+						<form
+							className="hero-buttons mx-auto mt-11 w-full max-w-[812px]"
+							onSubmit={(event) => {
+								event.preventDefault();
+								startPromptFromHero();
 							}}
 						>
-							{/* Mock UI Header */}
-							<div className="flex items-center justify-between border-b border-white/10 pb-4 mb-4">
-								<div className="flex items-center gap-3">
-									<div className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center">
-										<UltramaxoLogo size={18} />
-									</div>
-									<div>
-										<div className="text-sm font-medium text-white font-body">
-											Artifact Workspace
-										</div>
-										<div className="text-[10px] text-white/50 uppercase tracking-wider font-body">
-											Live session
-										</div>
-									</div>
-								</div>
-								<div className="liquid-glass rounded-full px-3 py-1 flex items-center gap-1.5">
-									<div className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
-									<span className="text-[10px] font-medium text-white uppercase tracking-wider font-body">
-										Active
-									</span>
+							<div className="overflow-hidden rounded-[28px] border border-white/10 bg-[#12161c]/92 text-left shadow-[0_36px_110px_rgba(0,0,0,0.55),0_0_0_1px_rgba(255,255,255,0.02)] backdrop-blur-xl transition-colors focus-within:border-[#ff5a32]/80">
+								<textarea
+									value={heroPrompt}
+									onChange={(event) => setHeroPrompt(event.target.value)}
+									className="min-h-[76px] w-full resize-none bg-transparent px-6 pt-6 font-body text-[16px] leading-6 text-white outline-none placeholder:text-white/32"
+									placeholder="Describe what you want to build..."
+								/>
+								<div className="flex items-center justify-between px-5 pb-4">
+									<button
+										type="button"
+										className="inline-flex h-9 w-9 items-center justify-center rounded-full text-white/42 transition-colors hover:bg-white/7 hover:text-white/76"
+									>
+										<Plus className="h-5 w-5" />
+									</button>
+									<button
+										type="submit"
+										className="inline-flex h-10 w-10 items-center justify-center rounded-full bg-white text-[#07090c] transition-colors hover:bg-[#ff4a1f] hover:text-white"
+										aria-label="Start from prompt"
+									>
+										<ArrowRight className="h-5 w-5" />
+									</button>
 								</div>
 							</div>
+						</form>
 
-							{/* Mock UI Body */}
-							<div className="space-y-4 font-body">
-								<div className="flex justify-end">
-									<div className="bg-white/10 text-white text-sm rounded-2xl rounded-tr-sm px-4 py-3 max-w-[85%] border border-white/5">
-										Generate a React component for a liquid glass landing page
-										with elegant animations.
-									</div>
-								</div>
-								<div className="flex justify-start">
-									<div className="bg-white text-black text-sm rounded-2xl rounded-tl-sm px-4 py-3 max-w-[90%] font-medium">
-										I&apos;ve created an artifact with the exact implementation
-										you need. It includes GSAP animations, ScrollTrigger
-										reveals, and pure CSS liquid glass effects.
-									</div>
-								</div>
-								<div className="liquid-glass-strong rounded-2xl p-4 mt-4 border border-white/10">
-									<div className="flex items-center justify-between mb-3">
-										<div className="text-xs font-semibold uppercase tracking-widest text-white/60">
-											landing-page.tsx
-										</div>
-										<button
-											type="button"
-											className="text-[10px] border border-white/20 rounded-full px-2.5 py-1 text-white hover:bg-white/10 transition-colors"
-										>
-											View Code
-										</button>
-									</div>
-									<div className="bg-black/60 rounded-xl p-3 border border-white/5">
-										<pre className="text-[11px] text-white/80 font-mono leading-relaxed overflow-hidden">
-											<code className="text-white/50">
-												{"export function LandingPage() {"}
-											</code>
-											<br />
-											<code className="text-white ml-4">{"return ("}</code>
-											<br />
-											<code className="text-white ml-8">
-												{'<div className="liquid-glass">'}
-											</code>
-											<br />
-											<code className="text-white/50 ml-12">
-												{"{/* Built with UltraAgent */}"}
-											</code>
-											<br />
-											<code className="text-white ml-8">{"</div>"}</code>
-											<br />
-											<code className="text-white ml-4">{");"}</code>
-											<br />
-											<code className="text-white/50">{"}"}</code>
-										</pre>
-									</div>
-								</div>
-							</div>
+						<div className="hero-chips mx-auto mt-5 flex max-w-2xl flex-wrap items-start justify-center gap-6 sm:gap-10">
+							{buildTypes.map(({ label, icon: Icon }) => (
+								<button
+									key={label}
+									type="button"
+									onClick={() =>
+										setHeroPrompt(
+											`Create a modern ${label.toLowerCase()} for my brand`,
+										)
+									}
+									className="group flex flex-col items-center gap-2 font-body text-sm text-white/48 transition-colors hover:text-white/82"
+								>
+									<span className="flex h-[60px] w-[60px] items-center justify-center rounded-[20px] border border-white/10 bg-white/[0.045] text-white/66 shadow-[0_18px_42px_rgba(0,0,0,0.22)] transition-colors group-hover:border-[#ff5a32]/60 group-hover:bg-[#ff3d12] group-hover:text-white">
+										<Icon className="h-5 w-5" />
+									</span>
+									{label}
+								</button>
+							))}
 						</div>
+
+						<button
+							type="button"
+							onClick={() =>
+								setHeroPrompt(
+									"Create a product launch website with a strong hero, pricing, FAQ, and CTA",
+								)
+							}
+							className="mt-6 inline-flex items-center gap-2 rounded-full px-3 py-2 font-body text-sm text-white/38 transition-colors hover:bg-white/7 hover:text-white/76"
+						>
+							Try an example prompt <RefreshCw className="h-4 w-4" />
+						</button>
+					</div>
+				</div>
+
+				<div className="relative z-10 mt-auto w-full max-w-[1780px] pb-4">
+					<div className="grid grid-cols-2 items-center gap-2 text-center font-body text-xs font-medium uppercase tracking-[0.18em] text-white/25 sm:grid-cols-4 lg:grid-cols-8">
+						{heroSignals.map((signal) => (
+							<div
+								key={signal}
+								className="rounded-full border border-white/8 bg-white/[0.025] px-3 py-2"
+							>
+								{signal}
+							</div>
+						))}
 					</div>
 				</div>
 			</section>

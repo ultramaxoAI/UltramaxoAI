@@ -34,7 +34,8 @@ export async function POST(request: Request) {
 
 	try {
 		const body = await request.json();
-		const { code, type, value, durationMonths, expiresAt } = body || {};
+		const { code, type, value, durationMonths, expiresAt, maxClaims } =
+			body || {};
 
 		if (!code || !type) {
 			return NextResponse.json(
@@ -74,6 +75,22 @@ export async function POST(request: Request) {
 			expiresAtDate = d;
 		}
 
+		let normalizedMaxClaims: number | null = null;
+		if (maxClaims !== undefined && maxClaims !== null && String(maxClaims) !== "") {
+			const parsedMaxClaims = Number(maxClaims);
+			if (
+				!Number.isInteger(parsedMaxClaims) ||
+				Number.isNaN(parsedMaxClaims) ||
+				parsedMaxClaims < 1
+			) {
+				return NextResponse.json(
+					{ error: "Maximum claims must be a positive integer" },
+					{ status: 400 },
+				);
+			}
+			normalizedMaxClaims = parsedMaxClaims;
+		}
+
 		const result = await createVoucher({
 			code: normCode,
 			type: normalizedType as "PRO" | "CREDIT",
@@ -81,6 +98,7 @@ export async function POST(request: Request) {
 			durationMonths:
 				normalizedType === "PRO" ? Math.max(1, Number(durationMonths) || 1) : 0,
 			expiresAt: expiresAtDate,
+			maxClaims: normalizedMaxClaims,
 		});
 
 		if (result.error) {

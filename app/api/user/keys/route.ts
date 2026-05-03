@@ -3,12 +3,14 @@ import {
 	createPlatformApiKey,
 	getPlatformApiKeysByUserId,
 } from "@backend/db/queries";
+import { checkRateLimit, getClientIp } from "@backend/rateLimiter";
 import { NextResponse } from "next/server";
 import { auth } from "@/app/(auth)/auth";
 import {
 	hashPlatformApiKey,
 	maskPlatformApiKey,
 } from "@/lib/platform-api-keys";
+import { isAllowedFirstPartyOrigin } from "@/lib/request-security";
 
 // Security: Generate cryptographically secure API keys
 function generateSecureApiKey(): string {
@@ -28,6 +30,9 @@ function sanitizeName(name: unknown): string | null {
 
 // Security: Rate limit key creation (max 10 keys per user)
 const MAX_KEYS_PER_USER = 10;
+const KEY_CREATE_USER_LIMIT = 5;
+const KEY_CREATE_IP_LIMIT = 20;
+const KEY_CREATE_WINDOW_MS = 60 * 60 * 1000;
 
 export async function GET() {
 	const session = await auth();
@@ -59,6 +64,10 @@ export async function POST(req: Request) {
 		return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 	}
 
+	if (!isAllowedFirstPartyOrigin(req)) {
+		return NextResponse.json({ error: "Forbidden origin" }, { status: 403 });
+	}
+
 	try {
 		// Security: Validate Content-Type
 		const contentType = req.headers.get("content-type");
@@ -66,6 +75,25 @@ export async function POST(req: Request) {
 			return NextResponse.json(
 				{ error: "Invalid content type" },
 				{ status: 400 },
+			);
+		}
+
+		const clientIp = getClientIp(req);
+		const userRate = checkRateLimit(
+			`user:${session.user.id}:api-key-create`,
+			KEY_CREATE_USER_LIMIT,
+			KEY_CREATE_WINDOW_MS,
+		);
+		const ipRate = checkRateLimit(
+			`ip:${clientIp}:api-key-create`,
+			KEY_CREATE_IP_LIMIT,
+			KEY_CREATE_WINDOW_MS,
+		);
+
+		if (!userRate.allowed || !ipRate.allowed) {
+			return NextResponse.json(
+				{ error: "Too many key creation attempts. Please try again later." },
+				{ status: 429 },
 			);
 		}
 

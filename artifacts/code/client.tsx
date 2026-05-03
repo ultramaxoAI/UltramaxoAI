@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
+import { Check, Copy, Eye, File, Files, TerminalSquare, X } from "lucide-react";
 import { toast } from "sonner";
 import { CodeEditor, type SupportedLanguage } from "@/components/code-editor";
 import {
@@ -7,7 +8,6 @@ import {
 	type ConsoleOutputContent,
 } from "@/components/console";
 import { Artifact } from "@/components/create-artifact";
-import { FileExplorer } from "@/components/file-explorer";
 import {
 	CopyIcon,
 	LogsIcon,
@@ -501,35 +501,35 @@ export const codeArtifact = new Artifact<"code", Metadata>({
 	},
 	onStreamPart: ({ streamPart, setArtifact, setMetadata }) => {
 		if (streamPart.type === "data-codeDelta") {
+			const nextContent = streamPart.data ?? "";
 			setArtifact((draftArtifact) => ({
 				...draftArtifact,
-				content: streamPart.data,
-				// Make artifact visible immediately when code starts streaming
-				isVisible: true,
+				content: nextContent,
+				isVisible: draftArtifact.isVisible,
 				status: "streaming",
 			}));
 
 			// Parse files and detect language when enough content is available
-			if (streamPart.data.length > 50) {
+			if (nextContent.length > 50) {
 				setMetadata((metadata) => {
 					if (
 						!shouldRefreshParsedFiles(
-							streamPart.data,
+							nextContent,
 							metadata?.parsedContentLength,
 						)
 					) {
 						return metadata;
 					}
 
-					const files = parseCodeFiles(streamPart.data);
+					const files = parseCodeFiles(nextContent);
 					const detectedLang =
-						files[0]?.language || detectCodeLanguage(streamPart.data);
+						files[0]?.language || detectCodeLanguage(nextContent);
 
 					return {
 						...metadata,
 						language: detectedLang,
 						files,
-						parsedContentLength: streamPart.data.length,
+						parsedContentLength: nextContent.length,
 					};
 				});
 			}
@@ -537,12 +537,19 @@ export const codeArtifact = new Artifact<"code", Metadata>({
 	},
 	content: ({ metadata, setMetadata, content, ...props }) => {
 		const [_isExpanded, _setIsExpanded] = useState(true);
-		const [activeTab, setActiveTab] = useState<"code" | "preview">("code");
+		const [activeTab, setActiveTab] = useState<"code" | "preview" | "terminal">(
+			"code",
+		);
+		const [openTabs, setOpenTabs] = useState<string[]>([]);
+		const [copied, setCopied] = useState(false);
 		const terminalRef = useRef<WebTerminalHandle>(null);
 		const lastWorkspaceSignatureRef = useRef("");
 		const wc = useWebContainerOptional();
 		const files = useMemo(
-			() => metadata?.files || parseCodeFiles(content || ""),
+			() =>
+				metadata?.files && metadata.files.length > 0
+					? metadata.files
+					: parseCodeFiles(content || ""),
 			[metadata?.files, content],
 		);
 		const activeFileIndex = metadata?.activeFileIndex || 0;
@@ -563,6 +570,18 @@ export const codeArtifact = new Artifact<"code", Metadata>({
 			activeFile?.language ||
 			metadata?.language ||
 			detectCodeLanguage(content || "");
+
+		useEffect(() => {
+			if (!activeFile?.name) {
+				return;
+			}
+
+			setOpenTabs((currentTabs) =>
+				currentTabs.includes(activeFile.name)
+					? currentTabs
+					: [...currentTabs, activeFile.name],
+			);
+		}, [activeFile?.name]);
 
 		useEffect(() => {
 			if (wc?.devServer?.ready && isPreviewableWebProject(files)) {
@@ -642,6 +661,41 @@ export const codeArtifact = new Artifact<"code", Metadata>({
 			props.onSaveContent(serializeFilesToContent(updatedFiles), false);
 		};
 
+		const selectFile = (index: number) => {
+			setMetadata({ ...metadata, activeFileIndex: index });
+		};
+
+		const closeTab = (fileName: string, event: React.MouseEvent) => {
+			event.stopPropagation();
+
+			setOpenTabs((currentTabs) => {
+				const nextTabs = currentTabs.filter((tab) => tab !== fileName);
+
+				if (activeFile?.name === fileName) {
+					const fallbackFileName = nextTabs.at(-1);
+					const fallbackIndex = files.findIndex(
+						(file) => file.name === fallbackFileName,
+					);
+
+					if (fallbackIndex >= 0) {
+						selectFile(fallbackIndex);
+					}
+				}
+
+				return nextTabs;
+			});
+		};
+
+		const handleCopy = async () => {
+			try {
+				await navigator.clipboard.writeText(activeFile?.content || content || "");
+				setCopied(true);
+				window.setTimeout(() => setCopied(false), 1500);
+			} catch {
+				toast.error("Failed to copy code");
+			}
+		};
+
 		const handleActiveFileContentChange = (
 			updatedFileContent: string,
 			debounce: boolean,
@@ -667,66 +721,121 @@ export const codeArtifact = new Artifact<"code", Metadata>({
 		};
 
 		return (
-			<div className="flex flex-col w-full h-full border border-zinc-800 rounded-xl overflow-hidden bg-[#0A0A0A]">
-				<div className="flex items-center justify-between px-3 py-2 bg-[#141415] border-b border-zinc-800">
-					<div className="flex items-center gap-2">
-						<div className="flex items-center gap-1.5 px-2 py-1 bg-zinc-800/50 rounded text-xs font-medium text-zinc-300 border border-zinc-800/80">
-							{detectedLanguage === "python"
-								? "🐍 Python"
-								: detectedLanguage === "html"
-									? "🌐 Web"
-									: "💻 Node.js"}
-						</div>
-						<div className="hidden items-center gap-1.5 rounded border border-zinc-800/80 bg-zinc-900 px-2 py-1 text-[11px] font-medium text-zinc-400 md:flex">
-							<span
-								className={cn(
-									"h-2 w-2 rounded-full",
-									wc?.status === "running"
-										? "bg-emerald-400"
-										: wc?.status === "installing" || wc?.status === "booting"
-											? "bg-amber-400"
-											: wc?.status === "error"
-												? "bg-red-400"
-												: "bg-zinc-500",
-								)}
-							/>
-							<span>{wc?.status ?? "idle"}</span>
-							<span className="text-zinc-600">•</span>
-							<span>{files.length} files</span>
-						</div>
-						<div className="text-xs text-zinc-500 font-mono hidden md:block">
-							{activeFile?.name || "App.js"}
-						</div>
+			<div className="flex h-full w-full overflow-hidden bg-[#0e0e0e]">
+				<div className="hidden w-10 shrink-0 flex-col items-center gap-1 border-r border-white/[0.06] bg-[#0a0a0a] py-2 md:flex">
+					<button
+						type="button"
+						className="flex h-8 w-8 items-center justify-center rounded-md text-white/50 transition-colors hover:bg-white/[0.05] hover:text-white/80"
+					>
+						<Files className="h-[15px] w-[15px]" />
+					</button>
+				</div>
+
+				<div className="hidden w-[175px] shrink-0 flex-col border-r border-white/[0.06] bg-[#0a0a0a] md:flex">
+					<div className="border-b border-white/[0.05] px-3 py-2.5">
+						<span className="text-[10px] font-semibold uppercase tracking-[0.12em] text-white/22">
+							Files
+						</span>
 					</div>
-					<div className="flex items-center bg-zinc-900 border border-zinc-800 rounded-md p-0.5">
-						<button
-							type="button"
-							onClick={() => setActiveTab("code")}
-							className={cn(
-								"px-3 py-1 text-xs font-medium rounded transition-colors",
-								activeTab === "code"
-									? "bg-zinc-800 text-zinc-100 shadow-sm"
-									: "text-zinc-400 hover:text-zinc-200 cursor-pointer",
-							)}
-						>
-							Code
-						</button>
-						{isPreviewableWebProject(files) && (
+					<div className="flex-1 overflow-y-auto py-1">
+						{files.map((file, index) => (
 							<button
+								key={file.name}
 								type="button"
-								onClick={() => setActiveTab("preview")}
+								onClick={() => selectFile(index)}
 								className={cn(
-									"px-3 py-1 text-xs font-medium rounded transition-colors",
-									activeTab === "preview"
-										? "bg-zinc-800 text-zinc-100 shadow-sm"
-										: "text-zinc-400 hover:text-zinc-200 cursor-pointer",
+									"flex w-full items-center gap-1.5 px-3 py-1.5 text-left text-[12px] transition-colors",
+									index === activeFileIndex
+										? "bg-white/[0.05] text-white/82"
+										: "text-white/35 hover:bg-white/[0.03] hover:text-white/62",
 								)}
 							>
-								Preview
+								<File className="h-3 w-3 shrink-0 text-white/18" />
+								<span className="truncate">{file.name}</span>
 							</button>
-						)}
+						))}
 					</div>
 				</div>
+
+				<div className="flex min-w-0 flex-1 flex-col bg-[#0e0e0e]">
+					<div className="flex h-9 items-center justify-between border-b border-white/[0.06] bg-[#0a0a0a] pl-4 pr-2">
+						<span className="truncate text-[12px] text-white/38">
+							{activeFile?.name || "index.tsx"}
+						</span>
+						<button
+							type="button"
+							onClick={handleCopy}
+							className="flex h-6 w-6 items-center justify-center rounded text-white/22 transition-colors hover:text-white/55"
+						>
+							{copied ? (
+								<Check className="h-3 w-3 text-white/70" />
+							) : (
+								<Copy className="h-3 w-3" />
+							)}
+						</button>
+					</div>
+
+					{openTabs.length > 0 && (
+						<div className="flex shrink-0 overflow-x-auto border-b border-white/[0.06] bg-[#0a0a0a]">
+							{openTabs.map((tab) => {
+								const isActive = activeFile?.name === tab;
+								return (
+									<div
+										key={tab}
+										className={cn(
+											"flex h-9 shrink-0 cursor-pointer select-none items-center gap-1.5 border-r border-white/[0.05] px-3 text-[12px] transition-colors",
+											isActive
+												? "border-t border-t-white/[0.35] bg-[#0e0e0e] text-white/80"
+												: "text-white/32 hover:text-white/58",
+										)}
+										onClick={() => {
+											const nextIndex = files.findIndex((file) => file.name === tab);
+											if (nextIndex >= 0) {
+												selectFile(nextIndex);
+											}
+										}}
+										onKeyDown={() => {}}
+										role="button"
+										tabIndex={0}
+									>
+										<span>{tab}</span>
+										<button
+											type="button"
+											onClick={(event) => closeTab(tab, event)}
+											className="text-white/18 transition-colors hover:text-white/55"
+										>
+											<X className="h-2.5 w-2.5" />
+										</button>
+									</div>
+								);
+							})}
+						</div>
+					)}
+
+					<div className="flex shrink-0 items-center border-b border-white/[0.06] bg-[#0a0a0a]">
+						{([
+							{ id: "code", icon: Files, label: "Code" },
+							{ id: "preview", icon: Eye, label: "Preview" },
+							{ id: "terminal", icon: TerminalSquare, label: "Terminal" },
+						] as const)
+							.filter((item) => item.id !== "preview" || isPreviewableWebProject(files))
+							.map(({ id, icon: Icon, label }) => (
+								<button
+									key={id}
+									type="button"
+									onClick={() => setActiveTab(id)}
+									className={cn(
+										"flex h-8 items-center gap-1.5 border-r border-white/[0.05] px-4 text-[11px] transition-colors",
+										activeTab === id
+											? "text-white/75"
+											: "text-white/28 hover:text-white/55",
+									)}
+								>
+									<Icon className="h-3 w-3" />
+									{label}
+								</button>
+							))}
+					</div>
 
 				{/* Expandable Content */}
 				<div
@@ -736,26 +845,26 @@ export const codeArtifact = new Artifact<"code", Metadata>({
 					{/* WebContainer Runner (headless) */}
 					{isPreviewableWebProject(files) && <WebContainerRunner />}
 
-					{/* File Explorer Sidebar - Always show if there are files */}
-					{files.length > 0 && (
-						<FileExplorer
-							activeFileIndex={activeFileIndex}
-							className="w-56 shrink-0 border-r border-zinc-800"
-							files={files}
-							onFileAdd={handleFileAdd}
-							onFileDelete={handleFileDelete}
-							onFileRename={handleFileRename}
-							onFileSelect={(index) =>
-								setMetadata({ ...metadata, activeFileIndex: index })
-							}
-						/>
-					)}
-
-					{/* Main Right Area: Editor/Preview (Top) + Terminal (Bottom) */}
-					<div className="flex-1 flex flex-col min-w-0 bg-[#0E0E0E]">
+					<div className="flex min-w-0 flex-1 flex-col bg-[#0e0e0e]">
 						{/* Top Editor/Preview Section */}
 						<div className="flex-1 min-h-0 relative">
-							{activeTab === "preview" && isPreviewableWebProject(files) ? (
+							{activeTab === "terminal" ? (
+								<div className="h-full">
+									<WebTerminal
+										ref={terminalRef}
+										defaultCollapsed={false}
+										outputs={wc?.terminalOutputs}
+										status={
+											wc?.status === "installing"
+												? "Installing..."
+												: wc?.status === "running"
+													? "Running..."
+													: undefined
+										}
+										isRunning={wc?.isRunning ?? false}
+									/>
+								</div>
+							) : activeTab === "preview" && isPreviewableWebProject(files) ? (
 								wc?.devServer?.ready ? (
 									<div className="w-full h-full bg-white rounded-tl-md overflow-hidden">
 										<iframe
@@ -816,23 +925,28 @@ export const codeArtifact = new Artifact<"code", Metadata>({
 							)}
 						</div>
 
-						{/* Terminal Section */}
-						{isPreviewableWebProject(files) && (
-							<WebTerminal
-								ref={terminalRef}
-								defaultCollapsed={false}
-								outputs={wc?.terminalOutputs}
-								status={
-									wc?.status === "installing"
-										? "Installing..."
-										: wc?.status === "running"
-											? "Running..."
-											: undefined
-								}
-								isRunning={wc?.isRunning ?? false}
-							/>
-						)}
+						<div className="flex h-6 shrink-0 items-center justify-between border-t border-white/[0.05] bg-[#0a0a0a] px-4">
+							<span className="font-mono text-[10px] text-white/22">
+								{detectedLanguage}
+							</span>
+							<div className="flex items-center gap-1.5">
+								<div
+									className={cn(
+										"h-1.5 w-1.5 rounded-full",
+										wc?.status === "running"
+											? "bg-white/55"
+											: wc?.status === "error"
+												? "bg-white/30"
+												: "bg-white/20",
+									)}
+								/>
+								<span className="text-[10px] text-white/22">
+									{wc?.status ?? "ready"}
+								</span>
+							</div>
+						</div>
 					</div>
+				</div>
 				</div>
 			</div>
 		);

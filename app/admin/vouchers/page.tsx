@@ -15,6 +15,8 @@ interface RedeemCode {
 	usedBy: string | null;
 	usedAt: string | null;
 	expiresAt: string | null;
+	maxClaims: number | null;
+	claimedCount: number;
 	createdAt: string;
 }
 
@@ -30,6 +32,7 @@ export default function AdminVouchersPage() {
 		value: 0,
 		durationMonths: 1,
 		expiresAt: "",
+		maxClaims: "",
 	});
 
 	const fetchCodes = useCallback(async () => {
@@ -74,6 +77,9 @@ export default function AdminVouchersPage() {
 					formData.type === "PRO" ? Math.max(1, formData.durationMonths) : 0,
 			};
 			if (formData.expiresAt) payload.expiresAt = formData.expiresAt;
+			if (formData.maxClaims.trim()) {
+				payload.maxClaims = Number(formData.maxClaims);
+			}
 
 			const res = await fetch("/api/admin/redeem-codes", {
 				method: "POST",
@@ -89,6 +95,7 @@ export default function AdminVouchersPage() {
 					value: 0,
 					durationMonths: 1,
 					expiresAt: "",
+					maxClaims: "",
 				});
 				fetchCodes();
 			} else {
@@ -108,8 +115,19 @@ export default function AdminVouchersPage() {
 		setTimeout(() => setCopiedId(null), 2000);
 	};
 
-	const usedCount = codes.filter((c) => c.isUsed).length;
-	const activeCount = codes.filter((c) => !c.isUsed).length;
+	const getCodeStatus = (code: RedeemCode) => {
+		const now = Date.now();
+		const isExpired = code.expiresAt ? new Date(code.expiresAt).getTime() < now : false;
+		const isUsedUp =
+			code.maxClaims !== null && code.claimedCount >= code.maxClaims;
+
+		if (isExpired) return "expired" as const;
+		if (isUsedUp) return "used_up" as const;
+		return "active" as const;
+	};
+
+	const usedUpCount = codes.filter((code) => getCodeStatus(code) === "used_up").length;
+	const activeCount = codes.filter((code) => getCodeStatus(code) === "active").length;
 
 	return (
 		<div className="p-8 max-w-6xl mx-auto space-y-8">
@@ -137,9 +155,9 @@ export default function AdminVouchersPage() {
 					</p>
 				</div>
 				<div className="p-4 rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-[#0a0a0a]">
-					<p className="text-xs text-gray-500 font-medium">Redeemed</p>
+					<p className="text-xs text-gray-500 font-medium">Used Up</p>
 					<p className="text-xl font-semibold text-gray-400 mt-1">
-						{usedCount}
+						{usedUpCount}
 					</p>
 				</div>
 			</div>
@@ -150,7 +168,7 @@ export default function AdminVouchersPage() {
 					Create New Voucher
 				</h3>
 				<form onSubmit={handleCreate} className="space-y-4">
-					<div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+					<div className="grid grid-cols-1 md:grid-cols-4 gap-4">
 						<div className="space-y-2">
 							<span className="text-xs font-medium text-gray-500 dark:text-gray-400">
 								Code
@@ -228,6 +246,22 @@ export default function AdminVouchersPage() {
 								/>
 							</div>
 						)}
+
+						<div className="space-y-2">
+							<span className="text-xs font-medium text-gray-500 dark:text-gray-400">
+								Maximum Claims
+							</span>
+							<input
+								type="number"
+								min={1}
+								value={formData.maxClaims}
+								onChange={(e) =>
+									setFormData({ ...formData, maxClaims: e.target.value })
+								}
+								className="w-full px-3 py-2 bg-gray-50 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-lg text-sm dark:text-white focus:outline-none focus:border-indigo-500"
+								placeholder="Unlimited"
+							/>
+						</div>
 					</div>
 
 					<div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
@@ -267,6 +301,7 @@ export default function AdminVouchersPage() {
 								<th className="px-6 py-3 font-medium">Code</th>
 								<th className="px-6 py-3 font-medium">Type</th>
 								<th className="px-6 py-3 font-medium">Details</th>
+								<th className="px-6 py-3 font-medium">Usage</th>
 								<th className="px-6 py-3 font-medium">Status</th>
 								<th className="px-6 py-3 font-medium">Created</th>
 								<th className="px-6 py-3 font-medium text-right">Copy</th>
@@ -276,7 +311,7 @@ export default function AdminVouchersPage() {
 							{loading ? (
 								<tr>
 									<td
-										colSpan={6}
+										colSpan={7}
 										className="px-6 py-8 text-center text-gray-500"
 									>
 										Loading codes...
@@ -285,7 +320,7 @@ export default function AdminVouchersPage() {
 							) : codes.length === 0 ? (
 								<tr>
 									<td
-										colSpan={6}
+										colSpan={7}
 										className="px-6 py-8 text-center text-gray-500"
 									>
 										No vouchers created yet.
@@ -318,13 +353,21 @@ export default function AdminVouchersPage() {
 												? `${code.durationMonths}mo`
 												: `${code.value} credits`}
 										</td>
+										<td className="px-6 py-3 text-xs text-gray-500">
+											{code.claimedCount} /{" "}
+											{code.maxClaims === null ? "unlimited" : code.maxClaims}
+										</td>
 										<td className="px-6 py-3">
-											{code.isUsed ? (
-												<span className="text-xs text-gray-400">Redeemed</span>
-											) : (
+											{getCodeStatus(code) === "active" ? (
 												<span className="text-xs font-medium text-emerald-600 dark:text-emerald-400">
 													Active
 												</span>
+											) : getCodeStatus(code) === "used_up" ? (
+												<span className="text-xs font-medium text-amber-600 dark:text-amber-400">
+													Used up
+												</span>
+											) : (
+												<span className="text-xs text-gray-400">Expired</span>
 											)}
 										</td>
 										<td className="px-6 py-3 text-xs text-gray-500">

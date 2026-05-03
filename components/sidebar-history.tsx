@@ -1,12 +1,11 @@
 "use client";
 
 import type { Chat } from "@backend/db/schema";
-import { isToday, isYesterday, subMonths, subWeeks } from "date-fns";
+import { isToday, subWeeks } from "date-fns";
 import { motion } from "framer-motion";
-import { SearchIcon } from "lucide-react";
 import { usePathname, useRouter } from "next/navigation";
 import type { User } from "next-auth";
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { toast } from "sonner";
 import useSWRInfinite from "swr/infinite";
 import {
@@ -27,15 +26,12 @@ import {
 } from "@/components/ui/sidebar";
 import { fetcher } from "@/lib/utils";
 import { LoaderIcon } from "./icons";
-import { SidebarFolderManager } from "./sidebar-folder-manager";
 import { ChatItem } from "./sidebar-history-item";
 
 type GroupedChats = {
 	today: Chat[];
-	yesterday: Chat[];
 	lastWeek: Chat[];
 	lastMonth: Chat[];
-	older: Chat[];
 };
 
 export type ChatHistory = {
@@ -48,7 +44,6 @@ const PAGE_SIZE = 20;
 const groupChatsByDate = (chats: Chat[]): GroupedChats => {
 	const now = new Date();
 	const oneWeekAgo = subWeeks(now, 1);
-	const oneMonthAgo = subMonths(now, 1);
 
 	return chats.reduce(
 		(groups, chat) => {
@@ -56,24 +51,18 @@ const groupChatsByDate = (chats: Chat[]): GroupedChats => {
 
 			if (isToday(chatDate)) {
 				groups.today.push(chat);
-			} else if (isYesterday(chatDate)) {
-				groups.yesterday.push(chat);
 			} else if (chatDate > oneWeekAgo) {
 				groups.lastWeek.push(chat);
-			} else if (chatDate > oneMonthAgo) {
-				groups.lastMonth.push(chat);
 			} else {
-				groups.older.push(chat);
+				groups.lastMonth.push(chat);
 			}
 
 			return groups;
 		},
 		{
 			today: [],
-			yesterday: [],
 			lastWeek: [],
 			lastMonth: [],
-			older: [],
 		} as GroupedChats,
 	);
 };
@@ -117,9 +106,7 @@ export function SidebarHistory({ user }: { user: User | undefined }) {
 	const router = useRouter();
 	const [deleteId, setDeleteId] = useState<string | null>(null);
 	const [showDeleteDialog, setShowDeleteDialog] = useState(false);
-	const [searchTerm, setSearchTerm] = useState("");
-	const [folderFilter, setFolderFilter] = useState("all");
-	const [draggingChatId, setDraggingChatId] = useState<string | null>(null);
+	const [, setDraggingChatId] = useState<string | null>(null);
 
 	const hasReachedEnd = paginatedChatHistories
 		? paginatedChatHistories.some((page) => page.hasMore === false)
@@ -134,39 +121,12 @@ export function SidebarHistory({ user }: { user: User | undefined }) {
 			(paginatedChatHistory) => paginatedChatHistory.chats,
 		) || [];
 
-	const filteredChats = useMemo(() => {
-		const normalizedSearch = searchTerm.trim().toLowerCase();
-
-		return chatsFromHistory.filter((chat) => {
-			const matchesSearch =
-				normalizedSearch.length === 0 ||
-				chat.title.toLowerCase().includes(normalizedSearch) ||
-				chat.folder?.toLowerCase().includes(normalizedSearch) ||
-				chat.tags?.some((tag) => tag.toLowerCase().includes(normalizedSearch));
-
-			const matchesFolder =
-				folderFilter === "all"
-					? true
-					: folderFilter === "uncategorized"
-						? !chat.folder?.trim()
-						: chat.folder === folderFilter;
-
-			return matchesSearch && matchesFolder;
-		});
-	}, [chatsFromHistory, folderFilter, searchTerm]);
+	const filteredChats = chatsFromHistory;
 
 	const pinnedChats = filteredChats.filter((chat) => chat.isPinned);
 	const groupedChats = groupChatsByDate(
 		filteredChats.filter((chat) => !chat.isPinned),
 	);
-	const chatCounts = useMemo(() => {
-		return chatsFromHistory.reduce<Record<string, number>>((acc, chat) => {
-			const key = chat.folder?.trim() || "uncategorized";
-			acc[key] = (acc[key] ?? 0) + 1;
-			return acc;
-		}, {});
-	}, [chatsFromHistory]);
-
 	const handleDelete = () => {
 		const chatToDelete = deleteId;
 		const isCurrentChat = pathname === `/chat/${chatToDelete}`;
@@ -206,30 +166,6 @@ export function SidebarHistory({ user }: { user: User | undefined }) {
 		mutate();
 	};
 
-	const handleAssignChatToFolder = async (folder: string | null) => {
-		if (!draggingChatId) {
-			return;
-		}
-
-		const response = await fetch(`/api/chat/${draggingChatId}`, {
-			method: "PATCH",
-			headers: { "Content-Type": "application/json" },
-			body: JSON.stringify({ folder }),
-		});
-
-		if (!response.ok) {
-			toast.error("Failed to move chat");
-			setDraggingChatId(null);
-			return;
-		}
-
-		toast.success(
-			folder ? `Chat moved to ${folder}` : "Chat removed from folder",
-		);
-		setDraggingChatId(null);
-		handleHistoryRefresh();
-	};
-
 	const renderChatSection = (label: string, chats: Chat[]) => {
 		if (chats.length === 0) {
 			return null;
@@ -237,7 +173,7 @@ export function SidebarHistory({ user }: { user: User | undefined }) {
 
 		return (
 			<div className="space-y-1.5">
-				<div className="px-3 py-1.5 text-[10px] font-semibold tracking-[0.18em] uppercase text-[#7c7369] dark:text-[#828882]">
+				<div className="px-3 py-1.5 text-[10px] font-semibold tracking-[0.18em] text-white/25">
 					{label}
 				</div>
 				{chats.map((chat) => (
@@ -264,7 +200,7 @@ export function SidebarHistory({ user }: { user: User | undefined }) {
 			<SidebarGroup>
 				<SidebarGroupContent>
 					<div className="mx-3 mt-3 flex w-auto flex-row items-center justify-center rounded-[22px] border border-black/6 bg-white/55 px-4 py-4 text-sm text-[#6f746f] shadow-[0_12px_30px_rgba(17,19,21,0.04)] dark:border-white/7 dark:bg-white/[0.03] dark:text-[#9ca39d] dark:shadow-none">
-						Login to save and revisit previous chats!
+						Login to save and revisit previous chats.
 					</div>
 				</SidebarGroupContent>
 			</SidebarGroup>
@@ -316,36 +252,15 @@ export function SidebarHistory({ user }: { user: User | undefined }) {
 		<>
 			<SidebarGroup>
 				<SidebarGroupContent>
-					<SidebarFolderManager
-						activeFolder={folderFilter}
-						chatCounts={chatCounts}
-						draggingChatId={draggingChatId}
-						onAssignChatToFolder={handleAssignChatToFolder}
-						onFoldersUpdated={handleHistoryRefresh}
-						onSelectFolder={setFolderFilter}
-					/>
-					<div className="mb-4 space-y-2 px-3">
-						<div className="relative">
-							<SearchIcon className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#858278] dark:text-[#838982]" />
-							<input
-								className="h-11 w-full rounded-[20px] border border-black/6 bg-white/72 pl-9 pr-3 text-sm text-[#1d1f22] shadow-[0_10px_22px_rgba(16,18,20,0.04)] outline-none placeholder:text-[#7d817b] dark:border-white/7 dark:bg-white/[0.03] dark:text-[#ece4d8] dark:shadow-none dark:placeholder:text-[#7f8781]"
-								onChange={(e) => setSearchTerm(e.target.value)}
-								placeholder="Search chats"
-								value={searchTerm}
-							/>
-						</div>
-					</div>
 					<SidebarMenu>
-						<div className="flex flex-col gap-5 px-1">
-							{renderChatSection("Pinned", pinnedChats)}
-							{renderChatSection("Today", groupedChats.today)}
-							{renderChatSection("Yesterday", groupedChats.yesterday)}
-							{renderChatSection("Last 7 days", groupedChats.lastWeek)}
-							{renderChatSection("Last 30 days", groupedChats.lastMonth)}
-							{renderChatSection("Older than last month", groupedChats.older)}
+						<div className="flex flex-col gap-5 px-1 pt-3">
+							{renderChatSection("PINNED", pinnedChats)}
+							{renderChatSection("TODAY", groupedChats.today)}
+							{renderChatSection("LAST 7 DAYS", groupedChats.lastWeek)}
+							{renderChatSection("LAST 30 DAYS", groupedChats.lastMonth)}
 							{filteredChats.length === 0 ? (
-								<div className="mx-2 rounded-[20px] border border-black/6 bg-white/55 px-4 py-4 text-sm text-[#6f746f] shadow-[0_12px_30px_rgba(17,19,21,0.04)] dark:border-white/7 dark:bg-white/[0.03] dark:text-[#9d9388] dark:shadow-none">
-									No chats match the current filters.
+								<div className="mx-2 rounded-2xl border border-white/6 bg-white/[0.03] px-4 py-4 text-sm text-white/35">
+									No chats yet.
 								</div>
 							) : null}
 						</div>

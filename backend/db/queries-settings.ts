@@ -13,6 +13,9 @@ export type MaintenanceSettingsRecord = {
 	maintenanceTemplate: string;
 	maintenanceTitle: string;
 	maintenanceMessage: string;
+	chatAnnouncementEnabled: boolean;
+	chatAnnouncementTitle: string;
+	chatAnnouncementMessage: string;
 	updatedBy?: string | null;
 	createdAt?: Date;
 	updatedAt?: Date;
@@ -26,8 +29,27 @@ export const DEFAULT_MAINTENANCE_SETTINGS: Omit<
 	maintenanceTemplate: "minimal",
 	maintenanceTitle: "We will be right back.",
 	maintenanceMessage: "Lagi ada update kecil. Sebentar lagi balik.",
+	chatAnnouncementEnabled: false,
+	chatAnnouncementTitle: "",
+	chatAnnouncementMessage: "",
 	updatedBy: null,
 };
+
+export type ChatAnnouncementSettings = {
+	enabled: boolean;
+	title: string;
+	message: string;
+};
+
+export async function getStoredChatAnnouncementSettings(): Promise<ChatAnnouncementSettings> {
+	const globalSettings = await getSiteSettings("global");
+
+	return {
+		enabled: Boolean(globalSettings?.chatAnnouncementEnabled),
+		title: globalSettings?.chatAnnouncementTitle ?? "",
+		message: globalSettings?.chatAnnouncementMessage ?? "",
+	};
+}
 
 // ============================================================
 // User Settings (Personalization)
@@ -151,6 +173,27 @@ export async function listMaintenanceSettings() {
 	) as Record<MaintenanceScope, MaintenanceSettingsRecord>;
 }
 
+export async function getChatAnnouncementSettings(): Promise<ChatAnnouncementSettings> {
+	const storedSettings = await getStoredChatAnnouncementSettings();
+	const enabled = Boolean(storedSettings.enabled);
+	const title = storedSettings.title.trim();
+	const message = storedSettings.message.trim();
+
+	if (!enabled || !title || !message) {
+		return {
+			enabled: false,
+			title: "",
+			message: "",
+		};
+	}
+
+	return {
+		enabled: true,
+		title,
+		message,
+	};
+}
+
 export async function upsertSiteSettings(
 	key: string,
 	data: {
@@ -158,6 +201,9 @@ export async function upsertSiteSettings(
 		maintenanceTemplate?: string;
 		maintenanceTitle?: string;
 		maintenanceMessage?: string;
+		chatAnnouncementEnabled?: boolean;
+		chatAnnouncementTitle?: string;
+		chatAnnouncementMessage?: string;
 		updatedBy?: string | null;
 	},
 ) {

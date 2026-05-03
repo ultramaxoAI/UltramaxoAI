@@ -18,6 +18,19 @@ const nextConfig: NextConfig = {
 	async headers() {
 		return [
 			{
+				source: "/api/chat",
+				headers: [
+					{
+						key: "X-Accel-Buffering",
+						value: "no",
+					},
+					{
+						key: "Cache-Control",
+						value: "no-cache",
+					},
+				],
+			},
+			{
 				source: "/(.*)",
 				headers: [
 					{

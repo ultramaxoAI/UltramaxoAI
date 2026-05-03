@@ -9,9 +9,8 @@ import { Button } from "./ui/button";
 
 function PureArtifactCloseButton() {
 	const { setArtifact } = useArtifact();
-	const {
-		uiState: { isIdeLocked },
-	} = useArtifactUiState();
+	const artifactUiState = useArtifactUiState();
+	const isIdeLocked = artifactUiState?.uiState?.isIdeLocked ?? false;
 
 	if (isIdeLocked) {
 		return null;
@@ -19,7 +18,7 @@ function PureArtifactCloseButton() {
 
 	return (
 		<Button
-			className="h-10 w-10 rounded-full border-zinc-800/80 bg-zinc-900/80 p-0 text-zinc-100 backdrop-blur hover:bg-zinc-800 dark:hover:bg-zinc-700"
+			className="h-10 w-10 rounded-full border-white/[0.08] bg-white/[0.04] p-0 text-white/65 backdrop-blur transition-colors hover:bg-white/[0.08] hover:text-white/90"
 			data-testid="artifact-close-button"
 			onClick={() => {
 				setArtifact((currentArtifact) =>

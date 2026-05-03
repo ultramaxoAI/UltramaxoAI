@@ -1,4 +1,5 @@
 import {
+	getStoredChatAnnouncementSettings,
 	listMaintenanceSettings,
 	MAINTENANCE_SCOPES,
 	upsertSiteSettings,
@@ -15,8 +16,11 @@ export async function GET() {
 	}
 
 	try {
-		const settings = await listMaintenanceSettings();
-		return NextResponse.json({ settings });
+		const [settings, announcement] = await Promise.all([
+			listMaintenanceSettings(),
+			getStoredChatAnnouncementSettings(),
+		]);
+		return NextResponse.json({ settings, announcement });
 	} catch (error) {
 		console.error("API Error (admin/site-settings/GET):", error);
 		return NextResponse.json(
@@ -37,6 +41,7 @@ export async function PATCH(request: Request) {
 		const validTemplates = ["midnight", "aurora", "minimal", "ember"];
 
 		const scopes = body?.scopes;
+		const announcement = body?.announcement;
 		if (!scopes || typeof scopes !== "object") {
 			return NextResponse.json(
 				{ error: "Scopes payload is required" },
@@ -68,6 +73,26 @@ export async function PATCH(request: Request) {
 			}
 		}
 
+		if (announcement !== undefined) {
+			if (!announcement || typeof announcement !== "object") {
+				return NextResponse.json(
+					{ error: "Announcement payload is invalid" },
+					{ status: 400 },
+				);
+			}
+
+			const announcementEnabled = Boolean(announcement.enabled);
+			const announcementTitle = String(announcement.title ?? "").trim();
+			const announcementMessage = String(announcement.message ?? "").trim();
+
+			if (announcementEnabled && (!announcementTitle || !announcementMessage)) {
+				return NextResponse.json(
+					{ error: "Announcement title and message are required when enabled" },
+					{ status: 400 },
+				);
+			}
+		}
+
 		await Promise.all(
 			MAINTENANCE_SCOPES.map(async (scope) => {
 				const scopeSettings = scopes[scope];
@@ -90,9 +115,25 @@ export async function PATCH(request: Request) {
 			}),
 		);
 
-		const settings = await listMaintenanceSettings();
+		if (announcement && typeof announcement === "object") {
+			await upsertSiteSettings("global", {
+				chatAnnouncementEnabled: Boolean(announcement.enabled),
+				chatAnnouncementTitle: String(announcement.title ?? "").trim(),
+				chatAnnouncementMessage: String(announcement.message ?? "").trim(),
+				updatedBy: session.user.id,
+			});
+		}
 
-		return NextResponse.json({ success: true, settings });
+		const [settings, nextAnnouncement] = await Promise.all([
+			listMaintenanceSettings(),
+			getStoredChatAnnouncementSettings(),
+		]);
+
+		return NextResponse.json({
+			success: true,
+			settings,
+			announcement: nextAnnouncement,
+		});
 	} catch (error) {
 		console.error("API Error (admin/site-settings/PATCH):", error);
 		return NextResponse.json(

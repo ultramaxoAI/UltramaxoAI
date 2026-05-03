@@ -52,8 +52,8 @@ import {
 	suggestion,
 	type User,
 	user,
-	userFeedback,
 	userApiKeys,
+	userFeedback,
 	userKnowledgeEntry,
 	userMemory,
 	userSettings,
@@ -75,6 +75,19 @@ function isMissingFeedbackTableError(error: unknown) {
 		"code" in error &&
 		error.code === "42P01"
 	);
+}
+
+function getNestedErrorCode(error: unknown): string | undefined {
+	if (typeof error !== "object" || error === null) {
+		return undefined;
+	}
+
+	const record = error as { code?: unknown; cause?: unknown };
+	if (typeof record.code === "string") {
+		return record.code;
+	}
+
+	return getNestedErrorCode(record.cause);
 }
 
 // Optionally, if not using email/pass login, you can
@@ -204,10 +217,7 @@ export async function createUserFeedback({
 		const normalizedMessage = message.trim();
 
 		if (!normalizedMessage) {
-			throw new ChatSDKError(
-				"bad_request:api",
-				"Feedback message is required",
-			);
+			throw new ChatSDKError("bad_request:api", "Feedback message is required");
 		}
 
 		const [feedback] = await db
@@ -337,6 +347,9 @@ export async function saveChat({
 		return result;
 	} catch (error) {
 		console.error("saveChat database error:", error);
+		if (getNestedErrorCode(error) === "23505") {
+			return;
+		}
 		throw new ChatSDKError("bad_request:database", "Failed to save chat");
 	}
 }

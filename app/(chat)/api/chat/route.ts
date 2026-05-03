@@ -6,10 +6,17 @@ import {
 } from "@backend/ai/tools/agent-mode";
 import {
 	createCodeFile,
+	createFile,
+	createFolder,
 	deleteCodeFile,
+	editFile,
 	executeTerminalCommand,
 	installDependency,
+	installPackage,
 	listCodeFiles,
+	listFiles,
+	readFile,
+	runCommand,
 	runWorkspaceCommand,
 	startPreviewServer,
 	updateCodeFile,
@@ -17,11 +24,11 @@ import {
 import { createDocument } from "@backend/ai/tools/create-document";
 import { getWeather } from "@backend/ai/tools/get-weather";
 import { requestSuggestions } from "@backend/ai/tools/request-suggestions";
+import { requestClarification } from "@backend/ai/tools/request-clarification";
 import { updateDocument } from "@backend/ai/tools/update-document";
 import { webSearch } from "@backend/ai/tools/web-search";
 import {
 	createStreamId,
-	deductUserLimitCount,
 	deleteChatById,
 	expireProIfNeeded,
 	getChatById,
@@ -29,7 +36,6 @@ import {
 	getEnabledUserMemoryByUserId,
 	getMessagesByChatId,
 	getRecentCrossChatMemory,
-	getTodayMessageCount,
 	getUserById,
 	resolveExistingUserId,
 	saveChat,
@@ -38,7 +44,6 @@ import {
 	spendCreditsForUser,
 	updateChatTitleById,
 	updateMessage,
-	updateUserIdeModeUsage,
 } from "@backend/db/queries";
 import {
 	getEnabledUserApiKey,
@@ -88,6 +93,23 @@ type StreamErrorDetails = Error & {
 type ChatMessagePart = ChatMessage["parts"][number];
 type ModelMessages = Awaited<ReturnType<typeof convertToModelMessages>>;
 type ModelMessage = ModelMessages[number];
+
+function hasApprovalContinuationState(parts: ChatMessage["parts"] = []) {
+	return parts.some((part) => {
+		if (!part || typeof part !== "object" || !("state" in part)) {
+			return false;
+		}
+
+		const state = (part as { state?: string }).state;
+		return state === "approval-responded" || state === "output-denied";
+	});
+}
+
+function getApprovalPatchMessages(messages: ChatMessage[] = []) {
+	return messages.filter((message) =>
+		hasApprovalContinuationState(message.parts),
+	);
+}
 
 function isImageLikePart(part: unknown) {
 	if (!part || typeof part !== "object" || !("type" in part)) {
@@ -272,56 +294,12 @@ export async function POST(request: Request) {
 			const userSettings = await getUserSettings(session.user.id);
 			const customInstructions = userSettings?.customInstructions || "";
 
-			// Daily Message Limit for Free Users (SKIP IF USING CUSTOM KEY)
 			const [currentUser] = await getUserById(session.user.id);
-			if (
-				!customConfig &&
-				!currentUser?.isPro &&
-				currentUser?.role !== "admin"
-			) {
-				const todayCount = await getTodayMessageCount(session.user.id);
-				// Free users get 10 messages per day
-				if (todayCount >= 10) {
-					// If exceeded 10 daily limits, try deducting from extra limitCount
-					const deducted = await deductUserLimitCount(session.user.id);
-					if (!deducted) {
-						return new Response(
-							"Out of Limits! You have reached your 10 daily free messages. Please upgrade to PRO, or add your own Custom API Key in Settings.",
-							{ status: 429 },
-						);
-					}
-				}
-			}
 
-			// Daily IDE Mode Limit Check for Free Users (1x per day)
-			const isIdeAgentModeRequested =
-				inferredFullstackModeEnabled || inferredMobileModeEnabled;
-			if (
-				isIdeAgentModeRequested &&
-				!customConfig &&
-				!currentUser?.isPro &&
-				currentUser?.role !== "admin"
-			) {
-				const lastIdeUsageDate = currentUser?.freeIdeModeUsedAt;
-				const today = new Date();
-				const isUsedToday =
-					lastIdeUsageDate &&
-					lastIdeUsageDate.getFullYear() === today.getFullYear() &&
-					lastIdeUsageDate.getMonth() === today.getMonth() &&
-					lastIdeUsageDate.getDate() === today.getDate();
-
-				if (isUsedToday) {
-					return new Response(
-						"IDE Mode Limit! You can only use Fullstack/Mobile Dev mode 1 time per day on a Free account. Please upgrade to PRO for unlimited usage.",
-						{ status: 429 },
-					);
-				} else {
-					// Record their 1 daily usage
-					await updateUserIdeModeUsage(session.user.id);
-				}
-			}
-
-			const isToolApprovalFlow = Boolean(messages);
+			const approvalPatchMessages = getApprovalPatchMessages(
+				(messages as ChatMessage[] | undefined) ?? [],
+			);
+			const isToolApprovalFlow = approvalPatchMessages.length > 0;
 
 			if (message?.role === "user" && !isToolApprovalFlow && !customConfig) {
 				const creditCost = getChatCreditCost({
@@ -360,9 +338,7 @@ export async function POST(request: Request) {
 				if (chat.userId !== session.user.id) {
 					return new ChatSDKError("forbidden:chat").toResponse();
 				}
-				if (!isToolApprovalFlow) {
-					messagesFromDb = await getMessagesByChatId({ id });
-				}
+				messagesFromDb = await getMessagesByChatId({ id });
 			} else if (message?.role === "user") {
 				await saveChat({
 					id,
@@ -373,11 +349,35 @@ export async function POST(request: Request) {
 				titlePromise = generateTitleFromUserMessage({
 					message: message as ChatMessage,
 				});
+			} else if (isToolApprovalFlow) {
+				return new ChatSDKError("bad_request:api").toResponse();
 			}
 
+			if (!message && !isToolApprovalFlow) {
+				return new ChatSDKError("bad_request:api").toResponse();
+			}
+
+			const uiMessagesFromDb = convertToUIMessages(messagesFromDb);
+			const mergedToolApprovalMessages = isToolApprovalFlow
+				? uiMessagesFromDb.map((storedMessage) => {
+						const patchMessage = approvalPatchMessages.find(
+							(candidate) => candidate.id === storedMessage.id,
+						);
+
+						if (!patchMessage) {
+							return storedMessage;
+						}
+
+						return {
+							...storedMessage,
+							parts: patchMessage.parts,
+						};
+					})
+				: uiMessagesFromDb;
+
 			const uiMessages = isToolApprovalFlow
-				? (messages as ChatMessage[])
-				: [...convertToUIMessages(messagesFromDb), message as ChatMessage];
+				? mergedToolApprovalMessages
+				: [...uiMessagesFromDb, message as ChatMessage];
 
 			const { longitude, latitude, city, country } = geolocation(request);
 
@@ -387,6 +387,24 @@ export async function POST(request: Request) {
 				city,
 				country,
 			};
+
+			if (isToolApprovalFlow) {
+				const persistedApprovalMessages = mergedToolApprovalMessages.filter(
+					(storedMessage) =>
+						approvalPatchMessages.some(
+							(patch) => patch.id === storedMessage.id,
+						),
+				);
+
+				await Promise.all(
+					persistedApprovalMessages.map((approvalMessage) =>
+						updateMessage({
+							id: approvalMessage.id,
+							parts: approvalMessage.parts,
+						}),
+					),
+				);
+			}
 
 			if (message?.role === "user") {
 				await saveMessages({
@@ -612,9 +630,6 @@ export async function POST(request: Request) {
 								: "Mobile Workspace",
 						});
 						dataStream.write({ type: "data-kind", data: "code" });
-						dataStream.write({ type: "data-clear", data: null });
-						dataStream.write({ type: "data-codeDelta", data: "" });
-						dataStream.write({ type: "data-finish", data: null });
 					}
 
 					while (retryCount <= maxRetries) {
@@ -684,6 +699,8 @@ export async function POST(request: Request) {
 								baseSystemPrompt += `\n\n[ACTIVE WORKSPACE]\nYou are currently operating in an active workspace artifact (documentId: ${currentDocumentId}).\nWhen calling createCodeFile, updateCodeFile, deleteCodeFile, or listCodeFiles, you MUST use this exact documentId.\nDo NOT call createDocument unless you are explicitly starting a brand new, separate project.`;
 							}
 
+							baseSystemPrompt += `\n\n[FINAL RESPONSE REQUIREMENT]\nAfter completing any task, tool call, or analysis, you MUST always write a clear final text response to the user explaining what you did, what was created or changed, and any next steps or how to use the result. Never finish with only tool calls. Never be silent after tool calls.`;
+
 							const getDocumentId = () => currentDocumentId;
 							const setDocumentId = (id: string) => {
 								currentDocumentId = id;
@@ -691,12 +708,11 @@ export async function POST(request: Request) {
 
 							// Determine which model to use
 							let effectiveModel = selectedChatModel;
-							if (isIdeAgentMode || deepThinkingEnabled) {
-								if (isPro) {
-									effectiveModel = "openai/gpt-5.4-mini";
-								} else if (deepThinkingEnabled) {
-									effectiveModel = "qwen3.6-plus";
-								}
+							if (
+								deepThinkingEnabled &&
+								!selectedChatModel.includes("gpt-5.4-mini")
+							) {
+								effectiveModel = selectedChatModel;
 							}
 
 							// Intelligent Prompt Jailbreak Injection
@@ -761,6 +777,7 @@ export async function POST(request: Request) {
 								tools: useTools
 									? {
 											getWeather,
+											requestClarification,
 											...(webSearchEnabled ? { webSearch } : {}),
 											...(isIdeAgentMode
 												? {
@@ -786,7 +803,22 @@ export async function POST(request: Request) {
 															getDocumentId,
 															setDocumentId,
 														}),
+														createFile: createFile({
+															session,
+															dataStream,
+															getDocumentId,
+															setDocumentId,
+														}),
+														createFolder: createFolder({
+															dataStream,
+														}),
 														updateCodeFile: updateCodeFile({
+															session,
+															dataStream,
+															getDocumentId,
+															setDocumentId,
+														}),
+														editFile: editFile({
 															session,
 															dataStream,
 															getDocumentId,
@@ -798,11 +830,29 @@ export async function POST(request: Request) {
 															getDocumentId,
 															setDocumentId,
 														}),
+														readFile: readFile({
+															session,
+															dataStream,
+															getDocumentId,
+															setDocumentId,
+														}),
 														runWorkspaceCommand: runWorkspaceCommand(),
+														listFiles: listFiles({
+															session,
+															dataStream,
+															getDocumentId,
+															setDocumentId,
+														}),
 														executeTerminalCommand: executeTerminalCommand({
 															dataStream,
 														}),
+														runCommand: runCommand({
+															dataStream,
+														}),
 														installDependency: installDependency({
+															dataStream,
+														}),
+														installPackage: installPackage({
 															dataStream,
 														}),
 														startPreviewServer: startPreviewServer({
@@ -984,7 +1034,12 @@ export async function POST(request: Request) {
 					}
 				},
 				generateId: generateUUID,
-				onFinish: async ({ messages: finishedMessages }) => {
+				onFinish: async ({ messages: finishedMessages, finishReason }) => {
+					console.log("[Chat API] Stream finished", {
+						chatId: id,
+						finishReason,
+						messageCount: finishedMessages.length,
+					});
 					if (isToolApprovalFlow) {
 						for (const finishedMsg of finishedMessages) {
 							const existingMsg = uiMessages.find(
@@ -1050,6 +1105,12 @@ export async function POST(request: Request) {
 
 			return createUIMessageStreamResponse({
 				stream,
+				headers: {
+					"Content-Type": "text/event-stream",
+					"Cache-Control": "no-cache, no-transform",
+					"X-Accel-Buffering": "no",
+					Connection: "keep-alive",
+				},
 				async consumeSseStream({ stream: sseStream }) {
 					if (!process.env.REDIS_URL) {
 						return;

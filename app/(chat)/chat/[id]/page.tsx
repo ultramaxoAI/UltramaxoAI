@@ -2,15 +2,15 @@ import { DEFAULT_CHAT_MODEL } from "@backend/ai/models";
 import {
 	getChatById,
 	getMessagesByChatId,
-	getTodayMessageCount,
 	getUserApiKeys,
-	getUserById,
 } from "@backend/db/queries";
+import { getChatAnnouncementSettings } from "@backend/db/queries-settings";
 import { cookies } from "next/headers";
 import { notFound, redirect } from "next/navigation";
 import { Suspense } from "react";
 import { auth } from "@/app/(auth)/auth";
 import { Chat } from "@/components/chat";
+import { ChatErrorBoundary } from "@/components/chat-error-boundary";
 import { ChatRouteLoading } from "@/components/chat-route-loading";
 import { DataStreamHandler } from "@/components/data-stream-handler";
 import { convertToUIMessages } from "@/lib/utils";
@@ -48,26 +48,13 @@ async function ChatPage({ params }: { params: Promise<{ id: string }> }) {
 	}
 
 	const isReadonly = !session || session.user?.id !== chat.userId;
+	const announcement = await getChatAnnouncementSettings();
 
-	let isAtLimit = false;
 	const customModels: Array<{ id: string; name: string; provider: string }> =
 		[];
 
 	if (session?.user?.id) {
-		const [todayCount, userRows, apiKeys] = await Promise.all([
-			getTodayMessageCount(session.user.id),
-			getUserById(session.user.id),
-			getUserApiKeys(session.user.id),
-		]);
-		const [currentUser] = userRows;
-		if (
-			!currentUser?.isPro &&
-			currentUser?.role !== "admin" &&
-			todayCount >= 10 &&
-			(currentUser?.limitCount || 0) <= 0
-		) {
-			isAtLimit = true;
-		}
+		const apiKeys = await getUserApiKeys(session.user.id);
 
 		for (const key of apiKeys) {
 			if (key.isEnabled && key.customModels) {
@@ -91,37 +78,39 @@ async function ChatPage({ params }: { params: Promise<{ id: string }> }) {
 
 	if (!chatModelFromCookie) {
 		return (
-			<>
+			<ChatErrorBoundary>
 				<Chat
 					autoResume={true}
+					chatAnnouncement={announcement}
 					id={chat.id}
 					initialChatModel={DEFAULT_CHAT_MODEL}
 					initialMessages={uiMessages}
 					initialVisibilityType={chat.visibility}
-					isAtLimit={isAtLimit}
+					isAtLimit={false}
 					isReadonly={isReadonly}
 					user={session?.user}
 					customModels={customModels}
 				/>
 				<DataStreamHandler />
-			</>
+			</ChatErrorBoundary>
 		);
 	}
 
 	return (
-		<>
+		<ChatErrorBoundary>
 			<Chat
 				autoResume={true}
+				chatAnnouncement={announcement}
 				id={chat.id}
 				initialChatModel={chatModelFromCookie.value}
 				initialMessages={uiMessages}
 				initialVisibilityType={chat.visibility}
-				isAtLimit={isAtLimit}
+				isAtLimit={false}
 				isReadonly={session?.user?.id !== chat.userId}
 				user={session?.user}
 				customModels={customModels}
 			/>
 			<DataStreamHandler />
-		</>
+		</ChatErrorBoundary>
 	);
 }

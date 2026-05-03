@@ -1,37 +1,36 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import {
-	Reasoning,
-	ReasoningContent,
-	ReasoningTrigger,
-} from "./elements/reasoning";
+	AgentThinkingPanel,
+	type AgentThinkingStep,
+} from "./agent-thinking-panel";
 
-type MessageReasoningProps = {
-	isLoading: boolean;
-	reasoning: string;
-};
+export { AgentThinkingPanel, type AgentThinkingStep };
 
 export function MessageReasoning({
 	isLoading,
 	reasoning,
-}: MessageReasoningProps) {
-	const [hasBeenStreaming, setHasBeenStreaming] = useState(isLoading);
-
-	useEffect(() => {
-		if (isLoading) {
-			setHasBeenStreaming(true);
-		}
-	}, [isLoading]);
+}: {
+	isLoading: boolean;
+	reasoning: string;
+}) {
+	const steps: AgentThinkingStep[] = reasoning
+		.split("\n")
+		.map((line) => line.trim())
+		.filter(Boolean)
+		.slice(0, 6)
+		.map((line, index) => ({
+			id: `reasoning-${index}`,
+			type: "thought",
+			label: line.replace(/^[-*>]\s*/, ""),
+			status:
+				isLoading && index === 0 ? ("running" as const) : ("done" as const),
+		}));
 
 	return (
-		<Reasoning
-			data-testid="message-reasoning"
-			defaultOpen={hasBeenStreaming}
-			isStreaming={isLoading}
-		>
-			<ReasoningTrigger />
-			<ReasoningContent>{reasoning}</ReasoningContent>
-		</Reasoning>
+		<AgentThinkingPanel
+			status={isLoading ? "thinking" : "done"}
+			steps={steps}
+		/>
 	);
 }

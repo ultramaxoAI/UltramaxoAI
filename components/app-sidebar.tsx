@@ -1,6 +1,6 @@
 "use client";
 
-import { PanelLeft, Search, Settings, SquarePen } from "lucide-react";
+import { PanelLeft, Search, Sliders, SquarePen } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import type { User } from "next-auth";
@@ -42,8 +42,7 @@ import {
 
 export function AppSidebar({ user }: { user: User | undefined }) {
 	const router = useRouter();
-	const { setOpenMobile, state, open, setOpen, isMobile, toggleSidebar } =
-		useSidebar();
+	const { setOpenMobile, state, isMobile, toggleSidebar } = useSidebar();
 	const { mutate } = useSWRConfig();
 	const [showDeleteAllDialog, setShowDeleteAllDialog] = useState(false);
 
@@ -70,10 +69,10 @@ export function AppSidebar({ user }: { user: User | undefined }) {
 	return (
 		<>
 			<Sidebar
-				className="z-30 border-r border-black/6 bg-[linear-gradient(180deg,rgba(248,244,237,0.985),rgba(242,236,226,0.985))] backdrop-blur-2xl dark:border-white/6 dark:bg-[linear-gradient(180deg,rgba(11,13,16,0.985),rgba(15,18,22,0.99))]"
+				className="z-30 border-r border-white/[0.06] bg-[#0a0a0a] text-white antialiased [&_[data-sidebar=sidebar]]:bg-[#0a0a0a]"
 				collapsible="icon"
 			>
-				<SidebarHeader className="border-b border-black/6 dark:border-white/6">
+				<SidebarHeader className="border-b border-white/[0.06]">
 					<SidebarMenu>
 						<TooltipProvider delayDuration={0}>
 							<div className="flex flex-col gap-4 px-3 py-4">
@@ -89,7 +88,7 @@ export function AppSidebar({ user }: { user: User | undefined }) {
 											href="/chat"
 											onClick={() => setOpenMobile(false)}
 										>
-											<span className="block text-[1.45rem] font-serif text-[#16181b] dark:text-[#f4f1ec]">
+											<span className="block text-[15px] font-semibold tracking-tight text-white/88">
 												Ultramaxo
 											</span>
 										</Link>
@@ -101,18 +100,18 @@ export function AppSidebar({ user }: { user: User | undefined }) {
 												aria-label={
 													isSidebarOpen ? "Collapse sidebar" : "Expand sidebar"
 												}
-												className="h-8 w-8 shrink-0 rounded-xl p-0 text-[#5e625c] transition-colors hover:bg-black/5 hover:text-[#15181b] dark:text-[#8f948d] dark:hover:bg-white/6 dark:hover:text-[#f4f1ec]"
+												className="h-8 w-8 shrink-0 rounded-md p-0 text-white/30 transition-colors hover:bg-white/[0.04] hover:text-white/65"
 												onClick={toggleSidebar}
 												type="button"
 												variant="ghost"
 											>
-												<PanelLeft className="h-5 w-5 opacity-70" />
+												<PanelLeft className="h-4 w-4" />
 											</Button>
 										</TooltipTrigger>
 										<TooltipContent
 											side="right"
 											sideOffset={12}
-											className="rounded-xl border border-white/8 bg-[#121519] px-3 py-1.5 text-xs font-medium text-white shadow-xl"
+											className="rounded-lg border border-white/[0.08] bg-[#111111] px-3 py-1.5 text-xs font-medium text-white/85 shadow-xl"
 										>
 											<span>
 												{isSidebarOpen ? "Close sidebar" : "Open sidebar"}
@@ -129,10 +128,10 @@ export function AppSidebar({ user }: { user: User | undefined }) {
 										<TooltipTrigger asChild>
 											<Button
 												className={cn(
-													"cursor-pointer font-normal text-[#1b1e21] transition-all hover:bg-black/5 dark:text-[#f4f1ec] dark:hover:bg-white/6",
+													"cursor-pointer font-normal text-white/38 transition-colors hover:bg-white/[0.04] hover:text-white/75",
 													isSidebarOpen
-														? "h-10 w-full justify-start gap-3 rounded-lg px-3"
-														: "mx-auto h-9 w-9 rounded-lg p-0",
+														? "h-9 w-full justify-start gap-3 rounded-md px-3"
+														: "mx-auto h-8 w-8 rounded-md p-0",
 												)}
 												onClick={() => {
 													setOpenMobile(false);
@@ -142,9 +141,9 @@ export function AppSidebar({ user }: { user: User | undefined }) {
 												type="button"
 												variant="ghost"
 											>
-												<SquarePen className="h-[18px] w-[18px] shrink-0 opacity-80" />
+												<SquarePen className="h-[17px] w-[17px] shrink-0" />
 												{isSidebarOpen && (
-													<span className="text-[14px] font-medium">
+													<span className="text-[13px] font-normal">
 														New chat
 													</span>
 												)}
@@ -154,7 +153,7 @@ export function AppSidebar({ user }: { user: User | undefined }) {
 											<TooltipContent
 												side="right"
 												sideOffset={12}
-												className="rounded-xl border border-white/8 bg-[#121519] px-3 py-1.5 text-xs font-medium text-white shadow-xl"
+												className="rounded-lg border border-white/[0.08] bg-[#111111] px-3 py-1.5 text-xs font-medium text-white/85 shadow-xl"
 											>
 												<span>New chat</span>
 											</TooltipContent>
@@ -165,19 +164,17 @@ export function AppSidebar({ user }: { user: User | undefined }) {
 										<TooltipTrigger asChild>
 											<Button
 												className={cn(
-													"cursor-pointer font-normal text-[#1b1e21] transition-all hover:bg-black/5 dark:text-[#f4f1ec] dark:hover:bg-white/6",
+													"cursor-pointer font-normal text-white/38 transition-colors hover:bg-white/[0.04] hover:text-white/75",
 													isSidebarOpen
-														? "h-10 w-full justify-start gap-3 rounded-lg px-3"
-														: "mx-auto h-9 w-9 rounded-lg p-0",
+														? "h-9 w-full justify-start gap-3 rounded-md px-3"
+														: "mx-auto h-8 w-8 rounded-md p-0",
 												)}
 												type="button"
 												variant="ghost"
 											>
-												<Search className="h-[18px] w-[18px] shrink-0 opacity-80" />
+												<Search className="h-[17px] w-[17px] shrink-0" />
 												{isSidebarOpen && (
-													<span className="text-[13px] text-[#666b66] dark:text-[#959b95]">
-														Search
-													</span>
+													<span className="text-[13px]">Search</span>
 												)}
 											</Button>
 										</TooltipTrigger>
@@ -185,7 +182,7 @@ export function AppSidebar({ user }: { user: User | undefined }) {
 											<TooltipContent
 												side="right"
 												sideOffset={12}
-												className="rounded-xl border border-white/8 bg-[#121519] px-3 py-1.5 text-xs font-medium text-white shadow-xl"
+												className="rounded-lg border border-white/[0.08] bg-[#111111] px-3 py-1.5 text-xs font-medium text-white/85 shadow-xl"
 											>
 												<span>Search</span>
 											</TooltipContent>
@@ -196,10 +193,10 @@ export function AppSidebar({ user }: { user: User | undefined }) {
 										<TooltipTrigger asChild>
 											<Button
 												className={cn(
-													"cursor-pointer font-normal text-[#1b1e21] transition-all hover:bg-black/5 dark:text-[#f4f1ec] dark:hover:bg-white/6",
+													"cursor-pointer font-normal text-white/38 transition-colors hover:bg-white/[0.04] hover:text-white/75",
 													isSidebarOpen
-														? "h-10 w-full justify-start gap-3 rounded-lg px-3"
-														: "mx-auto h-9 w-9 rounded-lg p-0",
+														? "h-9 w-full justify-start gap-3 rounded-md px-3"
+														: "mx-auto h-8 w-8 rounded-md p-0",
 												)}
 												onClick={() => {
 													setOpenMobile(false);
@@ -208,11 +205,9 @@ export function AppSidebar({ user }: { user: User | undefined }) {
 												type="button"
 												variant="ghost"
 											>
-												<Settings className="h-[18px] w-[18px] shrink-0 opacity-80" />
+												<Sliders className="h-[17px] w-[17px] shrink-0" />
 												{isSidebarOpen && (
-													<span className="text-[13px] text-[#666b66] dark:text-[#959b95]">
-														Personalization
-													</span>
+													<span className="text-[13px]">Settings</span>
 												)}
 											</Button>
 										</TooltipTrigger>
@@ -220,9 +215,9 @@ export function AppSidebar({ user }: { user: User | undefined }) {
 											<TooltipContent
 												side="right"
 												sideOffset={12}
-												className="rounded-xl border border-white/8 bg-[#121519] px-3 py-1.5 text-xs font-medium text-white shadow-xl"
+												className="rounded-lg border border-white/[0.08] bg-[#111111] px-3 py-1.5 text-xs font-medium text-white/85 shadow-xl"
 											>
-												<span>Personalization</span>
+												<span>Settings</span>
 											</TooltipContent>
 										)}
 									</Tooltip>

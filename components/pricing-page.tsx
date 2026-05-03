@@ -43,7 +43,7 @@ const pricingPlans = [
 		features: [
 			"AI Chat (UltraAgent Pro)",
 			"Semua fitur Free",
-			"Chat tanpa limit",
+			"500 credit harian untuk chat serius",
 			"Riwayat chat permanen",
 			"Code workspace lengkap",
 			"Full artifacts system",

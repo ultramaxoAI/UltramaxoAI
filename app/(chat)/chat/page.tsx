@@ -1,9 +1,6 @@
 import { DEFAULT_CHAT_MODEL } from "@backend/ai/models";
-import {
-	getTodayMessageCount,
-	getUserApiKeys,
-	getUserById,
-} from "@backend/db/queries";
+import { getUserApiKeys } from "@backend/db/queries";
+import { getChatAnnouncementSettings } from "@backend/db/queries-settings";
 import { cookies } from "next/headers";
 import { Suspense } from "react";
 import { auth } from "@/app/(auth)/auth";
@@ -24,22 +21,11 @@ async function NewChatPage() {
 	const modelIdFromCookie = cookieStore.get("chat-model");
 	const id = generateUUID();
 
-	let isAtLimit = false;
 	const customModels: Array<{ id: string; name: string; provider: string }> =
 		[];
+	const announcement = await getChatAnnouncementSettings();
 
 	if (session?.user?.id) {
-		const todayCount = await getTodayMessageCount(session.user.id);
-		const [currentUser] = await getUserById(session.user.id);
-		if (
-			!currentUser?.isPro &&
-			currentUser?.role !== "admin" &&
-			todayCount >= 10 &&
-			(currentUser?.limitCount || 0) <= 0
-		) {
-			isAtLimit = true;
-		}
-
 		const apiKeys = await getUserApiKeys(session.user.id);
 		for (const key of apiKeys) {
 			if (key.isEnabled && key.customModels) {
@@ -58,11 +44,12 @@ async function NewChatPage() {
 		<>
 			<Chat
 				autoResume={false}
+				chatAnnouncement={announcement}
 				id={id}
 				initialChatModel={modelIdFromCookie?.value ?? DEFAULT_CHAT_MODEL}
 				initialMessages={[]}
 				initialVisibilityType="private"
-				isAtLimit={isAtLimit}
+				isAtLimit={false}
 				isReadonly={!session}
 				key={id}
 				user={session?.user}

@@ -25,7 +25,6 @@ import { Label } from "@/components/ui/label";
 interface SettingsUser {
 	email?: string | null;
 	isPro?: boolean;
-	messageCount?: number;
 }
 
 interface UserSettingsData {
@@ -470,18 +469,12 @@ function AccountTab() {
 					<div className="flex-1 flex flex-col justify-end">
 						<div className="flex items-baseline gap-2">
 							<span className="text-2xl font-bold tracking-tight text-zinc-900 dark:text-white">
-								{user?.isPro
-									? "∞"
-									: Math.max(0, 10 - (user?.messageCount || 0))}
+								{user?.isPro ? "500" : "30"}
 							</span>
-							{!user?.isPro && (
-								<span className="text-sm font-medium text-zinc-500">/ 10</span>
-							)}
+							<span className="text-sm font-medium text-zinc-500">credits</span>
 						</div>
 						<p className="text-xs text-zinc-500 mt-1">
-							{user?.isPro
-								? "Unlimited daily messages"
-								: "Free daily messages remaining"}
+							{user?.isPro ? "Resets every day" : "Resets every 2 days"}
 						</p>
 					</div>
 				</Card>
@@ -1229,7 +1222,7 @@ function RedeemTab() {
 							PRO Membership
 						</h4>
 						<p className="text-xs text-zinc-500 line-height-[1.5]">
-							Unlocks unlimited queries and premium models for the duration
+							Unlocks 500 daily credits and premium models for the duration
 							specified in the voucher.
 						</p>
 					</div>

@@ -162,6 +162,10 @@ function sanitizeMessagePart(part: unknown) {
 		return part as UIMessagePart<CustomUIDataTypes, ChatTools>;
 	}
 
+	if (part.type === "dynamic-tool" && typeof part.toolName === "string") {
+		return part as UIMessagePart<CustomUIDataTypes, ChatTools>;
+	}
+
 	if (part.type.startsWith("tool-") && typeof part.toolCallId === "string") {
 		return part as UIMessagePart<CustomUIDataTypes, ChatTools>;
 	}

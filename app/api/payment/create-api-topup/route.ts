@@ -1,13 +1,19 @@
 import { createPurchaseRequest, db } from "@backend/db/queries";
+import { checkRateLimit, getClientIp } from "@backend/rateLimiter";
 import { purchaseRequest, user } from "@backend/db/schema";
 import { eq } from "drizzle-orm";
 import { NextResponse } from "next/server";
 import { auth } from "@/app/(auth)/auth";
+import { isAllowedFirstPartyOrigin } from "@/lib/request-security";
 
 const YOBASEPAY_API_KEY = process.env.YOBASEPAY_API_KEY || "";
 const YOBASEPAY_V3_URL = "https://yobasepay.net/api_v3.php";
 const USD_TO_IDR_RATE = Number(process.env.USD_TO_IDR_RATE || 16000);
 const MIN_TOPUP_USD = 2;
+const MAX_TOPUP_USD = 1000;
+const TOPUP_USER_LIMIT = 8;
+const TOPUP_IP_LIMIT = 20;
+const TOPUP_WINDOW_MS = 60 * 60 * 1000;
 
 function toIdrAmount(usdAmount: number) {
 	return Math.ceil(usdAmount * USD_TO_IDR_RATE);
@@ -20,13 +26,51 @@ export async function POST(request: Request) {
 			return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 		}
 
+		if (!isAllowedFirstPartyOrigin(request)) {
+			return NextResponse.json({ error: "Forbidden origin" }, { status: 403 });
+		}
+
+		const contentType = request.headers.get("content-type");
+		if (!contentType?.includes("application/json")) {
+			return NextResponse.json(
+				{ error: "Content-Type must be application/json" },
+				{ status: 415 },
+			);
+		}
+
+		const clientIp = getClientIp(request);
+		const userRate = checkRateLimit(
+			`user:${session.user.id}:api-topup-create`,
+			TOPUP_USER_LIMIT,
+			TOPUP_WINDOW_MS,
+		);
+		const ipRate = checkRateLimit(
+			`ip:${clientIp}:api-topup-create`,
+			TOPUP_IP_LIMIT,
+			TOPUP_WINDOW_MS,
+		);
+
+		if (!userRate.allowed || !ipRate.allowed) {
+			return NextResponse.json(
+				{ error: "Too many topup attempts. Please try again later." },
+				{ status: 429 },
+			);
+		}
+
 		const body = await request.json();
 		const { amountUsd } = body;
 		const usdAmount = Number(amountUsd);
 
-		if (!usdAmount || usdAmount < MIN_TOPUP_USD) {
+		if (!Number.isFinite(usdAmount) || usdAmount < MIN_TOPUP_USD) {
 			return NextResponse.json(
 				{ error: `Minimum topup USD ${MIN_TOPUP_USD}` },
+				{ status: 400 },
+			);
+		}
+
+		if (usdAmount > MAX_TOPUP_USD) {
+			return NextResponse.json(
+				{ error: `Maximum topup USD ${MAX_TOPUP_USD}` },
 				{ status: 400 },
 			);
 		}

@@ -5,11 +5,9 @@ import { GitIcon, LogoGoogle } from "./icons";
 import { Input } from "./ui/input";
 import { Label } from "./ui/label";
 
-const GOOGLE_OAUTH_HREF = `/oauth/google?callbackUrl=${encodeURIComponent("/chat")}`;
-const GITHUB_OAUTH_HREF = `/oauth/github?callbackUrl=${encodeURIComponent("/chat")}`;
-const LOGIN_FALLBACK_ACTION = `/api/auth/login-fallback?redirectTo=${encodeURIComponent(
-	"/chat",
-)}`;
+function buildCallbackPath(path: string) {
+	return encodeURIComponent(path.startsWith("/") ? path : "/chat");
+}
 
 export function AuthForm({
 	action,
@@ -17,6 +15,7 @@ export function AuthForm({
 	children,
 	type,
 	defaultEmail = "",
+	callbackUrl = "/chat",
 }: {
 	action?: NonNullable<
 		string | ((formData: FormData) => void | Promise<void>) | undefined
@@ -25,9 +24,13 @@ export function AuthForm({
 	children: React.ReactNode;
 	type: "login" | "register";
 	defaultEmail?: string;
+	callbackUrl?: string;
 }) {
+	const googleOAuthHref = `/oauth/google?callbackUrl=${buildCallbackPath(callbackUrl)}`;
+	const githubOAuthHref = `/oauth/github?callbackUrl=${buildCallbackPath(callbackUrl)}`;
+	const loginFallbackAction = `/api/auth/login-fallback?redirectTo=${buildCallbackPath(callbackUrl)}`;
 	const resolvedAction =
-		type === "login" && !action ? LOGIN_FALLBACK_ACTION : action;
+		type === "login" && !action ? loginFallbackAction : action;
 	const isServerAction = typeof resolvedAction === "function";
 	const formProps = isServerAction
 		? { action: resolvedAction }
@@ -55,14 +58,14 @@ export function AuthForm({
 				<div className="flex flex-col gap-2.5 relative z-10">
 					<a
 						className="flex w-full items-center justify-center gap-2.5 rounded-xl border border-zinc-200 dark:border-white/10 bg-zinc-50 dark:bg-white/5 py-2.5 text-sm font-semibold text-zinc-900 dark:text-white hover:bg-zinc-100 dark:hover:bg-white/10 shadow-sm transition-all active:scale-[0.98]"
-						href={GOOGLE_OAUTH_HREF}
+						href={googleOAuthHref}
 					>
 						<LogoGoogle size={16} />
 						<span>Continue with Google</span>
 					</a>
 					<a
 						className="flex w-full items-center justify-center gap-2.5 rounded-xl border border-zinc-200 dark:border-white/10 bg-zinc-50 dark:bg-white/5 py-2.5 text-sm font-semibold text-zinc-900 dark:text-white hover:bg-zinc-100 dark:hover:bg-white/10 shadow-sm transition-all active:scale-[0.98]"
-						href={GITHUB_OAUTH_HREF}
+						href={githubOAuthHref}
 					>
 						<GitIcon size={16} />
 						<span>Continue with GitHub</span>

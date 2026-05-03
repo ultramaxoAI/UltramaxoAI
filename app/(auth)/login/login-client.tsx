@@ -7,7 +7,11 @@ import { AuthForm } from "@/components/auth-form";
 import { SubmitButton } from "@/components/submit-button";
 import { toast } from "@/components/toast";
 
-export default function LoginClient() {
+export default function LoginClient({
+	callbackUrl = "/chat",
+}: {
+	callbackUrl?: string;
+}) {
 	const searchParams = useSearchParams();
 
 	useEffect(() => {
@@ -123,7 +127,7 @@ export default function LoginClient() {
 						</div>
 					</div>
 
-					<AuthForm defaultEmail="" type="login">
+					<AuthForm callbackUrl={callbackUrl} defaultEmail="" type="login">
 						<SubmitButton isSuccessful={false}>Sign in</SubmitButton>
 					</AuthForm>
 

@@ -3,6 +3,7 @@ import type { Document, Vote } from "@backend/db/schema";
 import { formatDistance } from "date-fns";
 import equal from "fast-deep-equal";
 import { AnimatePresence, motion } from "framer-motion";
+import { ChevronLeft, X } from "lucide-react";
 import {
 	type Dispatch,
 	memo,
@@ -17,14 +18,16 @@ import { codeArtifact } from "@/artifacts/code/client";
 import { imageArtifact } from "@/artifacts/image/client";
 import { sheetArtifact } from "@/artifacts/sheet/client";
 import { textArtifact } from "@/artifacts/text/client";
-import { useArtifact, useArtifactUiState } from "@/hooks/use-artifact";
+import {
+	initialArtifactData,
+	useArtifact,
+	useArtifactUiState,
+} from "@/hooks/use-artifact";
 import type { Attachment, ChatMessage } from "@/lib/types";
 import { cn, fetcher } from "@/lib/utils";
 import { ArtifactActions } from "./artifact-actions";
-import { ArtifactCloseButton } from "./artifact-close-button";
 import { ArtifactShareButton } from "./artifact-share-button";
 import { Toolbar } from "./toolbar";
-import { useSidebar } from "./ui/sidebar";
 import { VersionFooter } from "./version-footer";
 import type { VisibilityType } from "./visibility-selector";
 
@@ -99,17 +102,17 @@ function PureArtifact({
 	setWebSearchEnabled: Dispatch<SetStateAction<boolean>>;
 }) {
 	const { artifact, setArtifact, metadata, setMetadata } = useArtifact();
-	const {
-		uiState: { isIdeLocked },
-	} = useArtifactUiState();
+	const artifactUiState = useArtifactUiState();
+	const isIdeLocked = artifactUiState?.uiState?.isIdeLocked ?? false;
+	const safeArtifact = artifact ?? initialArtifactData;
 
 	const {
 		data: documents,
 		isLoading: isDocumentsFetching,
 		mutate: mutateDocuments,
 	} = useSWR<Document[]>(
-		artifact.documentId !== "init" && artifact.status !== "streaming"
-			? `/api/document?id=${artifact.documentId}`
+		safeArtifact.documentId !== "init" && safeArtifact.status !== "streaming"
+			? `/api/document?id=${safeArtifact.documentId}`
 			: null,
 		fetcher,
 	);
@@ -118,8 +121,6 @@ function PureArtifact({
 	const [document, setDocument] = useState<Document | null>(null);
 	const [currentVersionIndex, setCurrentVersionIndex] = useState(-1);
 
-	const { open: isSidebarOpen } = useSidebar();
-
 	useEffect(() => {
 		if (documents && documents.length > 0) {
 			const mostRecentDocument = documents.at(-1);
@@ -127,10 +128,19 @@ function PureArtifact({
 			if (mostRecentDocument) {
 				setDocument(mostRecentDocument);
 				setCurrentVersionIndex(documents.length - 1);
-				setArtifact((currentArtifact) => ({
-					...currentArtifact,
-					content: mostRecentDocument.content ?? "",
-				}));
+				setArtifact((currentArtifact) => {
+					const currentContent = currentArtifact?.content ?? "";
+					const nextContent = mostRecentDocument.content ?? "";
+
+					if (currentContent.trim().length > nextContent.trim().length) {
+						return currentArtifact;
+					}
+
+					return {
+						...currentArtifact,
+						content: nextContent,
+					};
+				});
 			}
 		}
 	}, [documents, setArtifact]);
@@ -257,38 +267,66 @@ function PureArtifact({
 			: true;
 
 	const { width: windowWidth, height: windowHeight } = useWindowSize();
-	const isMobile = windowWidth ? windowWidth < 1024 : false;
+	const isMobile = windowWidth ? windowWidth < 768 : false;
+	const artifactLanguage =
+		safeArtifact.kind === "code" ? "code" : safeArtifact.kind || "text";
+	const closeArtifact = useCallback(() => {
+		setArtifact((currentArtifact) =>
+			currentArtifact.status === "streaming"
+				? {
+						...currentArtifact,
+						isVisible: false,
+					}
+				: { ...initialArtifactData, status: "idle" },
+		);
+	}, [setArtifact]);
 
 	const artifactDefinition = artifactDefinitions.find(
-		(definition) => definition.kind === artifact.kind,
+		(definition) => definition.kind === safeArtifact.kind,
 	);
 
 	if (!artifactDefinition) {
-		throw new Error("Artifact definition not found!");
+		return null;
 	}
 
 	useEffect(() => {
-		if (artifact.documentId !== "init" && artifactDefinition.initialize) {
+		if (
+			safeArtifact.documentId !== "init" &&
+			artifactDefinition.initialize
+		) {
 			artifactDefinition.initialize({
-				documentId: artifact.documentId,
+				documentId: safeArtifact.documentId,
 				setMetadata,
 			});
 		}
-	}, [artifact.documentId, artifactDefinition, setMetadata]);
+	}, [safeArtifact.documentId, artifactDefinition, setMetadata]);
+
+	if (!artifact) {
+		return null;
+	}
+
+	if (
+		!safeArtifact.content &&
+		safeArtifact.status !== "streaming" &&
+		safeArtifact.documentId === "init" &&
+		!safeArtifact.isVisible
+	) {
+		return null;
+	}
 
 	return (
 		<AnimatePresence>
-			{artifact.isVisible && (
+			{safeArtifact.isVisible && (
 				<motion.div
 					animate={{ opacity: 1 }}
 					className={cn(
-						"fixed inset-0 z-50 flex h-dvh w-dvw flex-row pointer-events-none",
+						"fixed inset-0 z-50 flex h-dvh w-dvw flex-row pointer-events-none md:relative md:inset-auto md:z-10 md:h-full md:w-full md:min-w-0 md:flex-1",
 						isIdeLocked
 							? "bg-transparent backdrop-blur-0"
-							: "bg-black/30 backdrop-blur-[2px] lg:bg-transparent lg:backdrop-blur-0",
+							: "bg-black/30 backdrop-blur-[2px] md:bg-transparent md:backdrop-blur-0",
 					)}
 					data-testid="artifact"
-					exit={{ opacity: 0, transition: { delay: 0.4 } }}
+					exit={{ opacity: 0, transition: { delay: 0.15 } }}
 					initial={{ opacity: 0 }}
 				>
 					<motion.div
@@ -298,12 +336,7 @@ function PureArtifact({
 										opacity: 1,
 										x: 0,
 										y: 0,
-										height:
-											isIdeLocked && windowHeight
-												? windowHeight * 0.56
-												: windowHeight
-													? windowHeight
-													: "100dvh",
+										height: windowHeight ? windowHeight : "100dvh",
 										width: windowWidth ? windowWidth : "100dvw",
 										borderRadius: 0,
 										transition: {
@@ -316,16 +349,10 @@ function PureArtifact({
 									}
 								: {
 										opacity: 1,
-										x: windowWidth
-											? windowWidth * (isIdeLocked ? 0.46 : 0.32)
-											: 0,
+										x: 0,
 										y: 0,
-										height: windowHeight ? windowHeight : "100dvh",
-										width: windowWidth
-											? windowWidth * (isIdeLocked ? 0.54 : 0.68)
-											: isIdeLocked
-												? "54dvw"
-												: "68dvw",
+										height: "100%",
+										width: "100%",
 										borderRadius: 0,
 										transition: {
 											delay: 0,
@@ -337,7 +364,7 @@ function PureArtifact({
 									}
 						}
 						className={cn(
-							"fixed inset-0 flex h-dvh flex-col overflow-y-auto border-zinc-800 bg-zinc-950 text-zinc-100 pointer-events-auto shadow-2xl",
+							"fixed inset-0 flex h-dvh min-w-0 flex-col overflow-hidden border-white/[0.06] bg-[#0e0e0e] text-white/85 shadow-2xl pointer-events-auto md:relative md:inset-auto md:h-full md:w-full md:flex-1 md:shadow-none",
 							isIdeLocked ? "border-b md:border-l" : "md:border-l",
 						)}
 						exit={{
@@ -355,64 +382,60 @@ function PureArtifact({
 								? {
 										opacity: 0,
 										x: 0,
-										y: isIdeLocked ? 32 : 24,
-										height:
-											isIdeLocked && windowHeight
-												? windowHeight * 0.52
-												: windowHeight
-													? windowHeight
-													: "100dvh",
+										y: 24,
+										height: windowHeight ? windowHeight : "100dvh",
 										width: windowWidth ? windowWidth : "100dvw",
 										borderRadius: 0,
 									}
 								: {
 										opacity: 0.8,
-										x: artifact.boundingBox.left,
-										y: artifact.boundingBox.top,
-										height: artifact.boundingBox.height,
-										width: artifact.boundingBox.width,
-										borderRadius: 50,
+										x: 48,
+										y: 0,
+										height: "100%",
+										width: "100%",
+										borderRadius: 0,
 									}
 						}
 					>
-						<div className="sticky top-0 z-20 flex flex-row items-center justify-between gap-3 border-b border-zinc-800 bg-zinc-950/95 px-3 py-3 backdrop-blur md:px-4">
-							<div className="flex min-w-0 flex-row items-center gap-3 md:gap-4">
-								<ArtifactCloseButton />
+						<div className="sticky top-0 z-20 flex items-center justify-between border-b border-white/[0.06] bg-[#0a0a0a] px-4 py-2.5">
+							<div className="flex min-w-0 items-center gap-2">
+								<button
+									className="mr-1 inline-flex h-7 items-center gap-1.5 rounded-lg px-2 text-[12px] text-white/45 transition-colors hover:bg-white/[0.05] hover:text-white/75 md:hidden"
+									onClick={closeArtifact}
+									type="button"
+								>
+									<ChevronLeft className="size-4" />
+									Back
+								</button>
+								<span className="truncate text-[12px] text-white/38">
+									{safeArtifact.title || "Untitled artifact"}
+								</span>
+								<span className="rounded border border-white/[0.06] bg-white/[0.03] px-1.5 py-0.5 font-mono text-[10px] text-white/25">
+									{artifactLanguage}
+								</span>
 
-								<div className="flex min-w-0 flex-col">
-									<div className="truncate font-semibold text-zinc-100 text-sm tracking-wide md:text-base">
-										{artifact.title}
-									</div>
-
-									{isContentDirty ? (
-										<div className="text-muted-foreground text-xs md:text-sm">
-											Saving changes...
-										</div>
-									) : document ? (
-										<div className="text-muted-foreground text-xs md:text-sm">
-											{`Updated ${formatDistance(
-												new Date(document.createdAt),
-												new Date(),
-												{
-													addSuffix: true,
-												},
-											)}`}
-										</div>
-									) : (
-										<div className="mt-2 h-3 w-32 animate-pulse rounded-md bg-muted-foreground/20" />
-									)}
-								</div>
+								{isContentDirty ? (
+									<span className="hidden text-[11px] text-white/30 sm:inline">
+										Saving...
+									</span>
+								) : document ? (
+									<span className="hidden text-[11px] text-white/25 lg:inline">
+										{formatDistance(new Date(document.createdAt), new Date(), {
+											addSuffix: true,
+										})}
+									</span>
+								) : null}
 							</div>
 
-							<div className="flex shrink-0 items-center gap-2">
+							<div className="flex shrink-0 items-center gap-1">
 								{document ? (
 									<ArtifactShareButton
 										defaultShared={Boolean(document.isShared)}
-										documentId={artifact.documentId}
+										documentId={safeArtifact.documentId}
 									/>
 								) : null}
 								<ArtifactActions
-									artifact={artifact}
+									artifact={safeArtifact}
 									currentVersionIndex={currentVersionIndex}
 									handleVersionChange={handleVersionChange}
 									isCurrentVersion={isCurrentVersion}
@@ -420,36 +443,50 @@ function PureArtifact({
 									mode={mode}
 									setMetadata={setMetadata}
 								/>
+								<button
+									className="flex h-7 w-7 items-center justify-center rounded-lg text-white/30 transition-colors hover:bg-white/[0.05] hover:text-white/60"
+									onClick={closeArtifact}
+									type="button"
+								>
+									<X className="h-[14px] w-[14px]" />
+								</button>
 							</div>
 						</div>
 
-						<div className="h-full flex-1 max-w-full! items-center overflow-y-auto bg-zinc-950">
-							<div className={artifact.kind === "code" ? "" : "p-3 md:p-4"}>
+						<div className="flex min-h-0 flex-1 max-w-full overflow-hidden bg-[#0e0e0e]">
+							<div
+								className={cn(
+									"min-h-0 flex-1",
+									safeArtifact.kind === "code"
+										? "h-full"
+										: "overflow-y-auto p-3 md:p-4",
+								)}
+							>
 								<artifactDefinition.content
 									content={
 										isCurrentVersion
-											? artifact.content
+											? safeArtifact.content
 											: getDocumentContentById(currentVersionIndex)
 									}
 									currentVersionIndex={currentVersionIndex}
 									getDocumentContentById={getDocumentContentById}
 									isCurrentVersion={isCurrentVersion}
 									isInline={false}
-									isLoading={isDocumentsFetching && !artifact.content}
+									isLoading={isDocumentsFetching && !safeArtifact.content}
 									metadata={metadata}
 									mode={mode}
 									onSaveContent={saveContent}
 									setMetadata={setMetadata}
-									status={artifact.status}
+									status={safeArtifact.status}
 									suggestions={[]}
-									title={artifact.title}
+									title={safeArtifact.title}
 								/>
 							</div>
 
 							<AnimatePresence>
 								{isCurrentVersion && (
 									<Toolbar
-										artifactKind={artifact.kind}
+										artifactKind={safeArtifact.kind}
 										isToolbarVisible={isToolbarVisible}
 										sendMessage={sendMessage}
 										setIsToolbarVisible={setIsToolbarVisible}

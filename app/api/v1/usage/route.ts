@@ -1,5 +1,6 @@
 import { db } from "@backend/db/queries";
 import { apiCreditTransaction, platformApiKey } from "@backend/db/schema";
+import { checkRateLimit, getClientIp } from "@backend/rateLimiter";
 import { and, desc, eq, gte } from "drizzle-orm";
 import { type NextRequest, NextResponse } from "next/server";
 import { hashPlatformApiKey } from "@/lib/platform-api-keys";
@@ -9,6 +10,9 @@ const CORS_HEADERS = {
 	"Access-Control-Allow-Methods": "GET, OPTIONS",
 	"Access-Control-Allow-Headers": "Content-Type, Authorization",
 };
+const USAGE_KEY_LIMIT = 60;
+const USAGE_IP_LIMIT = 120;
+const USAGE_WINDOW_MS = 60_000;
 
 export async function GET(req: NextRequest) {
 	try {
@@ -45,6 +49,25 @@ export async function GET(req: NextRequest) {
 			return NextResponse.json(
 				{ error: { message: "Invalid or revoked API Key." } },
 				{ status: 401, headers: CORS_HEADERS },
+			);
+		}
+
+		const clientIp = getClientIp(req);
+		const keyRate = checkRateLimit(
+			`api-usage:key:${keyRecord.id}`,
+			USAGE_KEY_LIMIT,
+			USAGE_WINDOW_MS,
+		);
+		const ipRate = checkRateLimit(
+			`api-usage:ip:${clientIp}`,
+			USAGE_IP_LIMIT,
+			USAGE_WINDOW_MS,
+		);
+
+		if (!keyRate.allowed || !ipRate.allowed) {
+			return NextResponse.json(
+				{ error: { message: "Rate limit exceeded. Try again later." } },
+				{ status: 429, headers: CORS_HEADERS },
 			);
 		}
 

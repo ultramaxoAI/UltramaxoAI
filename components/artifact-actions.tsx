@@ -7,7 +7,7 @@ import { Button } from "./ui/button";
 import { Tooltip, TooltipContent, TooltipTrigger } from "./ui/tooltip";
 
 type ArtifactActionsProps = {
-	artifact: UIArtifact;
+	artifact?: UIArtifact | null;
 	handleVersionChange: (type: "next" | "prev" | "toggle" | "latest") => void;
 	currentVersionIndex: number;
 	isCurrentVersion: boolean;
@@ -26,17 +26,20 @@ function PureArtifactActions({
 	setMetadata,
 }: ArtifactActionsProps) {
 	const [isLoading, setIsLoading] = useState(false);
+	const safeArtifact = artifact ?? null;
 
-	const artifactDefinition = artifactDefinitions.find(
-		(definition) => definition.kind === artifact.kind,
-	);
+	const artifactDefinition = safeArtifact
+		? artifactDefinitions.find(
+				(definition) => definition.kind === safeArtifact.kind,
+			)
+		: null;
 
 	if (!artifactDefinition) {
-		throw new Error("Artifact definition not found!");
+		return null;
 	}
 
 	const actionContext: ArtifactActionContext = {
-		content: artifact.content,
+		content: safeArtifact?.content ?? "",
 		handleVersionChange,
 		currentVersionIndex,
 		isCurrentVersion,
@@ -52,17 +55,17 @@ function PureArtifactActions({
 					<TooltipTrigger asChild>
 						<Button
 							className={cn(
-								"h-fit transition-all text-sm rounded-full",
+								"h-fit rounded-lg text-sm transition-all",
 								{
 									"p-2": !action.label,
 									"px-4 py-1.5": action.label,
 								},
 								action.label
-									? "bg-zinc-100 text-zinc-900 hover:bg-zinc-200"
-									: "text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800",
+									? "bg-white text-[#0b0d10] hover:bg-white/90"
+									: "border-white/[0.08] bg-white/[0.03] text-white/35 hover:bg-white/[0.06] hover:text-white/75",
 							)}
 							disabled={
-								isLoading || artifact.status === "streaming"
+								isLoading || safeArtifact?.status === "streaming"
 									? true
 									: action.isDisabled
 										? action.isDisabled(actionContext)
@@ -97,7 +100,7 @@ function PureArtifactActions({
 export const ArtifactActions = memo(
 	PureArtifactActions,
 	(prevProps, nextProps) => {
-		if (prevProps.artifact.status !== nextProps.artifact.status) {
+		if (prevProps.artifact?.status !== nextProps.artifact?.status) {
 			return false;
 		}
 		if (prevProps.currentVersionIndex !== nextProps.currentVersionIndex) {
@@ -106,7 +109,7 @@ export const ArtifactActions = memo(
 		if (prevProps.isCurrentVersion !== nextProps.isCurrentVersion) {
 			return false;
 		}
-		if (prevProps.artifact.content !== nextProps.artifact.content) {
+		if (prevProps.artifact?.content !== nextProps.artifact?.content) {
 			return false;
 		}
 

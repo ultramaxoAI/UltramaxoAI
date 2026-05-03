@@ -78,22 +78,22 @@ function PureWebTerminal(
 
 		const term = new XTerm({
 			theme: {
-				background: "#0a0a0a",
-				foreground: "#e4e4e7",
-				cursor: "#22d3ee",
-				selectionBackground: "#27272a",
-				black: "#09090b",
-				red: "#ef4444",
-				green: "#22c55e",
+				background: "#0b0d10",
+				foreground: "rgba(255,255,255,0.82)",
+				cursor: "rgba(255,255,255,0.7)",
+				selectionBackground: "rgba(99,102,241,0.3)",
+				black: "#1a1d23",
+				red: "#f87171",
+				green: "#4ade80",
 				yellow: "#eab308",
-				blue: "#3b82f6",
-				magenta: "#a855f7",
-				cyan: "#06b6d4",
-				white: "#e4e4e7",
+				blue: "#6366f1",
+				magenta: "#a78bfa",
+				cyan: "#22d3ee",
+				white: "rgba(255,255,255,0.82)",
 			},
-			fontFamily: "'JetBrains Mono', 'Fira Code', 'Cascadia Code', monospace",
+			fontFamily: "'Geist Mono', Menlo, monospace",
 			fontSize: 13,
-			lineHeight: 1.4,
+			lineHeight: 1.6,
 			cursorBlink: true,
 			cursorStyle: "bar",
 			scrollback: 5000,
@@ -112,7 +112,7 @@ function PureWebTerminal(
 		fitRef.current = fit;
 
 		// Welcome message
-		term.writeln("\x1b[36m⚡ WebContainer Terminal\x1b[0m");
+		term.writeln("\x1b[36mWebContainer Terminal\x1b[0m");
 		term.writeln("\x1b[90mReady for AI agent commands...\x1b[0m");
 		term.writeln("");
 
@@ -185,24 +185,24 @@ function PureWebTerminal(
 	return (
 		<div
 			className={cn(
-				"flex flex-col border-t border-zinc-800 bg-[#0a0a0a]",
+				"flex flex-col border-white/[0.06] border-t bg-[#0b0d10]",
 				className,
 			)}
 		>
 			{/* ── Header ─────────────────────────────────────────────────── */}
 			<button
 				type="button"
-				className="flex items-center justify-between px-3 py-2 hover:bg-zinc-900/50 transition-colors"
+				className="flex items-center justify-between border-white/[0.06] border-b bg-[#111318] px-3 py-2 transition-colors hover:bg-white/[0.02]"
 				onClick={() => setCollapsed((prev) => !prev)}
 			>
-				<div className="flex items-center gap-2 text-xs font-medium text-zinc-400">
-					<TerminalSquare size={14} className="text-cyan-400" />
+				<div className="flex items-center gap-2 text-xs font-medium text-white/45">
+					<TerminalSquare size={14} className="text-indigo-300/70" />
 					<span>Terminal</span>
 					{isRunning && (
-						<Loader2 size={12} className="animate-spin text-cyan-400" />
+						<Loader2 size={12} className="animate-spin text-indigo-400/80" />
 					)}
 					{status && (
-						<span className="ml-1 text-zinc-500 font-normal">{status}</span>
+						<span className="ml-1 font-normal text-white/25">{status}</span>
 					)}
 				</div>
 				<div className="flex items-center gap-1">
@@ -210,7 +210,7 @@ function PureWebTerminal(
 						<Button
 							variant="ghost"
 							size="icon"
-							className="h-6 w-6 text-zinc-500 hover:text-zinc-300"
+							className="h-6 w-6 text-white/30 hover:bg-white/[0.06] hover:text-white/60"
 							onClick={(e) => {
 								e.stopPropagation();
 								handleClear();
@@ -220,9 +220,9 @@ function PureWebTerminal(
 						</Button>
 					)}
 					{collapsed ? (
-						<ChevronUp size={14} className="text-zinc-500" />
+						<ChevronUp size={14} className="text-white/30" />
 					) : (
-						<ChevronDown size={14} className="text-zinc-500" />
+						<ChevronDown size={14} className="text-white/30" />
 					)}
 				</div>
 			</button>
@@ -255,7 +255,7 @@ export function formatTerminalOutput(output: TerminalOutput): string {
 		case "stderr":
 			return `\x1b[31m${output.data}\x1b[0m`; // red
 		case "error":
-			return `\x1b[31m✗ ${output.data}\x1b[0m`; // red with X
+			return `\x1b[31merror: ${output.data}\x1b[0m`; // red
 		case "exit":
 			return `\x1b[90m${output.data}\x1b[0m`; // dim
 		default:
