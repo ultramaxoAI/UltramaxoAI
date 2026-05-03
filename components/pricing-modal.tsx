@@ -85,6 +85,7 @@ export function PricingModal({ open, onOpenChange, user }: PricingModalProps) {
 	const [loading, setLoading] = useState(false);
 	const [qrisData, setQrisData] = useState<{
 		qris: string;
+		qrImage?: string | null;
 		requestId: string;
 		planName: string;
 		price: string;
@@ -188,16 +189,17 @@ export function PricingModal({ open, onOpenChange, user }: PricingModalProps) {
 				throw new Error(data.error || "Gagal membuat invoice");
 			}
 
-			if ((data.qris || data.checkoutUrl) && data.requestId) {
+			if ((data.qris || data.qrImage || data.checkoutUrl) && data.requestId) {
 				setQrisData({
 					qris: data.qris || "",
+					qrImage: data.qrImage || null,
 					requestId: data.requestId,
 					planName: planName,
 					price: plan.price,
 					checkoutUrl: data.checkoutUrl || null,
 				});
 				toast.success(
-					data.qris
+					data.qris || data.qrImage
 						? "Silakan scan kode QRIS untuk menyelesaikan pembayaran"
 						: "Checkout YoBasePay siap dibuka",
 				);
@@ -277,13 +279,21 @@ export function PricingModal({ open, onOpenChange, user }: PricingModalProps) {
 								Checkout {qrisData.planName}
 							</h2>
 							<p className="text-zinc-500 dark:text-zinc-400 mb-8 max-w-sm">
-								{qrisData.qris
+								{qrisData.qris || qrisData.qrImage
 									? "Scan kode QRIS di bawah ini dengan aplikasi Bank atau E-Wallet kesayangan Anda untuk membayar "
 									: "Lanjutkan pembayaran lewat halaman checkout YoBasePay untuk membayar "}
 								<b>{qrisData.price}</b>.
 							</p>
 
-							{qrisData.qris ? (
+							{qrisData.qrImage ? (
+								<div className="bg-white p-4 rounded-3xl shrink-0 mb-8 flex justify-center items-center overflow-hidden w-64 h-64 border border-zinc-200 dark:border-zinc-700 relative mx-auto shadow-sm">
+									<img
+										src={qrisData.qrImage}
+										alt="QRIS Payment"
+										className="w-full h-full object-contain"
+									/>
+								</div>
+							) : qrisData.qris ? (
 								<div className="bg-white p-4 rounded-3xl shrink-0 mb-8 flex justify-center items-center overflow-hidden w-64 h-64 border border-zinc-200 dark:border-zinc-700 relative mx-auto shadow-sm">
 									<img
 										src={`https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${encodeURIComponent(qrisData.qris)}&color=0a0a0a`}

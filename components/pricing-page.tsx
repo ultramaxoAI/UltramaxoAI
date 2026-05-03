@@ -87,6 +87,7 @@ export function PricingPage({ user }: PricingPageProps) {
 	const [loading, setLoading] = useState(false);
 	const [qrisData, setQrisData] = useState<{
 		qris: string;
+		qrImage?: string | null;
 		requestId: string;
 		planName: string;
 		price: string;
@@ -250,16 +251,17 @@ export function PricingPage({ user }: PricingPageProps) {
 				throw new Error(data.error || "Gagal membuat invoice");
 			}
 
-			if ((data.qris || data.checkoutUrl) && data.requestId) {
+			if ((data.qris || data.qrImage || data.checkoutUrl) && data.requestId) {
 				setQrisData({
 					qris: data.qris || "",
+					qrImage: data.qrImage || null,
 					requestId: data.requestId,
 					planName: planName,
 					price: plan.price,
 					checkoutUrl: data.checkoutUrl || null,
 				});
 				toast.success(
-					data.qris
+					data.qris || data.qrImage
 						? "Silakan scan kode QRIS untuk menyelesaikan pembayaran"
 						: "Checkout YoBasePay siap dibuka",
 				);
@@ -395,13 +397,21 @@ export function PricingPage({ user }: PricingPageProps) {
 							Checkout {qrisData.planName}
 						</h2>
 						<p className="text-zinc-500 dark:text-zinc-400 mb-8 max-w-sm">
-							{qrisData.qris
+							{qrisData.qris || qrisData.qrImage
 								? "Scan kode QRIS di bawah ini dengan aplikasi Bank atau E-Wallet kesayangan Anda untuk membayar "
 								: "Lanjutkan pembayaran lewat halaman checkout YoBasePay untuk membayar "}
 							<b>{qrisData.price}</b>.
 						</p>
 
-						{qrisData.qris ? (
+						{qrisData.qrImage ? (
+							<div className="relative mx-auto mb-8 flex aspect-square w-full max-w-64 shrink-0 items-center justify-center rounded-3xl border border-zinc-200 bg-white p-4 dark:border-zinc-700">
+								<img
+									src={qrisData.qrImage}
+									alt="QRIS Payment"
+									className="h-full w-full object-contain"
+								/>
+							</div>
+						) : qrisData.qris ? (
 							<div className="relative mx-auto mb-8 flex aspect-square w-full max-w-64 shrink-0 items-center justify-center rounded-3xl border border-zinc-200 bg-white p-4 dark:border-zinc-700">
 								<QRCode
 									value={qrisData.qris}

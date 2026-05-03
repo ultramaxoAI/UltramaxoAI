@@ -52,6 +52,7 @@ export async function GET(request: Request) {
 		const noteData = parseNote(reqInfo.note) as {
 			checkoutUrl?: string | null;
 			qris?: string | null;
+			qrImage?: string | null;
 			webhookStatus?: string | null;
 			paidAt?: string | null;
 		};
@@ -62,6 +63,7 @@ export async function GET(request: Request) {
 				status: reqInfo.status,
 				checkoutUrl: noteData.checkoutUrl || null,
 				qris: noteData.qris || null,
+				qrImage: noteData.qrImage || null,
 				paidAt: noteData.paidAt || null,
 			});
 		}
@@ -100,6 +102,7 @@ export async function GET(request: Request) {
 				status: "approved",
 				checkoutUrl: noteData.checkoutUrl || null,
 				qris: noteData.qris || null,
+				qrImage: noteData.qrImage || null,
 				paidAt: noteData.paidAt || null,
 			});
 		}
@@ -115,6 +118,7 @@ export async function GET(request: Request) {
 				status: "rejected",
 				checkoutUrl: noteData.checkoutUrl || null,
 				qris: noteData.qris || null,
+				qrImage: noteData.qrImage || null,
 			});
 		}
 
@@ -123,6 +127,7 @@ export async function GET(request: Request) {
 			status: reqInfo.status,
 			checkoutUrl: noteData.checkoutUrl || null,
 			qris: noteData.qris || null,
+			qrImage: noteData.qrImage || null,
 		});
 	} catch (error) {
 		console.error("[QRIS Check] Internal Error:", error);

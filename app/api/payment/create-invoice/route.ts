@@ -9,6 +9,7 @@ import { auth } from "@/app/(auth)/auth";
 const YOBASEPAY_API_KEY = process.env.YOBASEPAY_API_KEY || "";
 const YOBASEPAY_BASE_URL =
 	process.env.YOBASEPAY_BASE_URL || "https://yobasepay.net/api/v3";
+const YOBASEPAY_V3_URL = "https://yobasepay.net/api_v3.php";
 const YOBASEPAY_SUCCESS_URL =
 	process.env.YOBASEPAY_SUCCESS_URL || "https://ultramaxo.tech/payment/success";
 const isDevelopment = process.env.NODE_ENV === "development";
@@ -87,12 +88,59 @@ async function createYoBasePayTransaction({
 	return JSON.parse(text);
 }
 
+async function createYoBasePayV3Order({
+	merchantRef,
+	amount,
+}: {
+	merchantRef: string;
+	amount: number;
+}) {
+	const params = new URLSearchParams({
+		action: "create_order",
+		api_key: YOBASEPAY_API_KEY,
+		amount: String(amount),
+		ref_id: merchantRef,
+	});
+
+	const v3Url = `${YOBASEPAY_V3_URL}?${params.toString()}`;
+
+	if (isDevelopment) {
+		console.log(
+			"[YoBasePay V3] Creating order:",
+			v3Url.replace(YOBASEPAY_API_KEY, "***"),
+		);
+	}
+
+	const response = await fetch(v3Url, {
+		method: "GET",
+		headers: {
+			"X-API-KEY": YOBASEPAY_API_KEY,
+		},
+	});
+
+	const text = await response.text();
+	if (isDevelopment) {
+		console.log(
+			"[YoBasePay V3] Response:",
+			response.status,
+			text.slice(0, 500),
+		);
+	}
+
+	if (!response.ok) {
+		throw new Error(`YoBasePay V3 error: ${response.status} ${text}`);
+	}
+
+	return JSON.parse(text);
+}
+
 function buildPaymentNote({
 	planId,
 	months,
 	amount,
 	checkoutUrl,
 	qris,
+	qrImage,
 	providerRef,
 	rawResponse,
 }: {
@@ -101,6 +149,7 @@ function buildPaymentNote({
 	amount: number;
 	checkoutUrl: string | null;
 	qris: string | null;
+	qrImage: string | null;
 	providerRef: string | null;
 	rawResponse: unknown;
 }) {
@@ -111,6 +160,7 @@ function buildPaymentNote({
 		amount,
 		checkoutUrl,
 		qris,
+		qrImage,
 		providerRef,
 		rawResponse,
 		createdAt: new Date().toISOString(),
@@ -202,6 +252,72 @@ export async function POST(request: Request) {
 		}
 
 		try {
+			const yobaseV3Result = await createYoBasePayV3Order({
+				merchantRef: purchaseReq.id,
+				amount: validPrice,
+			});
+
+			if (yobaseV3Result?.status === "Success" && yobaseV3Result?.data) {
+				const checkoutUrl =
+					yobaseV3Result.data.payment_url ||
+					yobaseV3Result.data.checkout_url ||
+					null;
+				const qrImage = yobaseV3Result.data.qr_image || null;
+				const qris =
+					yobaseV3Result.data.qris || yobaseV3Result.data.qr_string || null;
+				const providerRef =
+					yobaseV3Result.data.ref_id ||
+					yobaseV3Result.data.trx_id ||
+					purchaseReq.id;
+
+				await db
+					.update(purchaseRequest)
+					.set({
+						method: "yobasepay",
+						note: buildPaymentNote({
+							planId,
+							months: effectiveMonths,
+							amount: validPrice,
+							checkoutUrl,
+							qris,
+							qrImage,
+							providerRef,
+							rawResponse: yobaseV3Result,
+						}),
+						updatedAt: new Date(),
+					})
+					.where(eq(purchaseRequest.id, purchaseReq.id));
+
+				if (!checkoutUrl && !qris && !qrImage) {
+					console.warn(
+						"[YoBasePay V3] Unknown response format:",
+						yobaseV3Result,
+					);
+					return NextResponse.json(
+						{
+							error:
+								"YoBasePay tidak mengembalikan metode pembayaran yang valid",
+						},
+						{ status: 502 },
+					);
+				}
+
+				return NextResponse.json({
+					success: true,
+					requestId: purchaseReq.id,
+					checkoutUrl,
+					qris,
+					qrImage,
+					provider: "yobasepay",
+				});
+			}
+
+			console.warn("[YoBasePay V3] Unexpected response:", yobaseV3Result);
+		} catch (yobaseV3Err) {
+			console.error("[YoBasePay V3] Failed to create order:", yobaseV3Err);
+		}
+
+		try {
 			const yobaseResult = await createYoBasePayTransaction({
 				merchantRef: purchaseReq.id,
 				amount: validPrice,
@@ -226,6 +342,8 @@ export async function POST(request: Request) {
 				yobaseResult.data?.qr_string ||
 				yobaseResult.qr_string ||
 				null;
+			const qrImage =
+				yobaseResult.qr_image || yobaseResult.data?.qr_image || null;
 
 			const providerRef =
 				yobaseResult.merchant_ref ||
@@ -244,6 +362,7 @@ export async function POST(request: Request) {
 						amount: validPrice,
 						checkoutUrl,
 						qris,
+						qrImage,
 						providerRef,
 						rawResponse: yobaseResult,
 					}),
@@ -251,7 +370,7 @@ export async function POST(request: Request) {
 				})
 				.where(eq(purchaseRequest.id, purchaseReq.id));
 
-			if (!checkoutUrl && !qris) {
+			if (!checkoutUrl && !qris && !qrImage) {
 				console.warn("[YoBasePay] Unknown response format:", yobaseResult);
 				return NextResponse.json(
 					{
@@ -266,6 +385,7 @@ export async function POST(request: Request) {
 				requestId: purchaseReq.id,
 				checkoutUrl,
 				qris,
+				qrImage,
 				provider: "yobasepay",
 			});
 		} catch (yobaseErr) {
