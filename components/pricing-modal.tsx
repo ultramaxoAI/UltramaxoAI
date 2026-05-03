@@ -88,6 +88,7 @@ export function PricingModal({ open, onOpenChange, user }: PricingModalProps) {
 		requestId: string;
 		planName: string;
 		price: string;
+		checkoutUrl?: string | null;
 	} | null>(null);
 	const [checkStatusLoading, setCheckStatusLoading] = useState(false);
 
@@ -187,24 +188,19 @@ export function PricingModal({ open, onOpenChange, user }: PricingModalProps) {
 				throw new Error(data.error || "Gagal membuat invoice");
 			}
 
-			if (data.checkoutUrl) {
-				// YoBasePay checkout — redirect user ke halaman pembayaran
-				toast.success("Mengarahkan ke halaman pembayaran...");
-				window.open(data.checkoutUrl, "_blank");
-			} else if (data.qris && data.requestId) {
+			if ((data.qris || data.checkoutUrl) && data.requestId) {
 				setQrisData({
-					qris: data.qris,
+					qris: data.qris || "",
 					requestId: data.requestId,
 					planName: planName,
 					price: plan.price,
+					checkoutUrl: data.checkoutUrl || null,
 				});
-				toast.success("Silakan scan kode QRIS untuk menyelesaikan pembayaran");
-			} else if (data.fallback) {
-				// Fallback if local without API Key, fallback to WhatsApp
-				toast.success("Menghubungi Admin via WhatsApp...");
-				const text = `Halo Admin, saya ingin upgrade ke paket *${planName}* seharga ${plan.price} untuk akun saya dengan email *${user.email}*. Mohon panduannya.`;
-				const waUrl = `https://wa.me/6285191689131?text=${encodeURIComponent(text)}`;
-				window.open(waUrl, "_blank");
+				toast.success(
+					data.qris
+						? "Silakan scan kode QRIS untuk menyelesaikan pembayaran"
+						: "Checkout YoBasePay siap dibuka",
+				);
 			} else {
 				throw new Error("Gagal mengambil data pembayaran");
 			}
@@ -281,19 +277,34 @@ export function PricingModal({ open, onOpenChange, user }: PricingModalProps) {
 								Checkout {qrisData.planName}
 							</h2>
 							<p className="text-zinc-500 dark:text-zinc-400 mb-8 max-w-sm">
-								Scan kode QRIS di bawah ini dengan aplikasi Bank atau E-Wallet
-								kesayangan Anda untuk membayar <b>{qrisData.price}</b>.
+								{qrisData.qris
+									? "Scan kode QRIS di bawah ini dengan aplikasi Bank atau E-Wallet kesayangan Anda untuk membayar "
+									: "Lanjutkan pembayaran lewat halaman checkout YoBasePay untuk membayar "}
+								<b>{qrisData.price}</b>.
 							</p>
 
-							<div className="bg-white p-4 rounded-3xl shrink-0 mb-8 flex justify-center items-center overflow-hidden w-64 h-64 border border-zinc-200 dark:border-zinc-700 relative mx-auto shadow-sm">
-								<img
-									src={`https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${encodeURIComponent(qrisData.qris)}&color=0a0a0a`}
-									alt="QRIS Payment"
-									className="w-full h-full object-contain mix-blend-multiply"
-								/>
-							</div>
+							{qrisData.qris ? (
+								<div className="bg-white p-4 rounded-3xl shrink-0 mb-8 flex justify-center items-center overflow-hidden w-64 h-64 border border-zinc-200 dark:border-zinc-700 relative mx-auto shadow-sm">
+									<img
+										src={`https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${encodeURIComponent(qrisData.qris)}&color=0a0a0a`}
+										alt="QRIS Payment"
+										className="w-full h-full object-contain mix-blend-multiply"
+									/>
+								</div>
+							) : null}
 
 							<div className="flex flex-col gap-3 w-full max-w-[280px]">
+								{qrisData.checkoutUrl ? (
+									<Button
+										onClick={() =>
+											window.open(qrisData.checkoutUrl || "", "_blank")
+										}
+										variant="outline"
+										className="w-full rounded-xl h-12"
+									>
+										Buka Checkout YoBasePay
+									</Button>
+								) : null}
 								<Button
 									onClick={handleManualCheck}
 									disabled={checkStatusLoading}

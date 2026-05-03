@@ -7,6 +7,17 @@ import { auth } from "@/app/(auth)/auth";
 
 export const dynamic = "force-dynamic";
 
+function parseNote(note: string | null) {
+	if (!note) return {};
+
+	try {
+		const parsed = JSON.parse(note);
+		return typeof parsed === "object" && parsed !== null ? parsed : {};
+	} catch {
+		return {};
+	}
+}
+
 export async function GET(request: Request) {
 	try {
 		const session = await auth();
@@ -38,90 +49,81 @@ export async function GET(request: Request) {
 			return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
 		}
 
-		// If it's already approved, return true
+		const noteData = parseNote(reqInfo.note) as {
+			checkoutUrl?: string | null;
+			qris?: string | null;
+			webhookStatus?: string | null;
+			paidAt?: string | null;
+		};
+
 		if (reqInfo.status === "approved" || reqInfo.status === "paid") {
-			return NextResponse.json({ paid: true, status: reqInfo.status });
+			return NextResponse.json({
+				paid: true,
+				status: reqInfo.status,
+				checkoutUrl: noteData.checkoutUrl || null,
+				qris: noteData.qris || null,
+				paidAt: noteData.paidAt || null,
+			});
 		}
 
-		// Check the external transaction via QRIS Cepat TRX ID stored in 'note'
-		const trxId = reqInfo.note;
-		if (!trxId) {
-			return NextResponse.json(
-				{ error: "No external transaction ID found for this request" },
-				{ status: 400 },
-			);
-		}
+		const webhookStatus = String(noteData.webhookStatus || "").toUpperCase();
+		if (
+			reqInfo.status === "pending" &&
+			["PAID", "SUCCESS", "SETTLED", "COMPLETED", "SUCCESSFUL"].includes(
+				webhookStatus,
+			)
+		) {
+			await updatePurchaseRequestStatus({
+				id: requestId,
+				status: "approved",
+			});
 
-		// Call QRIS Cepat checking endpoint
-		const checkUrl = `https://qriscepat.com/api/trx/${trxId}`;
-		console.log("[QRIS Check] Polling QRISCepat API for trx:", trxId);
+			try {
+				const [proUser] = await db
+					.select()
+					.from(user)
+					.where(eq(user.id, reqInfo.userId))
+					.limit(1);
 
-		const checkResponse = await fetch(checkUrl);
-		const checkText = await checkResponse.text();
-
-		console.log(
-			"[QRIS Check] Response:",
-			checkResponse.status,
-			`${checkText.substring(0, 100)}...`,
-		);
-
-		if (checkResponse.ok) {
-			const checkData = JSON.parse(checkText);
-
-			if (checkData.status === "success" && checkData.data) {
-				const trxStatus = checkData.data.trx_status?.toLowerCase();
-
-				if (
-					trxStatus === "success" ||
-					trxStatus === "paid" ||
-					trxStatus === "settled"
-				) {
-					console.log(
-						"[QRIS Check] Payment successful for requestId:",
-						requestId,
-					);
-					// Mark as approved (this grants PRO inside queries.ts)
-					await updatePurchaseRequestStatus({
-						id: requestId,
-						status: "approved",
-					});
-
-					// Trigger Upgrade Email
-					try {
-						const [proUser] = await db
-							.select()
-							.from(user)
-							.where(eq(user.id, reqInfo.userId))
-							.limit(1);
-
-						if (proUser?.email) {
-							await sendProUpgradeEmail(proUser.email, proUser.name || "User");
-						}
-					} catch (emailErr) {
-						console.error(
-							"[QRIS Check] Failed to send PRO upgrade email:",
-							emailErr,
-						);
-					}
-
-					return NextResponse.json({ paid: true, status: "approved" });
-				} else if (trxStatus === "failed" || trxStatus === "expired") {
-					await updatePurchaseRequestStatus({
-						id: requestId,
-						status: "rejected",
-					});
-					return NextResponse.json({ paid: false, status: "rejected" });
+				if (proUser?.email) {
+					await sendProUpgradeEmail(proUser.email, proUser.name || "User");
 				}
-
-				// "pending"
-				return NextResponse.json({
-					paid: false,
-					status: trxStatus || "pending",
-				});
+			} catch (emailErr) {
+				console.error(
+					"[Payment Status] Failed to send PRO upgrade email:",
+					emailErr,
+				);
 			}
+
+			return NextResponse.json({
+				paid: true,
+				status: "approved",
+				checkoutUrl: noteData.checkoutUrl || null,
+				qris: noteData.qris || null,
+				paidAt: noteData.paidAt || null,
+			});
 		}
 
-		return NextResponse.json({ paid: false, status: "pending" });
+		if (
+			reqInfo.status === "rejected" ||
+			["FAILED", "EXPIRED", "REJECTED", "CANCELLED", "CANCELED"].includes(
+				webhookStatus,
+			)
+		) {
+			return NextResponse.json({
+				paid: false,
+				status: "rejected",
+				checkoutUrl: noteData.checkoutUrl || null,
+				qris: noteData.qris || null,
+			});
+		}
+
+		return NextResponse.json({
+			paid: false,
+			status: reqInfo.status,
+			checkoutUrl: noteData.checkoutUrl || null,
+			qris: noteData.qris || null,
+		});
 	} catch (error) {
 		console.error("[QRIS Check] Internal Error:", error);
 		return NextResponse.json(

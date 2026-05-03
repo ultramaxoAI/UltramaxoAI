@@ -1,6 +1,6 @@
 import { createHmac } from "node:crypto";
 import { createPurchaseRequest, db } from "@backend/db/queries";
-import { user } from "@backend/db/schema";
+import { purchaseRequest, user } from "@backend/db/schema";
 import { eq } from "drizzle-orm";
 import { NextResponse } from "next/server";
 import { auth } from "@/app/(auth)/auth";
@@ -11,12 +11,7 @@ const YOBASEPAY_BASE_URL =
 	process.env.YOBASEPAY_BASE_URL || "https://yobasepay.net/api/v3";
 const YOBASEPAY_SUCCESS_URL =
 	process.env.YOBASEPAY_SUCCESS_URL || "https://ultramaxo.tech/payment/success";
-const _YOBASEPAY_WEBHOOK_SECRET = process.env.YOBASEPAY_WEBHOOK_SECRET || "";
 const isDevelopment = process.env.NODE_ENV === "development";
-
-// Fallback: QRIS Cepat
-const QRIS_CEPAT_API_KEY = process.env.QRIS_CEPAT_API_KEY || "";
-const QRIS_CEPAT_BASE_URL = "https://qriscepat.com/api";
 
 // Tabel harga resmi server-side
 const PRICING_TABLE: Record<string, Record<number, number>> = {
@@ -90,6 +85,36 @@ async function createYoBasePayTransaction({
 	}
 
 	return JSON.parse(text);
+}
+
+function buildPaymentNote({
+	planId,
+	months,
+	amount,
+	checkoutUrl,
+	qris,
+	providerRef,
+	rawResponse,
+}: {
+	planId: string;
+	months: number;
+	amount: number;
+	checkoutUrl: string | null;
+	qris: string | null;
+	providerRef: string | null;
+	rawResponse: unknown;
+}) {
+	return JSON.stringify({
+		provider: "yobasepay",
+		planId,
+		months,
+		amount,
+		checkoutUrl,
+		qris,
+		providerRef,
+		rawResponse,
+		createdAt: new Date().toISOString(),
+	});
 }
 
 export async function POST(request: Request) {
@@ -169,104 +194,87 @@ export async function POST(request: Request) {
 			? purchaseReqRaw[0]
 			: purchaseReqRaw;
 
-		// 6. Coba buat transaksi via YoBasePay V3
-		if (YOBASEPAY_API_KEY) {
-			try {
-				const yobaseResult = await createYoBasePayTransaction({
-					merchantRef: purchaseReq.id,
-					amount: validPrice,
-					customerName: dbUser.name || dbUser.username || "User",
-					customerEmail: dbUser.email || undefined,
-					description: `Upgrade ${planId} - ${effectiveMonths} bulan`,
-				});
+		if (!YOBASEPAY_API_KEY) {
+			return NextResponse.json(
+				{ error: "YoBasePay belum dikonfigurasi di server" },
+				{ status: 503 },
+			);
+		}
 
-				// YoBasePay biasanya return checkout_url atau payment_url
-				const checkoutUrl =
-					yobaseResult.checkout_url ||
-					yobaseResult.payment_url ||
-					yobaseResult.data?.checkout_url ||
-					yobaseResult.data?.payment_url ||
-					yobaseResult.data?.url;
+		try {
+			const yobaseResult = await createYoBasePayTransaction({
+				merchantRef: purchaseReq.id,
+				amount: validPrice,
+				customerName: dbUser.name || dbUser.username || "User",
+				customerEmail: dbUser.email || undefined,
+				description: `Upgrade ${planId} - ${effectiveMonths} bulan`,
+			});
 
-				if (checkoutUrl) {
-					return NextResponse.json({
-						success: true,
-						requestId: purchaseReq.id,
+			const checkoutUrl =
+				yobaseResult.checkout_url ||
+				yobaseResult.payment_url ||
+				yobaseResult.data?.checkout_url ||
+				yobaseResult.data?.payment_url ||
+				yobaseResult.data?.url ||
+				yobaseResult.url ||
+				yobaseResult.redirect_url ||
+				null;
+
+			const qris =
+				yobaseResult.qris ||
+				yobaseResult.data?.qris ||
+				yobaseResult.data?.qr_string ||
+				yobaseResult.qr_string ||
+				null;
+
+			const providerRef =
+				yobaseResult.merchant_ref ||
+				yobaseResult.reference ||
+				yobaseResult.reference_id ||
+				yobaseResult.data?.merchant_ref ||
+				purchaseReq.id;
+
+			await db
+				.update(purchaseRequest)
+				.set({
+					method: "yobasepay",
+					note: buildPaymentNote({
+						planId,
+						months: effectiveMonths,
+						amount: validPrice,
 						checkoutUrl,
-						provider: "yobasepay",
-					});
-				}
+						qris,
+						providerRef,
+						rawResponse: yobaseResult,
+					}),
+					updatedAt: new Date(),
+				})
+				.where(eq(purchaseRequest.id, purchaseReq.id));
 
-				// Jika ada QRIS data
-				const qrisData =
-					yobaseResult.qris ||
-					yobaseResult.data?.qris ||
-					yobaseResult.data?.qr_string;
-				if (qrisData) {
-					return NextResponse.json({
-						success: true,
-						requestId: purchaseReq.id,
-						qris: qrisData,
-						provider: "yobasepay",
-					});
-				}
-
-				// Return raw response kalau format tidak dikenali
+			if (!checkoutUrl && !qris) {
 				console.warn("[YoBasePay] Unknown response format:", yobaseResult);
-				return NextResponse.json({
-					success: true,
-					requestId: purchaseReq.id,
-					checkoutUrl: yobaseResult.url || yobaseResult.redirect_url || null,
-					rawResponse: yobaseResult,
-					provider: "yobasepay",
-				});
-			} catch (yobaseErr) {
-				console.error("[YoBasePay] Failed, falling back:", yobaseErr);
-				// Lanjut ke fallback QRIS Cepat
-			}
-		}
-
-		// 7. Fallback ke QRIS Cepat
-		if (QRIS_CEPAT_API_KEY) {
-			try {
-				const qrisUrl = `${QRIS_CEPAT_BASE_URL}/deposit/${validPrice}/${QRIS_CEPAT_API_KEY}`;
-				console.log("[QRISCepat] Generating QRIS for amount:", validPrice);
-
-				const qrisResponse = await fetch(qrisUrl);
-				const qrisText = await qrisResponse.text();
-
-				console.log(
-					"[QRISCepat] Response:",
-					qrisResponse.status,
-					`${qrisText.substring(0, 100)}...`,
+				return NextResponse.json(
+					{
+						error: "YoBasePay tidak mengembalikan metode pembayaran yang valid",
+					},
+					{ status: 502 },
 				);
-
-				if (qrisResponse.ok) {
-					const qrisData = JSON.parse(qrisText);
-
-					if (qrisData.status === "success" && qrisData.data?.qris) {
-						// Update purchase request method
-						return NextResponse.json({
-							success: true,
-							requestId: purchaseReq.id,
-							trxId: qrisData.data.trx_id,
-							qris: qrisData.data.qris,
-							provider: "qriscepat",
-						});
-					}
-				}
-			} catch (qrisErr) {
-				console.error("[QRISCepat] Also failed:", qrisErr);
 			}
-		}
 
-		// 8. Final fallback — manual
-		return NextResponse.json({
-			success: true,
-			requestId: purchaseReq.id,
-			fallback: true,
-			provider: "manual",
-		});
+			return NextResponse.json({
+				success: true,
+				requestId: purchaseReq.id,
+				checkoutUrl,
+				qris,
+				provider: "yobasepay",
+			});
+		} catch (yobaseErr) {
+			console.error("[YoBasePay] Failed to create transaction:", yobaseErr);
+			return NextResponse.json(
+				{ error: "Gagal membuat transaksi YoBasePay" },
+				{ status: 502 },
+			);
+		}
 	} catch (error) {
 		console.error("[Payment API] FATAL error:", error);
 		return NextResponse.json(

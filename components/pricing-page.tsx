@@ -90,6 +90,7 @@ export function PricingPage({ user }: PricingPageProps) {
 		requestId: string;
 		planName: string;
 		price: string;
+		checkoutUrl?: string | null;
 	} | null>(null);
 	const [checkStatusLoading, setCheckStatusLoading] = useState(false);
 
@@ -249,21 +250,21 @@ export function PricingPage({ user }: PricingPageProps) {
 				throw new Error(data.error || "Gagal membuat invoice");
 			}
 
-			if (data.qris && data.requestId) {
+			if ((data.qris || data.checkoutUrl) && data.requestId) {
 				setQrisData({
-					qris: data.qris,
+					qris: data.qris || "",
 					requestId: data.requestId,
 					planName: planName,
 					price: plan.price,
+					checkoutUrl: data.checkoutUrl || null,
 				});
-				toast.success("Silakan scan kode QRIS untuk menyelesaikan pembayaran");
-			} else if (data.fallback) {
-				toast.success("Menghubungi Admin via WhatsApp...");
-				const text = `Halo Admin, saya ingin upgrade ke paket *${planName}* seharga ${plan.price} untuk akun saya dengan email *${user.email}*. Mohon panduannya.`;
-				const waUrl = `https://wa.me/6285191689131?text=${encodeURIComponent(text)}`;
-				window.open(waUrl, "_blank");
+				toast.success(
+					data.qris
+						? "Silakan scan kode QRIS untuk menyelesaikan pembayaran"
+						: "Checkout YoBasePay siap dibuka",
+				);
 			} else {
-				throw new Error("Gagal mengambil QRIS pembayaran");
+				throw new Error("Gagal mengambil data pembayaran YoBasePay");
 			}
 		} catch (error) {
 			console.error("Gagal memproses upgrade:", error);
@@ -394,20 +395,35 @@ export function PricingPage({ user }: PricingPageProps) {
 							Checkout {qrisData.planName}
 						</h2>
 						<p className="text-zinc-500 dark:text-zinc-400 mb-8 max-w-sm">
-							Scan kode QRIS di bawah ini dengan aplikasi Bank atau E-Wallet
-							kesayangan Anda untuk membayar <b>{qrisData.price}</b>.
+							{qrisData.qris
+								? "Scan kode QRIS di bawah ini dengan aplikasi Bank atau E-Wallet kesayangan Anda untuk membayar "
+								: "Lanjutkan pembayaran lewat halaman checkout YoBasePay untuk membayar "}
+							<b>{qrisData.price}</b>.
 						</p>
 
-						<div className="relative mx-auto mb-8 flex aspect-square w-full max-w-64 shrink-0 items-center justify-center rounded-3xl border border-zinc-200 bg-white p-4 dark:border-zinc-700">
-							<QRCode
-								value={qrisData.qris}
-								size={256}
-								style={{ height: "auto", maxWidth: "100%", width: "100%" }}
-								viewBox={`0 0 256 256`}
-							/>
-						</div>
+						{qrisData.qris ? (
+							<div className="relative mx-auto mb-8 flex aspect-square w-full max-w-64 shrink-0 items-center justify-center rounded-3xl border border-zinc-200 bg-white p-4 dark:border-zinc-700">
+								<QRCode
+									value={qrisData.qris}
+									size={256}
+									style={{ height: "auto", maxWidth: "100%", width: "100%" }}
+									viewBox={`0 0 256 256`}
+								/>
+							</div>
+						) : null}
 
 						<div className="flex flex-col gap-3 w-full max-w-[280px]">
+							{qrisData.checkoutUrl ? (
+								<Button
+									onClick={() =>
+										window.open(qrisData.checkoutUrl || "", "_blank")
+									}
+									variant="outline"
+									className="w-full rounded-xl h-12"
+								>
+									Buka Checkout YoBasePay
+								</Button>
+							) : null}
 							<Button
 								onClick={handleManualCheck}
 								disabled={checkStatusLoading}
