@@ -234,7 +234,7 @@ function PureMessages({
 					>
 						<div className="mx-auto flex min-w-0 w-full max-w-[820px] flex-col space-y-8 px-6 py-10">
 							{visibleMessages.map((message, index) => (
-								<Fragment key={message.id}>
+								<Fragment key={`${message.id}-${index}`}>
 									{showThinkingSurfaceOnly &&
 										index === contextualThinkingAnchorIndex &&
 										!contextualThinkingAnchoredToUser && (
@@ -287,7 +287,7 @@ function PureMessages({
 												<div className="min-w-0 flex-1">
 													<AgentThinkingPanel
 														isActive={contextualThinkingActive}
-														key={liveThinking.startedAt ?? "live-thinking"}
+														key={liveThinking.startedAt ?? "live-thinking-user"}
 														liveSteps={liveThinking.steps}
 														variant={inlineActivityVariant ?? "deep-thinking"}
 														status={

@@ -19,6 +19,7 @@ import {
   X,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { HlsVideo } from "./hls-video";
 
@@ -955,23 +956,23 @@ export default function LandingPage() {
                     <div className="absolute left-0 top-full mt-1 hidden w-48 flex-col rounded-xl border border-white/[0.08] bg-[#0b0d10] p-1.5 shadow-2xl group-hover:flex">
                       {item.label === "Product" && (
                         <>
-                          <button onClick={() => scrollToSection("#product")} className="flex items-center rounded-md px-3 py-2 text-sm text-white/70 hover:bg-white/10 hover:text-white text-left" type="button">Workspace</button>
-                          <button onClick={() => scrollToSection("#features")} className="flex items-center rounded-md px-3 py-2 text-sm text-white/70 hover:bg-white/10 hover:text-white text-left" type="button">Artifacts</button>
-                          <button onClick={() => scrollToSection("#use-cases")} className="flex items-center rounded-md px-3 py-2 text-sm text-white/70 hover:bg-white/10 hover:text-white text-left" type="button">Live Code</button>
+                          <Link href="/product/workspace" className="flex items-center rounded-md px-3 py-2 text-sm text-white/70 hover:bg-white/10 hover:text-white text-left">Workspace</Link>
+                          <Link href="/product/artifacts" className="flex items-center rounded-md px-3 py-2 text-sm text-white/70 hover:bg-white/10 hover:text-white text-left">Artifacts</Link>
+                          <Link href="/product/live-code" className="flex items-center rounded-md px-3 py-2 text-sm text-white/70 hover:bg-white/10 hover:text-white text-left">Live Code</Link>
                         </>
                       )}
                       {item.label === "Features" && (
                         <>
-                          <button onClick={() => scrollToSection("#features")} className="flex items-center rounded-md px-3 py-2 text-sm text-white/70 hover:bg-white/10 hover:text-white text-left" type="button">Mobile Mode</button>
-                          <button onClick={() => scrollToSection("#features")} className="flex items-center rounded-md px-3 py-2 text-sm text-white/70 hover:bg-white/10 hover:text-white text-left" type="button">Fullstack Mode</button>
-                          <button onClick={() => scrollToSection("#features")} className="flex items-center rounded-md px-3 py-2 text-sm text-white/70 hover:bg-white/10 hover:text-white text-left" type="button">Model Routing</button>
+                          <Link href="/features/mobile-mode" className="flex items-center rounded-md px-3 py-2 text-sm text-white/70 hover:bg-white/10 hover:text-white text-left">Mobile Mode</Link>
+                          <Link href="/features/fullstack-mode" className="flex items-center rounded-md px-3 py-2 text-sm text-white/70 hover:bg-white/10 hover:text-white text-left">Fullstack Mode</Link>
+                          <Link href="/features/model-routing" className="flex items-center rounded-md px-3 py-2 text-sm text-white/70 hover:bg-white/10 hover:text-white text-left">Model Routing</Link>
                         </>
                       )}
                       {item.label === "Use Cases" && (
                         <>
-                          <button onClick={() => scrollToSection("#use-cases")} className="flex items-center rounded-md px-3 py-2 text-sm text-white/70 hover:bg-white/10 hover:text-white text-left" type="button">For Developers</button>
-                          <button onClick={() => scrollToSection("#use-cases")} className="flex items-center rounded-md px-3 py-2 text-sm text-white/70 hover:bg-white/10 hover:text-white text-left" type="button">For Researchers</button>
-                          <button onClick={() => scrollToSection("#use-cases")} className="flex items-center rounded-md px-3 py-2 text-sm text-white/70 hover:bg-white/10 hover:text-white text-left" type="button">For Operators</button>
+                          <Link href="/use-cases/developers" className="flex items-center rounded-md px-3 py-2 text-sm text-white/70 hover:bg-white/10 hover:text-white text-left">For Developers</Link>
+                          <Link href="/use-cases/researchers" className="flex items-center rounded-md px-3 py-2 text-sm text-white/70 hover:bg-white/10 hover:text-white text-left">For Researchers</Link>
+                          <Link href="/use-cases/operators" className="flex items-center rounded-md px-3 py-2 text-sm text-white/70 hover:bg-white/10 hover:text-white text-left">For Operators</Link>
                         </>
                       )}
                     </div>

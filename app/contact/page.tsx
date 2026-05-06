@@ -22,28 +22,19 @@ export default function ContactPage() {
 					Have a question or want to talk to sales? Reach out to us through the
 					channels below.
 				</p>
-				<div className="grid w-full max-w-4xl grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+				<div className="flex w-full max-w-2xl flex-col sm:flex-row gap-4 justify-center items-center">
 					<a
 						href="mailto:support@ultramaxo.tech"
-						className="flex items-center justify-center gap-3 bg-white/5 border border-white/10 px-6 py-4 rounded-2xl hover:bg-white/10 transition-colors"
+						className="flex-1 flex w-full items-center justify-center gap-3 bg-white/5 border border-white/10 px-6 py-4 rounded-2xl hover:bg-white/10 transition-colors"
 					>
 						<Mail className="w-5 h-5" />
 						<span className="font-medium">support@ultramaxo.tech</span>
 					</a>
 					<a
-						href="https://t.me/iiokans"
-						target="_blank"
-						rel="noreferrer"
-						className="flex items-center justify-center gap-3 bg-white/5 border border-white/10 px-6 py-4 rounded-2xl hover:bg-white/10 transition-colors"
-					>
-						<Send className="w-5 h-5" />
-						<span className="font-medium">Telegram @iiokans</span>
-					</a>
-					<a
 						href="https://whatsapp.com/channel/0029VbCYCY6HltYHdOeG660L"
 						target="_blank"
 						rel="noreferrer"
-						className="flex items-center justify-center gap-3 bg-white/5 border border-white/10 px-6 py-4 rounded-2xl hover:bg-white/10 transition-colors sm:col-span-2 lg:col-span-1"
+						className="flex-1 flex w-full items-center justify-center gap-3 bg-white/5 border border-white/10 px-6 py-4 rounded-2xl hover:bg-white/10 transition-colors"
 					>
 						<Users className="w-5 h-5" />
 						<span className="font-medium">Join WhatsApp Channel</span>
