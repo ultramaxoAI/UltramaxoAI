@@ -488,7 +488,7 @@ export const agentRun = pgTable("agent_run", {
 		.notNull()
 		.references(() => user.id, { onDelete: "cascade" }),
 	chatId: uuid("chatId").references(() => chat.id, { onDelete: "set null" }),
-	mode: varchar("mode", { enum: ["fullstack", "mobile"] }).notNull(),
+	mode: varchar("mode", { enum: ["general", "fullstack", "mobile"] }).notNull(),
 	goal: text("goal").notNull(),
 	plan: json("plan").$type<string[]>().notNull().default([]),
 	deliverable: text("deliverable").notNull(),

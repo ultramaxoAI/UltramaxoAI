@@ -60,7 +60,7 @@ npm install -g pnpm
    ```bash
    cp .env.example .env.local
    ```
-   *Note: Ensure you configure your Postgres database URL and Auth Secret.*
+   *Note: Ensure you configure your Postgres database URL, Auth Secret, and `REDIS_URL` if you want production-safe distributed API rate limiting.*
 
 4. **Initialize the Database:**
    Generate tables and push the schema using Drizzle.
@@ -90,6 +90,8 @@ This project is optimized for deployment on Vercel.
 [![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Fyourusername%2Fultramaxo)
 
 Make sure to add your `.env` variables in the Vercel Dashboard before building.
+
+For production, set `REDIS_URL` as well. The API Console rate limiter uses Redis when available so limits stay consistent across multiple instances and cold starts.
 
 ---
 

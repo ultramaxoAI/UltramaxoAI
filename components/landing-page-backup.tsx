@@ -40,7 +40,10 @@ const navigationItems = [
 	{ label: "Use cases", href: "#use-cases" },
 	{ label: "Pricing", href: "#pricing" },
 	{ label: "FAQ", href: "#faq" },
-	{ label: "Community", href: "https://t.me/+CQR8SWdH5nE2OTdk" },
+	{
+		label: "Community",
+		href: "https://whatsapp.com/channel/0029VbCYCY6HltYHdOeG660L",
+	},
 ];
 
 const capabilityChips = [
@@ -1284,7 +1287,10 @@ def slowloris_worker(target_ip, proxy_list):
 						<button
 							className="transition-colors hover:text-[#171717] dark:hover:text-[#f3f4f1]"
 							onClick={() =>
-								window.open("https://t.me/+CQR8SWdH5nE2OTdk", "_blank")
+								window.open(
+									"https://whatsapp.com/channel/0029VbCYCY6HltYHdOeG660L",
+									"_blank",
+								)
 							}
 							type="button"
 						>

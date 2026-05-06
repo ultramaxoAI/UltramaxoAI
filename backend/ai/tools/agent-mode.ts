@@ -22,11 +22,11 @@ export const startAgentTaskWithPersistence = ({
 }) => {
 	return {
 		description:
-			"Start an autonomous build session for Fullstack Web or Mobile Dev mode. Use this at the beginning to announce the goal and the execution plan.",
+			"Start an autonomous agent session. Use this at the beginning to announce the goal and the execution plan.",
 		inputSchema: z.object({
 			mode: z
-				.enum(["fullstack", "mobile"])
-				.describe("Which IDE agent mode is currently active"),
+				.enum(["general", "fullstack", "mobile"])
+				.describe("Which autonomous agent mode is currently active"),
 			goal: z.string().min(1).describe("The user request being executed"),
 			plan: z
 				.array(z.string().min(1))
@@ -36,7 +36,7 @@ export const startAgentTaskWithPersistence = ({
 			deliverable: z
 				.string()
 				.min(1)
-				.describe("What will be delivered in the IDE artifact"),
+				.describe("What will be delivered by the agent run"),
 		}),
 		execute: ({
 			mode,
@@ -44,7 +44,7 @@ export const startAgentTaskWithPersistence = ({
 			plan,
 			deliverable,
 		}: {
-			mode: "fullstack" | "mobile";
+			mode: "general" | "fullstack" | "mobile";
 			goal: string;
 			plan: string[];
 			deliverable: string;
@@ -103,7 +103,7 @@ export const reportAgentStepWithPersistence = ({
 }) => {
 	return {
 		description:
-			"Report a concrete agent step while building the Fullstack Web or Mobile Dev project. Use this to show progress like creating files, adding packages, or launching preview.",
+			"Report a concrete agent step while executing an autonomous task. Use this to show progress like researching, inspecting files, creating changes, adding packages, or launching preview.",
 		inputSchema: z.object({
 			title: z.string().min(1).describe("Short action title"),
 			status: z

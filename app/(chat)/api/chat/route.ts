@@ -23,8 +23,8 @@ import {
 } from "@backend/ai/tools/code-workspace";
 import { createDocument } from "@backend/ai/tools/create-document";
 import { getWeather } from "@backend/ai/tools/get-weather";
-import { requestSuggestions } from "@backend/ai/tools/request-suggestions";
 import { requestClarification } from "@backend/ai/tools/request-clarification";
+import { requestSuggestions } from "@backend/ai/tools/request-suggestions";
 import { updateDocument } from "@backend/ai/tools/update-document";
 import { webSearch } from "@backend/ai/tools/web-search";
 import {
@@ -64,6 +64,7 @@ import {
 import { after } from "next/server";
 import { createResumableStreamContext } from "resumable-stream";
 import { auth } from "@/app/(auth)/auth";
+import { detectAgentMode } from "@/lib/agent-mode-detector";
 import {
 	isDevelopmentEnvironment,
 	isFullstackModeInMaintenance,
@@ -93,6 +94,34 @@ type StreamErrorDetails = Error & {
 type ChatMessagePart = ChatMessage["parts"][number];
 type ModelMessages = Awaited<ReturnType<typeof convertToModelMessages>>;
 type ModelMessage = ModelMessages[number];
+
+function hasRenderableAssistantResponseMessage(
+	message: ModelMessage | { role?: string; content?: unknown },
+) {
+	if (message.role !== "assistant") {
+		return false;
+	}
+
+	if (typeof message.content === "string") {
+		return Boolean(message.content.trim());
+	}
+
+	if (!Array.isArray(message.content)) {
+		return false;
+	}
+
+	return message.content.some((part) => {
+		if (!part || typeof part !== "object" || !("type" in part)) {
+			return false;
+		}
+
+		if (part.type === "text") {
+			return typeof part.text === "string" && Boolean(part.text.trim());
+		}
+
+		return false;
+	});
+}
 
 function hasApprovalContinuationState(parts: ChatMessage["parts"] = []) {
 	return parts.some((part) => {
@@ -221,6 +250,29 @@ export async function POST(request: Request) {
 						.map((part) => part.text ?? "")
 						.join(" ")
 				: "";
+			const latestMessageHasAttachment = Array.isArray(message?.parts)
+				? message.parts.some((part) => isImageLikePart(part))
+				: false;
+			const recentContext = (messages ?? [])
+				.slice(-4)
+				.map((candidate) =>
+					(candidate.parts ?? [])
+						.filter(
+							(part): part is Extract<ChatMessagePart, { type: "text" }> =>
+								part?.type === "text",
+						)
+						.map((part) => part.text ?? "")
+						.join(" "),
+				)
+				.filter(Boolean);
+			const autoAgentDetection = detectAgentMode({
+				message: latestUserText,
+				recentContext,
+				hasAttachment: latestMessageHasAttachment,
+			});
+			const isApprovalContinuationRequest = (messages ?? []).some((candidate) =>
+				hasApprovalContinuationState(candidate.parts as ChatMessage["parts"]),
+			);
 			const requestedMobileModeByText =
 				MOBILE_MODE_INTENT_REGEX.test(latestUserText);
 			const requestedIdeModeByText =
@@ -231,6 +283,11 @@ export async function POST(request: Request) {
 			const inferredFullstackModeEnabled =
 				effectiveFullstackModeEnabled ||
 				(requestedIdeModeByText && !inferredMobileModeEnabled);
+			const inferredGeneralAgentModeEnabled =
+				(autoAgentDetection.mode === "agent" ||
+					isApprovalContinuationRequest) &&
+				!inferredFullstackModeEnabled &&
+				!inferredMobileModeEnabled;
 
 			const session = await auth();
 
@@ -247,6 +304,8 @@ export async function POST(request: Request) {
 					webSearchEnabled,
 					fullstackModeEnabled: inferredFullstackModeEnabled,
 					mobileModeEnabled: inferredMobileModeEnabled,
+					generalAgentModeEnabled: inferredGeneralAgentModeEnabled,
+					autoAgentDetection,
 				});
 			}
 
@@ -458,7 +517,9 @@ export async function POST(request: Request) {
 				selectedChatModel.includes("deepseek-r1") ||
 				deepThinkingEnabled;
 			const isIdeAgentMode =
-				inferredFullstackModeEnabled || inferredMobileModeEnabled;
+				inferredFullstackModeEnabled ||
+				inferredMobileModeEnabled ||
+				inferredGeneralAgentModeEnabled;
 			const maxContextMessages = isIdeAgentMode ? 10 : 18;
 			const recentUiMessages = uiMessages.slice(-maxContextMessages);
 
@@ -471,6 +532,8 @@ export async function POST(request: Request) {
 					webSearchEnabled,
 					fullstackModeEnabled: inferredFullstackModeEnabled,
 					mobileModeEnabled: inferredMobileModeEnabled,
+					generalAgentModeEnabled: inferredGeneralAgentModeEnabled,
+					autoAgentDetection,
 				});
 			}
 
@@ -591,6 +654,8 @@ export async function POST(request: Request) {
 				});
 			}
 
+			let streamedFallbackAssistantMessage: ChatMessage | null = null;
+
 			const stream = createUIMessageStream({
 				originalMessages: isToolApprovalFlow ? uiMessages : undefined,
 				execute: async ({ writer: dataStream }) => {
@@ -609,9 +674,11 @@ export async function POST(request: Request) {
 						if (effectiveUserId) {
 							await saveDocument({
 								id: currentDocumentId,
-								title: fullstackModeEnabled
+								title: inferredFullstackModeEnabled
 									? "Fullstack Workspace"
-									: "Mobile Workspace",
+									: inferredMobileModeEnabled
+										? "Mobile Workspace"
+										: "Agent Workspace",
 								kind: "code",
 								content: "",
 								userId: effectiveUserId,
@@ -625,11 +692,24 @@ export async function POST(request: Request) {
 						dataStream.write({ type: "data-id", data: currentDocumentId });
 						dataStream.write({
 							type: "data-title",
-							data: fullstackModeEnabled
+							data: inferredFullstackModeEnabled
 								? "Fullstack Workspace"
-								: "Mobile Workspace",
+								: inferredMobileModeEnabled
+									? "Mobile Workspace"
+									: "Agent Workspace",
 						});
 						dataStream.write({ type: "data-kind", data: "code" });
+					}
+
+					// Emit initial agent thinking event so the frontend panel shows immediately
+					if (isIdeAgentMode) {
+						dataStream.write({
+							type: "data-agent-thinking",
+							data: {
+								label: "Menganalisis permintaan...",
+								status: "running",
+							},
+						});
 					}
 
 					while (retryCount <= maxRetries) {
@@ -660,6 +740,7 @@ export async function POST(request: Request) {
 								webSearchEnabled,
 								fullstackModeEnabled: inferredFullstackModeEnabled,
 								mobileModeEnabled: inferredMobileModeEnabled,
+								generalAgentModeEnabled: inferredGeneralAgentModeEnabled,
 							});
 
 							// Append cross-chat memory to the system prompt
@@ -766,6 +847,91 @@ export async function POST(request: Request) {
 								messages: finalMessages,
 								stopWhen: stepCountIs(isIdeAgentMode ? 10 : 8),
 								maxOutputTokens: isIdeAgentMode ? 8192 : 8192,
+								onChunk: isIdeAgentMode
+									? ({ chunk }) => {
+											if (chunk.type === "tool-input-start") {
+												dataStream.write({
+													type: "data-agent-tool_start",
+													data: {
+														id: chunk.id,
+														toolCallId: chunk.id,
+														tool: chunk.toolName,
+														label: chunk.title ?? chunk.toolName,
+													},
+												});
+											}
+
+											if (chunk.type === "tool-result") {
+												const rawOutput = (chunk as Record<string, unknown>).output ?? (chunk as Record<string, unknown>).result;
+												const outputStr =
+													typeof rawOutput === "string"
+														? rawOutput.slice(0, 200)
+														: JSON.stringify(rawOutput ?? "").slice(0, 200);
+												dataStream.write({
+													type: "data-agent-tool_done",
+													data: {
+														id: chunk.toolCallId,
+														toolCallId: chunk.toolCallId,
+														tool: chunk.toolName,
+														label: chunk.toolName,
+														status: "done",
+														result: outputStr,
+													},
+												});
+											}
+										}
+									: undefined,
+								onStepFinish: isIdeAgentMode
+									? (stepResult) => {
+											const toolCalls = stepResult.toolCalls ?? [];
+
+											// Log step completion for debugging
+											console.log(
+												`[Agent Mode] Step finished with ${toolCalls.length} tool calls`,
+											);
+										}
+									: undefined,
+								onFinish: ({ response }) => {
+									// Emit agent:done when all steps finish
+									if (isIdeAgentMode) {
+										dataStream.write({
+											type: "data-agent-done",
+											data: { status: "done" },
+										});
+									}
+									const streamedMessages = response.messages;
+									const assistantMessages = streamedMessages.filter(
+										(candidate) => candidate.role === "assistant",
+									);
+									const hasRenderableAssistantResponse = assistantMessages.some(
+										(candidate) =>
+											hasRenderableAssistantResponseMessage(candidate),
+									);
+
+									if (hasRenderableAssistantResponse) {
+										streamedFallbackAssistantMessage = null;
+										return;
+									}
+
+									streamedFallbackAssistantMessage = {
+										id: generateUUID(),
+										role: "assistant",
+										parts: [
+											{
+												type: "text",
+												text: "Proses sudah selesai, tapi respons akhir tidak sempat tampil di chat. Coba generate ulang atau lanjutkan dari hasil workspace yang sudah dibuat.",
+											},
+										],
+										metadata: {
+											createdAt: new Date().toISOString(),
+										},
+									};
+
+									dataStream.write({
+										type: "data-appendMessage",
+										data: JSON.stringify(streamedFallbackAssistantMessage),
+									});
+								},
 								toolChoice: "auto",
 								providerOptions: deepThinkingEnabled
 									? {
@@ -797,64 +963,97 @@ export async function POST(request: Request) {
 															getDocumentId,
 															setDocumentId,
 														}),
-														createCodeFile: createCodeFile({
-															session,
-															dataStream,
-															getDocumentId,
-															setDocumentId,
-														}),
-														createFile: createFile({
-															session,
-															dataStream,
-															getDocumentId,
-															setDocumentId,
-														}),
-														createFolder: createFolder({
-															dataStream,
-														}),
-														updateCodeFile: updateCodeFile({
-															session,
-															dataStream,
-															getDocumentId,
-															setDocumentId,
-														}),
-														editFile: editFile({
-															session,
-															dataStream,
-															getDocumentId,
-															setDocumentId,
-														}),
-														deleteCodeFile: deleteCodeFile({
-															session,
-															dataStream,
-															getDocumentId,
-															setDocumentId,
-														}),
+														createCodeFile: {
+															...createCodeFile({
+																session,
+																dataStream,
+																getDocumentId,
+																setDocumentId,
+															}),
+															needsApproval: true,
+														},
+														createFile: {
+															...createFile({
+																session,
+																dataStream,
+																getDocumentId,
+																setDocumentId,
+															}),
+															needsApproval: true,
+														},
+														createFolder: {
+															...createFolder({
+																dataStream,
+															}),
+															needsApproval: true,
+														},
+														updateCodeFile: {
+															...updateCodeFile({
+																session,
+																dataStream,
+																getDocumentId,
+																setDocumentId,
+															}),
+															needsApproval: true,
+														},
+														editFile: {
+															...editFile({
+																session,
+																dataStream,
+																getDocumentId,
+																setDocumentId,
+															}),
+															needsApproval: true,
+														},
+														deleteCodeFile: {
+															...deleteCodeFile({
+																session,
+																dataStream,
+																getDocumentId,
+																setDocumentId,
+															}),
+															needsApproval: true,
+														},
 														readFile: readFile({
 															session,
 															dataStream,
 															getDocumentId,
 															setDocumentId,
 														}),
-														runWorkspaceCommand: runWorkspaceCommand(),
+														runWorkspaceCommand: {
+															...runWorkspaceCommand(),
+															needsApproval: true,
+														},
 														listFiles: listFiles({
 															session,
 															dataStream,
 															getDocumentId,
 															setDocumentId,
 														}),
-														executeTerminalCommand: executeTerminalCommand({
-															dataStream,
-														}),
-														runCommand: runCommand({
-															dataStream,
-														}),
-														installDependency: installDependency({
-															dataStream,
-														}),
-														installPackage: installPackage({
-															dataStream,
-														}),
+														executeTerminalCommand: {
+															...executeTerminalCommand({
+																dataStream,
+															}),
+															needsApproval: true,
+														},
+														runCommand: {
+															...runCommand({
+																dataStream,
+															}),
+															needsApproval: true,
+														},
+														installDependency: {
+															...installDependency({
+																dataStream,
+															}),
+															needsApproval: true,
+														},
+														installPackage: {
+															...installPackage({
+																dataStream,
+															}),
+															needsApproval: true,
+														},
 														startPreviewServer: startPreviewServer({
 															dataStream,
 														}),
@@ -1040,6 +1239,13 @@ export async function POST(request: Request) {
 						finishReason,
 						messageCount: finishedMessages.length,
 					});
+					if (streamedFallbackAssistantMessage) {
+						finishedMessages = [
+							...finishedMessages,
+							streamedFallbackAssistantMessage,
+						];
+					}
+
 					if (isToolApprovalFlow) {
 						for (const finishedMsg of finishedMessages) {
 							const existingMsg = uiMessages.find(

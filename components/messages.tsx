@@ -58,11 +58,31 @@ function PureMessages({
 		if (!message || !message.id) {
 			return false;
 		}
+		const rawContent =
+			typeof (message as { content?: unknown }).content === "string"
+				? ((message as { content?: string }).content ?? "")
+				: "";
 
 		const messageParts = Array.isArray(message.parts) ? message.parts : [];
+		const textPayload = [
+			rawContent,
+			...messageParts
+				.filter((part) => part?.type === "text")
+				.map((part) => (part as { text?: string }).text ?? ""),
+		].join("\n");
+
+		if (
+			message.role === "assistant" &&
+			textPayload.includes(
+				"Proses sudah selesai, tapi respons akhir tidak sempat tampil di chat",
+			)
+		) {
+			return false;
+		}
+
 		const hasTextContent =
-			typeof (message as { content?: unknown }).content === "string"
-				? Boolean(((message as { content?: string }).content ?? "").trim())
+			rawContent
+				? Boolean(rawContent.trim())
 				: messageParts.some((part) => {
 						if (!part || typeof part !== "object" || !("type" in part)) {
 							return false;
@@ -90,9 +110,18 @@ function PureMessages({
 	});
 
 	const lastMessage = visibleMessages.at(-1);
+	const lastUserIndex = visibleMessages.findLastIndex(
+		(message) => message.role === "user",
+	);
+	const assistantAfterLastUserIndex =
+		lastUserIndex === -1
+			? -1
+			: visibleMessages.findIndex(
+					(message, index) => index > lastUserIndex && message.role === "assistant",
+				);
 	const lastAssistantHasContent =
-		lastMessage?.role === "assistant" &&
-		(lastMessage.parts ?? []).some((part) => {
+		assistantAfterLastUserIndex !== -1 &&
+		(visibleMessages[assistantAfterLastUserIndex]?.parts ?? []).some((part) => {
 			if (!part || typeof part !== "object" || !("type" in part)) {
 				return false;
 			}
@@ -119,30 +148,50 @@ function PureMessages({
 			: agentStream.startedAt
 				? Date.now() - agentStream.startedAt
 				: undefined;
-	const lastAssistantIndex = visibleMessages.findLastIndex(
-		(message) => message.role === "assistant",
-	);
+	const contextualThinkingAnchorIndex =
+		assistantAfterLastUserIndex !== -1 ? assistantAfterLastUserIndex : lastUserIndex;
+	const contextualThinkingAnchoredToUser =
+		contextualThinkingAnchorIndex !== -1 &&
+		visibleMessages[contextualThinkingAnchorIndex]?.role === "user";
 	const [thinkingDurationMs, setThinkingDurationMs] = useState<
 		number | undefined
 	>();
-	const showContextualThinking =
+	const hasLiveThinkingSurface =
 		liveThinking.enabled &&
-		liveThinking.steps.length > 0 &&
-		(status === "submitted" ||
+		(liveThinking.steps.length > 0 ||
+			status === "submitted" ||
 			status === "streaming" ||
-			lastAssistantIndex !== -1);
+			status === "error");
+	const showContextualThinking =
+		hasLiveThinkingSurface &&
+		((liveThinking.enabled &&
+			(status === "submitted" ||
+				status === "streaming" ||
+				status === "error" ||
+				contextualThinkingAnchorIndex !== -1)) ||
+			(status === "ready" && contextualThinkingAnchorIndex === -1) ||
+			(status === "error" && contextualThinkingAnchorIndex === -1));
 	const waitingForFirstAssistantToken =
-		status === "streaming" &&
-		(lastAssistantIndex === -1 ||
-			(lastMessage?.role === "assistant" && !lastAssistantHasContent));
+		(status === "submitted" || status === "streaming") &&
+		(assistantAfterLastUserIndex === -1 || !lastAssistantHasContent);
 	const contextualThinkingActive =
 		(status === "submitted" || waitingForFirstAssistantToken) &&
 		!hasApprovalResponse;
 	const showToolAgentPanel =
 		!showContextualThinking &&
-		(status === "submitted" || waitingForFirstAssistantToken) &&
 		!hasApprovalResponse &&
-		agentStream.steps.length > 0;
+		agentStream.steps.length > 0 &&
+		(status === "submitted" ||
+			waitingForFirstAssistantToken ||
+			(status === "ready" && assistantAfterLastUserIndex === -1) ||
+			(status === "error" && assistantAfterLastUserIndex === -1));
+	const showBasicAssistantLoading =
+		!showContextualThinking &&
+		!showToolAgentPanel &&
+		(status === "submitted" || status === "streaming") &&
+		assistantAfterLastUserIndex === -1 &&
+		lastUserIndex !== -1;
+	const showMissingAssistantFallback = false;
 
 	useEffect(() => {
 		if (contextualThinkingActive) {
@@ -178,8 +227,8 @@ function PureMessages({
 							{visibleMessages.map((message, index) => (
 								<Fragment key={message.id}>
 									{showContextualThinking &&
-										message.role === "assistant" &&
-										index === lastAssistantIndex && (
+										index === contextualThinkingAnchorIndex &&
+										!contextualThinkingAnchoredToUser && (
 											<div className="mx-auto flex w-full max-w-[820px] items-start gap-3">
 												<div className="mt-1 flex h-7 w-7 shrink-0 items-center justify-center rounded-full border border-white/[0.10] bg-white/[0.08] text-[11px] font-semibold text-white/55">
 													U
@@ -218,10 +267,31 @@ function PureMessages({
 												: undefined
 										}
 									/>
+									{showContextualThinking &&
+										index === contextualThinkingAnchorIndex &&
+										contextualThinkingAnchoredToUser && (
+											<div className="mx-auto flex w-full max-w-[820px] items-start gap-3">
+												<div className="mt-1 flex h-7 w-7 shrink-0 items-center justify-center rounded-full border border-white/[0.10] bg-white/[0.08] text-[11px] font-semibold text-white/55">
+													U
+												</div>
+												<div className="min-w-0 flex-1">
+													<AgentThinkingPanel
+														isActive={contextualThinkingActive}
+														key={liveThinking.startedAt ?? "live-thinking"}
+														liveSteps={liveThinking.steps}
+														status={
+															contextualThinkingActive ? "thinking" : "done"
+														}
+														steps={[]}
+														totalDurationMs={thinkingDurationMs}
+													/>
+												</div>
+											</div>
+										)}
 								</Fragment>
 							))}
 
-							{showContextualThinking && lastAssistantIndex === -1 && (
+							{showContextualThinking && contextualThinkingAnchorIndex === -1 && (
 								<div
 									className="group/message fade-in w-full animate-in duration-300"
 									data-role="assistant"
@@ -245,6 +315,29 @@ function PureMessages({
 								</div>
 							)}
 
+							{showBasicAssistantLoading && (
+								<div
+									className="group/message fade-in w-full animate-in duration-300"
+									data-role="assistant"
+									data-testid="message-assistant-basic-loading"
+								>
+									<div className="mx-auto flex w-full max-w-[820px] items-start gap-3">
+										<div className="mt-1 flex h-7 w-7 shrink-0 items-center justify-center rounded-full border border-white/[0.10] bg-white/[0.08] text-[11px] font-semibold text-white/55">
+											U
+										</div>
+										<div className="flex min-h-11 items-center gap-1.5 rounded-2xl border border-white/[0.06] bg-white/[0.03] px-4 py-3 text-white/30">
+											{[0, 1, 2].map((dot) => (
+												<span
+													className="size-1.5 animate-[typing-dot_1s_ease-in-out_infinite] rounded-full bg-white/40"
+													key={dot}
+													style={{ animationDelay: `${dot * 0.16}s` }}
+												/>
+											))}
+										</div>
+									</div>
+								</div>
+							)}
+
 							{showToolAgentPanel && (
 								<div
 									className="group/message fade-in w-full animate-in duration-300"
@@ -261,15 +354,44 @@ function PureMessages({
 												steps={agentStream.steps}
 												totalDuration={totalAgentDuration}
 											/>
-											<div className="mt-3 flex items-center gap-1.5 pl-1 text-white/25">
-												{[0, 1, 2].map((dot) => (
-													<span
-														className="size-1.5 animate-[typing-dot_1s_ease-in-out_infinite] rounded-full bg-white/35"
-														key={dot}
-														style={{ animationDelay: `${dot * 0.16}s` }}
-													/>
-												))}
-											</div>
+											{(status === "submitted" ||
+												status === "streaming") && (
+												<div className="mt-3 flex items-center gap-1.5 pl-1 text-white/25">
+													{[0, 1, 2].map((dot) => (
+														<span
+															className="size-1.5 animate-[typing-dot_1s_ease-in-out_infinite] rounded-full bg-white/35"
+															key={dot}
+															style={{ animationDelay: `${dot * 0.16}s` }}
+														/>
+													))}
+												</div>
+											)}
+										</div>
+									</div>
+								</div>
+							)}
+
+							{showMissingAssistantFallback && (
+								<div className="mx-auto flex w-full max-w-[820px] items-start gap-3">
+									<div className="mt-1 flex h-7 w-7 shrink-0 items-center justify-center rounded-full border border-white/[0.10] bg-white/[0.08] text-[11px] font-semibold text-white/55">
+										U
+									</div>
+									<div className="flex w-full max-w-2xl items-start gap-3 rounded-xl border border-white/[0.08] bg-white/[0.03] p-4 text-white/70">
+										<div className="min-w-0 flex-1">
+											<p className="text-[13px] leading-6">
+												Agent sudah selesai jalan, tapi pesan akhir belum
+												sempat tampil di chat.
+											</p>
+											{onRetry ? (
+												<button
+													className="mt-3 inline-flex items-center gap-1.5 rounded-lg bg-white/10 px-3 py-1.5 text-[11px] text-white/60 transition-colors hover:bg-white/15 hover:text-white/80"
+													onClick={onRetry}
+													type="button"
+												>
+													<RefreshCw className="size-3" />
+													Coba generate ulang
+												</button>
+											) : null}
 										</div>
 									</div>
 								</div>

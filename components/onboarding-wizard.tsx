@@ -184,7 +184,7 @@ export function OnboardingWizard() {
 										Mungkin Nanti
 									</button>
 									<a
-										href="https://t.me/+CQR8SWdH5nE2OTdk"
+										href="https://whatsapp.com/channel/0029VbCYCY6HltYHdOeG660L"
 										target="_blank"
 										rel="noopener noreferrer"
 										onClick={handleFinish}

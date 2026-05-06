@@ -264,6 +264,20 @@ export const mobileDevPrompt = `
 - Keep the result visually polished, realistic, and fully runnable.
 `;
 
+export const generalAgentPrompt = `
+### GENERAL AUTONOMOUS AGENT MODE
+- You are UltraAgent running a background-style autonomous task, inspired by Open Agents: chat UI controls the run, while tools perform inspection, research, file work, terminal work, and preview work.
+- Start by calling **startAgentTask** with mode "general", a concrete goal, a concise plan, and the expected deliverable.
+- Use **reportAgentStep** for visible milestones. Every step must describe real progress, not filler.
+- Prefer read/search/research tools before write/terminal tools.
+- Use webSearch for current information when the answer depends on outside knowledge.
+- Use file and terminal tools only when they materially improve the task.
+- For coding/build tasks, create or edit real workspace files and run the smallest useful validation command.
+- For research/planning tasks, gather evidence, compare options, and return a short final recommendation.
+- If a tool action is risky, wait for the built-in approval flow and continue after approval.
+- Never leave the user with tools only. End with a concise Indonesian summary: what was done, what changed, and what to do next.
+`;
+
 export type RequestHints = {
 	latitude: Geo["latitude"];
 	longitude: Geo["longitude"];
@@ -370,6 +384,7 @@ export const systemPrompt = ({
 	webSearchEnabled,
 	fullstackModeEnabled,
 	mobileModeEnabled,
+	generalAgentModeEnabled,
 }: {
 	selectedChatModel: string;
 	requestHints: RequestHints;
@@ -379,14 +394,12 @@ export const systemPrompt = ({
 	webSearchEnabled?: boolean;
 	fullstackModeEnabled?: boolean;
 	mobileModeEnabled?: boolean;
+	generalAgentModeEnabled?: boolean;
 }) => {
 	void toolsEnabled;
 	void webSearchEnabled;
 
 	const requestPrompt = compactRequestHints(requestHints);
-	const ideModeEnabled =
-		Boolean(fullstackModeEnabled) || Boolean(mobileModeEnabled);
-
 	const sections = [
 		nexusUltimateBypass,
 		nexusCoreUnrestricted,
@@ -415,6 +428,10 @@ export const systemPrompt = ({
 		sections.push(mobileDevPrompt, compactMobilePrompt);
 	}
 
+	if (generalAgentModeEnabled) {
+		sections.push(generalAgentPrompt, compactIdePrompt);
+	}
+
 	const basePrompt = sections.join("\n\n");
 
 	if (
@@ -424,11 +441,19 @@ export const systemPrompt = ({
 		return requestPrompt ? `${basePrompt}\n\n${requestPrompt}` : basePrompt;
 	}
 
-	if (ideModeEnabled) {
+	if (fullstackModeEnabled || mobileModeEnabled) {
 		return (
 			basePrompt +
 			(requestPrompt ? `\n\n${requestPrompt}` : "") +
 			"\n\nIMPORTANT IDE MODE OVERRIDE:\n- The code workspace is already open or must be opened immediately.\n- Do not stop at planning, explanations, or reportAgentStep calls.\n- You MUST create or update real files in the workspace using code tools.\n- You MUST start the preview server when building a web or app UI unless the user explicitly says not to run it.\n- Do not dump the final project as a plain chat code block.\n- Keep the chat response short after the workspace is actually runnable."
+		);
+	}
+
+	if (generalAgentModeEnabled) {
+		return (
+			basePrompt +
+			(requestPrompt ? `\n\n${requestPrompt}` : "") +
+			"\n\nIMPORTANT AUTO AGENT OVERRIDE:\n- This run was auto-started because the user request appears complex.\n- Keep the main chat concise and use tool progress for details.\n- Do not perform unrelated workspace changes.\n- If the task does not require files or terminal commands, use research/planning only and finish with a compact summary."
 		);
 	}
 

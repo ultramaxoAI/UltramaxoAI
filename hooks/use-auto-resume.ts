@@ -58,6 +58,10 @@ export function useAutoResume({
 	]);
 
 	useEffect(() => {
+		if (!autoResume) {
+			return;
+		}
+
 		if (!dataStream) {
 			return;
 		}
@@ -72,10 +76,16 @@ export function useAutoResume({
 				const message = sanitizeChatMessage(
 					JSON.parse(dataPart.data) as ChatMessage,
 				);
-				setMessages([...safeInitialMessages, message]);
+				setMessages((currentMessages) => {
+					if (currentMessages.some((current) => current.id === message.id)) {
+						return currentMessages;
+					}
+
+					return [...currentMessages, message];
+				});
 			} catch (err) {
 				console.warn("[AutoResume] Failed to append streamed message:", err);
 			}
 		}
-	}, [dataStream, safeInitialMessages, setMessages]);
+	}, [autoResume, dataStream, safeInitialMessages, setMessages]);
 }

@@ -16,7 +16,7 @@ export function JsonLd() {
 		name: "Ultramaxo",
 		url: siteUrl,
 		logo: `${siteUrl}/favicon.svg`,
-		sameAs: ["https://t.me/+CQR8SWdH5nE2OTdk"],
+		sameAs: ["https://whatsapp.com/channel/0029VbCYCY6HltYHdOeG660L"],
 	};
 
 	const softwareStructuredData = {

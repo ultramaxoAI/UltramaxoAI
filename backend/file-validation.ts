@@ -15,7 +15,6 @@ export const ALLOWED_IMAGE_TYPES = [
 	"image/png",
 	"image/gif",
 	"image/webp",
-	"image/svg+xml",
 ];
 
 export const ALLOWED_DOCUMENT_TYPES = [
@@ -27,12 +26,8 @@ export const ALLOWED_DOCUMENT_TYPES = [
 	"application/xml",
 	"application/zip",
 	"application/x-zip-compressed",
-	"application/x-php",
-	"application/x-httpd-php",
-	"text/x-php",
 	"text/javascript",
 	"text/typescript",
-	"text/html",
 	"text/css",
 ];
 

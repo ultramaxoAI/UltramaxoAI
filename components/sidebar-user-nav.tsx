@@ -251,7 +251,10 @@ export function SidebarUserNav({
 						<DropdownMenuItem
 							className="cursor-pointer gap-2 rounded-md text-white/72 focus:bg-white/[0.06] focus:text-white hover:bg-white/[0.06] hover:text-white"
 							onSelect={() =>
-								window.open("https://t.me/+CQR8SWdH5nE2OTdk", "_blank")
+								window.open(
+									"https://whatsapp.com/channel/0029VbCYCY6HltYHdOeG660L",
+									"_blank",
+								)
 							}
 						>
 							<MessageCircle className="h-4 w-4" />

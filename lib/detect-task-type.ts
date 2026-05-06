@@ -4,7 +4,7 @@ export function detectTaskType(message: string): TaskType {
 	const lower = message.toLowerCase();
 
 	if (
-		/\d+[+\-*/^]|\bhitung\b|\bberapa\b|\bsolve\b|\bintegral\b|\bderivat|\bmatematika\b/.test(
+		/\d+\s*(?:[+*/^]|-\s*\d)\s*\d|\bhitung\b|\bberapa\b|\bsolve\b|\bintegral\b|\bderivat|\bmatematika\b/.test(
 			lower,
 		)
 	) {

@@ -281,10 +281,10 @@ function MessageTextPart({
 		isHuge && !expanded ? rawText.slice(0, maxChars) : rawText;
 
 	return (
-		<div>
+		<div className={cn(messageRole === "user" && "max-w-full")}>
 			<MessageContent
 				className={cn("w-full", {
-					"wrap-break-word ml-auto w-fit max-w-[75%] rounded-2xl bg-white/[0.07] px-5 py-3.5 text-left text-[15px] leading-[1.8] text-white/88 shadow-none":
+					"ml-auto w-fit min-w-12 max-w-full whitespace-pre-wrap break-words rounded-2xl bg-white/[0.07] px-5 py-3.5 text-left text-[15px] leading-[1.8] text-white/88 shadow-none":
 						messageRole === "user",
 					"w-full bg-transparent px-0 py-0 text-left text-[15px] leading-[1.8] text-white/75":
 						messageRole === "assistant",
@@ -396,7 +396,9 @@ const PurePreviewMessage = ({
 		const normalizedType = getNormalizedPartType(part);
 
 		if (normalizedType === "text") {
-			return Boolean(sanitizeText((part as { text?: string }).text ?? "").trim());
+			return Boolean(
+				sanitizeText((part as { text?: string }).text ?? "").trim(),
+			);
 		}
 
 		if (normalizedType === "reasoning") {
@@ -429,6 +431,11 @@ const PurePreviewMessage = ({
 			);
 		}),
 	);
+	const shouldShowAssistantActions =
+		message.role === "user" ||
+		hasTextPart ||
+		Boolean(fallbackContent.trim()) ||
+		attachmentsFromMessage.length > 0;
 
 	if (
 		message.role === "assistant" &&
@@ -468,7 +475,7 @@ const PurePreviewMessage = ({
 								Boolean((p as { text?: string }).text?.trim()),
 						),
 						"w-full": message.role === "assistant" || mode === "edit",
-						"items-end max-w-[75%]": message.role === "user" && mode !== "edit",
+						"w-full items-end": message.role === "user" && mode !== "edit",
 					})}
 				>
 					{attachmentsFromMessage.length > 0 && (
@@ -497,119 +504,136 @@ const PurePreviewMessage = ({
 					)}
 
 					{/* Render message parts */}
-						{messageParts.map((part, index) => {
-							if (!isValidMessagePart(part)) {
-								return null;
-							}
+					{messageParts.map((part, index) => {
+						if (!isValidMessagePart(part)) {
+							return null;
+						}
 
-							const { type } = part;
-							const normalizedType = getNormalizedPartType(part);
-							const key = `message-${message.id}-part-${index}`;
+						const normalizedType = getNormalizedPartType(part);
+						const key = `message-${message.id}-part-${index}`;
 
-							try {
-
+						try {
 							if (normalizedType === "reasoning") {
 								const reasoningPart = part as { text?: string };
 								if (hasAgentThinkingPanel) {
 									return null;
-							}
-							const hasContent = (reasoningPart.text?.trim().length ?? 0) > 0;
-							const isStreaming = getPartState(part) === "streaming";
-							if (hasContent || isStreaming) {
-								return (
-									<MessageReasoning
-										isLoading={isLoading || isStreaming}
-										key={key}
-										reasoning={reasoningPart.text || ""}
-									/>
-								);
-							}
-						}
-
-						if (normalizedType === "text") {
-							const textPart = part as { text?: string };
-							if (mode === "view") {
-								const rawText = sanitizeText(textPart.text ?? "");
-								const MAX_MSG_CHARS = 15_000;
-								const isHuge = rawText.length > MAX_MSG_CHARS;
-
-								return (
-									<MessageTextPart
-										key={key}
-										rawText={rawText}
-										isHuge={isHuge}
-										maxChars={MAX_MSG_CHARS}
-										messageRole={message.role}
-										isLoading={isLoading}
-										hasAnyArtifact={hasAnyArtifact}
-									/>
-								);
+								}
+								const hasContent = (reasoningPart.text?.trim().length ?? 0) > 0;
+								const isStreaming = getPartState(part) === "streaming";
+								if (hasContent || isStreaming) {
+									return (
+										<MessageReasoning
+											isLoading={isLoading || isStreaming}
+											key={key}
+											reasoning={reasoningPart.text || ""}
+										/>
+									);
+								}
 							}
 
-							if (mode === "edit") {
-								return (
-									<div
-										className="flex w-full flex-row items-start gap-3"
-										key={key}
-									>
-										<div className="size-8" />
-										<div className="min-w-0 flex-1">
-											<MessageEditor
-												key={message.id}
-												message={message}
-												regenerate={regenerate}
-												setMessages={setMessages}
-												setMode={setMode}
+							if (normalizedType === "text") {
+								const textPart = part as { text?: string };
+								if (mode === "view") {
+									const rawText = sanitizeText(textPart.text ?? "");
+									const MAX_MSG_CHARS = 15_000;
+									const isHuge = rawText.length > MAX_MSG_CHARS;
+
+									return (
+										<MessageTextPart
+											key={key}
+											rawText={rawText}
+											isHuge={isHuge}
+											maxChars={MAX_MSG_CHARS}
+											messageRole={message.role}
+											isLoading={isLoading}
+											hasAnyArtifact={hasAnyArtifact}
+										/>
+									);
+								}
+
+								if (mode === "edit") {
+									return (
+										<div
+											className="flex w-full flex-row items-start gap-3"
+											key={key}
+										>
+											<div className="size-8" />
+											<div className="min-w-0 flex-1">
+												<MessageEditor
+													key={message.id}
+													message={message}
+													regenerate={regenerate}
+													setMessages={setMessages}
+													setMode={setMode}
+												/>
+											</div>
+										</div>
+									);
+								}
+							}
+
+							if (normalizedType === "tool-getWeather") {
+								const toolPart = asToolPart(part);
+								const { toolCallId, state } = toolPart;
+								const approvalId = toolPart.approval?.id;
+								const isDenied =
+									state === "output-denied" ||
+									(state === "approval-responded" &&
+										toolPart.approval?.approved === false);
+								const widthClass = "w-[min(100%,450px)]";
+
+								if (state === "output-available") {
+									return (
+										<div className={widthClass} key={toolCallId}>
+											<Weather
+												weatherAtLocation={toolPart.output as WeatherAtLocation}
 											/>
 										</div>
-									</div>
-								);
-							}
-						}
+									);
+								}
 
-						if (normalizedType === "tool-getWeather") {
-							const toolPart = asToolPart(part);
-							const { toolCallId, state } = toolPart;
-							const approvalId = toolPart.approval?.id;
-							const isDenied =
-								state === "output-denied" ||
-								(state === "approval-responded" &&
-									toolPart.approval?.approved === false);
-							const widthClass = "w-[min(100%,450px)]";
+								if (isDenied) {
+									return (
+										<div className={widthClass} key={toolCallId}>
+											<Tool className="w-full" defaultOpen={true}>
+												<ToolHeader
+													state="output-denied"
+													type="tool-getWeather"
+													title="Memeriksa cuaca (Ditolak)"
+													icon={
+														<CloudRainIcon className="size-4 shrink-0 text-muted-foreground" />
+													}
+												/>
+												<ToolContent>
+													<div className="px-4 py-3 text-muted-foreground text-sm">
+														Weather lookup was denied.
+													</div>
+												</ToolContent>
+											</Tool>
+										</div>
+									);
+								}
 
-							if (state === "output-available") {
-								return (
-									<div className={widthClass} key={toolCallId}>
-										<Weather
-											weatherAtLocation={toolPart.output as WeatherAtLocation}
-										/>
-									</div>
-								);
-							}
+								if (state === "approval-responded") {
+									return (
+										<div className={widthClass} key={toolCallId}>
+											<Tool className="w-full" defaultOpen={true}>
+												<ToolHeader
+													state={getSafeToolState(state)}
+													type="tool-getWeather"
+													title="Memeriksa cuaca..."
+													icon={
+														<CloudRainIcon className="size-4 shrink-0 text-muted-foreground" />
+													}
+												/>
+												<ToolContent>
+													<ToolInput input={toolPart.input} />
+												</ToolContent>
+											</Tool>
+										</div>
+									);
+								}
 
-							if (isDenied) {
-								return (
-									<div className={widthClass} key={toolCallId}>
-										<Tool className="w-full" defaultOpen={true}>
-											<ToolHeader
-												state="output-denied"
-												type="tool-getWeather"
-												title="Memeriksa cuaca (Ditolak)"
-												icon={
-													<CloudRainIcon className="size-4 shrink-0 text-muted-foreground" />
-												}
-											/>
-											<ToolContent>
-												<div className="px-4 py-3 text-muted-foreground text-sm">
-													Weather lookup was denied.
-												</div>
-											</ToolContent>
-										</Tool>
-									</div>
-								);
-							}
-
-							if (state === "approval-responded") {
 								return (
 									<div className={widthClass} key={toolCallId}>
 										<Tool className="w-full" defaultOpen={true}>
@@ -622,417 +646,219 @@ const PurePreviewMessage = ({
 												}
 											/>
 											<ToolContent>
-												<ToolInput input={toolPart.input} />
+												{(state === "input-available" ||
+													state === "approval-requested") && (
+													<ToolInput input={toolPart.input} />
+												)}
+												{state === "approval-requested" && approvalId && (
+													<div className="flex items-center justify-end gap-2 border-t px-4 py-3">
+														<button
+															className="rounded-md px-3 py-1.5 text-muted-foreground text-sm transition-colors hover:bg-muted hover:text-foreground"
+															onClick={() => {
+																addToolApprovalResponse({
+																	id: approvalId,
+																	approved: false,
+																	reason: "User denied weather lookup",
+																});
+															}}
+															type="button"
+														>
+															Deny
+														</button>
+														<button
+															className="rounded-md bg-primary px-3 py-1.5 text-primary-foreground text-sm transition-colors hover:bg-primary/90"
+															onClick={() => {
+																addToolApprovalResponse({
+																	id: approvalId,
+																	approved: true,
+																});
+															}}
+															type="button"
+														>
+															Allow
+														</button>
+													</div>
+												)}
 											</ToolContent>
 										</Tool>
 									</div>
 								);
 							}
 
-							return (
-								<div className={widthClass} key={toolCallId}>
-										<Tool className="w-full" defaultOpen={true}>
-											<ToolHeader
-												state={getSafeToolState(state)}
-												type="tool-getWeather"
-											title="Memeriksa cuaca..."
+							if (normalizedType === "tool-requestClarification") {
+								const clarificationPart = part as {
+									toolCallId?: string;
+									state?: string;
+									input?: unknown;
+									output?: unknown;
+								};
+								const toolCallId = clarificationPart.toolCallId ?? key;
+								const state = clarificationPart.state;
+								const payload =
+									state === "output-available"
+										? clarificationPart.output
+										: clarificationPart.input;
+								const clarification = isRecord(payload) ? payload : {};
+								const question = getStringValue(
+									clarification.question,
+									"Bisa share detail yang kurang dulu?",
+								);
+
+								return (
+									<div
+										className="flex w-full max-w-[820px] items-start gap-3"
+										key={toolCallId}
+									>
+										<div className="mt-1 flex h-7 w-7 shrink-0 items-center justify-center rounded-full border border-white/[0.10] bg-white/[0.08] text-[11px] font-semibold text-white/55">
+											U
+										</div>
+										<p className="pt-0.5 text-[15px] leading-[1.8] text-white/75">
+											{question}
+										</p>
+									</div>
+								);
+							}
+
+							if (
+								normalizedType === "tool-createDocument" ||
+								normalizedType === "tool-updateDocument"
+							) {
+								const toolPart = asToolPart(part);
+								const { toolCallId, state } = toolPart;
+								const toolType =
+									normalizedType === "tool-createDocument"
+										? "create"
+										: "update";
+								const args = toolPart.input as DocumentToolCallArgs;
+								const title = args && "title" in args ? args.title : "dokumen";
+
+								return (
+									<Tool defaultOpen={true} key={toolCallId}>
+										<ToolHeader
+											state={getSafeToolState(state)}
+											type={normalizedType as `tool-${string}`}
+											title={
+												normalizedType === "tool-createDocument"
+													? `Membuat dokumen: ${title}`
+													: `Memperbarui dokumen: ${title}`
+											}
 											icon={
-												<CloudRainIcon className="size-4 shrink-0 text-muted-foreground" />
+												normalizedType === "tool-createDocument" ? (
+													<FileTextIcon className="size-4 shrink-0 text-muted-foreground" />
+												) : (
+													<FileEditIcon className="size-4 shrink-0 text-muted-foreground" />
+												)
 											}
 										/>
 										<ToolContent>
-											{(state === "input-available" ||
-												state === "approval-requested") && (
-												<ToolInput input={toolPart.input} />
+											{(state === "input-streaming" ||
+												state === "input-available") && (
+												<DocumentToolCall
+													type={toolType}
+													args={toolPart.input as DocumentToolCallArgs}
+													isReadonly={isReadonly}
+												/>
 											)}
-											{state === "approval-requested" && approvalId && (
-												<div className="flex items-center justify-end gap-2 border-t px-4 py-3">
-													<button
-														className="rounded-md px-3 py-1.5 text-muted-foreground text-sm transition-colors hover:bg-muted hover:text-foreground"
-														onClick={() => {
-															addToolApprovalResponse({
-																id: approvalId,
-																approved: false,
-																reason: "User denied weather lookup",
-															});
-														}}
-														type="button"
-													>
-														Deny
-													</button>
-													<button
-														className="rounded-md bg-primary px-3 py-1.5 text-primary-foreground text-sm transition-colors hover:bg-primary/90"
-														onClick={() => {
-															addToolApprovalResponse({
-																id: approvalId,
-																approved: true,
-															});
-														}}
-														type="button"
-													>
-														Allow
-													</button>
-												</div>
+											{state === "output-available" && (
+												<DocumentToolResult
+													type={toolType}
+													result={
+														toolPart.output as {
+															id: string;
+															title: string;
+															kind: "image" | "text" | "code" | "sheet";
+															content?: string;
+														}
+													}
+													isReadonly={isReadonly}
+												/>
 											)}
 										</ToolContent>
 									</Tool>
-								</div>
-							);
-						}
+								);
+							}
 
-						if (normalizedType === "tool-requestClarification") {
-							const clarificationPart = part as {
-								toolCallId?: string;
-								state?: string;
-								input?: unknown;
-								output?: unknown;
-							};
-							const toolCallId = clarificationPart.toolCallId ?? key;
-							const state = clarificationPart.state;
-							const payload =
-								state === "output-available"
-									? clarificationPart.output
-									: clarificationPart.input;
-							const clarification = isRecord(payload) ? payload : {};
-							const question = getStringValue(
-								clarification.question,
-								"Bisa share detail yang kurang dulu?",
-							);
-
-							return (
-								<div
-									className="flex w-full max-w-[820px] items-start gap-3"
-									key={toolCallId}
-								>
-									<div className="mt-1 flex h-7 w-7 shrink-0 items-center justify-center rounded-full border border-white/[0.10] bg-white/[0.08] text-[11px] font-semibold text-white/55">
-										U
-									</div>
-									<p className="pt-0.5 text-[15px] leading-[1.8] text-white/75">
-										{question}
-									</p>
-								</div>
-							);
-						}
-
-						if (
-							normalizedType === "tool-createDocument" ||
-							normalizedType === "tool-updateDocument"
-						) {
-							const toolPart = asToolPart(part);
-							const { toolCallId, state } = toolPart;
-							const toolType =
-								normalizedType === "tool-createDocument" ? "create" : "update";
-							const args = toolPart.input as DocumentToolCallArgs;
-							const title = args && "title" in args ? args.title : "dokumen";
-
-							return (
-								<Tool defaultOpen={true} key={toolCallId}>
-									<ToolHeader
-										state={getSafeToolState(state)}
-										type={normalizedType as `tool-${string}`}
-										title={
-											normalizedType === "tool-createDocument"
-												? `Membuat dokumen: ${title}`
-												: `Memperbarui dokumen: ${title}`
-										}
-										icon={
-											normalizedType === "tool-createDocument" ? (
-												<FileTextIcon className="size-4 shrink-0 text-muted-foreground" />
-											) : (
-												<FileEditIcon className="size-4 shrink-0 text-muted-foreground" />
-											)
-										}
-									/>
-									<ToolContent>
-										{(state === "input-streaming" ||
-											state === "input-available") && (
-											<DocumentToolCall
-												type={toolType}
-												args={toolPart.input as DocumentToolCallArgs}
-												isReadonly={isReadonly}
-											/>
-										)}
-										{state === "output-available" && (
-											<DocumentToolResult
-												type={toolType}
-												result={
-													toolPart.output as {
-														id: string;
-														title: string;
-														kind: "image" | "text" | "code" | "sheet";
-														content?: string;
-													}
-												}
-												isReadonly={isReadonly}
-											/>
-										)}
-									</ToolContent>
-								</Tool>
-							);
-						}
-
-						if (normalizedType === "tool-startAgentTask") {
-							const toolPart = asToolPart(part);
-							const { toolCallId, state } = toolPart;
-							const payload =
-								state === "output-available" ? toolPart.output : toolPart.input;
-							const agentTask = isRecord(payload) ? payload : {};
-							const agentMode =
-								agentTask.mode === "mobile" ? "mobile" : "fullstack";
-							const agentPlan = getStringArray(agentTask.plan);
+							if (normalizedType === "tool-startAgentTask") {
+								const toolPart = asToolPart(part);
+								const { toolCallId, state } = toolPart;
+								const payload =
+									state === "output-available"
+										? toolPart.output
+										: toolPart.input;
+								const agentTask = isRecord(payload) ? payload : {};
+								const agentMode =
+									agentTask.mode === "mobile"
+										? "mobile"
+										: agentTask.mode === "general"
+											? "general"
+											: "fullstack";
+								const agentPlan = getStringArray(agentTask.plan);
 
 								return (
 									<Tool defaultOpen={true} key={toolCallId}>
 										<ToolHeader
 											state={getSafeToolState(state)}
 											type={"tool-startAgentTask" as `tool-${string}`}
-										title={`Menjalankan tugas agen: ${getStringValue(agentTask.goal, "Analisis")}`}
-										icon={
-											<BotIcon className="size-4 shrink-0 text-muted-foreground" />
-										}
-									/>
-									<ToolContent>
-										<div className="space-y-4 px-4 py-4">
-											<div className="flex items-center gap-2 text-sm font-medium text-foreground">
-												{agentMode === "mobile" ? (
-													<SmartphoneIcon className="size-4 text-pink-500" />
-												) : (
-													<MonitorSmartphoneIcon className="size-4 text-orange-500" />
-												)}
-												<span>
-													{agentMode === "mobile"
-														? "Mobile Dev Agent"
-														: "Fullstack Agent"}
-												</span>
-											</div>
-
-											<div className="rounded-xl border bg-muted/40 p-3">
-												<div className="mb-1 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
-													Goal
-												</div>
-												<p className="text-sm leading-relaxed text-foreground">
-													{getStringValue(
-														agentTask.goal,
-														"Agent task started.",
-													)}
-												</p>
-											</div>
-
-											<div className="rounded-xl border bg-background p-3">
-												<div className="mb-2 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
-													Execution Plan
-												</div>
-												<ul className="space-y-2">
-													{agentPlan.map((planItem) => (
-														<li
-															className="flex items-start gap-2 text-sm text-foreground"
-															key={`${toolCallId}-plan-${planItem}`}
-														>
-															<WandSparklesIcon className="mt-0.5 size-3.5 shrink-0 text-violet-500" />
-															<span>{planItem}</span>
-														</li>
-													))}
-												</ul>
-											</div>
-
-											<div className="rounded-xl border bg-muted/40 p-3 text-sm text-foreground">
-												<div className="mb-1 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
-													Deliverable
-												</div>
-												{getStringValue(
-													agentTask.deliverable,
-													"Preparing workspace changes.",
-												)}
-											</div>
-										</div>
-									</ToolContent>
-								</Tool>
-							);
-						}
-
-						if (normalizedType === "tool-reportAgentStep") {
-							const toolPart = asToolPart(part);
-							const { toolCallId, state } = toolPart;
-							const payload =
-								state === "output-available" ? toolPart.output : toolPart.input;
-							const step = isRecord(payload) ? payload : {};
-							const stepStatus =
-								step.status === "completed" ? "completed" : "in_progress";
-							const stepFiles = getStringArray(step.files);
-							const stepPackages = getStringArray(step.packages);
-							const stepCommand =
-								typeof step.command === "string" ? step.command : "";
-
-								return (
-									<Tool defaultOpen={true} key={toolCallId}>
-										<ToolHeader
-											state={getSafeToolState(state)}
-											type={"tool-reportAgentStep" as `tool-${string}`}
-										title={`Langkah agen: ${getStringValue(step.title, "Proses")}`}
-										icon={
-											<PlayIcon className="size-4 shrink-0 text-muted-foreground" />
-										}
-									/>
-									<ToolContent>
-										<div className="space-y-3 px-4 py-4">
-											<div className="flex items-start justify-between gap-3 rounded-xl border bg-background p-3">
-												<div className="flex items-start gap-2">
-													{stepStatus === "completed" ? (
-														<CheckCircle2Icon className="mt-0.5 size-4 shrink-0 text-emerald-500" />
-													) : (
-														<Clock3Icon className="mt-0.5 size-4 shrink-0 animate-pulse text-amber-500" />
-													)}
-													<div>
-														<div className="text-sm font-medium text-foreground">
-															{getStringValue(step.title, "Agent step")}
-														</div>
-														<p className="mt-1 text-sm leading-relaxed text-muted-foreground">
-															{getStringValue(
-																step.detail,
-																"Processing workspace changes.",
-															)}
-														</p>
-													</div>
-												</div>
-												<div className="inline-flex rounded-full border px-2.5 py-1 text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
-													{stepStatus === "completed" ? "Done" : "Running"}
-												</div>
-											</div>
-
-											{stepFiles.length > 0 && (
-												<div className="rounded-xl border bg-muted/40 p-3">
-													<div className="mb-2 flex items-center gap-2 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
-														<LucideSparklesIcon className="size-3.5" />
-														Files
-													</div>
-													<div className="flex flex-wrap gap-2">
-														{stepFiles.map((file) => (
-															<span
-																className="rounded-full border bg-background px-2.5 py-1 font-mono text-xs text-foreground"
-																key={`${toolCallId}-${file}`}
-															>
-																{file}
-															</span>
-														))}
-													</div>
-												</div>
-											)}
-
-											{stepPackages.length > 0 && (
-												<div className="rounded-xl border bg-muted/40 p-3">
-													<div className="mb-2 flex items-center gap-2 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
-														<PackageIcon className="size-3.5" />
-														Packages
-													</div>
-													<div className="flex flex-wrap gap-2">
-														{stepPackages.map((pkg) => (
-															<span
-																className="rounded-full border bg-background px-2.5 py-1 text-xs text-foreground"
-																key={`${toolCallId}-${pkg}`}
-															>
-																{pkg}
-															</span>
-														))}
-													</div>
-												</div>
-											)}
-
-											{stepCommand && (
-												<div className="rounded-xl border bg-zinc-950 px-3 py-2 font-mono text-xs text-zinc-100 dark:bg-zinc-900">
-													<div className="mb-1 flex items-center gap-2 text-[11px] font-semibold uppercase tracking-wide text-zinc-400">
-														<PlayIcon className="size-3.5" />
-														Action
-													</div>
-													{stepCommand}
-												</div>
-											)}
-										</div>
-									</ToolContent>
-								</Tool>
-							);
-						}
-
-						if (
-							normalizedType === "tool-listCodeFiles" ||
-							normalizedType === "tool-listFiles" ||
-							normalizedType === "tool-createCodeFile" ||
-							normalizedType === "tool-createFile" ||
-							normalizedType === "tool-createFolder" ||
-							normalizedType === "tool-updateCodeFile" ||
-							normalizedType === "tool-editFile" ||
-							normalizedType === "tool-deleteCodeFile" ||
-							normalizedType === "tool-readFile" ||
-							normalizedType === "tool-runWorkspaceCommand" ||
-							normalizedType === "tool-runCommand" ||
-							normalizedType === "tool-executeTerminalCommand" ||
-							normalizedType === "tool-installPackage" ||
-							normalizedType === "tool-installDependency"
-						) {
-							const toolPart = asToolPart(part);
-							const { toolCallId, state } = toolPart;
-							const payload =
-								state === "output-available" ? toolPart.output : toolPart.input;
-
-							if (
-								normalizedType === "tool-runWorkspaceCommand" ||
-								normalizedType === "tool-runCommand" ||
-								normalizedType === "tool-executeTerminalCommand" ||
-								normalizedType === "tool-installPackage" ||
-								normalizedType === "tool-installDependency" ||
-								normalizedType === "tool-createFolder"
-							) {
-								const commandResult: Record<string, unknown> = isRecord(payload)
-									? payload
-									: {};
-								const packages = getStringArray(commandResult.packages);
-								const commandTitle =
-									normalizedType === "tool-installPackage" ||
-									normalizedType === "tool-installDependency"
-										? `Menginstall: ${packages.join(", ") || "package"}`
-										: normalizedType === "tool-createFolder"
-											? `Membuat folder: ${getStringValue(commandResult.path, "folder")}`
-											: `Menjalankan perintah: ${getStringValue(commandResult.command, "Terminal Command")}`;
-
-									return (
-										<Tool defaultOpen={true} key={toolCallId}>
-										<ToolHeader
-											state={getSafeToolState(state)}
-											type={normalizedType as `tool-${string}`}
-										title={commandTitle}
+											title={`Menjalankan tugas agen: ${getStringValue(agentTask.goal, "Analisis")}`}
 											icon={
-												<TerminalIcon className="size-4 shrink-0 text-muted-foreground" />
+												<BotIcon className="size-4 shrink-0 text-muted-foreground" />
 											}
 										/>
 										<ToolContent>
-											<div className="space-y-3 px-4 py-4">
-												<div className="rounded-xl border bg-zinc-950 px-3 py-3 font-mono text-xs text-zinc-100 dark:bg-zinc-900">
-													<div className="mb-2 flex items-center gap-2 text-[11px] font-semibold uppercase tracking-wide text-zinc-400">
-														<PlayIcon className="size-3.5" />
-														Virtual Command
-													</div>
-													{getStringValue(
-														commandResult.command,
-														packages.length
-															? `npm install ${packages.join(" ")}`
-															: "Unavailable command",
+											<div className="space-y-4 px-4 py-4">
+												<div className="flex items-center gap-2 text-sm font-medium text-foreground">
+													{agentMode === "mobile" ? (
+														<SmartphoneIcon className="size-4 text-pink-500" />
+													) : agentMode === "general" ? (
+														<BotIcon className="size-4 text-sky-500" />
+													) : (
+														<MonitorSmartphoneIcon className="size-4 text-orange-500" />
 													)}
+													<span>
+														{agentMode === "mobile"
+															? "Mobile Dev Agent"
+															: agentMode === "general"
+																? "Auto Agent"
+																: "Fullstack Agent"}
+													</span>
 												</div>
+
+												<div className="rounded-xl border bg-muted/40 p-3">
+													<div className="mb-1 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
+														Goal
+													</div>
+													<p className="text-sm leading-relaxed text-foreground">
+														{getStringValue(
+															agentTask.goal,
+															"Agent task started.",
+														)}
+													</p>
+												</div>
+
+												<div className="rounded-xl border bg-background p-3">
+													<div className="mb-2 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
+														Execution Plan
+													</div>
+													<ul className="space-y-2">
+														{agentPlan.map((planItem) => (
+															<li
+																className="flex items-start gap-2 text-sm text-foreground"
+																key={`${toolCallId}-plan-${planItem}`}
+															>
+																<WandSparklesIcon className="mt-0.5 size-3.5 shrink-0 text-violet-500" />
+																<span>{planItem}</span>
+															</li>
+														))}
+													</ul>
+												</div>
+
 												<div className="rounded-xl border bg-muted/40 p-3 text-sm text-foreground">
 													<div className="mb-1 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
-														Purpose
+														Deliverable
 													</div>
 													{getStringValue(
-														commandResult.purpose,
-														"Virtual workspace command",
-													)}
-												</div>
-												<div className="rounded-xl border bg-background p-3 text-sm text-foreground">
-													<div className="mb-1 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
-														Result
-													</div>
-													{getStringValue(
-														commandResult.result,
-														"No result available",
+														agentTask.deliverable,
+														"Preparing workspace changes.",
 													)}
 												</div>
 											</div>
@@ -1041,165 +867,366 @@ const PurePreviewMessage = ({
 								);
 							}
 
-							const workspacePayload: Record<string, unknown> = isRecord(
-								payload,
-							)
-								? payload
-								: {};
-							const workspaceFiles = getStringArray(workspacePayload.files);
+							if (normalizedType === "tool-reportAgentStep") {
+								const toolPart = asToolPart(part);
+								const { toolCallId, state } = toolPart;
+								const payload =
+									state === "output-available"
+										? toolPart.output
+										: toolPart.input;
+								const step = isRecord(payload) ? payload : {};
+								const stepStatus =
+									step.status === "completed" ? "completed" : "in_progress";
+								const stepFiles = getStringArray(step.files);
+								const stepPackages = getStringArray(step.packages);
+								const stepCommand =
+									typeof step.command === "string" ? step.command : "";
 
-							const titleMap: Record<string, string> = {
-								"tool-listCodeFiles": "Membaca file workspace",
-								"tool-listFiles": "Membaca file workspace",
-								"tool-createCodeFile": "Membuat file baru",
-								"tool-createFile": "Membuat file baru",
-								"tool-updateCodeFile": "Memperbarui file",
-								"tool-editFile": "Memperbarui file",
-								"tool-deleteCodeFile": "Menghapus file",
-								"tool-readFile": "Membaca file",
-							};
+								return (
+									<Tool defaultOpen={true} key={toolCallId}>
+										<ToolHeader
+											state={getSafeToolState(state)}
+											type={"tool-reportAgentStep" as `tool-${string}`}
+											title={`Langkah agen: ${getStringValue(step.title, "Proses")}`}
+											icon={
+												<PlayIcon className="size-4 shrink-0 text-muted-foreground" />
+											}
+										/>
+										<ToolContent>
+											<div className="space-y-3 px-4 py-4">
+												<div className="flex items-start justify-between gap-3 rounded-xl border bg-background p-3">
+													<div className="flex items-start gap-2">
+														{stepStatus === "completed" ? (
+															<CheckCircle2Icon className="mt-0.5 size-4 shrink-0 text-emerald-500" />
+														) : (
+															<Clock3Icon className="mt-0.5 size-4 shrink-0 animate-pulse text-amber-500" />
+														)}
+														<div>
+															<div className="text-sm font-medium text-foreground">
+																{getStringValue(step.title, "Agent step")}
+															</div>
+															<p className="mt-1 text-sm leading-relaxed text-muted-foreground">
+																{getStringValue(
+																	step.detail,
+																	"Processing workspace changes.",
+																)}
+															</p>
+														</div>
+													</div>
+													<div className="inline-flex rounded-full border px-2.5 py-1 text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+														{stepStatus === "completed" ? "Done" : "Running"}
+													</div>
+												</div>
 
-							const iconMap: Record<string, React.ReactNode> = {
-								"tool-listCodeFiles": (
-									<FileCodeIcon className="size-4 shrink-0 text-muted-foreground" />
-								),
-								"tool-listFiles": (
-									<FileCodeIcon className="size-4 shrink-0 text-muted-foreground" />
-								),
-								"tool-createCodeFile": (
-									<FileTextIcon className="size-4 shrink-0 text-muted-foreground" />
-								),
-								"tool-createFile": (
-									<FileTextIcon className="size-4 shrink-0 text-muted-foreground" />
-								),
-								"tool-updateCodeFile": (
-									<FileEditIcon className="size-4 shrink-0 text-muted-foreground" />
-								),
-								"tool-editFile": (
-									<FileEditIcon className="size-4 shrink-0 text-muted-foreground" />
-								),
-								"tool-deleteCodeFile": (
-									<TrashIcon className="size-4 shrink-0 text-muted-foreground" />
-								),
-								"tool-readFile": (
-									<FileCodeIcon className="size-4 shrink-0 text-muted-foreground" />
-								),
-							};
+												{stepFiles.length > 0 && (
+													<div className="rounded-xl border bg-muted/40 p-3">
+														<div className="mb-2 flex items-center gap-2 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
+															<LucideSparklesIcon className="size-3.5" />
+															Files
+														</div>
+														<div className="flex flex-wrap gap-2">
+															{stepFiles.map((file) => (
+																<span
+																	className="rounded-full border bg-background px-2.5 py-1 font-mono text-xs text-foreground"
+																	key={`${toolCallId}-${file}`}
+																>
+																	{file}
+																</span>
+															))}
+														</div>
+													</div>
+												)}
+
+												{stepPackages.length > 0 && (
+													<div className="rounded-xl border bg-muted/40 p-3">
+														<div className="mb-2 flex items-center gap-2 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
+															<PackageIcon className="size-3.5" />
+															Packages
+														</div>
+														<div className="flex flex-wrap gap-2">
+															{stepPackages.map((pkg) => (
+																<span
+																	className="rounded-full border bg-background px-2.5 py-1 text-xs text-foreground"
+																	key={`${toolCallId}-${pkg}`}
+																>
+																	{pkg}
+																</span>
+															))}
+														</div>
+													</div>
+												)}
+
+												{stepCommand && (
+													<div className="rounded-xl border bg-zinc-950 px-3 py-2 font-mono text-xs text-zinc-100 dark:bg-zinc-900">
+														<div className="mb-1 flex items-center gap-2 text-[11px] font-semibold uppercase tracking-wide text-zinc-400">
+															<PlayIcon className="size-3.5" />
+															Action
+														</div>
+														{stepCommand}
+													</div>
+												)}
+											</div>
+										</ToolContent>
+									</Tool>
+								);
+							}
+
+							if (
+								normalizedType === "tool-listCodeFiles" ||
+								normalizedType === "tool-listFiles" ||
+								normalizedType === "tool-createCodeFile" ||
+								normalizedType === "tool-createFile" ||
+								normalizedType === "tool-createFolder" ||
+								normalizedType === "tool-updateCodeFile" ||
+								normalizedType === "tool-editFile" ||
+								normalizedType === "tool-deleteCodeFile" ||
+								normalizedType === "tool-readFile" ||
+								normalizedType === "tool-runWorkspaceCommand" ||
+								normalizedType === "tool-runCommand" ||
+								normalizedType === "tool-executeTerminalCommand" ||
+								normalizedType === "tool-installPackage" ||
+								normalizedType === "tool-installDependency"
+							) {
+								const toolPart = asToolPart(part);
+								const { toolCallId, state } = toolPart;
+								const payload =
+									state === "output-available"
+										? toolPart.output
+										: toolPart.input;
+
+								if (
+									normalizedType === "tool-runWorkspaceCommand" ||
+									normalizedType === "tool-runCommand" ||
+									normalizedType === "tool-executeTerminalCommand" ||
+									normalizedType === "tool-installPackage" ||
+									normalizedType === "tool-installDependency" ||
+									normalizedType === "tool-createFolder"
+								) {
+									const commandResult: Record<string, unknown> = isRecord(
+										payload,
+									)
+										? payload
+										: {};
+									const packages = getStringArray(commandResult.packages);
+									const resultText = getStringValue(commandResult.result, "");
+									const commandTitle =
+										normalizedType === "tool-installPackage" ||
+										normalizedType === "tool-installDependency"
+											? `Menginstall: ${packages.join(", ") || "package"}`
+											: normalizedType === "tool-createFolder"
+												? `Membuat folder: ${getStringValue(commandResult.path, "folder")}`
+												: `Menjalankan perintah: ${getStringValue(commandResult.command, "Terminal Command")}`;
+
+									return (
+										<Tool defaultOpen={true} key={toolCallId}>
+											<ToolHeader
+												state={getSafeToolState(state)}
+												type={normalizedType as `tool-${string}`}
+												title={commandTitle}
+												icon={
+													<TerminalIcon className="size-4 shrink-0 text-muted-foreground" />
+												}
+											/>
+											<ToolContent>
+												<div className="space-y-3 px-4 py-4">
+													<div className="rounded-xl border bg-zinc-950 px-3 py-3 font-mono text-xs text-zinc-100 dark:bg-zinc-900">
+														<div className="mb-2 flex items-center gap-2 text-[11px] font-semibold uppercase tracking-wide text-zinc-400">
+															<PlayIcon className="size-3.5" />
+															Virtual Command
+														</div>
+														{getStringValue(
+															commandResult.command,
+															packages.length
+																? `npm install ${packages.join(" ")}`
+																: "Unavailable command",
+														)}
+													</div>
+													<div className="rounded-xl border bg-muted/40 p-3 text-sm text-foreground">
+														<div className="mb-1 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
+															Purpose
+														</div>
+														{getStringValue(
+															commandResult.purpose,
+															"Virtual workspace command",
+														)}
+													</div>
+													{(state === "output-available" ||
+														state === "output-error") &&
+													resultText ? (
+														<div className="rounded-xl border bg-background p-3 text-sm text-foreground">
+															<div className="mb-1 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
+																Result
+															</div>
+															{resultText}
+														</div>
+													) : null}
+												</div>
+											</ToolContent>
+										</Tool>
+									);
+								}
+
+								const workspacePayload: Record<string, unknown> = isRecord(
+									payload,
+								)
+									? payload
+									: {};
+								const workspaceFiles = getStringArray(workspacePayload.files);
+
+								const titleMap: Record<string, string> = {
+									"tool-listCodeFiles": "Membaca file workspace",
+									"tool-listFiles": "Membaca file workspace",
+									"tool-createCodeFile": "Membuat file baru",
+									"tool-createFile": "Membuat file baru",
+									"tool-updateCodeFile": "Memperbarui file",
+									"tool-editFile": "Memperbarui file",
+									"tool-deleteCodeFile": "Menghapus file",
+									"tool-readFile": "Membaca file",
+								};
+
+								const iconMap: Record<string, React.ReactNode> = {
+									"tool-listCodeFiles": (
+										<FileCodeIcon className="size-4 shrink-0 text-muted-foreground" />
+									),
+									"tool-listFiles": (
+										<FileCodeIcon className="size-4 shrink-0 text-muted-foreground" />
+									),
+									"tool-createCodeFile": (
+										<FileTextIcon className="size-4 shrink-0 text-muted-foreground" />
+									),
+									"tool-createFile": (
+										<FileTextIcon className="size-4 shrink-0 text-muted-foreground" />
+									),
+									"tool-updateCodeFile": (
+										<FileEditIcon className="size-4 shrink-0 text-muted-foreground" />
+									),
+									"tool-editFile": (
+										<FileEditIcon className="size-4 shrink-0 text-muted-foreground" />
+									),
+									"tool-deleteCodeFile": (
+										<TrashIcon className="size-4 shrink-0 text-muted-foreground" />
+									),
+									"tool-readFile": (
+										<FileCodeIcon className="size-4 shrink-0 text-muted-foreground" />
+									),
+								};
 
 								return (
 									<Tool defaultOpen={true} key={toolCallId}>
 										<ToolHeader
 											state={getSafeToolState(state)}
 											type={normalizedType as `tool-${string}`}
-										title={titleMap[normalizedType] ?? "Aksi Workspace"}
-										icon={iconMap[normalizedType]}
-									/>
-									<ToolContent>
-										<div className="space-y-3 px-4 py-4">
-											<div className="flex items-center gap-2 text-sm font-medium text-foreground">
-												<LucideSparklesIcon className="size-4 text-cyan-500" />
-												<span>{titleMap[normalizedType] ?? "Workspace Action"}</span>
+											title={titleMap[normalizedType] ?? "Aksi Workspace"}
+											icon={iconMap[normalizedType]}
+										/>
+										<ToolContent>
+											<div className="space-y-3 px-4 py-4">
+												<div className="flex items-center gap-2 text-sm font-medium text-foreground">
+													<LucideSparklesIcon className="size-4 text-cyan-500" />
+													<span>
+														{titleMap[normalizedType] ?? "Workspace Action"}
+													</span>
+												</div>
+
+												{typeof workspacePayload.path === "string" && (
+													<div className="rounded-xl border bg-background p-3 text-sm text-foreground">
+														<div className="mb-1 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
+															Path
+														</div>
+														<div className="font-mono text-xs">
+															{workspacePayload.path}
+														</div>
+													</div>
+												)}
+
+												{typeof workspacePayload.count === "number" && (
+													<div className="rounded-xl border bg-muted/40 p-3 text-sm text-foreground">
+														{workspacePayload.count} files available in the
+														virtual workspace.
+													</div>
+												)}
+
+												{workspaceFiles.length > 0 && (
+													<div className="rounded-xl border bg-muted/40 p-3">
+														<div className="mb-2 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
+															Files
+														</div>
+														<div className="flex flex-wrap gap-2">
+															{workspaceFiles.map((file) => (
+																<span
+																	className="rounded-full border bg-background px-2.5 py-1 font-mono text-xs text-foreground"
+																	key={`${toolCallId}-${file}`}
+																>
+																	{file}
+																</span>
+															))}
+														</div>
+													</div>
+												)}
 											</div>
+										</ToolContent>
+									</Tool>
+								);
+							}
 
-											{typeof workspacePayload.path === "string" && (
-												<div className="rounded-xl border bg-background p-3 text-sm text-foreground">
-													<div className="mb-1 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
-														Path
-													</div>
-													<div className="font-mono text-xs">
-														{workspacePayload.path}
-													</div>
-												</div>
+							if (normalizedType === "tool-requestSuggestions") {
+								const toolPart = asToolPart(part);
+								const { toolCallId, state } = toolPart;
+
+								return (
+									<Tool defaultOpen={true} key={toolCallId}>
+										<ToolHeader
+											state={getSafeToolState(state)}
+											type="tool-requestSuggestions"
+											title="Mencari saran perbaikan..."
+											icon={
+												<LightbulbIcon className="size-4 shrink-0 text-muted-foreground" />
+											}
+										/>
+										<ToolContent>
+											{state === "input-available" && (
+												<ToolInput input={toolPart.input} />
 											)}
+											{state === "output-available" &&
+												(() => {
+													const suggestionOutput =
+														toolPart.output as DocumentToolResultData;
 
-											{typeof workspacePayload.count === "number" && (
-												<div className="rounded-xl border bg-muted/40 p-3 text-sm text-foreground">
-													{workspacePayload.count} files available in the
-													virtual workspace.
-												</div>
-											)}
-
-											{workspaceFiles.length > 0 && (
-												<div className="rounded-xl border bg-muted/40 p-3">
-													<div className="mb-2 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
-														Files
-													</div>
-													<div className="flex flex-wrap gap-2">
-														{workspaceFiles.map((file) => (
-															<span
-																className="rounded-full border bg-background px-2.5 py-1 font-mono text-xs text-foreground"
-																key={`${toolCallId}-${file}`}
-															>
-																{file}
-															</span>
-														))}
-													</div>
-												</div>
-											)}
-										</div>
-									</ToolContent>
-								</Tool>
-							);
-						}
-
-						if (normalizedType === "tool-requestSuggestions") {
-							const toolPart = asToolPart(part);
-							const { toolCallId, state } = toolPart;
-
-							return (
-								<Tool defaultOpen={true} key={toolCallId}>
-									<ToolHeader
-										state={getSafeToolState(state)}
-										type="tool-requestSuggestions"
-										title="Mencari saran perbaikan..."
-										icon={
-											<LightbulbIcon className="size-4 shrink-0 text-muted-foreground" />
-										}
-									/>
-									<ToolContent>
-										{state === "input-available" && (
-											<ToolInput input={toolPart.input} />
-										)}
-										{state === "output-available" &&
-											(() => {
-												const suggestionOutput =
-													toolPart.output as DocumentToolResultData;
-
-												return (
-													<ToolOutput
-														errorText={undefined}
-														output={
-															suggestionOutput.error ? (
-																<div className="rounded border p-2 text-red-500">
-																	Error: {String(suggestionOutput.error)}
-																</div>
-															) : (
-																<DocumentToolResult
-																	isReadonly={isReadonly}
-																	result={suggestionOutput}
-																	type="request-suggestions"
-																/>
-															)
-														}
-													/>
-												);
-											})()}
-									</ToolContent>
-								</Tool>
-							);
+													return (
+														<ToolOutput
+															errorText={undefined}
+															output={
+																suggestionOutput.error ? (
+																	<div className="rounded border p-2 text-red-500">
+																		Error: {String(suggestionOutput.error)}
+																	</div>
+																) : (
+																	<DocumentToolResult
+																		isReadonly={isReadonly}
+																		result={suggestionOutput}
+																		type="request-suggestions"
+																	/>
+																)
+															}
+														/>
+													);
+												})()}
+										</ToolContent>
+									</Tool>
+								);
 							}
 
 							return null;
-							} catch (error) {
-								console.error("[PreviewMessage] Failed to render part", {
-									error,
-									messageId: message.id,
-									part,
-									partIndex: index,
-								});
-								return null;
-							}
-						})}
+						} catch (error) {
+							console.error("[PreviewMessage] Failed to render part", {
+								error,
+								messageId: message.id,
+								part,
+								partIndex: index,
+							});
+							return null;
+						}
+					})}
 
 					{!hasTextPart && fallbackContent.trim() ? (
 						<MessageTextPart
@@ -1285,7 +1312,7 @@ const PurePreviewMessage = ({
 						</div>
 					) : null}
 
-					{!isReadonly && (
+					{!isReadonly && shouldShowAssistantActions && (
 						<MessageActions
 							chatId={chatId}
 							isLoading={isLoading}

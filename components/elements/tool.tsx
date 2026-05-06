@@ -62,11 +62,11 @@ const getStatusBadge = (status: ToolUIPart["state"]) => {
 
 	return (
 		<Badge
-			className="flex items-center gap-1 rounded-full text-xs"
+			className="flex shrink-0 items-center gap-1 whitespace-nowrap rounded-full text-xs"
 			variant="secondary"
 		>
 			{icons[status]}
-			<span>{labels[status]}</span>
+			<span className="hidden sm:inline">{labels[status]}</span>
 		</Badge>
 	);
 };
@@ -81,7 +81,7 @@ export const ToolHeader = ({
 }: ToolHeaderProps) => (
 	<CollapsibleTrigger
 		className={cn(
-			"flex w-full min-w-0 items-center justify-between gap-2 p-3 hover:bg-muted/50 transition-colors",
+			"flex w-full min-w-0 items-center justify-between gap-2 overflow-hidden p-3 transition-colors hover:bg-muted/50",
 			className,
 		)}
 		{...props}
@@ -92,7 +92,7 @@ export const ToolHeader = ({
 				{title || type}
 			</span>
 		</div>
-		<div className="flex shrink-0 items-center gap-2">
+		<div className="flex shrink-0 items-center gap-2 whitespace-nowrap">
 			{getStatusBadge(state)}
 			<ChevronDownIcon className="size-4 text-muted-foreground transition-transform group-data-[state=open]:rotate-180" />
 		</div>

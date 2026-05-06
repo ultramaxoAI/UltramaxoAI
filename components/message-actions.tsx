@@ -97,7 +97,7 @@ export function PureMessageActions({
 	return (
 		<div className="mt-2 flex flex-wrap items-center gap-1 opacity-100 transition-opacity duration-200 md:opacity-0 md:group-hover/message:opacity-100 md:focus-within:opacity-100">
 			<button
-				className="inline-flex items-center gap-1.5 rounded-full px-2 py-1 text-[11px] text-white/30 transition-colors hover:bg-white/6 hover:text-white/60 disabled:opacity-40"
+				className="inline-flex items-center gap-1.5 whitespace-nowrap rounded-full px-2 py-1 text-[11px] text-white/30 transition-colors hover:bg-white/6 hover:text-white/60 disabled:opacity-40"
 				data-testid="message-upvote"
 				disabled={vote?.isUpvoted}
 				onClick={() => {
@@ -148,7 +148,7 @@ export function PureMessageActions({
 			</button>
 
 			<button
-				className="inline-flex items-center gap-1.5 rounded-full px-2 py-1 text-[11px] text-white/30 transition-colors hover:bg-white/6 hover:text-white/60 disabled:opacity-40"
+				className="inline-flex items-center gap-1.5 whitespace-nowrap rounded-full px-2 py-1 text-[11px] text-white/30 transition-colors hover:bg-white/6 hover:text-white/60 disabled:opacity-40"
 				data-testid="message-downvote"
 				disabled={vote && !vote.isUpvoted}
 				onClick={() => {
@@ -199,7 +199,7 @@ export function PureMessageActions({
 			</button>
 
 			<button
-				className="inline-flex items-center gap-1.5 rounded-full px-2 py-1 text-[11px] text-white/30 transition-colors hover:bg-white/6 hover:text-white/60"
+				className="inline-flex items-center gap-1.5 whitespace-nowrap rounded-full px-2 py-1 text-[11px] text-white/30 transition-colors hover:bg-white/6 hover:text-white/60"
 				onClick={handleCopy}
 				type="button"
 			>
@@ -209,7 +209,7 @@ export function PureMessageActions({
 
 			{regenerate ? (
 				<button
-					className="inline-flex items-center gap-1.5 rounded-full px-2 py-1 text-[11px] text-white/30 transition-colors hover:bg-white/6 hover:text-white/60"
+					className="inline-flex items-center gap-1.5 whitespace-nowrap rounded-full px-2 py-1 text-[11px] text-white/30 transition-colors hover:bg-white/6 hover:text-white/60"
 					onClick={() => regenerate()}
 					type="button"
 				>

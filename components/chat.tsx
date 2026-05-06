@@ -13,6 +13,7 @@ import { ChatContextHeader } from "@/components/chat-context-header";
 import { useArtifactSelector, useArtifactUiState } from "@/hooks/use-artifact";
 import { useAutoResume } from "@/hooks/use-auto-resume";
 import { useChatVisibility } from "@/hooks/use-chat-visibility";
+import { detectAgentMode } from "@/lib/agent-mode-detector";
 import { detectTaskType } from "@/lib/detect-task-type";
 import { ChatSDKError } from "@/lib/errors";
 import { getThinkingSteps } from "@/lib/thinking-steps";
@@ -23,8 +24,10 @@ import {
 	fetchWithErrorHandlers,
 	generateUUID,
 	getTextFromMessage,
+	sanitizeChatMessage,
 	sanitizeChatMessages,
 } from "@/lib/utils";
+import { AgentDock } from "./agent-dock";
 import { Artifact } from "./artifact";
 import { ContextualUpgradeBanner } from "./contextual-upgrade-banner";
 import { useDataStream } from "./data-stream-provider";
@@ -99,7 +102,13 @@ export function Chat({
 		window.addEventListener("popstate", handlePopState);
 		return () => window.removeEventListener("popstate", handlePopState);
 	}, [router]);
-	const { setDataStream, setAgentStream, setLiveThinking } = useDataStream();
+	const {
+		agentStream,
+		liveThinking,
+		setDataStream,
+		setAgentStream,
+		setLiveThinking,
+	} = useDataStream();
 	const { setUiState: setArtifactUiState } = useArtifactUiState();
 	const { setOpen: setSidebarOpen, setOpenMobile: setSidebarOpenMobile } =
 		useSidebar();
@@ -115,7 +124,10 @@ export function Chat({
 	const [isAnnouncementOpen, setIsAnnouncementOpen] = useState(false);
 	const [streamError, setStreamError] = useState<string | null>(null);
 	const [lastChunkAt, setLastChunkAt] = useState(() => Date.now());
+	const streamStallTimeoutMs = 30_000;
+	const streamWatchdogTimeoutMs = 90_000;
 	const lastThinkingMessageIdRef = useRef<string | null>(null);
+	const lastFallbackMessageForUserIdRef = useRef<string | null>(null);
 	const currentModelIdRef = useRef(currentModelId);
 	const statusResetAtRef = useRef<number | null>(null);
 	const activeDocumentId = useArtifactSelector((state) => state.documentId);
@@ -262,6 +274,32 @@ export function Chat({
 		onData: (dataPart) => {
 			setLastChunkAt(Date.now());
 			setStreamError(null);
+
+			if (
+				dataPart.type === "data-appendMessage" &&
+				typeof dataPart.data === "string"
+			) {
+				try {
+					const parsedMessage = sanitizeChatMessage(
+						JSON.parse(dataPart.data) as ChatMessage,
+					);
+					setMessages((currentMessages) => {
+						if (
+							currentMessages.some((message) => message.id === parsedMessage.id)
+						) {
+							return currentMessages;
+						}
+
+						return [...currentMessages, parsedMessage];
+					});
+				} catch (error) {
+					console.warn(
+						"[Chat] Failed to append streamed fallback message",
+						error,
+					);
+				}
+			}
+
 			setDataStream((ds) => [
 				...(ds ?? []),
 				dataPart as DataUIPart<CustomUIDataTypes>,
@@ -356,19 +394,35 @@ export function Chat({
 				.slice()
 				.reverse()
 				.find((message) => message.role === "user");
-			if (
-				!lastUserMessage ||
-				lastThinkingMessageIdRef.current === lastUserMessage.id
-			) {
+			if (!lastUserMessage) {
 				return;
 			}
 
-			lastThinkingMessageIdRef.current = lastUserMessage.id;
+			const isReplayOfSameUserMessage =
+				lastThinkingMessageIdRef.current === lastUserMessage.id;
+			if (!isReplayOfSameUserMessage) {
+				lastThinkingMessageIdRef.current = lastUserMessage.id;
+			}
 			const userText = lastUserMessage
 				? getTextFromMessage(lastUserMessage)
 				: "";
 			const taskType = detectTaskType(userText);
-			const shouldShowLiveThinking = taskType !== "general";
+			const recentContext = messages
+				.filter((candidate) => candidate.id !== lastUserMessage.id)
+				.slice(-4)
+				.map((candidate) => getTextFromMessage(candidate).trim())
+				.filter(Boolean);
+			const shouldShowLiveThinking =
+				fullstackModeEnabled ||
+				mobileModeEnabled ||
+				deepThinkingEnabled ||
+				detectAgentMode({
+					message: userText,
+					recentContext,
+					hasAttachment: Array.isArray(lastUserMessage.parts)
+						? lastUserMessage.parts.some((part) => part.type === "file")
+						: false,
+				}).mode === "agent";
 
 			setStreamError(null);
 			setLastChunkAt(now);
@@ -420,6 +474,96 @@ export function Chat({
 	}, [messages, setAgentStream, setLiveThinking, status]);
 
 	useEffect(() => {
+		if (status !== "ready") {
+			return;
+		}
+
+		const lastUserMessage = messages
+			.slice()
+			.reverse()
+			.find((message) => message.role === "user");
+
+		if (!lastUserMessage) {
+			return;
+		}
+
+		const assistantMessagesAfterLastUser = messages.filter((message, index) => {
+			const lastUserIndex = messages.findLastIndex(
+				(candidate) => candidate.id === lastUserMessage.id,
+			);
+			return index > lastUserIndex && message.role === "assistant";
+		});
+
+		const hasRenderableAssistantAfterLastUser =
+			assistantMessagesAfterLastUser.some((message) => {
+				const messageParts = Array.isArray(message.parts) ? message.parts : [];
+				const hasTextPart = messageParts.some((part) => {
+					if (!part || typeof part !== "object" || !("type" in part)) {
+						return false;
+					}
+
+					if (part.type === "text" || part.type === "reasoning") {
+						return Boolean((part as { text?: string }).text?.trim());
+					}
+
+					return false;
+				});
+
+				const hasFallbackContent =
+					typeof (message as { content?: unknown }).content === "string" &&
+					Boolean(((message as { content?: string }).content ?? "").trim());
+
+				return hasTextPart || hasFallbackContent;
+			});
+
+		const hasAgentTrace =
+			agentStream.steps.length > 0 || liveThinking.steps.length > 0;
+		const hasAssistantToolOutputAfterLastUser = assistantMessagesAfterLastUser.some(
+			(message) =>
+				(message.parts ?? []).some((part) => {
+					if (!part || typeof part !== "object" || !("type" in part)) {
+						return false;
+					}
+
+					return String((part as { type?: string }).type ?? "").includes("tool");
+				}),
+		);
+
+		if (
+			hasRenderableAssistantAfterLastUser ||
+			hasAssistantToolOutputAfterLastUser ||
+			!hasAgentTrace ||
+			lastFallbackMessageForUserIdRef.current === lastUserMessage.id
+		) {
+			return;
+		}
+
+		lastFallbackMessageForUserIdRef.current = lastUserMessage.id;
+		setMessages((currentMessages) => [
+			...currentMessages,
+			{
+				id: generateUUID(),
+				role: "assistant",
+				parts: [
+					{
+						type: "text",
+						text: "Proses sudah selesai, tapi respons akhir tidak sempat tampil di chat. Coba generate ulang atau lanjutkan dari hasil workspace yang sudah dibuat.",
+					},
+				],
+				metadata: {
+					createdAt: new Date().toISOString(),
+				},
+			},
+		]);
+	}, [
+		agentStream.steps.length,
+		liveThinking.steps.length,
+		messages,
+		setMessages,
+		status,
+	]);
+
+	useEffect(() => {
 		if (status !== "streaming") {
 			return;
 		}
@@ -436,7 +580,7 @@ export function Chat({
 					error: "Koneksi terhenti. Silakan coba lagi.",
 				}));
 			},
-			Math.max(0, 8000 - elapsedSinceLastChunk),
+			Math.max(0, streamStallTimeoutMs - elapsedSinceLastChunk),
 		);
 
 		return () => window.clearTimeout(timer);
@@ -465,7 +609,7 @@ export function Chat({
 				status,
 				startedAt: statusResetAtRef.current,
 			});
-		}, 45_000);
+		}, streamWatchdogTimeoutMs);
 
 		return () => window.clearTimeout(watchdog);
 	}, [id, setAgentStream, setLiveThinking, status, stop]);
@@ -497,8 +641,7 @@ export function Chat({
 	const [attachments, setAttachments] = useState<Attachment[]>([]);
 	const isArtifactVisible = useArtifactSelector((state) => state.isVisible);
 	const artifactUiState = useArtifactUiState();
-	const isIdeArtifactLocked =
-		artifactUiState?.uiState?.isIdeLocked ?? false;
+	const isIdeArtifactLocked = artifactUiState?.uiState?.isIdeLocked ?? false;
 
 	// Count user messages for contextual upgrade banner
 	const userMessageCount = messages.filter((m) => m.role === "user").length;
@@ -570,86 +713,172 @@ export function Chat({
 							: "w-full",
 					)}
 				>
-				<div className="pointer-events-none absolute top-0 right-0 left-0 z-20">
-					<div className="pointer-events-auto w-full">
-						<ChatContextHeader
-							chatId={id}
-							isReadonly={isReadonly}
-							selectedVisibilityType={initialVisibilityType}
-							user={user}
-						/>
-					</div>
-				</div>
-
-				<div
-					className={`relative z-10 flex min-w-0 flex-1 flex-col overflow-hidden pt-20 sm:pt-[5.8rem] ${
-						messages.length === 0 ? "items-center justify-center" : ""
-					}`}
-				>
-					{messages.length > 0 && (
-						<div className="flex flex-1 flex-col overflow-hidden px-2 pb-2 sm:px-4 sm:pb-4">
-							<div className="flex h-full w-full min-w-0 flex-1 flex-col overflow-hidden bg-transparent">
-								<Messages
-									addToolApprovalResponse={addToolApprovalResponse}
-									chatId={id}
-									isArtifactVisible={isArtifactVisible}
-									isReadonly={isReadonly}
-									messages={messages}
-									regenerate={regenerate}
-									selectedModelId={initialChatModel}
-									setMessages={setMessages}
-									status={status}
-									votes={votes}
-									onSuggestedPrompt={handleSuggestedPrompt}
-									streamError={streamError}
-									onRetry={handleRetry}
-								/>
-							</div>
+					<div className="pointer-events-none absolute top-0 right-0 left-0 z-20">
+						<div className="pointer-events-auto w-full">
+							<ChatContextHeader
+								chatId={id}
+								isReadonly={isReadonly}
+								selectedVisibilityType={initialVisibilityType}
+								user={user}
+							/>
 						</div>
-					)}
+					</div>
 
-					{messages.length === 0 && (
-						<div className="flex w-full flex-1 items-center justify-center px-3 pb-4 sm:px-4">
-							<div className="mx-auto w-full max-w-3xl">
-								<Greeting onPromptSelect={handleSuggestedPrompt} />
+					<div
+						className={`relative z-10 flex min-w-0 flex-1 flex-col overflow-hidden pt-20 sm:pt-[5.8rem] ${
+							messages.length === 0 ? "items-center justify-center" : ""
+						}`}
+					>
+						{messages.length > 0 && (
+							<div className="flex flex-1 flex-col overflow-hidden px-2 pb-2 sm:px-4 sm:pb-4">
+								<div className="flex h-full w-full min-w-0 flex-1 flex-col overflow-hidden bg-transparent">
+									<Messages
+										addToolApprovalResponse={addToolApprovalResponse}
+										chatId={id}
+										isArtifactVisible={isArtifactVisible}
+										isReadonly={isReadonly}
+										messages={messages}
+										regenerate={regenerate}
+										selectedModelId={initialChatModel}
+										setMessages={setMessages}
+										status={status}
+										votes={votes}
+										onSuggestedPrompt={handleSuggestedPrompt}
+										streamError={streamError}
+										onRetry={handleRetry}
+									/>
+								</div>
+							</div>
+						)}
 
+						{messages.length === 0 && (
+							<div className="flex w-full flex-1 items-center justify-center px-3 pb-4 sm:px-4">
+								<div className="mx-auto w-full max-w-3xl">
+									<Greeting onPromptSelect={handleSuggestedPrompt} />
+
+									{isReadonly ? (
+										<div className="mt-7 rounded-lg border border-dashed border-black/10 bg-white/45 px-6 py-5 text-center dark:border-white/10 dark:bg-white/[0.03]">
+											<p className="text-sm text-[#5f6258] dark:text-[#a6aca6]">
+												Masuk dulu untuk mulai ngobrol dan buka workspace penuh
+												Ultramaxo AI.
+											</p>
+											<div className="mt-4 flex justify-center gap-3">
+												<Button
+													asChild
+													className="rounded-full"
+													size="sm"
+													variant="outline"
+												>
+													<Link href="/login">Sign In</Link>
+												</Button>
+												<Button asChild className="rounded-full" size="sm">
+													<Link href="/register">Create Account</Link>
+												</Button>
+											</div>
+										</div>
+									) : isAtLimit ? (
+										<div className="mt-7 rounded-lg border border-dashed border-black/10 bg-white/45 px-6 py-5 text-center dark:border-white/10 dark:bg-white/[0.03]">
+											<p className="text-sm font-medium text-[#171717] dark:text-[#f3f4f1]">
+												Batas penggunaan tercapai untuk sementara.
+											</p>
+											<p className="mt-2 text-xs text-[#5f6258] dark:text-[#a6aca6]">
+												Coba lagi nanti atau buka halaman paket untuk melihat
+												opsi yang tersedia.
+											</p>
+											<div className="mt-4 flex justify-center">
+												<Button asChild className="rounded-full" size="sm">
+													<Link href="/plan">Lihat paket</Link>
+												</Button>
+											</div>
+										</div>
+									) : (
+										<div className="mt-7">
+											<MultimodalInput
+												attachments={attachments}
+												chatId={id}
+												deepThinkingEnabled={deepThinkingEnabled}
+												input={input}
+												messages={messages}
+												onModelChange={setCurrentModelId}
+												selectedModelId={currentModelId}
+												selectedVisibilityType={visibilityType}
+												sendMessage={sendMessage}
+												setAttachments={setAttachments}
+												setDeepThinkingEnabled={setDeepThinkingEnabled}
+												setInput={setInput}
+												setMessages={setMessages}
+												setWebSearchEnabled={setWebSearchEnabled}
+												setWormgptEnabled={setWormgptEnabled}
+												fullstackModeEnabled={fullstackModeEnabled}
+												setFullstackModeEnabled={setFullstackModeEnabled}
+												mobileModeEnabled={mobileModeEnabled}
+												setMobileModeEnabled={setMobileModeEnabled}
+												status={status}
+												stop={stop}
+												user={user}
+												webSearchEnabled={webSearchEnabled}
+												wormgptEnabled={wormgptEnabled}
+												customModels={customModels}
+											/>
+										</div>
+									)}
+								</div>
+							</div>
+						)}
+					</div>
+
+					{messages.length > 0 && (
+						<div className="relative z-10 w-full px-2 pb-[max(1rem,env(safe-area-inset-bottom))] sm:px-4 sm:pb-6">
+							{/* Contextual Upgrade Banner */}
+							{user?.type !== "pro" && (
+								<ContextualUpgradeBanner
+									messageCount={userMessageCount}
+									isRateLimited={isRateLimited}
+									userType={user?.type}
+								/>
+							)}
+							<div className="min-w-0 w-full">
 								{isReadonly ? (
-									<div className="mt-7 rounded-lg border border-dashed border-black/10 bg-white/45 px-6 py-5 text-center dark:border-white/10 dark:bg-white/[0.03]">
-										<p className="text-sm text-[#5f6258] dark:text-[#a6aca6]">
-											Masuk dulu untuk mulai ngobrol dan buka workspace penuh
-											Ultramaxo AI.
-										</p>
-										<div className="mt-4 flex justify-center gap-3">
-											<Button
-												asChild
-												className="rounded-full"
-												size="sm"
-												variant="outline"
-											>
-												<Link href="/login">Sign In</Link>
-											</Button>
-											<Button asChild className="rounded-full" size="sm">
-												<Link href="/register">Create Account</Link>
-											</Button>
+									<div className="flex w-full items-center justify-center p-4">
+										<div className="w-full max-w-3xl rounded-[30px] border border-dashed border-black/7 bg-white/52 p-6 text-center shadow-[0_18px_50px_rgba(18,20,22,0.06)] backdrop-blur-xl dark:border-white/10 dark:bg-[#171b1f]/78 dark:shadow-[0_18px_50px_rgba(0,0,0,0.24)]">
+											<p className="text-sm text-[#5f6258] dark:text-[#a6aca6]">
+												Please sign in to start chatting with Ultramaxo AI.
+											</p>
+											<div className="mt-2 flex gap-4">
+												<Button
+													asChild
+													className="rounded-full"
+													size="sm"
+													variant="outline"
+												>
+													<Link href="/login">Sign In</Link>
+												</Button>
+												<Button asChild className="rounded-full" size="sm">
+													<Link href="/register">Create Account</Link>
+												</Button>
+											</div>
 										</div>
 									</div>
 								) : isAtLimit ? (
-									<div className="mt-7 rounded-lg border border-dashed border-black/10 bg-white/45 px-6 py-5 text-center dark:border-white/10 dark:bg-white/[0.03]">
-										<p className="text-sm font-medium text-[#171717] dark:text-[#f3f4f1]">
-											Batas penggunaan tercapai untuk sementara.
-										</p>
-										<p className="mt-2 text-xs text-[#5f6258] dark:text-[#a6aca6]">
-											Coba lagi nanti atau buka halaman paket untuk melihat opsi
-											yang tersedia.
-										</p>
-										<div className="mt-4 flex justify-center">
-											<Button asChild className="rounded-full" size="sm">
-												<Link href="/plan">Lihat paket</Link>
-											</Button>
+									<div className="flex w-full items-center justify-center p-4">
+										<div className="w-full max-w-3xl rounded-[30px] border border-dashed border-black/7 bg-white/52 p-6 text-center shadow-[0_18px_50px_rgba(18,20,22,0.06)] backdrop-blur-xl dark:border-white/10 dark:bg-[#171b1f]/78 dark:shadow-[0_18px_50px_rgba(0,0,0,0.24)]">
+											<p className="text-sm font-medium text-[#171717] dark:text-[#f3f4f1]">
+												Batas penggunaan tercapai untuk sementara.
+											</p>
+											<p className="mb-2 text-xs text-[#5f6258] dark:text-[#a6aca6]">
+												Coba lagi nanti atau buka halaman paket untuk melihat
+												opsi yang tersedia.
+											</p>
+											<div className="flex gap-4">
+												<Button asChild className="rounded-full" size="sm">
+													<Link href="/plan">Lihat paket</Link>
+												</Button>
+											</div>
 										</div>
 									</div>
 								) : (
-									<div className="mt-7">
+									<div className="relative flex flex-col gap-2">
+										<AgentDock stop={stop} />
 										<MultimodalInput
 											attachments={attachments}
 											chatId={id}
@@ -682,91 +911,6 @@ export function Chat({
 							</div>
 						</div>
 					)}
-				</div>
-
-				{messages.length > 0 && (
-					<div className="relative z-10 w-full px-2 pb-[max(1rem,env(safe-area-inset-bottom))] sm:px-4 sm:pb-6">
-						{/* Contextual Upgrade Banner */}
-						{user?.type !== "pro" && (
-							<ContextualUpgradeBanner
-								messageCount={userMessageCount}
-								isRateLimited={isRateLimited}
-								userType={user?.type}
-							/>
-						)}
-						<div className="min-w-0 w-full">
-							{isReadonly ? (
-								<div className="flex w-full items-center justify-center p-4">
-									<div className="w-full max-w-3xl rounded-[30px] border border-dashed border-black/7 bg-white/52 p-6 text-center shadow-[0_18px_50px_rgba(18,20,22,0.06)] backdrop-blur-xl dark:border-white/10 dark:bg-[#171b1f]/78 dark:shadow-[0_18px_50px_rgba(0,0,0,0.24)]">
-										<p className="text-sm text-[#5f6258] dark:text-[#a6aca6]">
-											Please sign in to start chatting with Ultramaxo AI.
-										</p>
-										<div className="mt-2 flex gap-4">
-											<Button
-												asChild
-												className="rounded-full"
-												size="sm"
-												variant="outline"
-											>
-												<Link href="/login">Sign In</Link>
-											</Button>
-											<Button asChild className="rounded-full" size="sm">
-												<Link href="/register">Create Account</Link>
-											</Button>
-										</div>
-									</div>
-								</div>
-							) : isAtLimit ? (
-								<div className="flex w-full items-center justify-center p-4">
-									<div className="w-full max-w-3xl rounded-[30px] border border-dashed border-black/7 bg-white/52 p-6 text-center shadow-[0_18px_50px_rgba(18,20,22,0.06)] backdrop-blur-xl dark:border-white/10 dark:bg-[#171b1f]/78 dark:shadow-[0_18px_50px_rgba(0,0,0,0.24)]">
-										<p className="text-sm font-medium text-[#171717] dark:text-[#f3f4f1]">
-											Batas penggunaan tercapai untuk sementara.
-										</p>
-										<p className="mb-2 text-xs text-[#5f6258] dark:text-[#a6aca6]">
-											Coba lagi nanti atau buka halaman paket untuk melihat opsi
-											yang tersedia.
-										</p>
-										<div className="flex gap-4">
-											<Button asChild className="rounded-full" size="sm">
-												<Link href="/plan">Lihat paket</Link>
-											</Button>
-										</div>
-									</div>
-								</div>
-							) : (
-								<div className="relative flex flex-col gap-2">
-									<MultimodalInput
-										attachments={attachments}
-										chatId={id}
-										deepThinkingEnabled={deepThinkingEnabled}
-										input={input}
-										messages={messages}
-										onModelChange={setCurrentModelId}
-										selectedModelId={currentModelId}
-										selectedVisibilityType={visibilityType}
-										sendMessage={sendMessage}
-										setAttachments={setAttachments}
-										setDeepThinkingEnabled={setDeepThinkingEnabled}
-										setInput={setInput}
-										setMessages={setMessages}
-										setWebSearchEnabled={setWebSearchEnabled}
-										setWormgptEnabled={setWormgptEnabled}
-										fullstackModeEnabled={fullstackModeEnabled}
-										setFullstackModeEnabled={setFullstackModeEnabled}
-										mobileModeEnabled={mobileModeEnabled}
-										setMobileModeEnabled={setMobileModeEnabled}
-										status={status}
-										stop={stop}
-										user={user}
-										webSearchEnabled={webSearchEnabled}
-										wormgptEnabled={wormgptEnabled}
-										customModels={customModels}
-									/>
-								</div>
-							)}
-						</div>
-					</div>
-				)}
 				</div>
 
 				<Artifact

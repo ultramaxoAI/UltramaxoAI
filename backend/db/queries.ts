@@ -2447,7 +2447,7 @@ export async function createAgentRun({
 }: {
 	userId: string;
 	chatId?: string;
-	mode: "fullstack" | "mobile";
+	mode: "general" | "fullstack" | "mobile";
 	goal: string;
 	plan: string[];
 	deliverable: string;

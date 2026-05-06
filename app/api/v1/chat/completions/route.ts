@@ -5,15 +5,15 @@ import {
 } from "@backend/db/queries";
 import { platformApiKey } from "@backend/db/schema";
 import { getModelCatalogById } from "@backend/models/model-catalog";
-import { checkRateLimit, getClientIp } from "@backend/rateLimiter";
+import { checkApiRateLimit, getClientIp } from "@backend/rateLimiter";
 import { eq } from "drizzle-orm";
 import { type NextRequest, NextResponse } from "next/server";
 import { calculateCostCents, estimateTokens } from "@/lib/api-billing";
 import { hashPlatformApiKey } from "@/lib/platform-api-keys";
 
 const MIN_BALANCE_CENTS = 200;
-const FREE_RPM_LIMIT = 5;
-const PAID_RPM_LIMIT = 60;
+const FREE_RPM_LIMIT = 3;
+const PAID_RPM_LIMIT = 15;
 const WINDOW_MS = 60_000;
 const FREE_IP_RPM_LIMIT = 20;
 const PAID_IP_RPM_LIMIT = 180;
@@ -33,6 +33,18 @@ const SECURITY_HEADERS = {
 	"X-Frame-Options": "DENY",
 	"Cache-Control": "no-store, no-cache, must-revalidate",
 };
+
+function buildRateLimitHeaders(
+	limit: number,
+	remaining: number,
+	resetSeconds: number,
+) {
+	return {
+		"X-RateLimit-Limit": String(limit),
+		"X-RateLimit-Remaining": String(Math.max(remaining, 0)),
+		"X-RateLimit-Reset": String(Math.max(resetSeconds, 1)),
+	};
+}
 
 type ChatMessage = {
 	role: string;
@@ -258,21 +270,28 @@ export async function POST(req: NextRequest) {
 		const ipRateLimitKey = `api-ip:${clientIp}:rpm`;
 		const limit = isFreeModel ? FREE_RPM_LIMIT : PAID_RPM_LIMIT;
 		const ipLimit = isFreeModel ? FREE_IP_RPM_LIMIT : PAID_IP_RPM_LIMIT;
-		const rate = checkRateLimit(rateLimitKey, limit, WINDOW_MS);
-		const ipRate = checkRateLimit(ipRateLimitKey, ipLimit, WINDOW_MS);
+		const rate = await checkApiRateLimit(rateLimitKey, limit, WINDOW_MS);
+		const ipRate = await checkApiRateLimit(ipRateLimitKey, ipLimit, WINDOW_MS);
 		if (!rate.allowed || !ipRate.allowed) {
 			return NextResponse.json(
 				{
 					error: {
 						message: "Rate limit exceeded. Try again later.",
-						retryAfter: Math.ceil(WINDOW_MS / 1000),
+						retryAfter: Math.max(rate.resetSeconds, ipRate.resetSeconds),
 					},
 				},
 				{
 					status: 429,
 					headers: {
 						...SECURITY_HEADERS,
-						"Retry-After": String(Math.ceil(WINDOW_MS / 1000)),
+						...buildRateLimitHeaders(
+							limit,
+							rate.remaining,
+							Math.max(rate.resetSeconds, ipRate.resetSeconds),
+						),
+						"Retry-After": String(
+							Math.max(rate.resetSeconds, ipRate.resetSeconds),
+						),
 					},
 				},
 			);
@@ -415,6 +434,7 @@ export async function POST(req: NextRequest) {
 					"Cache-Control": "no-cache, no-store",
 					Connection: "keep-alive",
 					"X-Content-Type-Options": "nosniff",
+					...buildRateLimitHeaders(limit, rate.remaining, rate.resetSeconds),
 				},
 			});
 		}
@@ -450,7 +470,12 @@ export async function POST(req: NextRequest) {
 			}
 		}
 
-		return NextResponse.json(data, { headers: SECURITY_HEADERS });
+		return NextResponse.json(data, {
+			headers: {
+				...SECURITY_HEADERS,
+				...buildRateLimitHeaders(limit, rate.remaining, rate.resetSeconds),
+			},
+		});
 	} catch (error) {
 		console.error("Proxy Error:", error);
 		return NextResponse.json(

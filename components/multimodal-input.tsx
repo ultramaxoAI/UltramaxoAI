@@ -577,27 +577,27 @@ function PureMultimodalInput({
 					</div>
 				)}
 					{activeModeCount > 0 ? (
-						<div className="flex flex-row flex-wrap gap-1.5 px-4 pt-4">
+						<div className="flex max-w-full flex-row gap-1.5 overflow-x-auto px-4 pt-4 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
 							{deepThinkingEnabled ? (
-								<span className="inline-flex items-center gap-1 rounded-md border border-white/[0.08] bg-white/[0.04] px-2 py-1 text-[11px] font-medium text-white/55">
+								<span className="inline-flex shrink-0 items-center gap-1 whitespace-nowrap rounded-md border border-white/[0.08] bg-white/[0.04] px-2 py-1 text-[11px] font-medium text-white/55">
 									<CpuIcon className="size-3" />
 									Deep Thinking
 								</span>
 							) : null}
 							{fullstackModeEnabled ? (
-								<span className="inline-flex items-center gap-1 rounded-md border border-white/[0.08] bg-white/[0.04] px-2 py-1 text-[11px] font-medium text-white/55">
+								<span className="inline-flex shrink-0 items-center gap-1 whitespace-nowrap rounded-md border border-white/[0.08] bg-white/[0.04] px-2 py-1 text-[11px] font-medium text-white/55">
 									<FileTextIcon className="size-3" />
 									Fullstack
 								</span>
 							) : null}
 							{mobileModeEnabled ? (
-								<span className="inline-flex items-center gap-1 rounded-md border border-white/[0.08] bg-white/[0.04] px-2 py-1 text-[11px] font-medium text-white/55">
+								<span className="inline-flex shrink-0 items-center gap-1 whitespace-nowrap rounded-md border border-white/[0.08] bg-white/[0.04] px-2 py-1 text-[11px] font-medium text-white/55">
 									<CheckIcon className="size-3" />
 									Mobile Dev
 								</span>
 							) : null}
 							{imageGenerationMode ? (
-								<span className="inline-flex items-center gap-1 rounded-md border border-white/[0.08] bg-white/[0.04] px-2 py-1 text-[11px] font-medium text-white/55">
+								<span className="inline-flex shrink-0 items-center gap-1 whitespace-nowrap rounded-md border border-white/[0.08] bg-white/[0.04] px-2 py-1 text-[11px] font-medium text-white/55">
 									<Wand2Icon className="size-3" />
 									Image Gen
 								</span>
@@ -911,7 +911,7 @@ function PureModelSelectorCompact({
 			<DropdownMenu onOpenChange={setOpen} open={open}>
 				<DropdownMenuTrigger asChild>
 					<Button
-						className="h-8 min-w-0 justify-between gap-1.5 rounded-xl border border-transparent bg-transparent px-3 text-[12.5px] font-medium text-white/30 shadow-none transition-all hover:bg-white/[0.05] hover:text-white/60"
+						className="h-8 min-w-[9rem] max-w-[14rem] justify-between gap-1.5 rounded-xl border border-transparent bg-transparent px-3 text-[12.5px] font-medium text-white/30 shadow-none transition-all hover:bg-white/[0.05] hover:text-white/60"
 						variant="ghost"
 					>
 						<div className="flex min-w-0 items-center gap-2">

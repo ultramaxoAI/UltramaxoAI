@@ -40,13 +40,13 @@ export default function ContactPage() {
 						<span className="font-medium">Telegram @iiokans</span>
 					</a>
 					<a
-						href="https://t.me/+CQR8SWdH5nE2OTdk"
+						href="https://whatsapp.com/channel/0029VbCYCY6HltYHdOeG660L"
 						target="_blank"
 						rel="noreferrer"
 						className="flex items-center justify-center gap-3 bg-white/5 border border-white/10 px-6 py-4 rounded-2xl hover:bg-white/10 transition-colors sm:col-span-2 lg:col-span-1"
 					>
 						<Users className="w-5 h-5" />
-						<span className="font-medium">Join Telegram Community</span>
+						<span className="font-medium">Join WhatsApp Channel</span>
 					</a>
 				</div>
 			</main>

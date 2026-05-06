@@ -1,5 +1,6 @@
 import { db } from "@backend/db/queries";
 import { user } from "@backend/db/schema";
+import { validateImage } from "@backend/file-validation";
 import { logger } from "@backend/logger";
 import { put } from "@vercel/blob";
 import { eq } from "drizzle-orm";
@@ -14,16 +15,29 @@ export async function PATCH(request: Request) {
 		}
 
 		const formData = await request.formData();
-		const name = formData.get("name") as string;
+		const name = String(formData.get("name") ?? "").trim();
 		const imageFile = formData.get("image") as File | null;
 
 		let imageUrl: string | undefined;
 
+		if (name.length > 80) {
+			return NextResponse.json({ error: "Name is too long" }, { status: 400 });
+		}
+
 		// Upload image to Vercel Blob if provided
 		if (imageFile && process.env.BLOB_READ_WRITE_TOKEN) {
+			const validation = validateImage(imageFile);
+			if (!validation.valid) {
+				return NextResponse.json(
+					{ error: validation.error || "Invalid image" },
+					{ status: 400 },
+				);
+			}
+
 			try {
+				const safeFilename = imageFile.name.replace(/[^a-zA-Z0-9._-]/g, "_");
 				const blob = await put(
-					`profile/${session.user.id}/${imageFile.name}`,
+					`profile/${session.user.id}/${safeFilename}`,
 					imageFile,
 					{
 						access: "public",
@@ -36,9 +50,7 @@ export async function PATCH(request: Request) {
 		}
 
 		const updates: Partial<typeof user.$inferInsert> = {};
-		if (name) {
-			updates.name = name;
-		}
+		updates.name = name || null;
 		if (imageUrl) {
 			updates.image = imageUrl;
 		}

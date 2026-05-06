@@ -125,14 +125,14 @@ Authorization: Bearer ux_sk_YOUR_KEY`}</pre>
 								<span className="apic-tag apic-tag--green">Free</span>
 							</td>
 							<td>Requests per minute</td>
-							<td>5</td>
+							<td>3</td>
 						</tr>
 						<tr>
 							<td>
 								<span className="apic-tag apic-tag--amber">Paid</span>
 							</td>
 							<td>Requests per minute</td>
-							<td>60</td>
+							<td>15</td>
 						</tr>
 						<tr>
 							<td>All</td>

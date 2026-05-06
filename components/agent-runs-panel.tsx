@@ -24,7 +24,7 @@ type AgentStep = {
 
 type AgentRun = {
 	id: string;
-	mode: "fullstack" | "mobile";
+	mode: "general" | "fullstack" | "mobile";
 	goal: string;
 	plan: string[];
 	deliverable: string;
@@ -74,7 +74,7 @@ export function AgentRunsPanel() {
 					<h1 className="text-2xl font-semibold tracking-tight">Agent Runs</h1>
 				</div>
 				<p className="mt-2 text-sm text-zinc-500 dark:text-zinc-400">
-					Monitor autonomous fullstack and mobile agent sessions.
+					Monitor autonomous general, fullstack, and mobile agent sessions.
 				</p>
 			</header>
 
@@ -194,7 +194,8 @@ export function AgentRunsPanel() {
 				</div>
 			) : (
 				<div className="rounded-2xl border border-dashed border-zinc-200 px-5 py-8 text-sm text-zinc-500 dark:border-white/10 dark:text-zinc-400">
-					No agent runs yet. Use fullstack or mobile mode in chat to start one.
+					No agent runs yet. Complex chats will auto-start agent mode when
+					needed.
 				</div>
 			)}
 		</div>

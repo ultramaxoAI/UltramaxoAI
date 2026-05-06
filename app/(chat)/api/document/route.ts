@@ -103,6 +103,14 @@ export async function DELETE(request: Request) {
 		).toResponse();
 	}
 
+	const parsedTimestamp = new Date(timestamp);
+	if (Number.isNaN(parsedTimestamp.getTime())) {
+		return new ChatSDKError(
+			"bad_request:api",
+			"Parameter timestamp is invalid.",
+		).toResponse();
+	}
+
 	const session = await auth();
 
 	if (!session?.user) {
@@ -113,13 +121,17 @@ export async function DELETE(request: Request) {
 
 	const [document] = documents;
 
+	if (!document) {
+		return new ChatSDKError("not_found:document").toResponse();
+	}
+
 	if (document.userId !== session.user.id) {
 		return new ChatSDKError("forbidden:document").toResponse();
 	}
 
 	const documentsDeleted = await deleteDocumentsByIdAfterTimestamp({
 		id,
-		timestamp: new Date(timestamp),
+		timestamp: parsedTimestamp,
 	});
 
 	return Response.json(documentsDeleted, { status: 200 });
