@@ -146,11 +146,11 @@ export default function PaymentPage() {
 				<div className="apic-stat-value" style={{ fontSize: 32, marginTop: 8 }}>
 					Rp {data.amountToPay?.toLocaleString("id-ID") || "—"}
 				</div>
-				<p
-					style={{ fontSize: 12, color: "var(--apic-text-dim)", marginTop: 4 }}
-				>
-					≈ ${(data.amountUsd || 0).toFixed(2)} USD
-				</p>
+				{data.amountUsd > 0 && (
+					<p style={{ fontSize: 12, color: "var(--apic-text-dim)", marginTop: 4 }}>
+						≈ ${(data.amountUsd || 0).toFixed(2)} USD
+					</p>
+				)}
 			</div>
 
 			{/* QR Code */}
@@ -165,7 +165,11 @@ export default function PaymentPage() {
 						}}
 					>
 						<img
-							src={data.qrImage}
+							src={
+								data.qrImage.startsWith("http") || data.qrImage.startsWith("data:")
+									? data.qrImage
+									: `data:image/png;base64,${data.qrImage}`
+							}
 							alt="QRIS Payment QR Code"
 							style={{ maxWidth: 300, width: "100%", height: "auto" }}
 						/>

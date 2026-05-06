@@ -14,6 +14,7 @@ import {
 } from "@/components/sidebar-history";
 import { SidebarUserNav } from "@/components/sidebar-user-nav";
 import { Button } from "@/components/ui/button";
+import { UpgradeProButton } from "@/components/upgrade-pro-button";
 import {
 	Sidebar,
 	SidebarContent,
@@ -230,6 +231,11 @@ export function AppSidebar({ user }: { user: User | undefined }) {
 					{isSidebarOpen ? <SidebarHistory user={user} /> : null}
 				</SidebarContent>
 				<SidebarFooter>
+					{user && (user as any).type !== "pro" && isSidebarOpen && (
+						<div className="px-2 w-full pb-2">
+							<UpgradeProButton user={user as any} />
+						</div>
+					)}
 					{user && <SidebarUserNav isCollapsed={!isSidebarOpen} user={user} />}
 				</SidebarFooter>
 			</Sidebar>

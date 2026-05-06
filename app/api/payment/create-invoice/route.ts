@@ -16,8 +16,10 @@ const isDevelopment = process.env.NODE_ENV === "development";
 
 // Tabel harga resmi server-side
 const PRICING_TABLE: Record<string, Record<number, number>> = {
-	"Early Adopter (Pro)": { 1: 15000 },
-	"1 Tahun": { 12: 150000 },
+	"pro-1": { 1: 15000 },
+	"pro-3": { 3: 45000 },
+	"pro-6": { 6: 85000 },
+	"pro-12": { 12: 150000 },
 };
 
 function getValidPrice(planId: string, months: number): number | null {

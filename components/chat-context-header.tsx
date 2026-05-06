@@ -14,19 +14,24 @@ import {
 import { useSidebar } from "@/components/ui/sidebar";
 import { ChatExportButton } from "./chat-export-button";
 import { VisibilitySelector, type VisibilityType } from "./visibility-selector";
+import { UpgradeProButton } from "@/components/upgrade-pro-button";
+import { useSession } from "next-auth/react";
 
 function PureChatContextHeader({
 	chatId,
 	selectedVisibilityType,
 	isReadonly,
 	chatTitle = "Untitled Chat",
+	user,
 }: {
 	chatId: string;
 	selectedVisibilityType: VisibilityType;
 	isReadonly: boolean;
 	chatTitle?: string;
-	user?: { id?: string };
+	user?: { id?: string; email?: string; type?: string; [key: string]: any };
 }) {
+	const { data: session } = useSession();
+	const currentUser = user || session?.user;
 	const [isMenuOpen, setIsMenuOpen] = useState(false);
 	const { setOpenMobile, isMobile, openMobile } = useSidebar();
 
@@ -126,6 +131,9 @@ function PureChatContextHeader({
 				</div>
 
 				<div className="flex shrink-0 items-center gap-2">
+					{currentUser && currentUser.type !== "pro" && (
+						<UpgradeProButton user={currentUser as any} variant="minimal" />
+					)}
 					{!isReadonly && (
 						<DropdownMenu onOpenChange={setIsMenuOpen} open={isMenuOpen}>
 							<DropdownMenuTrigger asChild>

@@ -50,7 +50,7 @@ export async function GET(
 		trxId: (noteData.trxId as string) || null,
 		refId: order.id,
 		qrImage: (noteData.qrImage as string) || null,
-		paymentUrl: (noteData.paymentUrl as string) || null,
+		paymentUrl: (noteData.checkoutUrl as string) || (noteData.paymentUrl as string) || null,
 		amountToPay: order.price,
 		amountUsd: ((noteData.usdCents as number) || 0) / 100,
 		createdAt: order.createdAt,

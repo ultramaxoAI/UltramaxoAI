@@ -13,7 +13,6 @@ import "./globals.css";
 import { SessionProvider } from "next-auth/react";
 import { CookieConsent } from "@/components/cookie-consent";
 import { JsonLd } from "@/components/json-ld";
-import { OnboardingWizard } from "@/components/onboarding-wizard";
 import { TimedFeedbackPrompt } from "@/components/timed-feedback-prompt";
 import { VisitorTracker } from "@/components/visitor-tracker";
 
@@ -232,7 +231,6 @@ export default async function RootLayout({
 					<VisitorTracker />
 					<CookieConsent />
 					<SessionProvider>
-						<OnboardingWizard />
 						<TimedFeedbackPrompt />
 						{children}
 						<JsonLd />

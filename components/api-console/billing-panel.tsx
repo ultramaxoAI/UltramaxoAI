@@ -2,7 +2,9 @@
 
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
+import { useSession } from "next-auth/react";
 import { toast } from "sonner";
+import { UpgradeProButton } from "@/components/upgrade-pro-button";
 
 type CreditSummary = {
 	account: {
@@ -37,6 +39,7 @@ export function BillingPanel() {
 	const [orders, setOrders] = useState<PaymentOrder[]>([]);
 	const [amount, setAmount] = useState("2");
 	const [loading, setLoading] = useState(false);
+	const { data: session } = useSession();
 
 	const load = useCallback(async () => {
 		const [credRes, ordRes] = await Promise.all([
@@ -141,11 +144,16 @@ export function BillingPanel() {
 
 	return (
 		<div className="apic-stack apic-stack--32">
-			<div>
-				<h1 className="apic-h1">Billing</h1>
-				<p className="apic-subtitle">
-					Manage your API balance and payment history.
-				</p>
+			<div className="flex items-center justify-between">
+				<div>
+					<h1 className="apic-h1">Billing</h1>
+					<p className="apic-subtitle">
+						Manage your API balance and payment history.
+					</p>
+				</div>
+				{session?.user && (
+					<UpgradeProButton user={session.user as any} />
+				)}
 			</div>
 
 			{/* Stats */}
