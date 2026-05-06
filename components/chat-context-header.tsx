@@ -28,7 +28,7 @@ function PureChatContextHeader({
 	selectedVisibilityType: VisibilityType;
 	isReadonly: boolean;
 	chatTitle?: string;
-	user?: { id?: string; email?: string; type?: string; [key: string]: any };
+	user?: { id?: string; email?: string | null; type?: string; [key: string]: any };
 }) {
 	const { data: session } = useSession();
 	const currentUser = user || session?.user;
