@@ -847,7 +847,7 @@ export async function POST(request: Request) {
 								messages: finalMessages,
 								stopWhen: stepCountIs(isIdeAgentMode ? 10 : 8),
 								maxOutputTokens: isIdeAgentMode ? 8192 : 8192,
-								onChunk: isIdeAgentMode
+								onChunk: useTools
 									? ({ chunk }) => {
 											if (chunk.type === "tool-input-start") {
 												dataStream.write({
@@ -881,7 +881,7 @@ export async function POST(request: Request) {
 											}
 										}
 									: undefined,
-								onStepFinish: isIdeAgentMode
+								onStepFinish: useTools
 									? (stepResult) => {
 											const toolCalls = stepResult.toolCalls ?? [];
 
@@ -893,7 +893,7 @@ export async function POST(request: Request) {
 									: undefined,
 								onFinish: ({ response }) => {
 									// Emit agent:done when all steps finish
-									if (isIdeAgentMode) {
+									if (useTools) {
 										dataStream.write({
 											type: "data-agent-done",
 											data: { status: "done" },

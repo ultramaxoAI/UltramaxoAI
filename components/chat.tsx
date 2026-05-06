@@ -13,7 +13,7 @@ import { ChatContextHeader } from "@/components/chat-context-header";
 import { useArtifactSelector, useArtifactUiState } from "@/hooks/use-artifact";
 import { useAutoResume } from "@/hooks/use-auto-resume";
 import { useChatVisibility } from "@/hooks/use-chat-visibility";
-import { detectAgentMode } from "@/lib/agent-mode-detector";
+import { detectAgentMode, isAgenticToolName } from "@/lib/agent-mode-detector";
 import { detectTaskType } from "@/lib/detect-task-type";
 import { ChatSDKError } from "@/lib/errors";
 import { getThinkingSteps } from "@/lib/thinking-steps";
@@ -128,6 +128,11 @@ export function Chat({
 	const streamWatchdogTimeoutMs = 90_000;
 	const lastThinkingMessageIdRef = useRef<string | null>(null);
 	const lastFallbackMessageForUserIdRef = useRef<string | null>(null);
+	const pendingTurnRef = useRef<{
+		text: string;
+		hasAttachment: boolean;
+		startedAt: number;
+	} | null>(null);
 	const currentModelIdRef = useRef(currentModelId);
 	const statusResetAtRef = useRef<number | null>(null);
 	const activeDocumentId = useArtifactSelector((state) => state.documentId);
@@ -394,35 +399,47 @@ export function Chat({
 				.slice()
 				.reverse()
 				.find((message) => message.role === "user");
-			if (!lastUserMessage) {
+			const pendingTurn = pendingTurnRef.current;
+			if (!lastUserMessage && !pendingTurn) {
 				return;
 			}
 
 			const isReplayOfSameUserMessage =
+				lastUserMessage != null &&
 				lastThinkingMessageIdRef.current === lastUserMessage.id;
-			if (!isReplayOfSameUserMessage) {
+			if (lastUserMessage && !isReplayOfSameUserMessage) {
 				lastThinkingMessageIdRef.current = lastUserMessage.id;
 			}
 			const userText = lastUserMessage
 				? getTextFromMessage(lastUserMessage)
-				: "";
+				: pendingTurn?.text ?? "";
+			const hasAttachment = lastUserMessage
+				? Array.isArray(lastUserMessage.parts)
+					? lastUserMessage.parts.some((part) => part.type === "file")
+					: false
+				: pendingTurn?.hasAttachment ?? false;
 			const taskType = detectTaskType(userText);
 			const recentContext = messages
-				.filter((candidate) => candidate.id !== lastUserMessage.id)
+				.filter((candidate) =>
+					lastUserMessage ? candidate.id !== lastUserMessage.id : true,
+				)
 				.slice(-4)
 				.map((candidate) => getTextFromMessage(candidate).trim())
 				.filter(Boolean);
-			const shouldShowLiveThinking =
-				fullstackModeEnabled ||
-				mobileModeEnabled ||
-				deepThinkingEnabled ||
-				detectAgentMode({
-					message: userText,
-					recentContext,
-					hasAttachment: Array.isArray(lastUserMessage.parts)
-						? lastUserMessage.parts.some((part) => part.type === "file")
-						: false,
-				}).mode === "agent";
+			const preflightDetection = detectAgentMode({
+				message: userText,
+				recentContext,
+				hasAttachment,
+			});
+			const initialSurface =
+				fullstackModeEnabled || mobileModeEnabled
+					? "agent-active"
+					: preflightDetection.uiSurface === "agent-active"
+						? "deep-thinking"
+					: deepThinkingEnabled && preflightDetection.uiSurface === "responding"
+						? "deep-thinking"
+						: preflightDetection.uiSurface;
+			const shouldShowLiveThinking = initialSurface !== "responding";
 
 			setStreamError(null);
 			setLastChunkAt(now);
@@ -439,11 +456,14 @@ export function Chat({
 					? getThinkingSteps(taskType, userText)
 					: [],
 				startedAt: shouldShowLiveThinking ? now : null,
+				surface: initialSurface,
+				runtimeEscalated: false,
 			});
 		}
 
 		if (status === "ready") {
 			statusResetAtRef.current = null;
+			pendingTurnRef.current = null;
 			setAgentStream((current) =>
 				current.startedAt &&
 				current.status !== "done" &&
@@ -460,6 +480,7 @@ export function Chat({
 
 		if (status === "error") {
 			statusResetAtRef.current = null;
+			pendingTurnRef.current = null;
 			setAgentStream((current) => ({
 				...current,
 				status: "error",
@@ -472,6 +493,40 @@ export function Chat({
 			}));
 		}
 	}, [messages, setAgentStream, setLiveThinking, status]);
+
+	useEffect(() => {
+		if (status !== "submitted" && status !== "streaming") {
+			return;
+		}
+
+		const hasRuntimeAgentWork =
+			agentStream.steps.some((step) => {
+				if (step.type === "tool_call") {
+					return isAgenticToolName(step.label);
+				}
+
+				return agentStream.steps.length > 1;
+			}) ||
+			agentStream.steps.filter((step) => step.type === "tool_call").length > 1;
+
+		if (!hasRuntimeAgentWork) {
+			return;
+		}
+
+		setLiveThinking((current) => ({
+			...current,
+			enabled: true,
+			startedAt: current.startedAt ?? agentStream.startedAt ?? Date.now(),
+			surface: "agent-active",
+			runtimeEscalated: true,
+		}));
+	}, [
+		agentStream.startedAt,
+		agentStream.status,
+		agentStream.steps,
+		setLiveThinking,
+		status,
+	]);
 
 	useEffect(() => {
 		if (status !== "ready") {
@@ -614,6 +669,20 @@ export function Chat({
 		return () => window.clearTimeout(watchdog);
 	}, [id, setAgentStream, setLiveThinking, status, stop]);
 
+	function primeThinkingSurface({
+		text,
+		hasAttachment,
+	}: {
+		text: string;
+		hasAttachment: boolean;
+	}) {
+		pendingTurnRef.current = {
+			text,
+			hasAttachment,
+			startedAt: Date.now(),
+		};
+	}
+
 	const searchParams = useSearchParams();
 	const query = searchParams.get("query");
 
@@ -624,6 +693,10 @@ export function Chat({
 		if (query && !(hasAppendedQuery || hasAppendedQueryRef.current)) {
 			hasAppendedQueryRef.current = true;
 			setHasAppendedQuery(true);
+			primeThinkingSurface({
+				text: query,
+				hasAttachment: false,
+			});
 			sendMessage({
 				role: "user" as const,
 				parts: [{ type: "text", text: query }],
@@ -631,7 +704,7 @@ export function Chat({
 
 			window.history.replaceState({}, "", `/chat/${id}`);
 		}
-	}, [query, sendMessage, hasAppendedQuery, id]);
+	}, [query, sendMessage, hasAppendedQuery, id, primeThinkingSurface]);
 
 	const { data: votes } = useSWR<Vote[]>(
 		messages.length >= 2 ? `/api/vote?chatId=${id}` : null,
@@ -819,6 +892,7 @@ export function Chat({
 												webSearchEnabled={webSearchEnabled}
 												wormgptEnabled={wormgptEnabled}
 												customModels={customModels}
+												onWillSendMessage={primeThinkingSurface}
 											/>
 										</div>
 									)}
@@ -905,6 +979,7 @@ export function Chat({
 											webSearchEnabled={webSearchEnabled}
 											wormgptEnabled={wormgptEnabled}
 											customModels={customModels}
+											onWillSendMessage={primeThinkingSurface}
 										/>
 									</div>
 								)}

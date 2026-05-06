@@ -266,7 +266,7 @@ function normalizeAgentStep(
 			: typeof data.toolCallId === "string"
 				? data.toolCallId
 				: `${type}-${index}`;
-	const label =
+	const rawLabel =
 		typeof data.label === "string"
 			? data.label
 			: typeof data.tool === "string"
@@ -276,6 +276,7 @@ function normalizeAgentStep(
 					: type === "tool_call"
 						? "tool_call"
 						: "Menganalisis permintaan";
+	const label = formatAgentStepLabel(rawLabel);
 	const args =
 		typeof data.args === "string"
 			? data.args
@@ -307,6 +308,34 @@ function normalizeAgentStep(
 				: "running"),
 		duration,
 	};
+}
+
+function formatAgentStepLabel(label: string) {
+	const normalized = label.trim();
+
+	const friendlyMap: Record<string, string> = {
+		startAgentTask: "Memahami tugas",
+		reportAgentStep: "Mencatat progres kerja",
+		listCodeFiles: "Membaca struktur file",
+		createCodeFile: "Membuat file kode",
+		createFile: "Membuat file",
+		createFolder: "Membuat folder",
+		updateCodeFile: "Memperbarui file kode",
+		editFile: "Mengubah file",
+		deleteCodeFile: "Menghapus file kode",
+		readFile: "Membaca file",
+		listFiles: "Memeriksa isi folder",
+		runCommand: "Menjalankan perintah",
+		executeTerminalCommand: "Menjalankan terminal",
+		installPackage: "Menambahkan package",
+		installDependency: "Memasang dependency",
+		startPreviewServer: "Menyalakan preview",
+		runWorkspaceCommand: "Menjalankan workspace",
+		createDocument: "Menyiapkan dokumen",
+		updateDocument: "Memperbarui dokumen",
+	};
+
+	return friendlyMap[normalized] ?? normalized;
 }
 
 function stringifyCompact(value: unknown) {

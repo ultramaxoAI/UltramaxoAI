@@ -18,6 +18,7 @@ export type AgentModeDetection = {
 	reason: string;
 	suggestedRunGoal: string;
 	taskType: ReturnType<typeof detectTaskType>;
+	uiSurface: "responding" | "deep-thinking" | "agent-active";
 };
 
 type Signal = {
@@ -36,6 +37,9 @@ const MULTI_STEP_REGEX =
 
 const SIMPLE_CHAT_REGEX =
 	/^(hai|halo|hello|hi|ping|oke|ok|ya|iya|thanks|makasih|siapa kamu|apa kabar)[.!?\s]*$/i;
+
+const AGENTIC_TOOL_NAME_REGEX =
+	/\b(startAgentTask|reportAgentStep|listCodeFiles|createCodeFile|createFile|createFolder|updateCodeFile|editFile|deleteCodeFile|readFile|listFiles|runCommand|executeTerminalCommand|installPackage|installDependency|startPreviewServer|runWorkspaceCommand|createDocument|updateDocument)\b/i;
 
 function collectSignals(input: Required<AgentModeDetectionInput>): Signal[] {
 	const text = input.message.trim();
@@ -120,13 +124,26 @@ export function detectAgentMode(
 			reason: "simple conversational message",
 			suggestedRunGoal: summarizeGoal(text),
 			taskType,
+			uiSurface: "responding",
 		};
 	}
 
 	const signals = collectSignals(input);
 	const score = signals.reduce((total, signal) => total + signal.weight, 0);
 	const confidence = score >= 5 ? "high" : score >= 3 ? "medium" : "low";
-	const shouldUseAgent = score >= 4 || (score >= 3 && taskType === "coding");
+	const prefersDeepThinking =
+		score >= 2.5 ||
+		taskType === "reasoning" ||
+		(taskType === "coding" && score >= 2) ||
+		text.length > 140;
+	const shouldUseAgent =
+		score >= 4 ||
+		(score >= 3 &&
+			(taskType === "coding" || PROJECT_CONTEXT_REGEX.test(text))) ||
+		(score >= 2.5 &&
+			taskType === "coding" &&
+			COMPLEX_ACTION_REGEX.test(text) &&
+			PROJECT_CONTEXT_REGEX.test(text));
 
 	return {
 		mode: shouldUseAgent ? "agent" : "chat",
@@ -137,5 +154,14 @@ export function detectAgentMode(
 			"no complex workflow signal",
 		suggestedRunGoal: summarizeGoal(text),
 		taskType,
+		uiSurface: shouldUseAgent
+			? "agent-active"
+			: prefersDeepThinking
+				? "deep-thinking"
+				: "responding",
 	};
+}
+
+export function isAgenticToolName(toolName: string) {
+	return AGENTIC_TOOL_NAME_REGEX.test(toolName);
 }

@@ -35,9 +35,20 @@ export interface AgentThinkingPanelProps {
 	isActive?: boolean;
 	totalDurationMs?: number;
 	liveSteps?: ThinkingStep[];
+	variant?: "responding" | "deep-thinking" | "agent-active";
 }
 
 const ease = [0.4, 0, 0.2, 1] as const;
+const THINKING_SUBTITLES = [
+	"Memproses permintaan",
+	"Menganalisis konteks",
+	"Menyusun respons",
+] as const;
+const DEFAULT_THINKING_STEPS: ThinkingStep[] = [
+	{ id: "think-1", label: "Memahami permintaan", status: "done" },
+	{ id: "think-2", label: "Menyusun respons terbaik", status: "running" },
+	{ id: "think-3", label: "Mengirim jawaban", status: "running" },
+];
 
 function formatDuration(ms?: number) {
 	if (!ms || ms < 0) {
@@ -225,21 +236,72 @@ function useVisibleThinkingSteps(steps: ThinkingStep[], isActive: boolean) {
 	return visibleCount;
 }
 
+function useRotatingSubtitle(isActive: boolean) {
+	const [subtitleIndex, setSubtitleIndex] = useState(0);
+
+	useEffect(() => {
+		if (!isActive) {
+			return;
+		}
+
+		const interval = window.setInterval(() => {
+			setSubtitleIndex((current) => (current + 1) % THINKING_SUBTITLES.length);
+		}, 3000);
+
+		return () => window.clearInterval(interval);
+	}, [isActive]);
+
+	return THINKING_SUBTITLES[subtitleIndex];
+}
+
+function getActiveThinkingSubtitle(
+	steps: ThinkingStep[],
+	visibleCount: number,
+	isActive: boolean,
+	fallback: string,
+) {
+	if (!steps.length) {
+		return fallback;
+	}
+
+	const activeIndex = isActive
+		? Math.min(Math.max(visibleCount - 1, 0), steps.length - 1)
+		: steps.length - 1;
+	const currentStep = steps[activeIndex];
+	const subtitle = currentStep?.detail?.trim() || currentStep?.label?.trim();
+
+	if (!subtitle) {
+		return fallback;
+	}
+
+	return subtitle.length > 120 ? `${subtitle.slice(0, 117)}...` : subtitle;
+}
+
 function LiveThinkingPanel({
 	steps,
 	isActive,
 	totalDurationMs,
+	variant = "deep-thinking",
 }: {
 	steps: ThinkingStep[];
 	isActive: boolean;
 	totalDurationMs?: number;
+	variant?: "responding" | "deep-thinking" | "agent-active";
 }) {
 	const [collapsed, setCollapsed] = useState(false);
 	const [elapsed, setElapsed] = useState(totalDurationMs ?? 0);
 	const startedAtRef = useRef(Date.now());
-	const visibleCount = useVisibleThinkingSteps(steps, isActive);
+	const normalizedSteps = steps.length ? steps : DEFAULT_THINKING_STEPS;
+	const visibleCount = useVisibleThinkingSteps(normalizedSteps, isActive);
 	const displayElapsed = totalDurationMs ?? elapsed;
 	const isDone = !isActive;
+	const rotatingSubtitle = useRotatingSubtitle(isActive);
+	const subtitle = getActiveThinkingSubtitle(
+		normalizedSteps,
+		visibleCount,
+		isActive,
+		rotatingSubtitle,
+	);
 
 	useEffect(() => {
 		if (!isActive) {
@@ -248,7 +310,7 @@ function LiveThinkingPanel({
 			return;
 		}
 
-		setCollapsed(false);
+		setCollapsed(true);
 		startedAtRef.current = Date.now() - (totalDurationMs ?? 0);
 		const interval = window.setInterval(() => {
 			setElapsed(Date.now() - startedAtRef.current);
@@ -257,20 +319,16 @@ function LiveThinkingPanel({
 		return () => window.clearInterval(interval);
 	}, [isActive, totalDurationMs]);
 
-	if (!steps.length) {
-		return null;
-	}
-
 	if (isDone && collapsed) {
 		return (
 			<button
-				className="mb-4 flex items-center gap-2 font-mono text-[11px] text-white/30 transition-colors hover:text-white/50"
+				className="mb-4 flex items-center gap-2 text-[11px] text-[#777] transition-colors hover:text-[#ccc]"
 				onClick={() => setCollapsed(false)}
 				type="button"
 			>
-				<span className="size-1.5 rounded-full bg-white/20" />
+				<span className="size-1.5 rounded-full bg-[#555]" />
 				<span>
-					Selesai berpikir · {steps.length} langkah ·{" "}
+					Selesai berpikir · {normalizedSteps.length} langkah ·{" "}
 					{formatDuration(displayElapsed)}
 				</span>
 				<ChevronDown className="size-3" />
@@ -281,112 +339,112 @@ function LiveThinkingPanel({
 	return (
 		<motion.div
 			animate={{ opacity: 1, y: 0 }}
-			className="mb-5 overflow-hidden rounded-xl border border-white/[0.07] bg-[#111318]"
+			className={cn(
+				"mb-5 overflow-hidden rounded-[14px] border shadow-sm",
+				variant === "agent-active"
+					? "border-[#2a2a2a] bg-[#1a1a1a]"
+					: "border-[#2a2a2a] bg-[#1a1a1a]",
+			)}
 			initial={{ opacity: 0, y: 6 }}
 			transition={{ duration: 0.28, ease }}
 		>
 			<button
-				className="flex w-full items-center justify-between px-4 py-3 transition-colors hover:bg-white/[0.02]"
+				aria-expanded={!collapsed}
+				className="flex w-full items-start justify-between gap-3 px-4 py-3 text-left transition-colors hover:bg-white/[0.015]"
 				onClick={() => setCollapsed((value) => !value)}
 				type="button"
 			>
-				<div className="flex items-center gap-2">
-					{isActive ? (
-						<span className="relative flex size-2">
-							<span className="absolute inline-flex size-full animate-ping rounded-full bg-indigo-400 opacity-75" />
-							<span className="relative inline-flex size-2 rounded-full bg-indigo-500" />
-						</span>
-					) : (
-						<span className="size-2 rounded-full bg-white/20" />
-					)}
-					<span className="text-[12px] font-medium text-white/55">
-						{isActive ? "Berpikir..." : "Selesai berpikir"}
-					</span>
+				<div className="flex min-w-0 flex-1 items-start gap-3">
+					<div className="flex pt-1">
+						{[0, 1, 2].map((dot) => (
+							<motion.span
+								animate={{ opacity: [0.3, 1, 0.3], scale: [0.92, 1, 0.92] }}
+								className="mr-1 size-1.5 rounded-full bg-[#4a90e2]"
+								key={dot}
+								transition={{
+									delay: dot * 0.2,
+									duration: 1.1,
+									ease: "easeInOut",
+									repeat: Number.POSITIVE_INFINITY,
+								}}
+							/>
+						))}
+					</div>
+					<div className="min-w-0">
+						<div className="text-[13px] font-medium text-[#ccc]">
+							{isActive ? "Berpikir..." : "Selesai berpikir"}
+						</div>
+						<div className="mt-0.5 text-[11px] text-[#777]">
+							{isDone ? "Pemrosesan selesai" : subtitle}
+						</div>
+					</div>
 				</div>
-				<div className="flex items-center gap-2 text-[11px] text-white/25">
-					<span>{formatDuration(displayElapsed)}</span>
-					{collapsed ? (
-						<ChevronDown className="size-3" />
-					) : (
-						<ChevronUp className="size-3" />
-					)}
+				<div className="flex shrink-0 items-center gap-2 pt-0.5 text-[12px] text-[#777]">
+					<span className="tabular-nums text-[#777]">
+						{(displayElapsed / 1000).toFixed(1)}s
+					</span>
+					<ChevronDown
+						className={cn(
+							"size-3 transition-transform duration-200",
+							!collapsed && "rotate-180",
+						)}
+					/>
 				</div>
 			</button>
 
-			<AnimatePresence initial={false}>
-				{!collapsed ? (
-					<motion.div
-						animate={{ height: "auto", opacity: 1 }}
-						className="overflow-hidden"
-						exit={{ height: 0, opacity: 0 }}
-						initial={{ height: 0, opacity: 0 }}
-						transition={{ duration: 0.28, ease }}
-					>
-						<div className="space-y-2 border-white/[0.05] border-t px-4 pt-3 pb-4">
-							<AnimatePresence>
-								{steps.slice(0, visibleCount).map((step, index) => {
-									const isCurrentStep = index === visibleCount - 1 && isActive;
+			<div
+				className="overflow-hidden transition-[max-height,opacity] duration-300 ease-out"
+				style={{
+					maxHeight: collapsed ? 0 : 240,
+					opacity: collapsed ? 0 : 1,
+				}}
+			>
+				<div className="border-[#2a2a2a] border-t px-4 pb-4 pt-3">
+					<div className="space-y-3">
+						{normalizedSteps.slice(0, visibleCount).map((step, index) => {
+							const isDoneStep = step.status === "done" || (!isActive && index < normalizedSteps.length - 1);
+							const isActiveStep =
+								isActive && index === Math.min(visibleCount - 1, normalizedSteps.length - 1);
 
-									return (
-										<motion.div
-											animate={{ opacity: 1, x: 0 }}
+							return (
+								<div
+									className="flex items-start gap-3"
+									key={step.id}
+								>
+									<div className="flex size-4 shrink-0 items-center justify-center pt-0.5">
+										{isDoneStep ? (
+											<CheckCircle2 className="size-3.5 text-[#3ecf8e]" />
+										) : isActiveStep ? (
+											<span className="size-3.5 animate-spin rounded-full border border-[#555] border-t-[#4a90e2]" />
+										) : (
+											<Circle className="size-3.5 text-[#555]" />
+										)}
+									</div>
+									<div className="min-w-0">
+										<div
 											className={cn(
-												"flex items-start gap-2.5",
-												isCurrentStep &&
-													"-ml-2 border-indigo-500/40 border-l-2 pl-2",
+												"text-[13px] leading-5",
+												isActiveStep
+													? "text-[#ccc]"
+													: isDoneStep
+														? "text-[#b8b8b8]"
+														: "text-[#777]",
 											)}
-											initial={{ opacity: 0, x: -6 }}
-											key={step.id}
-											transition={{ duration: 0.3, ease }}
 										>
-											{isCurrentStep ? (
-												<Loader2 className="mt-0.5 size-3 shrink-0 animate-spin text-indigo-400/80" />
-											) : (
-												<CheckCircle2 className="mt-0.5 size-3 shrink-0 text-green-400/60" />
-											)}
-											<div className="min-w-0">
-												<span
-													className={cn(
-														"font-mono text-[12px] leading-relaxed",
-														isCurrentStep ? "text-white/70" : "text-white/40",
-													)}
-												>
-													{step.label}
-													{isCurrentStep && (
-														<span className="ml-1 inline-block h-[0.9em] w-[2px] animate-pulse align-middle bg-indigo-400/60" />
-													)}
-												</span>
-												{step.detail ? (
-													<div className="mt-1 font-mono text-[11px] text-white/25">
-														{step.detail}
-													</div>
-												) : null}
+											{step.label}
+										</div>
+										{step.detail ? (
+											<div className="mt-0.5 text-[11px] text-[#555]">
+												{step.detail}
 											</div>
-										</motion.div>
-									);
-								})}
-							</AnimatePresence>
-
-							{isActive && visibleCount < steps.length ? (
-								<div className="flex gap-1 pt-1 pl-5">
-									{[0, 1, 2].map((dot) => (
-										<motion.span
-											animate={{ opacity: [0.2, 0.8, 0.2] }}
-											className="size-1 rounded-full bg-white/20"
-											key={dot}
-											transition={{
-												delay: dot * 0.2,
-												duration: 1.2,
-												repeat: Number.POSITIVE_INFINITY,
-											}}
-										/>
-									))}
+										) : null}
+									</div>
 								</div>
-							) : null}
-						</div>
-					</motion.div>
-				) : null}
-			</AnimatePresence>
+							);
+						})}
+					</div>
+				</div>
+			</div>
 		</motion.div>
 	);
 }
@@ -396,9 +454,10 @@ function StaticAgentThinkingPanel({
 	steps,
 	totalDuration,
 	defaultCollapsed,
+	variant = "agent-active",
 }: Pick<
 	AgentThinkingPanelProps,
-	"status" | "steps" | "totalDuration" | "defaultCollapsed"
+	"status" | "steps" | "totalDuration" | "defaultCollapsed" | "variant"
 >) {
 	const safeSteps = Array.isArray(steps) ? steps.filter(Boolean) : [];
 	const [collapsed, setCollapsed] = useState(
@@ -458,9 +517,9 @@ function StaticAgentThinkingPanel({
 		<motion.div className="my-3 w-full max-w-2xl" layout="position">
 			<button
 				className={cn(
-					"flex w-full items-center gap-2 font-mono text-[11px] text-white/30 transition-colors hover:text-white/45",
+					"flex w-full items-center gap-2 text-[11px] text-white/30 transition-colors hover:text-white/45",
 					!collapsed &&
-						"rounded-t-xl border border-white/[0.06] border-b-0 bg-[#111318] px-4 pt-3 pb-2",
+						"rounded-t-[22px] border border-white/[0.06] border-b-0 bg-[linear-gradient(180deg,rgba(99,102,241,0.08),rgba(17,19,24,0.96))] px-4 pt-3 pb-2",
 				)}
 				onClick={() => setCollapsed((value) => !value)}
 				type="button"
@@ -511,10 +570,12 @@ function StaticAgentThinkingPanel({
 					>
 						<div
 							className={cn(
-								"rounded-b-xl border bg-[#111318] p-4 shadow-[0_18px_55px_rgba(0,0,0,0.18)]",
+								"rounded-b-[22px] border p-4 shadow-[0_18px_55px_rgba(0,0,0,0.18)]",
 								status === "error"
 									? "border-red-400/15 bg-red-950/10"
-									: "border-white/[0.06]",
+									: variant === "agent-active"
+										? "border-indigo-400/14 bg-[linear-gradient(180deg,rgba(99,102,241,0.05),rgba(17,19,24,0.98))]"
+										: "border-white/[0.06] bg-[linear-gradient(180deg,rgba(255,255,255,0.045),rgba(17,19,24,0.98))]",
 							)}
 						>
 							<motion.div
@@ -557,16 +618,18 @@ export function AgentThinkingPanel({
 	isActive,
 	totalDurationMs,
 	liveSteps,
+	variant = "agent-active",
 }: AgentThinkingPanelProps) {
 	const safeSteps = Array.isArray(steps) ? steps.filter(Boolean) : [];
 	const safeLiveSteps = Array.isArray(liveSteps) ? liveSteps.filter(Boolean) : [];
 
-	if (safeLiveSteps.length > 0) {
+	if (variant !== "agent-active") {
 		return (
 			<LiveThinkingPanel
 				isActive={Boolean(isActive)}
 				steps={safeLiveSteps}
 				totalDurationMs={totalDurationMs}
+				variant={variant}
 			/>
 		);
 	}
@@ -581,6 +644,7 @@ export function AgentThinkingPanel({
 			status={status}
 			steps={safeSteps}
 			totalDuration={totalDuration}
+			variant={variant}
 		/>
 	);
 }

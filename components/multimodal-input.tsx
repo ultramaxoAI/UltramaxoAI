@@ -90,6 +90,10 @@ export interface MultimodalInputProps {
 	setMobileModeEnabled: Dispatch<SetStateAction<boolean>>;
 	user?: { type?: string; isPro?: boolean; role?: string };
 	customModels?: Array<{ id: string; name: string; provider: string }>;
+	onWillSendMessage?: (payload: {
+		text: string;
+		hasAttachment: boolean;
+	}) => void;
 }
 
 function PureMultimodalInput({
@@ -118,6 +122,7 @@ function PureMultimodalInput({
 	setMobileModeEnabled,
 	user,
 	customModels,
+	onWillSendMessage,
 }: MultimodalInputProps) {
 	const textareaRef = useRef<HTMLTextAreaElement>(null);
 	const { width } = useWindowSize();
@@ -321,6 +326,11 @@ function PureMultimodalInput({
 			return;
 		}
 
+		onWillSendMessage?.({
+			text: input,
+			hasAttachment: attachments.length > 0,
+		});
+
 		sendMessage({
 			role: "user",
 			parts: [
@@ -336,7 +346,6 @@ function PureMultimodalInput({
 				},
 			],
 		});
-
 		setAttachments([]);
 		setLocalStorageInput("");
 		resetHeight();
@@ -358,6 +367,7 @@ function PureMultimodalInput({
 		imageGenerationMode,
 		selectedVisibilityType,
 		setMessages,
+		onWillSendMessage,
 	]);
 
 	const uploadFile = useCallback(async (file: File) => {

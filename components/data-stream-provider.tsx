@@ -30,6 +30,8 @@ type DataStreamContextValue = {
 		taskType: TaskType;
 		steps: ThinkingStep[];
 		startedAt: number | null;
+		surface: "responding" | "deep-thinking" | "agent-active";
+		runtimeEscalated: boolean;
 	};
 	setLiveThinking: React.Dispatch<
 		React.SetStateAction<DataStreamContextValue["liveThinking"]>
@@ -61,6 +63,8 @@ export function DataStreamProvider({
 		taskType: "general",
 		steps: [],
 		startedAt: null,
+		surface: "responding",
+		runtimeEscalated: false,
 	});
 
 	const value = useMemo(

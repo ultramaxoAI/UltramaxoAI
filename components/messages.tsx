@@ -178,9 +178,8 @@ function PureMessages({
 		(status === "submitted" || waitingForFirstAssistantToken) &&
 		!hasApprovalResponse;
 	const showToolAgentPanel =
-		!showContextualThinking &&
 		!hasApprovalResponse &&
-		agentStream.steps.length > 0 &&
+		(agentStream.steps.length > 0 || liveThinking.surface === "agent-active") &&
 		(status === "submitted" ||
 			waitingForFirstAssistantToken ||
 			(status === "ready" && assistantAfterLastUserIndex === -1) ||
@@ -192,6 +191,16 @@ function PureMessages({
 		assistantAfterLastUserIndex === -1 &&
 		lastUserIndex !== -1;
 	const showMissingAssistantFallback = false;
+	const showThinkingSurfaceOnly = showContextualThinking && !showToolAgentPanel;
+	const inlineActivityVariant = showToolAgentPanel
+		? "agent-active"
+		: showContextualThinking
+			? liveThinking.surface === "responding"
+				? "deep-thinking"
+				: liveThinking.surface
+			: showBasicAssistantLoading
+				? "responding"
+				: null;
 
 	useEffect(() => {
 		if (contextualThinkingActive) {
@@ -226,7 +235,7 @@ function PureMessages({
 						<div className="mx-auto flex min-w-0 w-full max-w-[820px] flex-col space-y-8 px-6 py-10">
 							{visibleMessages.map((message, index) => (
 								<Fragment key={message.id}>
-									{showContextualThinking &&
+									{showThinkingSurfaceOnly &&
 										index === contextualThinkingAnchorIndex &&
 										!contextualThinkingAnchoredToUser && (
 											<div className="mx-auto flex w-full max-w-[820px] items-start gap-3">
@@ -238,6 +247,7 @@ function PureMessages({
 														isActive={contextualThinkingActive}
 														key={liveThinking.startedAt ?? "live-thinking"}
 														liveSteps={liveThinking.steps}
+														variant={inlineActivityVariant ?? "deep-thinking"}
 														status={
 															contextualThinkingActive ? "thinking" : "done"
 														}
@@ -267,7 +277,7 @@ function PureMessages({
 												: undefined
 										}
 									/>
-									{showContextualThinking &&
+									{showThinkingSurfaceOnly &&
 										index === contextualThinkingAnchorIndex &&
 										contextualThinkingAnchoredToUser && (
 											<div className="mx-auto flex w-full max-w-[820px] items-start gap-3">
@@ -279,6 +289,7 @@ function PureMessages({
 														isActive={contextualThinkingActive}
 														key={liveThinking.startedAt ?? "live-thinking"}
 														liveSteps={liveThinking.steps}
+														variant={inlineActivityVariant ?? "deep-thinking"}
 														status={
 															contextualThinkingActive ? "thinking" : "done"
 														}
@@ -291,7 +302,7 @@ function PureMessages({
 								</Fragment>
 							))}
 
-							{showContextualThinking && contextualThinkingAnchorIndex === -1 && (
+							{showThinkingSurfaceOnly && contextualThinkingAnchorIndex === -1 && (
 								<div
 									className="group/message fade-in w-full animate-in duration-300"
 									data-role="assistant"
@@ -306,6 +317,7 @@ function PureMessages({
 												isActive={contextualThinkingActive}
 												key={liveThinking.startedAt ?? "live-thinking"}
 												liveSteps={liveThinking.steps}
+												variant={inlineActivityVariant ?? "deep-thinking"}
 												status="thinking"
 												steps={[]}
 												totalDurationMs={thinkingDurationMs}
@@ -325,14 +337,13 @@ function PureMessages({
 										<div className="mt-1 flex h-7 w-7 shrink-0 items-center justify-center rounded-full border border-white/[0.10] bg-white/[0.08] text-[11px] font-semibold text-white/55">
 											U
 										</div>
-										<div className="flex min-h-11 items-center gap-1.5 rounded-2xl border border-white/[0.06] bg-white/[0.03] px-4 py-3 text-white/30">
-											{[0, 1, 2].map((dot) => (
-												<span
-													className="size-1.5 animate-[typing-dot_1s_ease-in-out_infinite] rounded-full bg-white/40"
-													key={dot}
-													style={{ animationDelay: `${dot * 0.16}s` }}
-												/>
-											))}
+										<div className="min-w-0 flex-1">
+											<AgentThinkingPanel
+												isActive
+												liveSteps={[]}
+												status="thinking"
+												variant="responding"
+											/>
 										</div>
 									</div>
 								</div>
@@ -353,19 +364,8 @@ function PureMessages({
 												status={agentStream.status}
 												steps={agentStream.steps}
 												totalDuration={totalAgentDuration}
+												variant="agent-active"
 											/>
-											{(status === "submitted" ||
-												status === "streaming") && (
-												<div className="mt-3 flex items-center gap-1.5 pl-1 text-white/25">
-													{[0, 1, 2].map((dot) => (
-														<span
-															className="size-1.5 animate-[typing-dot_1s_ease-in-out_infinite] rounded-full bg-white/35"
-															key={dot}
-															style={{ animationDelay: `${dot * 0.16}s` }}
-														/>
-													))}
-												</div>
-											)}
 										</div>
 									</div>
 								</div>
