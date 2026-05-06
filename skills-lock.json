@@ -7,6 +7,12 @@
       "skillPath": "skills/baseline-ui/SKILL.md",
       "computedHash": "49817c981208de2f412719f7814d31eba2b2096462edc048a279d93f522cab0f"
     },
+    "qa-expert": {
+      "source": "daymade/claude-code-skills",
+      "sourceType": "github",
+      "skillPath": "qa-expert/SKILL.md",
+      "computedHash": "cb6fafeb55b7e3eeabb69568ca8b80c6ba828c66eeffb3bbcc301029117349d4"
+    },
     "requesting-code-review": {
       "source": "obra/superpowers",
       "sourceType": "github",
