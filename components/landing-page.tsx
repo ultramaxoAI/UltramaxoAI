@@ -935,21 +935,52 @@ export default function LandingPage() {
           </button>
 
           <div className="ml-3 hidden items-center gap-1 lg:flex">
-            {navigationItems.map((item) => (
-              <button
-                key={item.label}
-                onClick={() => scrollToSection(item.href)}
-                className="inline-flex h-9 items-center gap-1.5 rounded-lg border border-transparent px-3 font-body text-sm font-medium text-white/52 transition-colors hover:border-white/[0.06] hover:bg-white/[0.04] hover:text-white/86"
-                type="button"
-              >
-                {item.label}
-                {["Product", "Features", "Use Cases"].includes(item.label) ? (
-                  <ChevronDown className="h-3.5 w-3.5 text-white/28" />
-                ) : null}
-              </button>
-            ))}
+            {navigationItems.map((item) => {
+              const hasDropdown = ["Product", "Features", "Use Cases"].includes(item.label);
+              
+              return (
+                <div key={item.label} className="group relative">
+                  <button
+                    onClick={() => !hasDropdown && scrollToSection(item.href)}
+                    className="inline-flex h-9 items-center gap-1.5 rounded-lg border border-transparent px-3 font-body text-sm font-medium text-white/60 transition-all hover:bg-white/10 hover:text-white group-hover:bg-white/10 group-hover:text-white"
+                    type="button"
+                  >
+                    {item.label}
+                    {hasDropdown ? (
+                      <ChevronDown className="h-3.5 w-3.5 text-white/40 transition-transform duration-200 group-hover:rotate-180" />
+                    ) : null}
+                  </button>
+                  
+                  {hasDropdown && (
+                    <div className="absolute left-0 top-full mt-1 hidden w-48 flex-col rounded-xl border border-white/[0.08] bg-[#0b0d10] p-1.5 shadow-2xl group-hover:flex">
+                      {item.label === "Product" && (
+                        <>
+                          <button onClick={() => scrollToSection("#product")} className="flex items-center rounded-md px-3 py-2 text-sm text-white/70 hover:bg-white/10 hover:text-white text-left" type="button">Workspace</button>
+                          <button onClick={() => scrollToSection("#features")} className="flex items-center rounded-md px-3 py-2 text-sm text-white/70 hover:bg-white/10 hover:text-white text-left" type="button">Artifacts</button>
+                          <button onClick={() => scrollToSection("#use-cases")} className="flex items-center rounded-md px-3 py-2 text-sm text-white/70 hover:bg-white/10 hover:text-white text-left" type="button">Live Code</button>
+                        </>
+                      )}
+                      {item.label === "Features" && (
+                        <>
+                          <button onClick={() => scrollToSection("#features")} className="flex items-center rounded-md px-3 py-2 text-sm text-white/70 hover:bg-white/10 hover:text-white text-left" type="button">Mobile Mode</button>
+                          <button onClick={() => scrollToSection("#features")} className="flex items-center rounded-md px-3 py-2 text-sm text-white/70 hover:bg-white/10 hover:text-white text-left" type="button">Fullstack Mode</button>
+                          <button onClick={() => scrollToSection("#features")} className="flex items-center rounded-md px-3 py-2 text-sm text-white/70 hover:bg-white/10 hover:text-white text-left" type="button">Model Routing</button>
+                        </>
+                      )}
+                      {item.label === "Use Cases" && (
+                        <>
+                          <button onClick={() => scrollToSection("#use-cases")} className="flex items-center rounded-md px-3 py-2 text-sm text-white/70 hover:bg-white/10 hover:text-white text-left" type="button">For Developers</button>
+                          <button onClick={() => scrollToSection("#use-cases")} className="flex items-center rounded-md px-3 py-2 text-sm text-white/70 hover:bg-white/10 hover:text-white text-left" type="button">For Researchers</button>
+                          <button onClick={() => scrollToSection("#use-cases")} className="flex items-center rounded-md px-3 py-2 text-sm text-white/70 hover:bg-white/10 hover:text-white text-left" type="button">For Operators</button>
+                        </>
+                      )}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
             <button
-              className="inline-flex h-9 items-center rounded-lg border border-transparent px-3 font-body text-sm font-medium text-white/52 transition-colors hover:border-white/[0.06] hover:bg-white/[0.04] hover:text-white/86"
+              className="inline-flex h-9 items-center rounded-lg border border-transparent px-3 font-body text-sm font-medium text-white/60 transition-all hover:bg-white/10 hover:text-white"
               onClick={() => window.open("/app-release.apk", "_blank")}
               type="button"
             >
