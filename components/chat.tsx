@@ -47,6 +47,28 @@ import {
 import { useSidebar } from "./ui/sidebar";
 import type { VisibilityType } from "./visibility-selector";
 
+function getPartState(part: unknown) {
+	if (!part || typeof part !== "object") {
+		return undefined;
+	}
+
+	const record = part as { state?: unknown };
+	return typeof record.state === "string" ? record.state : undefined;
+}
+
+function isApprovalGranted(part: unknown) {
+	if (!part || typeof part !== "object") {
+		return false;
+	}
+
+	const record = part as { approval?: unknown };
+	if (!record.approval || typeof record.approval !== "object") {
+		return false;
+	}
+
+	return (record.approval as { approved?: unknown }).approved === true;
+}
+
 export function Chat({
 	id,
 	initialMessages,
@@ -78,10 +100,7 @@ export function Chat({
 
 	const hasApprovalContinuationPart = (parts: ChatMessage["parts"] = []) =>
 		parts.some((part) => {
-			const state =
-				part && typeof part === "object"
-					? (part as { state?: string }).state
-					: undefined;
+			const state = getPartState(part);
 			return state === "approval-responded" || state === "output-denied";
 		});
 
@@ -233,12 +252,8 @@ export function Chat({
 			const shouldContinue =
 				lastMessage?.parts?.some(
 					(part) =>
-						part &&
-						typeof part === "object" &&
-						"state" in part &&
-						part.state === "approval-responded" &&
-						"approval" in part &&
-						(part.approval as { approved?: boolean })?.approved === true,
+						getPartState(part) === "approval-responded" &&
+						isApprovalGranted(part),
 				) ?? false;
 			return shouldContinue;
 		},
@@ -412,12 +427,12 @@ export function Chat({
 			}
 			const userText = lastUserMessage
 				? getTextFromMessage(lastUserMessage)
-				: pendingTurn?.text ?? "";
+				: (pendingTurn?.text ?? "");
 			const hasAttachment = lastUserMessage
 				? Array.isArray(lastUserMessage.parts)
 					? lastUserMessage.parts.some((part) => part.type === "file")
 					: false
-				: pendingTurn?.hasAttachment ?? false;
+				: (pendingTurn?.hasAttachment ?? false);
 			const taskType = detectTaskType(userText);
 			const recentContext = messages
 				.filter((candidate) =>
@@ -436,9 +451,10 @@ export function Chat({
 					? "agent-active"
 					: preflightDetection.uiSurface === "agent-active"
 						? "deep-thinking"
-					: deepThinkingEnabled && preflightDetection.uiSurface === "responding"
-						? "deep-thinking"
-						: preflightDetection.uiSurface;
+						: deepThinkingEnabled &&
+								preflightDetection.uiSurface === "responding"
+							? "deep-thinking"
+							: preflightDetection.uiSurface;
 			const shouldShowLiveThinking = initialSurface !== "responding";
 
 			setStreamError(null);
@@ -573,16 +589,18 @@ export function Chat({
 
 		const hasAgentTrace =
 			agentStream.steps.length > 0 || liveThinking.steps.length > 0;
-		const hasAssistantToolOutputAfterLastUser = assistantMessagesAfterLastUser.some(
-			(message) =>
+		const hasAssistantToolOutputAfterLastUser =
+			assistantMessagesAfterLastUser.some((message) =>
 				(message.parts ?? []).some((part) => {
 					if (!part || typeof part !== "object" || !("type" in part)) {
 						return false;
 					}
 
-					return String((part as { type?: string }).type ?? "").includes("tool");
+					return String((part as { type?: string }).type ?? "").includes(
+						"tool",
+					);
 				}),
-		);
+			);
 
 		if (
 			hasRenderableAssistantAfterLastUser ||

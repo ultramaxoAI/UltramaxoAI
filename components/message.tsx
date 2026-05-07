@@ -797,9 +797,13 @@ const PurePreviewMessage = ({
 								return (
 									<Tool defaultOpen={true} key={toolCallId}>
 										<ToolHeader
-											state={getSafeToolState(state)}
+											state={
+												state === "output-error"
+													? "output-error"
+													: "input-available"
+											}
 											type={"tool-startAgentTask" as `tool-${string}`}
-											title={`Menjalankan tugas agen: ${getStringValue(agentTask.goal, "Analisis")}`}
+											title={`Rencana agen: ${getStringValue(agentTask.goal, "Analisis")}`}
 											icon={
 												<BotIcon className="size-4 shrink-0 text-muted-foreground" />
 											}

@@ -106,6 +106,12 @@ export type CustomUIDataTypes = {
 	clear: null;
 	finish: null;
 	"chat-title": string;
+	thinking_start: null;
+	upgrade_to_agent: null;
+	thinking_chunk: { content: string } | string;
+	response_chunk: { content: string } | string;
+	done: { durationMs?: number };
+	thinking_done: { durationMs?: number };
 	"agent-thinking": {
 		id?: string;
 		label?: string;
@@ -135,6 +141,7 @@ export type CustomUIDataTypes = {
 	"agent-done": {
 		status?: string;
 		duration?: number;
+		reason?: string;
 	};
 	"terminal-command": string;
 	"install-package": string;

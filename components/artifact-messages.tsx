@@ -20,6 +20,15 @@ type ArtifactMessagesProps = {
 	artifactStatus: UIArtifact["status"];
 };
 
+function getPartState(part: unknown) {
+	if (!part || typeof part !== "object") {
+		return undefined;
+	}
+
+	const record = part as { state?: unknown };
+	return typeof record.state === "string" ? record.state : undefined;
+}
+
 function PureArtifactMessages({
 	addToolApprovalResponse,
 	chatId,
@@ -57,11 +66,7 @@ function PureArtifactMessages({
 
 	const hasApprovalResponse = messages.some((msg) =>
 		(msg.parts ?? []).some((part) => {
-			if (!part || typeof part !== "object" || !("state" in part)) {
-				return false;
-			}
-
-			return (part as { state?: string }).state === "approval-responded";
+			return getPartState(part) === "approval-responded";
 		}),
 	);
 

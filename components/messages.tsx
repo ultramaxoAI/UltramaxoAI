@@ -25,6 +25,15 @@ type MessagesProps = {
 	onRetry?: () => void;
 };
 
+function getPartState(part: unknown) {
+	if (!part || typeof part !== "object") {
+		return undefined;
+	}
+
+	const record = part as { state?: unknown };
+	return typeof record.state === "string" ? record.state : undefined;
+}
+
 function PureMessages({
 	addToolApprovalResponse,
 	chatId,
@@ -39,9 +48,7 @@ function PureMessages({
 	streamError,
 	onRetry,
 }: MessagesProps) {
-	if (!Array.isArray(messages)) {
-		return null;
-	}
+	const safeMessages = Array.isArray(messages) ? messages : [];
 
 	const {
 		containerRef: messagesContainerRef,
@@ -54,7 +61,7 @@ function PureMessages({
 	});
 
 	const { agentStream, liveThinking } = useDataStream();
-	const visibleMessages = messages.filter((message) => {
+	const visibleMessages = safeMessages.filter((message) => {
 		if (!message || !message.id) {
 			return false;
 		}
@@ -80,20 +87,19 @@ function PureMessages({
 			return false;
 		}
 
-		const hasTextContent =
-			rawContent
-				? Boolean(rawContent.trim())
-				: messageParts.some((part) => {
-						if (!part || typeof part !== "object" || !("type" in part)) {
-							return false;
-						}
-
-						if (part.type === "text" || part.type === "reasoning") {
-							return Boolean((part as { text?: string }).text?.trim());
-						}
-
+		const hasTextContent = rawContent
+			? Boolean(rawContent.trim())
+			: messageParts.some((part) => {
+					if (!part || typeof part !== "object" || !("type" in part)) {
 						return false;
-					});
+					}
+
+					if (part.type === "text" || part.type === "reasoning") {
+						return Boolean((part as { text?: string }).text?.trim());
+					}
+
+					return false;
+				});
 		const hasToolCalls = messageParts.some((part) => {
 			if (!part || typeof part !== "object" || !("type" in part)) {
 				return false;
@@ -101,15 +107,26 @@ function PureMessages({
 
 			return String(part.type).includes("tool");
 		});
+		const hasRenderableNonTextPart = messageParts.some((part) => {
+			if (!part || typeof part !== "object" || !("type" in part)) {
+				return false;
+			}
 
-		if (message.role === "assistant" && !hasTextContent && !hasToolCalls) {
+			return part.type === "file";
+		});
+
+		if (
+			message.role === "assistant" &&
+			!hasTextContent &&
+			!hasToolCalls &&
+			!hasRenderableNonTextPart
+		) {
 			return false;
 		}
 
 		return true;
 	});
 
-	const lastMessage = visibleMessages.at(-1);
 	const lastUserIndex = visibleMessages.findLastIndex(
 		(message) => message.role === "user",
 	);
@@ -117,7 +134,8 @@ function PureMessages({
 		lastUserIndex === -1
 			? -1
 			: visibleMessages.findIndex(
-					(message, index) => index > lastUserIndex && message.role === "assistant",
+					(message, index) =>
+						index > lastUserIndex && message.role === "assistant",
 				);
 	const lastAssistantHasContent =
 		assistantAfterLastUserIndex !== -1 &&
@@ -135,11 +153,7 @@ function PureMessages({
 
 	const hasApprovalResponse = visibleMessages.some((msg) =>
 		(msg.parts ?? []).some((part) => {
-			if (!part || typeof part !== "object" || !("state" in part)) {
-				return false;
-			}
-
-			return (part as { state?: string }).state === "approval-responded";
+			return getPartState(part) === "approval-responded";
 		}),
 	);
 	const totalAgentDuration =
@@ -149,7 +163,9 @@ function PureMessages({
 				? Date.now() - agentStream.startedAt
 				: undefined;
 	const contextualThinkingAnchorIndex =
-		assistantAfterLastUserIndex !== -1 ? assistantAfterLastUserIndex : lastUserIndex;
+		assistantAfterLastUserIndex !== -1
+			? assistantAfterLastUserIndex
+			: lastUserIndex;
 	const contextualThinkingAnchoredToUser =
 		contextualThinkingAnchorIndex !== -1 &&
 		visibleMessages[contextualThinkingAnchorIndex]?.role === "user";
@@ -302,30 +318,31 @@ function PureMessages({
 								</Fragment>
 							))}
 
-							{showThinkingSurfaceOnly && contextualThinkingAnchorIndex === -1 && (
-								<div
-									className="group/message fade-in w-full animate-in duration-300"
-									data-role="assistant"
-									data-testid="message-assistant-loading"
-								>
-									<div className="mx-auto flex w-full max-w-[820px] items-start gap-3">
-										<div className="mt-1 flex h-7 w-7 shrink-0 items-center justify-center rounded-full border border-white/[0.10] bg-white/[0.08] text-[11px] font-semibold text-white/55">
-											U
-										</div>
-										<div className="min-w-0 flex-1">
-											<AgentThinkingPanel
-												isActive={contextualThinkingActive}
-												key={liveThinking.startedAt ?? "live-thinking"}
-												liveSteps={liveThinking.steps}
-												variant={inlineActivityVariant ?? "deep-thinking"}
-												status="thinking"
-												steps={[]}
-												totalDurationMs={thinkingDurationMs}
-											/>
+							{showThinkingSurfaceOnly &&
+								contextualThinkingAnchorIndex === -1 && (
+									<div
+										className="group/message fade-in w-full animate-in duration-300"
+										data-role="assistant"
+										data-testid="message-assistant-loading"
+									>
+										<div className="mx-auto flex w-full max-w-[820px] items-start gap-3">
+											<div className="mt-1 flex h-7 w-7 shrink-0 items-center justify-center rounded-full border border-white/[0.10] bg-white/[0.08] text-[11px] font-semibold text-white/55">
+												U
+											</div>
+											<div className="min-w-0 flex-1">
+												<AgentThinkingPanel
+													isActive={contextualThinkingActive}
+													key={liveThinking.startedAt ?? "live-thinking"}
+													liveSteps={liveThinking.steps}
+													variant={inlineActivityVariant ?? "deep-thinking"}
+													status="thinking"
+													steps={[]}
+													totalDurationMs={thinkingDurationMs}
+												/>
+											</div>
 										</div>
 									</div>
-								</div>
-							)}
+								)}
 
 							{showBasicAssistantLoading && (
 								<div
@@ -379,8 +396,8 @@ function PureMessages({
 									<div className="flex w-full max-w-2xl items-start gap-3 rounded-xl border border-white/[0.08] bg-white/[0.03] p-4 text-white/70">
 										<div className="min-w-0 flex-1">
 											<p className="text-[13px] leading-6">
-												Agent sudah selesai jalan, tapi pesan akhir belum
-												sempat tampil di chat.
+												Agent sudah selesai jalan, tapi pesan akhir belum sempat
+												tampil di chat.
 											</p>
 											{onRetry ? (
 												<button

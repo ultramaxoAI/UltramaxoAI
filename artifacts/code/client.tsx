@@ -1,5 +1,5 @@
-import { useEffect, useMemo, useRef, useState } from "react";
 import { Check, Copy, Eye, File, Files, TerminalSquare, X } from "lucide-react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 import { CodeEditor, type SupportedLanguage } from "@/components/code-editor";
 import {
@@ -321,6 +321,27 @@ function isPreviewableWebProject(
 	);
 }
 
+function isStaticHtmlArtifact(
+	files: Array<{ name: string; content: string; language: SupportedLanguage }>,
+) {
+	const hasHtml = files.some(
+		(file) =>
+			file.name.endsWith(".html") || /<html|<!DOCTYPE/i.test(file.content),
+	);
+	const hasAppShell = files.some(
+		(file) =>
+			file.name === "package.json" ||
+			file.name.startsWith("app/") ||
+			file.name.startsWith("pages/") ||
+			file.name === "next.config.js" ||
+			file.name === "next.config.mjs" ||
+			file.name === "App.js" ||
+			file.name === "App.tsx",
+	);
+
+	return hasHtml && !hasAppShell;
+}
+
 const BUILT_IN_SANDBOX_DEPENDENCIES = new Set([
 	"react",
 	"react-dom",
@@ -584,6 +605,11 @@ export const codeArtifact = new Artifact<"code", Metadata>({
 		}, [activeFile?.name]);
 
 		useEffect(() => {
+			if (isStaticHtmlArtifact(files)) {
+				setActiveTab("preview");
+				return;
+			}
+
 			if (wc?.devServer?.ready && isPreviewableWebProject(files)) {
 				setActiveTab("preview");
 			}
@@ -619,7 +645,7 @@ export const codeArtifact = new Artifact<"code", Metadata>({
 			"\n",
 		).length;
 
-		const handleFileAdd = (newFile: {
+		const _handleFileAdd = (newFile: {
 			name: string;
 			content: string;
 			language: SupportedLanguage;
@@ -633,7 +659,7 @@ export const codeArtifact = new Artifact<"code", Metadata>({
 			props.onSaveContent(serializeFilesToContent(updatedFiles), false);
 		};
 
-		const handleFileDelete = (index: number) => {
+		const _handleFileDelete = (index: number) => {
 			if (files.length <= 1) {
 				return;
 			}
@@ -650,7 +676,7 @@ export const codeArtifact = new Artifact<"code", Metadata>({
 			props.onSaveContent(serializeFilesToContent(updatedFiles), false);
 		};
 
-		const handleFileRename = (index: number, newName: string) => {
+		const _handleFileRename = (index: number, newName: string) => {
 			const updatedFiles = [...files];
 			updatedFiles[index] = { ...updatedFiles[index], name: newName };
 
@@ -688,7 +714,9 @@ export const codeArtifact = new Artifact<"code", Metadata>({
 
 		const handleCopy = async () => {
 			try {
-				await navigator.clipboard.writeText(activeFile?.content || content || "");
+				await navigator.clipboard.writeText(
+					activeFile?.content || content || "",
+				);
 				setCopied(true);
 				window.setTimeout(() => setCopied(false), 1500);
 			} catch {
@@ -782,6 +810,7 @@ export const codeArtifact = new Artifact<"code", Metadata>({
 								return (
 									<div
 										key={tab}
+										aria-selected={isActive}
 										className={cn(
 											"flex h-9 shrink-0 cursor-pointer select-none items-center gap-1.5 border-r border-white/[0.05] px-3 text-[12px] transition-colors",
 											isActive
@@ -789,13 +818,27 @@ export const codeArtifact = new Artifact<"code", Metadata>({
 												: "text-white/32 hover:text-white/58",
 										)}
 										onClick={() => {
-											const nextIndex = files.findIndex((file) => file.name === tab);
+											const nextIndex = files.findIndex(
+												(file) => file.name === tab,
+											);
 											if (nextIndex >= 0) {
 												selectFile(nextIndex);
 											}
 										}}
-										onKeyDown={() => {}}
-										role="button"
+										onKeyDown={(event) => {
+											if (event.key !== "Enter" && event.key !== " ") {
+												return;
+											}
+
+											event.preventDefault();
+											const nextIndex = files.findIndex(
+												(file) => file.name === tab,
+											);
+											if (nextIndex >= 0) {
+												selectFile(nextIndex);
+											}
+										}}
+										role="tab"
 										tabIndex={0}
 									>
 										<span>{tab}</span>
@@ -813,12 +856,17 @@ export const codeArtifact = new Artifact<"code", Metadata>({
 					)}
 
 					<div className="flex shrink-0 items-center border-b border-white/[0.06] bg-[#0a0a0a]">
-						{([
-							{ id: "code", icon: Files, label: "Code" },
-							{ id: "preview", icon: Eye, label: "Preview" },
-							{ id: "terminal", icon: TerminalSquare, label: "Terminal" },
-						] as const)
-							.filter((item) => item.id !== "preview" || isPreviewableWebProject(files))
+						{(
+							[
+								{ id: "code", icon: Files, label: "Code" },
+								{ id: "preview", icon: Eye, label: "Preview" },
+								{ id: "terminal", icon: TerminalSquare, label: "Terminal" },
+							] as const
+						)
+							.filter(
+								(item) =>
+									item.id !== "preview" || isPreviewableWebProject(files),
+							)
 							.map(({ id, icon: Icon, label }) => (
 								<button
 									key={id}
@@ -837,116 +885,117 @@ export const codeArtifact = new Artifact<"code", Metadata>({
 							))}
 					</div>
 
-				{/* Expandable Content */}
-				<div
-					className="flex flex-1 w-full relative"
-					style={{ height: "calc(100vh - 120px)" }}
-				>
-					{/* WebContainer Runner (headless) */}
-					{isPreviewableWebProject(files) && <WebContainerRunner />}
+					{/* Expandable Content */}
+					<div
+						className="flex flex-1 w-full relative"
+						style={{ height: "calc(100vh - 120px)" }}
+					>
+						{/* WebContainer Runner (headless) */}
+						{isPreviewableWebProject(files) && <WebContainerRunner />}
 
-					<div className="flex min-w-0 flex-1 flex-col bg-[#0e0e0e]">
-						{/* Top Editor/Preview Section */}
-						<div className="flex-1 min-h-0 relative">
-							{activeTab === "terminal" ? (
-								<div className="h-full">
-									<WebTerminal
-										ref={terminalRef}
-										defaultCollapsed={false}
-										outputs={wc?.terminalOutputs}
-										status={
-											wc?.status === "installing"
-												? "Installing..."
-												: wc?.status === "running"
-													? "Running..."
-													: undefined
-										}
-										isRunning={wc?.isRunning ?? false}
-									/>
-								</div>
-							) : activeTab === "preview" && isPreviewableWebProject(files) ? (
-								wc?.devServer?.ready ? (
-									<div className="w-full h-full bg-white rounded-tl-md overflow-hidden">
-										<iframe
-											title="WebContainer Preview"
-											src={wc.devServer.url}
-											className="w-full h-full border-0"
-											sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-modals"
+						<div className="flex min-w-0 flex-1 flex-col bg-[#0e0e0e]">
+							{/* Top Editor/Preview Section */}
+							<div className="flex-1 min-h-0 relative">
+								{activeTab === "terminal" ? (
+									<div className="h-full">
+										<WebTerminal
+											ref={terminalRef}
+											defaultCollapsed={false}
+											outputs={wc?.terminalOutputs}
+											status={
+												wc?.status === "installing"
+													? "Installing..."
+													: wc?.status === "running"
+														? "Running..."
+														: undefined
+											}
+											isRunning={wc?.isRunning ?? false}
 										/>
 									</div>
-								) : (
-									// Fallback if dev server is still starting or failed
-									<SandpackViewer
-										dependencies={mergedDependencies}
-										files={files}
-										activeFileIndex={activeFileIndex}
-										onDependenciesChange={(nextDependencies) =>
-											setMetadata((currentMetadata) => ({
-												...currentMetadata,
-												userDependencies: nextDependencies,
-											}))
-										}
-										status={props.status}
-										userDependencies={userDependencies}
-										onSaveContent={(updatedFiles) => {
-											setMetadata({
-												...metadata,
-												files: updatedFiles,
-											});
-											props.onSaveContent(
-												serializeFilesToContent(updatedFiles),
-												true,
-											);
-										}}
-									/>
-								)
-							) : (
-								<div className="w-full h-full flex flex-col">
-									<CodeEditor
-										{...props}
-										content={activeFile?.content || content || ""}
-										language={detectedLanguage}
-										onSaveContent={handleActiveFileContentChange}
-									/>
-									{!isPreviewableWebProject(files) &&
-										metadata?.outputs &&
-										metadata.outputs.length > 0 && (
-											<Console
-												consoleOutputs={metadata.outputs}
-												setConsoleOutputs={() => {
-													setMetadata({
-														...metadata,
-														outputs: [],
-													});
-												}}
+								) : activeTab === "preview" &&
+									isPreviewableWebProject(files) ? (
+									wc?.devServer?.ready ? (
+										<div className="w-full h-full bg-white rounded-tl-md overflow-hidden">
+											<iframe
+												title="WebContainer Preview"
+												src={wc.devServer.url}
+												className="w-full h-full border-0"
+												sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-modals"
 											/>
-										)}
-								</div>
-							)}
-						</div>
+										</div>
+									) : (
+										// Fallback if dev server is still starting or failed
+										<SandpackViewer
+											dependencies={mergedDependencies}
+											files={files}
+											activeFileIndex={activeFileIndex}
+											onDependenciesChange={(nextDependencies) =>
+												setMetadata((currentMetadata) => ({
+													...currentMetadata,
+													userDependencies: nextDependencies,
+												}))
+											}
+											status={props.status}
+											userDependencies={userDependencies}
+											onSaveContent={(updatedFiles) => {
+												setMetadata({
+													...metadata,
+													files: updatedFiles,
+												});
+												props.onSaveContent(
+													serializeFilesToContent(updatedFiles),
+													true,
+												);
+											}}
+										/>
+									)
+								) : (
+									<div className="w-full h-full flex flex-col">
+										<CodeEditor
+											{...props}
+											content={activeFile?.content || content || ""}
+											language={detectedLanguage}
+											onSaveContent={handleActiveFileContentChange}
+										/>
+										{!isPreviewableWebProject(files) &&
+											metadata?.outputs &&
+											metadata.outputs.length > 0 && (
+												<Console
+													consoleOutputs={metadata.outputs}
+													setConsoleOutputs={() => {
+														setMetadata({
+															...metadata,
+															outputs: [],
+														});
+													}}
+												/>
+											)}
+									</div>
+								)}
+							</div>
 
-						<div className="flex h-6 shrink-0 items-center justify-between border-t border-white/[0.05] bg-[#0a0a0a] px-4">
-							<span className="font-mono text-[10px] text-white/22">
-								{detectedLanguage}
-							</span>
-							<div className="flex items-center gap-1.5">
-								<div
-									className={cn(
-										"h-1.5 w-1.5 rounded-full",
-										wc?.status === "running"
-											? "bg-white/55"
-											: wc?.status === "error"
-												? "bg-white/30"
-												: "bg-white/20",
-									)}
-								/>
-								<span className="text-[10px] text-white/22">
-									{wc?.status ?? "ready"}
+							<div className="flex h-6 shrink-0 items-center justify-between border-t border-white/[0.05] bg-[#0a0a0a] px-4">
+								<span className="font-mono text-[10px] text-white/22">
+									{detectedLanguage}
 								</span>
+								<div className="flex items-center gap-1.5">
+									<div
+										className={cn(
+											"h-1.5 w-1.5 rounded-full",
+											wc?.status === "running"
+												? "bg-white/55"
+												: wc?.status === "error"
+													? "bg-white/30"
+													: "bg-white/20",
+										)}
+									/>
+									<span className="text-[10px] text-white/22">
+										{wc?.status ?? "ready"}
+									</span>
+								</div>
 							</div>
 						</div>
 					</div>
-				</div>
 				</div>
 			</div>
 		);

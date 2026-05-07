@@ -44,21 +44,33 @@ export function DataStreamHandler() {
 				continue;
 			}
 
+			const adaptiveThinkingEvent = normalizeAdaptiveThinkingDataEvent(
+				deltaType,
+				deltaData,
+			);
+			if (adaptiveThinkingEvent) {
+				dispatchAdaptiveThinkingEventObject(adaptiveThinkingEvent);
+				continue;
+			}
+
 			if (
 				deltaType.startsWith("data-agent-") ||
 				deltaType.startsWith("agent:")
 			) {
+				const data =
+					typeof deltaData === "string"
+						? safeJsonParse(deltaData)
+						: isRecord(deltaData)
+							? deltaData
+							: {};
+				const eventName = deltaType.startsWith("agent:")
+					? deltaType
+					: deltaType.replace(/^data-agent-/, "agent:");
+
+				dispatchAdaptiveThinkingEvent(eventName, data);
+
 				setAgentStream((current) => {
 					const now = Date.now();
-					const data =
-						typeof deltaData === "string"
-							? safeJsonParse(deltaData)
-							: isRecord(deltaData)
-								? deltaData
-								: {};
-					const eventName = deltaType.startsWith("agent:")
-						? deltaType
-						: deltaType.replace(/^data-agent-/, "agent:");
 
 					if (eventName === "agent:thinking") {
 						return {
@@ -173,7 +185,9 @@ export function DataStreamHandler() {
 					if (!draftArtifact) {
 						return { ...initialArtifactData, status: "streaming" };
 					}
-					const shouldForceVisible = artifactVisibilityTypes.includes(delta.type);
+					const shouldForceVisible = artifactVisibilityTypes.includes(
+						delta.type,
+					);
 
 					switch (delta.type) {
 						case "data-id":
@@ -219,7 +233,7 @@ export function DataStreamHandler() {
 								? {
 										...draftArtifact,
 										isVisible: true,
-								  }
+									}
 								: draftArtifact;
 					}
 				});
@@ -252,6 +266,97 @@ function safeJsonParse(value: string) {
 	} catch {
 		return {};
 	}
+}
+
+type AdaptiveThinkingEvent =
+	| { type: "thinking_start" }
+	| { type: "upgrade_to_agent" }
+	| { type: "thinking_chunk"; content: string }
+	| { type: "response_chunk"; content: string }
+	| { type: "done"; durationMs?: number };
+
+function dispatchAdaptiveThinkingEventObject(event: AdaptiveThinkingEvent) {
+	window.dispatchEvent(
+		new CustomEvent("ultramaxo-thinking-event", { detail: event }),
+	);
+}
+
+function dispatchAdaptiveThinkingEvent(
+	eventName: string,
+	data: Record<string, unknown>,
+) {
+	if (
+		eventName === "agent:thinking" ||
+		eventName === "agent:tool_start" ||
+		eventName === "agent:tool_done"
+	) {
+		dispatchAdaptiveThinkingEventObject({ type: "upgrade_to_agent" });
+	}
+
+	if (eventName === "agent:thinking") {
+		const content = getAdaptiveContent(data);
+		if (content) {
+			dispatchAdaptiveThinkingEventObject({ content, type: "thinking_chunk" });
+		}
+	}
+
+	if (eventName === "agent:done") {
+		const durationMs =
+			typeof data.duration === "number" ? data.duration : undefined;
+		dispatchAdaptiveThinkingEventObject({ durationMs, type: "done" });
+	}
+}
+
+function normalizeAdaptiveThinkingDataEvent(
+	deltaType: string,
+	deltaData: unknown,
+): AdaptiveThinkingEvent | null {
+	const normalizedType = deltaType.startsWith("data-")
+		? deltaType.slice("data-".length)
+		: deltaType;
+	const data =
+		typeof deltaData === "string"
+			? safeJsonParse(deltaData)
+			: isRecord(deltaData)
+				? deltaData
+				: {};
+
+	if (normalizedType === "thinking_start") {
+		return { type: "thinking_start" };
+	}
+
+	if (normalizedType === "upgrade_to_agent") {
+		return { type: "upgrade_to_agent" };
+	}
+
+	if (normalizedType === "thinking_chunk") {
+		const content =
+			typeof deltaData === "string" ? deltaData : getAdaptiveContent(data);
+		return content ? { content, type: "thinking_chunk" } : null;
+	}
+
+	if (normalizedType === "response_chunk") {
+		const content =
+			typeof deltaData === "string" ? deltaData : getAdaptiveContent(data);
+		return content ? { content, type: "response_chunk" } : null;
+	}
+
+	if (normalizedType === "done" || normalizedType === "thinking_done") {
+		const durationMs =
+			typeof data.durationMs === "number"
+				? data.durationMs
+				: typeof data.duration === "number"
+					? data.duration
+					: undefined;
+		return { durationMs, type: "done" };
+	}
+
+	return null;
+}
+
+function getAdaptiveContent(data: Record<string, unknown>) {
+	const content = data.content ?? data.text ?? data.thinking ?? data.detail;
+	return typeof content === "string" && content.length > 0 ? content : "";
 }
 
 function normalizeAgentStep(

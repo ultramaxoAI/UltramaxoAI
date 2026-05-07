@@ -130,11 +130,8 @@ export function WebContainerRunner() {
 			try {
 				switch (action.type) {
 					case "command": {
-						const parts = action.command.split(" ");
-						const cmd = parts[0];
-						const args = parts.slice(1);
 						ctx.setStatus("running");
-						await runCommand(cmd, args, onOutput);
+						await runCommand("sh", ["-lc", action.command], onOutput);
 						break;
 					}
 

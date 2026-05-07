@@ -1,14 +1,16 @@
 "use client";
 
+import { MessageRenderer } from "@/components/MessageRenderer";
 import { cn } from "@/lib/utils";
-import { Response } from "./elements/response";
+
+function stripCodeBlocks(text: string) {
+	return text.replace(/```[\s\S]*?```/g, "").trim();
+}
 
 export function ResponseViewer({
 	text,
 	className,
-	showModes = true,
 	hideCodeBlocks = false,
-	isLoading = false,
 }: {
 	text: string;
 	className?: string;
@@ -16,12 +18,13 @@ export function ResponseViewer({
 	hideCodeBlocks?: boolean;
 	isLoading?: boolean;
 }) {
+	const strippedText = hideCodeBlocks ? stripCodeBlocks(text) : text;
+	const content =
+		hideCodeBlocks && strippedText.length > 0 ? strippedText : text;
+
 	return (
 		<div className={cn("space-y-3", className)}>
-			{/* Normal view: selalu tampil seperti AI biasa */}
-			<Response className={className} isLoading={isLoading}>
-				{text}
-			</Response>
+			<MessageRenderer content={content} />
 		</div>
 	);
 }

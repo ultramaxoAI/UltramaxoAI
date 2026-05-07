@@ -123,6 +123,27 @@ function toDisplayText(value: unknown) {
 	}
 }
 
+function getTextContentFromParts(parts: unknown): string {
+	if (!Array.isArray(parts)) {
+		return "";
+	}
+
+	return parts
+		.map((part) => {
+			if (!isRecord(part) || typeof part.type !== "string") {
+				return "";
+			}
+
+			if (part.type === "text" || part.type === "reasoning") {
+				return toDisplayText(part.text).trim();
+			}
+
+			return "";
+		})
+		.filter(Boolean)
+		.join("\n");
+}
+
 function sanitizeMessagePart(part: unknown) {
 	if (!isRecord(part) || typeof part.type !== "string") {
 		return null;
@@ -174,21 +195,26 @@ function sanitizeMessagePart(part: unknown) {
 }
 
 export function convertToUIMessages(messages: DBMessage[]): ChatMessage[] {
-	return messages.map((message) => ({
-		id: message.id,
-		role: message.role as "user" | "assistant" | "system",
-		parts: Array.isArray(message.parts)
+	return messages.map((message) => {
+		const safeParts = Array.isArray(message.parts)
 			? message.parts
 					.map(sanitizeMessagePart)
 					.filter(
 						(part): part is UIMessagePart<CustomUIDataTypes, ChatTools> =>
 							part !== null,
 					)
-			: [],
-		metadata: {
-			createdAt: formatISO(message.createdAt),
-		},
-	}));
+			: [];
+
+		return {
+			id: message.id,
+			role: message.role as "user" | "assistant" | "system",
+			content: getTextContentFromParts(safeParts),
+			parts: safeParts,
+			metadata: {
+				createdAt: formatISO(message.createdAt),
+			},
+		};
+	});
 }
 
 export function getTextFromMessage(message: ChatMessage | UIMessage): string {
@@ -212,6 +238,11 @@ export function sanitizeChatMessage(message: ChatMessage): ChatMessage {
 
 	return {
 		...message,
+		content:
+			typeof (message as { content?: unknown }).content === "string" &&
+			(message as { content?: string }).content?.trim()
+				? ((message as { content?: string }).content ?? "")
+				: getTextContentFromParts(safeParts),
 		parts: safeParts,
 	};
 }

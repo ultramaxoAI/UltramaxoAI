@@ -65,6 +65,7 @@ import { after } from "next/server";
 import { createResumableStreamContext } from "resumable-stream";
 import { auth } from "@/app/(auth)/auth";
 import { detectAgentMode } from "@/lib/agent-mode-detector";
+import { detectBuildMode } from "@/lib/build-mode-detector";
 import {
 	isDevelopmentEnvironment,
 	isFullstackModeInMaintenance,
@@ -270,24 +271,36 @@ export async function POST(request: Request) {
 				recentContext,
 				hasAttachment: latestMessageHasAttachment,
 			});
+			const buildModeDetection = detectBuildMode({
+				message: latestUserText,
+				recentContext,
+			});
 			const isApprovalContinuationRequest = (messages ?? []).some((candidate) =>
 				hasApprovalContinuationState(candidate.parts as ChatMessage["parts"]),
 			);
 			const requestedMobileModeByText =
 				MOBILE_MODE_INTENT_REGEX.test(latestUserText);
 			const requestedIdeModeByText =
-				requestedMobileModeByText || IDE_MODE_INTENT_REGEX.test(latestUserText);
+				requestedMobileModeByText ||
+				buildModeDetection.mode === "workspace-app" ||
+				(buildModeDetection.mode !== "html-preview" &&
+					IDE_MODE_INTENT_REGEX.test(latestUserText));
 			const inferredMobileModeEnabled =
 				effectiveMobileModeEnabled ||
 				(!effectiveFullstackModeEnabled && requestedMobileModeByText);
 			const inferredFullstackModeEnabled =
 				effectiveFullstackModeEnabled ||
 				(requestedIdeModeByText && !inferredMobileModeEnabled);
+			const htmlPreviewModeEnabled =
+				buildModeDetection.mode === "html-preview" &&
+				!inferredFullstackModeEnabled &&
+				!inferredMobileModeEnabled;
 			const inferredGeneralAgentModeEnabled =
 				(autoAgentDetection.mode === "agent" ||
 					isApprovalContinuationRequest) &&
 				!inferredFullstackModeEnabled &&
-				!inferredMobileModeEnabled;
+				!inferredMobileModeEnabled &&
+				!htmlPreviewModeEnabled;
 
 			const session = await auth();
 
@@ -305,6 +318,8 @@ export async function POST(request: Request) {
 					fullstackModeEnabled: inferredFullstackModeEnabled,
 					mobileModeEnabled: inferredMobileModeEnabled,
 					generalAgentModeEnabled: inferredGeneralAgentModeEnabled,
+					htmlPreviewModeEnabled,
+					buildModeDetection,
 					autoAgentDetection,
 				});
 			}
@@ -533,6 +548,8 @@ export async function POST(request: Request) {
 					fullstackModeEnabled: inferredFullstackModeEnabled,
 					mobileModeEnabled: inferredMobileModeEnabled,
 					generalAgentModeEnabled: inferredGeneralAgentModeEnabled,
+					htmlPreviewModeEnabled,
+					buildModeDetection,
 					autoAgentDetection,
 				});
 			}
@@ -659,10 +676,28 @@ export async function POST(request: Request) {
 			const stream = createUIMessageStream({
 				originalMessages: isToolApprovalFlow ? uiMessages : undefined,
 				execute: async ({ writer: dataStream }) => {
+					dataStream.write({ type: "data-thinking_start", data: null });
+
 					let retryCount = 0;
 					const maxRetries = 1;
 					let activeAgentRunId: string | null = null;
 					let currentDocumentId = activeDocumentId;
+					const executionMetrics = {
+						artifactContentLength: 0,
+						artifactKind: null as string | null,
+						buildMode:
+							inferredFullstackModeEnabled ||
+							inferredMobileModeEnabled ||
+							inferredGeneralAgentModeEnabled
+								? "workspace-app"
+								: htmlPreviewModeEnabled
+									? "html-preview"
+									: "none",
+						previewRequested: false,
+						toolErrors: 0,
+						workspaceFileCount: 0,
+						workspaceTouched: false,
+					};
 
 					if (isIdeAgentMode && !currentDocumentId) {
 						currentDocumentId = generateUUID();
@@ -701,8 +736,9 @@ export async function POST(request: Request) {
 						dataStream.write({ type: "data-kind", data: "code" });
 					}
 
-					// Emit initial agent thinking event so the frontend panel shows immediately
+					// Backend-owned adaptive thinking upgrade signal.
 					if (isIdeAgentMode) {
+						dataStream.write({ type: "data-upgrade_to_agent", data: null });
 						dataStream.write({
 							type: "data-agent-thinking",
 							data: {
@@ -715,6 +751,7 @@ export async function POST(request: Request) {
 					while (retryCount <= maxRetries) {
 						try {
 							const wantsArtifact =
+								htmlPreviewModeEnabled ||
 								/\b(artifact|dokumen|document|aplikasi lengkap|project lengkap|proyek lengkap)\b/i.test(
 									latestUserText,
 								);
@@ -780,12 +817,18 @@ export async function POST(request: Request) {
 								baseSystemPrompt += `\n\n[ACTIVE WORKSPACE]\nYou are currently operating in an active workspace artifact (documentId: ${currentDocumentId}).\nWhen calling createCodeFile, updateCodeFile, deleteCodeFile, or listCodeFiles, you MUST use this exact documentId.\nDo NOT call createDocument unless you are explicitly starting a brand new, separate project.`;
 							}
 
+							if (htmlPreviewModeEnabled) {
+								baseSystemPrompt += `\n\n[HTML PREVIEW MODE OVERRIDE]\n- This request should be fulfilled as a preview-first HTML artifact, not a full Next.js workspace.\n- Use createDocument exactly once with kind "code" and put the FULL deliverable inside it.\n- Prefer split files using markers like // filename: index.html, // filename: style.css, // filename: script.js.\n- Build a directly previewable landing page.\n- Do NOT use listCodeFiles, createCodeFile, updateCodeFile, terminal commands, package installation, or preview server tools unless the user explicitly asked for Next.js, React, or an app project.\n- The artifact must contain real HTML/CSS/JS content, not placeholders, and should be ready to preview immediately.`;
+							}
+
 							baseSystemPrompt += `\n\n[FINAL RESPONSE REQUIREMENT]\nAfter completing any task, tool call, or analysis, you MUST always write a clear final text response to the user explaining what you did, what was created or changed, and any next steps or how to use the result. Never finish with only tool calls. Never be silent after tool calls.`;
 
 							const getDocumentId = () => currentDocumentId;
 							const setDocumentId = (id: string) => {
 								currentDocumentId = id;
 							};
+							const shouldStreamAgentProgress =
+								isIdeAgentMode || inferredGeneralAgentModeEnabled;
 
 							// Determine which model to use
 							let effectiveModel = selectedChatModel;
@@ -847,40 +890,121 @@ export async function POST(request: Request) {
 								messages: finalMessages,
 								stopWhen: stepCountIs(isIdeAgentMode ? 10 : 8),
 								maxOutputTokens: isIdeAgentMode ? 8192 : 8192,
-								onChunk: useTools
-									? ({ chunk }) => {
-											if (chunk.type === "tool-input-start") {
-												dataStream.write({
-													type: "data-agent-tool_start",
-													data: {
-														id: chunk.id,
-														toolCallId: chunk.id,
-														tool: chunk.toolName,
-														label: chunk.title ?? chunk.toolName,
-													},
-												});
-											}
+								onChunk: ({ chunk }) => {
+									const chunkRecord = chunk as Record<string, unknown>;
+									const chunkType =
+										typeof chunkRecord.type === "string"
+											? chunkRecord.type
+											: "";
 
-											if (chunk.type === "tool-result") {
-												const rawOutput = (chunk as Record<string, unknown>).output ?? (chunk as Record<string, unknown>).result;
-												const outputStr =
-													typeof rawOutput === "string"
-														? rawOutput.slice(0, 200)
-														: JSON.stringify(rawOutput ?? "").slice(0, 200);
-												dataStream.write({
-													type: "data-agent-tool_done",
-													data: {
-														id: chunk.toolCallId,
-														toolCallId: chunk.toolCallId,
-														tool: chunk.toolName,
-														label: chunk.toolName,
-														status: "done",
-														result: outputStr,
-													},
-												});
-											}
+									if (chunkType.includes("reasoning")) {
+										const contentCandidate =
+											chunkRecord.textDelta ??
+											chunkRecord.delta ??
+											chunkRecord.text ??
+											chunkRecord.content;
+										if (typeof contentCandidate === "string") {
+											dataStream.write({
+												type: "data-thinking_chunk",
+												data: { content: contentCandidate },
+											});
 										}
-									: undefined,
+									}
+
+									if (!useTools) {
+										return;
+									}
+
+									if (chunk.type === "tool-input-start") {
+										if (chunk.toolName === "startPreviewServer") {
+											executionMetrics.previewRequested = true;
+										}
+
+										if (shouldStreamAgentProgress) {
+											dataStream.write({
+												type: "data-agent-tool_start",
+												data: {
+													id: chunk.id,
+													toolCallId: chunk.id,
+													tool: chunk.toolName,
+													label: chunk.title ?? chunk.toolName,
+												},
+											});
+										}
+									}
+
+									if (chunk.type === "tool-result") {
+										const rawOutput =
+											(chunk as Record<string, unknown>).output ??
+											(chunk as Record<string, unknown>).result;
+										const outputRecord =
+											typeof rawOutput === "object" && rawOutput !== null
+												? (rawOutput as Record<string, unknown>)
+												: null;
+										const outputStr =
+											typeof rawOutput === "string"
+												? rawOutput.slice(0, 200)
+												: JSON.stringify(rawOutput ?? "").slice(0, 200);
+
+										if (
+											chunk.toolName === "createDocument" ||
+											chunk.toolName === "updateDocument"
+										) {
+											executionMetrics.artifactKind =
+												typeof outputRecord?.kind === "string"
+													? outputRecord.kind
+													: executionMetrics.artifactKind;
+											executionMetrics.artifactContentLength = Math.max(
+												executionMetrics.artifactContentLength,
+												typeof outputRecord?.content === "string"
+													? outputRecord.content.length
+													: 0,
+											);
+										}
+
+										if (
+											chunk.toolName === "createCodeFile" ||
+											chunk.toolName === "createFile" ||
+											chunk.toolName === "updateCodeFile" ||
+											chunk.toolName === "editFile" ||
+											chunk.toolName === "listCodeFiles" ||
+											chunk.toolName === "listFiles"
+										) {
+											executionMetrics.workspaceTouched = true;
+											const nextFiles = Array.isArray(outputRecord?.files)
+												? outputRecord.files.filter(
+														(item): item is string => typeof item === "string",
+													)
+												: [];
+											const nextCount =
+												typeof outputRecord?.count === "number"
+													? outputRecord.count
+													: nextFiles.length;
+											executionMetrics.workspaceFileCount = Math.max(
+												executionMetrics.workspaceFileCount,
+												nextCount,
+											);
+										}
+
+										if (chunk.toolName === "startPreviewServer") {
+											executionMetrics.previewRequested = true;
+										}
+
+										if (shouldStreamAgentProgress) {
+											dataStream.write({
+												type: "data-agent-tool_done",
+												data: {
+													id: chunk.toolCallId,
+													toolCallId: chunk.toolCallId,
+													tool: chunk.toolName,
+													label: chunk.toolName,
+													status: "done",
+													result: outputStr,
+												},
+											});
+										}
+									}
+								},
 								onStepFinish: useTools
 									? (stepResult) => {
 											const toolCalls = stepResult.toolCalls ?? [];
@@ -892,11 +1016,34 @@ export async function POST(request: Request) {
 										}
 									: undefined,
 								onFinish: ({ response }) => {
-									// Emit agent:done when all steps finish
-									if (useTools) {
+									if (shouldStreamAgentProgress) {
+										const htmlPreviewSucceeded =
+											executionMetrics.buildMode === "html-preview"
+												? executionMetrics.artifactContentLength > 80
+												: true;
+										const workspaceSucceeded =
+											executionMetrics.buildMode === "workspace-app"
+												? executionMetrics.workspaceTouched &&
+													executionMetrics.workspaceFileCount > 0 &&
+													executionMetrics.previewRequested
+												: true;
+										const completionStatus =
+											htmlPreviewSucceeded && workspaceSucceeded
+												? "done"
+												: "error";
+										const completionReason =
+											completionStatus === "done"
+												? "execution requirements satisfied"
+												: executionMetrics.buildMode === "html-preview"
+													? "html artifact was not created successfully"
+													: "workspace files or preview were not completed successfully";
+
 										dataStream.write({
 											type: "data-agent-done",
-											data: { status: "done" },
+											data: {
+												reason: completionReason,
+												status: completionStatus,
+											},
 										});
 									}
 									const streamedMessages = response.messages;
@@ -1272,17 +1419,28 @@ export async function POST(request: Request) {
 							}
 						}
 					} else if (finishedMessages.length > 0) {
-						// Filter out messages already saved (e.g. the user message saved earlier)
-						// to avoid duplicate key errors that would drop the entire batch
 						const existingMessageIds = new Set(messagesFromDb.map((m) => m.id));
-						// Also exclude the user message we just saved above
 						if (message?.id) {
 							existingMessageIds.add(message.id);
 						}
 
-						const newMessages = finishedMessages.filter(
-							(m) => !existingMessageIds.has(m.id),
+						const existingMessages = finishedMessages.filter((currentMessage) =>
+							existingMessageIds.has(currentMessage.id),
 						);
+						const newMessages = finishedMessages.filter(
+							(currentMessage) => !existingMessageIds.has(currentMessage.id),
+						);
+
+						if (existingMessages.length > 0) {
+							await Promise.all(
+								existingMessages.map((currentMessage) =>
+									updateMessage({
+										id: currentMessage.id,
+										parts: currentMessage.parts,
+									}),
+								),
+							);
+						}
 
 						if (newMessages.length > 0) {
 							await saveMessages({

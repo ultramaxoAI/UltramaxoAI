@@ -1,11 +1,20 @@
 "use client";
 
+import { ThinkingIndicator } from "@/components/ThinkingIndicator";
 import {
 	AgentThinkingPanel,
 	type AgentThinkingStep,
 } from "./agent-thinking-panel";
 
 export { AgentThinkingPanel, type AgentThinkingStep };
+
+function toReasoningChunks(reasoning: string) {
+	const normalized = reasoning
+		.replace(/\r\n/g, "\n")
+		.replace(/\*\*([\s\S]+?)\*\*/g, "<strong>$1</strong>");
+
+	return normalized.trim() ? [normalized] : [];
+}
 
 export function MessageReasoning({
 	isLoading,
@@ -14,23 +23,10 @@ export function MessageReasoning({
 	isLoading: boolean;
 	reasoning: string;
 }) {
-	const steps: AgentThinkingStep[] = reasoning
-		.split("\n")
-		.map((line) => line.trim())
-		.filter(Boolean)
-		.slice(0, 6)
-		.map((line, index) => ({
-			id: `reasoning-${index}`,
-			type: "thought",
-			label: line.replace(/^[-*>]\s*/, ""),
-			status:
-				isLoading && index === 0 ? ("running" as const) : ("done" as const),
-		}));
-
 	return (
-		<AgentThinkingPanel
-			status={isLoading ? "thinking" : "done"}
-			steps={steps}
+		<ThinkingIndicator
+			isActive={isLoading}
+			thinkingChunks={toReasoningChunks(reasoning)}
 		/>
 	);
 }
