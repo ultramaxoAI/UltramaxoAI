@@ -190,10 +190,17 @@ function PureWebTerminal(
 			)}
 		>
 			{/* ── Header ─────────────────────────────────────────────────── */}
-			<button
-				type="button"
-				className="flex items-center justify-between border-white/[0.06] border-b bg-[#111318] px-3 py-2 transition-colors hover:bg-white/[0.02]"
+			<div
+				className="flex cursor-pointer items-center justify-between border-white/[0.06] border-b bg-[#111318] px-3 py-2 transition-colors hover:bg-white/[0.02]"
 				onClick={() => setCollapsed((prev) => !prev)}
+				onKeyDown={(event) => {
+					if (event.key === "Enter" || event.key === " ") {
+						event.preventDefault();
+						setCollapsed((prev) => !prev);
+					}
+				}}
+				role="button"
+				tabIndex={0}
 			>
 				<div className="flex items-center gap-2 text-xs font-medium text-white/45">
 					<TerminalSquare size={14} className="text-indigo-300/70" />
@@ -225,7 +232,7 @@ function PureWebTerminal(
 						<ChevronDown size={14} className="text-white/30" />
 					)}
 				</div>
-			</button>
+			</div>
 
 			{/* ── Terminal body ───────────────────────────────────────────── */}
 			<div

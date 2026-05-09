@@ -22,6 +22,27 @@ import {
 	suggestionsPluginKey,
 } from "@/lib/editor/suggestions";
 
+function findScrollableAncestor(element: HTMLElement | null) {
+	let current = element?.parentElement ?? null;
+
+	while (current) {
+		const style = window.getComputedStyle(current);
+		const canScroll = /(auto|scroll)/.test(style.overflowY);
+		if (canScroll && current.scrollHeight > current.clientHeight) {
+			return current;
+		}
+		current = current.parentElement;
+	}
+
+	return null;
+}
+
+function isNearBottom(element: HTMLElement, threshold = 48) {
+	return (
+		element.scrollHeight - (element.scrollTop + element.clientHeight) <= threshold
+	);
+}
+
 type EditorProps = {
 	content: string;
 	onSaveContent: (updatedContent: string, debounce: boolean) => void;
@@ -94,6 +115,9 @@ function PureEditor({
 			const currentContent = buildContentFromDocument(
 				editorRef.current.state.doc,
 			);
+			const scrollParent = findScrollableAncestor(containerRef.current);
+			const shouldAutoFollow = scrollParent ? isNearBottom(scrollParent) : true;
+			const previousScrollTop = scrollParent?.scrollTop ?? 0;
 
 			if (status === "streaming") {
 				const newDocument = buildDocumentFromContent(content);
@@ -106,6 +130,19 @@ function PureEditor({
 
 				transaction.setMeta("no-save", true);
 				editorRef.current.dispatch(transaction);
+
+				requestAnimationFrame(() => {
+					if (!scrollParent) {
+						return;
+					}
+
+					if (shouldAutoFollow) {
+						scrollParent.scrollTop = scrollParent.scrollHeight;
+						return;
+					}
+
+					scrollParent.scrollTop = previousScrollTop;
+				});
 				return;
 			}
 

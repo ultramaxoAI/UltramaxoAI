@@ -88,11 +88,10 @@ export function AgentThinkingPanel({
 	totalDuration,
 	isActive,
 	totalDurationMs,
-	variant,
+	variant: _variant,
 }: AgentThinkingPanelProps) {
 	const active = isActive ?? (status === "thinking" || status === "executing");
-	const startsAsAgent =
-		variant === "agent-active" || status === "executing" || steps.length > 0;
+	const startsAsAgent = steps.length > 0;
 
 	return (
 		<ThinkingIndicator

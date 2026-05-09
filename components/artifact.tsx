@@ -46,6 +46,7 @@ export type UIArtifact = {
 	content: string;
 	isVisible: boolean;
 	status: "streaming" | "idle";
+	streamState?: "idle" | "pending" | "streaming" | "completed" | "error";
 	boundingBox: {
 		top: number;
 		left: number;
@@ -111,7 +112,9 @@ function PureArtifact({
 		isLoading: isDocumentsFetching,
 		mutate: mutateDocuments,
 	} = useSWR<Document[]>(
-		safeArtifact.documentId !== "init" && safeArtifact.status !== "streaming"
+		safeArtifact.documentId !== "init" &&
+			safeArtifact.streamState !== "pending" &&
+			safeArtifact.status !== "streaming"
 			? `/api/document?id=${safeArtifact.documentId}`
 			: null,
 		fetcher,
@@ -271,14 +274,10 @@ function PureArtifact({
 	const artifactLanguage =
 		safeArtifact.kind === "code" ? "code" : safeArtifact.kind || "text";
 	const closeArtifact = useCallback(() => {
-		setArtifact((currentArtifact) =>
-			currentArtifact.status === "streaming"
-				? {
-						...currentArtifact,
-						isVisible: false,
-					}
-				: { ...initialArtifactData, status: "idle" },
-		);
+		setArtifact((currentArtifact) => ({
+			...(currentArtifact ?? initialArtifactData),
+			isVisible: false,
+		}));
 	}, [setArtifact]);
 
 	const artifactDefinition = artifactDefinitions.find(
@@ -397,7 +396,8 @@ function PureArtifact({
 									}
 						}
 					>
-						<div className="sticky top-0 z-20 flex items-center justify-between border-b border-white/[0.06] bg-[#0a0a0a] px-4 py-2.5">
+						<div className="sticky top-0 z-20 border-b border-white/[0.06] bg-[linear-gradient(180deg,#0c1017_0%,#090b10_100%)] px-4 py-3 shadow-[0_18px_40px_rgba(0,0,0,0.28)]">
+							<div className="mb-2 flex items-center justify-between gap-3">
 							<div className="flex min-w-0 items-center gap-2">
 								<button
 									className="mr-1 inline-flex h-7 items-center gap-1.5 rounded-lg px-2 text-[12px] text-white/45 transition-colors hover:bg-white/[0.05] hover:text-white/75 md:hidden"
@@ -407,24 +407,34 @@ function PureArtifact({
 									<ChevronLeft className="size-4" />
 									Back
 								</button>
-								<span className="truncate text-[12px] text-white/38">
-									{safeArtifact.title || "Untitled artifact"}
-								</span>
-								<span className="rounded border border-white/[0.06] bg-white/[0.03] px-1.5 py-0.5 font-mono text-[10px] text-white/25">
-									{artifactLanguage}
-								</span>
-
-								{isContentDirty ? (
-									<span className="hidden text-[11px] text-white/30 sm:inline">
-										Saving...
-									</span>
-								) : document ? (
-									<span className="hidden text-[11px] text-white/25 lg:inline">
-										{formatDistance(new Date(document.createdAt), new Date(), {
-											addSuffix: true,
-										})}
-									</span>
-								) : null}
+								<div className="min-w-0">
+									<div className="truncate text-[14px] font-medium text-white/88">
+										{safeArtifact.title || "Untitled artifact"}
+									</div>
+									<div className="mt-1 flex flex-wrap items-center gap-2 text-[11px] text-white/38">
+										<span className="rounded-full border border-white/[0.08] bg-white/[0.04] px-2 py-0.5 font-mono text-[10px] uppercase tracking-[0.18em] text-white/52">
+											{artifactLanguage}
+										</span>
+										<span className="rounded-full border border-white/[0.08] bg-white/[0.03] px-2 py-0.5 text-[10px] uppercase tracking-[0.18em] text-white/45">
+											{safeArtifact.streamState === "pending"
+											? "Pending"
+											: safeArtifact.status === "streaming"
+												? "Streaming"
+												: safeArtifact.streamState === "error"
+													? "Error"
+													: "Ready"}
+										</span>
+										{isContentDirty ? (
+											<span>Saving changes…</span>
+										) : document ? (
+											<span>
+												{formatDistance(new Date(document.createdAt), new Date(), {
+													addSuffix: true,
+												})}
+											</span>
+										) : null}
+									</div>
+								</div>
 							</div>
 
 							<div className="flex shrink-0 items-center gap-1">
@@ -451,9 +461,20 @@ function PureArtifact({
 									<X className="h-[14px] w-[14px]" />
 								</button>
 							</div>
+							</div>
+							<div className="flex items-center justify-between gap-3 rounded-2xl border border-white/[0.06] bg-white/[0.025] px-3 py-2 text-[11px] text-white/42">
+								<div className="truncate">
+									{safeArtifact.kind === "code"
+										? "Live workspace siap untuk diinspeksi, edit, dan di-preview."
+										: "Artifact siap dibuka dan diteruskan dari panel kerja utama."}
+								</div>
+								<div className="shrink-0 rounded-full border border-white/[0.08] bg-white/[0.04] px-2 py-0.5 text-[10px] uppercase tracking-[0.18em] text-white/45">
+									{safeArtifact.kind}
+								</div>
+							</div>
 						</div>
 
-						<div className="flex min-h-0 flex-1 max-w-full overflow-hidden bg-[#0e0e0e]">
+						<div className="flex min-h-0 flex-1 max-w-full overflow-hidden bg-[radial-gradient(circle_at_top,rgba(72,104,255,0.08),transparent_28%),#0e0e0e]">
 							<div
 								className={cn(
 									"min-h-0 flex-1",

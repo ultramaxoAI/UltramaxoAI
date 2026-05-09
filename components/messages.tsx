@@ -34,6 +34,144 @@ function getPartState(part: unknown) {
 	return typeof record.state === "string" ? record.state : undefined;
 }
 
+function getAssistantTextPayload(message: ChatMessage | undefined) {
+	if (!message || message.role !== "assistant") {
+		return "";
+	}
+
+	const rawContent =
+		typeof (message as { content?: unknown }).content === "string"
+			? ((message as { content?: string }).content ?? "")
+			: "";
+	const parts = Array.isArray(message.parts) ? message.parts : [];
+	const partText = parts
+		.filter((part) => part?.type === "text")
+		.map((part) => (part as { text?: string }).text ?? "")
+		.join("\n");
+
+	return [rawContent, partText].filter(Boolean).join("\n").trim();
+}
+
+function normalizeAssistantFingerprint(value: string) {
+	return value.replace(/\s+/g, " ").trim().toLowerCase();
+}
+
+function isDuplicateOrOverlappingText(value: string, seen: Set<string>) {
+	const fingerprint = normalizeAssistantFingerprint(value);
+	if (!fingerprint) {
+		return false;
+	}
+
+	for (const previous of seen) {
+		const shorter = previous.length < fingerprint.length ? previous : fingerprint;
+		const longer = previous.length < fingerprint.length ? fingerprint : previous;
+		if (previous === fingerprint || (shorter.length > 32 && longer.includes(shorter))) {
+			return true;
+		}
+	}
+
+	seen.add(fingerprint);
+	return false;
+}
+
+function hasAssistantText(message: ChatMessage | undefined) {
+	return Boolean(getAssistantTextPayload(message).trim());
+}
+
+function hasToolPart(message: ChatMessage | undefined) {
+	const parts = Array.isArray(message?.parts) ? message.parts : [];
+	return parts.some((part) =>
+		Boolean(part && typeof part === "object" && "type" in part && String(part.type).includes("tool")),
+	);
+}
+
+function compactAssistantMessages(messages: ChatMessage[]) {
+	const result: ChatMessage[] = [];
+	let segment: ChatMessage[] = [];
+	const seenAssistantTexts = new Set<string>();
+
+	const flushSegment = () => {
+		if (segment.length === 0) {
+			return;
+		}
+
+		const lastAssistantTextIndex = segment.findLastIndex(
+			(message) => message.role === "assistant" && hasAssistantText(message),
+		);
+
+		for (let index = 0; index < segment.length; index++) {
+			const message = segment[index];
+			if (message.role !== "assistant") {
+				result.push(message);
+				continue;
+			}
+
+			const text = getAssistantTextPayload(message);
+			if (text) {
+				if (index < lastAssistantTextIndex) {
+					continue;
+				}
+				if (isDuplicateOrOverlappingText(text, seenAssistantTexts)) {
+					continue;
+				}
+				result.push(message);
+				continue;
+			}
+
+			// Hide stale thinking/reasoning shells when a final assistant answer exists in the same turn.
+			if (lastAssistantTextIndex !== -1 && index < lastAssistantTextIndex && !hasToolPart(message)) {
+				continue;
+			}
+
+			result.push(message);
+		}
+
+		segment = [];
+	};
+
+	for (const message of messages) {
+		if (message.role === "user") {
+			flushSegment();
+			result.push(message);
+			continue;
+		}
+
+		segment.push(message);
+	}
+
+	flushSegment();
+	return result;
+}
+
+function hasRenderableAssistantAnswer(message: ChatMessage | undefined) {
+	if (!message || message.role !== "assistant") {
+		return false;
+	}
+
+	const messageParts = Array.isArray(message.parts) ? message.parts : [];
+	const hasVisibleAnswerPart = messageParts.some((part) => {
+		if (!part || typeof part !== "object" || !("type" in part)) {
+			return false;
+		}
+
+		if (part.type === "text") {
+			return Boolean((part as { text?: string }).text?.trim());
+		}
+
+		return part.type === "file" || String(part.type).includes("tool");
+	});
+
+	if (hasVisibleAnswerPart) {
+		return true;
+	}
+
+	const rawContent =
+		typeof (message as { content?: unknown }).content === "string"
+			? ((message as { content?: string }).content ?? "")
+			: "";
+	return Boolean(rawContent.trim());
+}
+
 function PureMessages({
 	addToolApprovalResponse,
 	chatId,
@@ -61,7 +199,7 @@ function PureMessages({
 	});
 
 	const { agentStream, liveThinking } = useDataStream();
-	const visibleMessages = safeMessages.filter((message) => {
+	const filteredVisibleMessages = safeMessages.filter((message) => {
 		if (!message || !message.id) {
 			return false;
 		}
@@ -127,34 +265,32 @@ function PureMessages({
 		return true;
 	});
 
+	const visibleMessages = compactAssistantMessages(
+		filteredVisibleMessages.length > 0
+			? filteredVisibleMessages
+			: safeMessages.filter(
+					(message) => Boolean(message && message.id && message.role),
+				),
+	);
+	const recoveredFromHiddenMessages =
+		filteredVisibleMessages.length === 0 && safeMessages.length > 0;
+
 	const lastUserIndex = visibleMessages.findLastIndex(
 		(message) => message.role === "user",
 	);
-	const assistantAfterLastUserIndex =
+	const assistantsAfterLastUser =
 		lastUserIndex === -1
-			? -1
-			: visibleMessages.findIndex(
-					(message, index) =>
-						index > lastUserIndex && message.role === "assistant",
+			? []
+			: visibleMessages.filter(
+					(message, index) => index > lastUserIndex && message.role === "assistant",
 				);
-	const lastAssistantHasContent =
-		assistantAfterLastUserIndex !== -1 &&
-		(visibleMessages[assistantAfterLastUserIndex]?.parts ?? []).some((part) => {
-			if (!part || typeof part !== "object" || !("type" in part)) {
-				return false;
-			}
-
-			const typedPart = part as { type?: string; text?: string };
-			return (
-				(typedPart.type === "text" && Boolean(typedPart.text?.trim())) ||
-				(typedPart.type === "reasoning" && Boolean(typedPart.text?.trim()))
-			);
-		});
+	const firstAssistantAfterLastUser = assistantsAfterLastUser[0];
+	const hasRenderableAssistantAfterLastUser = assistantsAfterLastUser.some(
+		(message) => hasRenderableAssistantAnswer(message),
+	);
 
 	const hasApprovalResponse = visibleMessages.some((msg) =>
-		(msg.parts ?? []).some((part) => {
-			return getPartState(part) === "approval-responded";
-		}),
+		(msg.parts ?? []).some((part) => getPartState(part) === "approval-responded"),
 	);
 	const totalAgentDuration =
 		agentStream.startedAt && agentStream.endedAt
@@ -162,81 +298,28 @@ function PureMessages({
 			: agentStream.startedAt
 				? Date.now() - agentStream.startedAt
 				: undefined;
-	const contextualThinkingAnchorIndex =
-		assistantAfterLastUserIndex !== -1
-			? assistantAfterLastUserIndex
-			: lastUserIndex;
-	const contextualThinkingAnchoredToUser =
-		contextualThinkingAnchorIndex !== -1 &&
-		visibleMessages[contextualThinkingAnchorIndex]?.role === "user";
-	const [thinkingDurationMs, setThinkingDurationMs] = useState<
-		number | undefined
-	>();
-	const hasLiveThinkingSurface =
-		liveThinking.enabled &&
-		(liveThinking.steps.length > 0 ||
-			status === "submitted" ||
-			status === "streaming" ||
-			status === "error");
-	const showContextualThinking =
-		hasLiveThinkingSurface &&
-		((liveThinking.enabled &&
-			(status === "submitted" ||
-				status === "streaming" ||
-				status === "error" ||
-				contextualThinkingAnchorIndex !== -1)) ||
-			(status === "ready" && contextualThinkingAnchorIndex === -1) ||
-			(status === "error" && contextualThinkingAnchorIndex === -1));
+	const [thinkingDurationMs, setThinkingDurationMs] = useState<number | undefined>();
 	const waitingForFirstAssistantToken =
 		(status === "submitted" || status === "streaming") &&
-		(assistantAfterLastUserIndex === -1 || !lastAssistantHasContent);
-	const contextualThinkingActive =
-		(status === "submitted" || waitingForFirstAssistantToken) &&
-		!hasApprovalResponse;
-	const showToolAgentPanel =
+		(!firstAssistantAfterLastUser || !hasRenderableAssistantAfterLastUser);
+	const shouldRenderThinking =
 		!hasApprovalResponse &&
-		(agentStream.steps.length > 0 || liveThinking.surface === "agent-active") &&
-		(status === "submitted" ||
-			waitingForFirstAssistantToken ||
-			(status === "ready" && assistantAfterLastUserIndex === -1) ||
-			(status === "error" && assistantAfterLastUserIndex === -1));
-	const showBasicAssistantLoading =
-		!showContextualThinking &&
-		!showToolAgentPanel &&
-		(status === "submitted" || status === "streaming") &&
-		assistantAfterLastUserIndex === -1 &&
-		lastUserIndex !== -1;
-	const showMissingAssistantFallback = false;
-	const showThinkingSurfaceOnly = showContextualThinking && !showToolAgentPanel;
-	const inlineActivityVariant = showToolAgentPanel
-		? "agent-active"
-		: showContextualThinking
-			? liveThinking.surface === "responding"
-				? "deep-thinking"
-				: liveThinking.surface
-			: showBasicAssistantLoading
-				? "responding"
-				: null;
+		lastUserIndex !== -1 &&
+		(waitingForFirstAssistantToken || liveThinking.enabled);
+	const showToolAgentPanel =
+		shouldRenderThinking && agentStream.steps.length > 0;
+	const showSimpleThinking = shouldRenderThinking && !showToolAgentPanel;
 
 	useEffect(() => {
-		if (contextualThinkingActive) {
+		if (shouldRenderThinking) {
 			setThinkingDurationMs(undefined);
 			return;
 		}
 
-		if (
-			showContextualThinking &&
-			liveThinking.startedAt &&
-			thinkingDurationMs === undefined
-		) {
+		if (liveThinking.startedAt && thinkingDurationMs === undefined) {
 			setThinkingDurationMs(Date.now() - liveThinking.startedAt);
 		}
-	}, [
-		contextualThinkingActive,
-		liveThinking.startedAt,
-		showContextualThinking,
-		thinkingDurationMs,
-	]);
+	}, [liveThinking.startedAt, shouldRenderThinking, thinkingDurationMs]);
 
 	return (
 		<>
@@ -249,30 +332,13 @@ function PureMessages({
 						ref={messagesContainerRef}
 					>
 						<div className="mx-auto flex min-w-0 w-full max-w-[820px] flex-col space-y-8 px-6 py-10">
+							{recoveredFromHiddenMessages ? (
+								<div className="rounded-2xl border border-amber-400/15 bg-amber-400/8 px-4 py-3 text-[12px] text-amber-100/80">
+									Memulihkan percakapan dari data tersimpan. Beberapa bubble yang tidak lengkap tetap ditampilkan agar chat tidak kosong.
+								</div>
+							) : null}
 							{visibleMessages.map((message, index) => (
 								<Fragment key={`${message.id}-${index}`}>
-									{showThinkingSurfaceOnly &&
-										index === contextualThinkingAnchorIndex &&
-										!contextualThinkingAnchoredToUser && (
-											<div className="mx-auto flex w-full max-w-[820px] items-start gap-3">
-												<div className="mt-1 flex h-7 w-7 shrink-0 items-center justify-center rounded-full border border-white/[0.10] bg-white/[0.08] text-[11px] font-semibold text-white/55">
-													U
-												</div>
-												<div className="min-w-0 flex-1">
-													<AgentThinkingPanel
-														isActive={contextualThinkingActive}
-														key={liveThinking.startedAt ?? "live-thinking"}
-														liveSteps={liveThinking.steps}
-														variant={inlineActivityVariant ?? "deep-thinking"}
-														status={
-															contextualThinkingActive ? "thinking" : "done"
-														}
-														steps={[]}
-														totalDurationMs={thinkingDurationMs}
-													/>
-												</div>
-											</div>
-										)}
 									<PreviewMessage
 										addToolApprovalResponse={addToolApprovalResponse}
 										chatId={chatId}
@@ -293,74 +359,18 @@ function PureMessages({
 												: undefined
 										}
 									/>
-									{showThinkingSurfaceOnly &&
-										index === contextualThinkingAnchorIndex &&
-										contextualThinkingAnchoredToUser && (
-											<div className="mx-auto flex w-full max-w-[820px] items-start gap-3">
-												<div className="mt-1 flex h-7 w-7 shrink-0 items-center justify-center rounded-full border border-white/[0.10] bg-white/[0.08] text-[11px] font-semibold text-white/55">
-													U
-												</div>
-												<div className="min-w-0 flex-1">
-													<AgentThinkingPanel
-														isActive={contextualThinkingActive}
-														key={liveThinking.startedAt ?? "live-thinking-user"}
-														liveSteps={liveThinking.steps}
-														variant={inlineActivityVariant ?? "deep-thinking"}
-														status={
-															contextualThinkingActive ? "thinking" : "done"
-														}
-														steps={[]}
-														totalDurationMs={thinkingDurationMs}
-													/>
-												</div>
-											</div>
-										)}
 								</Fragment>
 							))}
 
-							{showThinkingSurfaceOnly &&
-								contextualThinkingAnchorIndex === -1 && (
-									<div
-										className="group/message fade-in w-full animate-in duration-300"
-										data-role="assistant"
-										data-testid="message-assistant-loading"
-									>
-										<div className="mx-auto flex w-full max-w-[820px] items-start gap-3">
-											<div className="mt-1 flex h-7 w-7 shrink-0 items-center justify-center rounded-full border border-white/[0.10] bg-white/[0.08] text-[11px] font-semibold text-white/55">
-												U
-											</div>
-											<div className="min-w-0 flex-1">
-												<AgentThinkingPanel
-													isActive={contextualThinkingActive}
-													key={liveThinking.startedAt ?? "live-thinking"}
-													liveSteps={liveThinking.steps}
-													variant={inlineActivityVariant ?? "deep-thinking"}
-													status="thinking"
-													steps={[]}
-													totalDurationMs={thinkingDurationMs}
-												/>
-											</div>
-										</div>
-									</div>
-								)}
-
-							{showBasicAssistantLoading && (
+							{showSimpleThinking && (
 								<div
 									className="group/message fade-in w-full animate-in duration-300"
 									data-role="assistant"
 									data-testid="message-assistant-basic-loading"
 								>
-									<div className="mx-auto flex w-full max-w-[820px] items-start gap-3">
-										<div className="mt-1 flex h-7 w-7 shrink-0 items-center justify-center rounded-full border border-white/[0.10] bg-white/[0.08] text-[11px] font-semibold text-white/55">
-											U
-										</div>
+									<div className="mx-auto flex w-full max-w-[820px]">
 										<div className="min-w-0 flex-1">
-											<AgentThinkingPanel
-												isActive
-												liveSteps={[]}
-												status="thinking"
-												variant="responding"
-											/>
+											<AgentThinkingPanel isActive status="thinking" />
 										</div>
 									</div>
 								</div>
@@ -372,10 +382,7 @@ function PureMessages({
 									data-role="assistant"
 									data-testid="message-assistant-loading"
 								>
-									<div className="mx-auto flex w-full max-w-[820px] items-start gap-3">
-										<div className="mt-1 flex h-7 w-7 shrink-0 items-center justify-center rounded-full border border-white/[0.10] bg-white/[0.08] text-[11px] font-semibold text-white/55">
-											U
-										</div>
+									<div className="mx-auto flex w-full max-w-[820px]">
 										<div className="min-w-0 flex-1">
 											<AgentThinkingPanel
 												status={agentStream.status}
@@ -383,32 +390,6 @@ function PureMessages({
 												totalDuration={totalAgentDuration}
 												variant="agent-active"
 											/>
-										</div>
-									</div>
-								</div>
-							)}
-
-							{showMissingAssistantFallback && (
-								<div className="mx-auto flex w-full max-w-[820px] items-start gap-3">
-									<div className="mt-1 flex h-7 w-7 shrink-0 items-center justify-center rounded-full border border-white/[0.10] bg-white/[0.08] text-[11px] font-semibold text-white/55">
-										U
-									</div>
-									<div className="flex w-full max-w-2xl items-start gap-3 rounded-xl border border-white/[0.08] bg-white/[0.03] p-4 text-white/70">
-										<div className="min-w-0 flex-1">
-											<p className="text-[13px] leading-6">
-												Agent sudah selesai jalan, tapi pesan akhir belum sempat
-												tampil di chat.
-											</p>
-											{onRetry ? (
-												<button
-													className="mt-3 inline-flex items-center gap-1.5 rounded-lg bg-white/10 px-3 py-1.5 text-[11px] text-white/60 transition-colors hover:bg-white/15 hover:text-white/80"
-													onClick={onRetry}
-													type="button"
-												>
-													<RefreshCw className="size-3" />
-													Coba generate ulang
-												</button>
-											) : null}
 										</div>
 									</div>
 								</div>

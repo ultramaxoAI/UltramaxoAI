@@ -23,7 +23,7 @@ export const createDocument = ({
 }) => {
 	return {
 		description:
-			"Create a new document for code, text, or spreadsheets. This opens a side panel for the user. ALWAYS use this for writing code.",
+			"Create a new document for code, text, or spreadsheets. Only call this when you already have the COMPLETE non-empty content ready. Never create an empty document.",
 		inputSchema: z.object({
 			title: z.string().describe("The title of the document"),
 			kind: z
@@ -31,9 +31,9 @@ export const createDocument = ({
 				.describe("The type of document to create"),
 			content: z
 				.string()
-				.nullish()
+				.min(1)
 				.describe(
-					"The FULL initial content of the document (code, text, or csv). Can be empty for code scaffolds.",
+					"REQUIRED. The FULL complete content of the document (code, text, or csv). Must never be empty.",
 				),
 		}),
 		execute: async ({
@@ -52,6 +52,11 @@ export const createDocument = ({
 
 			const normalizedTitle = title.trim() || "Untitled Document";
 			const normalizedContent = content?.trim() || "";
+			if (!normalizedContent) {
+				throw new Error(
+					"createDocument requires non-empty content. Generate the full code/content first, then call createDocument.",
+				);
+			}
 			let persisted = false;
 
 			console.log(

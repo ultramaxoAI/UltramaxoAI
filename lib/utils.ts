@@ -237,14 +237,14 @@ export function sanitizeChatMessage(message: ChatMessage): ChatMessage {
 		: [];
 
 	return {
-		...message,
+		...(message as ChatMessage & { content?: string }),
 		content:
 			typeof (message as { content?: unknown }).content === "string" &&
 			(message as { content?: string }).content?.trim()
 				? ((message as { content?: string }).content ?? "")
 				: getTextContentFromParts(safeParts),
 		parts: safeParts,
-	};
+	} as ChatMessage;
 }
 
 export function sanitizeChatMessages(messages: ChatMessage[]): ChatMessage[] {

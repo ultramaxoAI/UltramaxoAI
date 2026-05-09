@@ -19,7 +19,9 @@ import {
 	TrashIcon,
 	WandSparklesIcon,
 } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { useArtifact } from "@/hooks/use-artifact";
+import { useDataStream } from "./data-stream-provider";
 import type { ChatMessage } from "@/lib/types";
 import { cn, sanitizeText } from "@/lib/utils";
 import { DocumentToolCall, DocumentToolResult } from "./document";
@@ -78,6 +80,46 @@ type GenericToolPart = {
 	output?: unknown;
 	approval?: { id?: string; approved?: boolean };
 };
+
+type LocalApprovalState = {
+	phase: "approved" | "running" | "possibly-stuck" | "denied";
+	startedAt: number;
+};
+
+function isTerminalToolState(state?: string) {
+	return (
+		state === "output-available" ||
+		state === "output-error" ||
+		state === "output-denied"
+	);
+}
+
+function getApprovalAwareToolHeaderState(
+	state: string | undefined,
+	localApprovalState?: LocalApprovalState,
+): ToolHeaderState {
+	if (isTerminalToolState(state)) {
+		return getSafeToolState(state);
+	}
+
+	if (localApprovalState?.phase === "possibly-stuck") {
+		return "output-error";
+	}
+
+	if (
+		localApprovalState?.phase === "approved" ||
+		localApprovalState?.phase === "running" ||
+		state === "approval-responded"
+	) {
+		return "input-available";
+	}
+
+	if (localApprovalState?.phase === "denied") {
+		return "output-denied";
+	}
+
+	return getSafeToolState(state);
+}
 
 function getStringValue(value: unknown, fallback = "") {
 	return typeof value === "string" ? value : fallback;
@@ -150,6 +192,30 @@ function getSafeToolState(state?: string): ToolHeaderState {
 		default:
 			return "input-available";
 	}
+}
+
+function isDuplicateAssistantText(
+	fingerprint: string,
+	seenFingerprints: Set<string>,
+) {
+	if (!fingerprint) {
+		return false;
+	}
+
+	for (const seen of seenFingerprints) {
+		if (seen === fingerprint) {
+			return true;
+		}
+
+		const shorter = seen.length < fingerprint.length ? seen : fingerprint;
+		const longer = seen.length < fingerprint.length ? fingerprint : seen;
+
+		if (shorter.length > 24 && longer.includes(shorter)) {
+			return true;
+		}
+	}
+
+	return false;
 }
 
 function stringifyCompact(value: unknown) {
@@ -284,9 +350,9 @@ function MessageTextPart({
 		<div className={cn(messageRole === "user" && "max-w-full")}>
 			<MessageContent
 				className={cn("w-full", {
-					"ml-auto w-fit min-w-12 max-w-full whitespace-pre-wrap break-words rounded-2xl bg-white/[0.07] px-5 py-3.5 text-left text-[15px] leading-[1.8] text-white/88 shadow-none":
+					"ml-auto inline-flex w-auto max-w-full whitespace-pre-wrap break-words rounded-2xl bg-white/[0.07] px-4 py-3 text-left text-[15px] leading-[1.75] text-white/88 shadow-none":
 						messageRole === "user",
-					"w-full bg-transparent px-0 py-0 text-left text-[15px] leading-[1.8] text-white/75":
+					"w-full bg-transparent px-0 py-0 text-left text-[16px] leading-[1.85] text-white/78":
 						messageRole === "assistant",
 				})}
 				data-testid="message-content"
@@ -299,7 +365,7 @@ function MessageTextPart({
 						isLoading={isLoading}
 					/>
 				) : (
-					<Response className="text-[15px] leading-[1.8] text-white/88 [&_p]:mb-0">
+					<Response className="text-[15px] leading-[1.75] text-white/88 [&_p]:mb-0">
 						{displayText}
 					</Response>
 				)}
@@ -342,6 +408,100 @@ const PurePreviewMessage = ({
 	requiresScrollPadding: boolean;
 }) => {
 	const [mode, setMode] = useState<"view" | "edit">("view");
+	const [localApprovalStates, setLocalApprovalStates] = useState<
+		Record<string, LocalApprovalState>
+	>({});
+	const { artifact } = useArtifact();
+	const { artifactStream } = useDataStream();
+
+	useEffect(() => {
+		const interval = window.setInterval(() => {
+			const now = Date.now();
+			setLocalApprovalStates((current) => {
+				let changed = false;
+				const next = { ...current };
+
+				for (const [toolCallId, approvalState] of Object.entries(current)) {
+					if (
+						approvalState.phase === "approved" &&
+						now - approvalState.startedAt > 600
+					) {
+						next[toolCallId] = { ...approvalState, phase: "running" };
+						changed = true;
+					}
+
+					if (
+						approvalState.phase === "running" &&
+						now - approvalState.startedAt > 10_000
+					) {
+						next[toolCallId] = { ...approvalState, phase: "possibly-stuck" };
+						changed = true;
+					}
+				}
+
+				return changed ? next : current;
+			});
+		}, 500);
+
+		return () => window.clearInterval(interval);
+	}, []);
+
+	useEffect(() => {
+		const toolParts = (Array.isArray(message.parts) ? message.parts : []).filter(
+			isValidMessagePart,
+		);
+
+		setLocalApprovalStates((current) => {
+			let changed = false;
+			const next = { ...current };
+			const liveToolCallIds = new Set<string>();
+
+			for (const part of toolParts) {
+				const normalizedType = getNormalizedPartType(part);
+				if (!normalizedType.startsWith("tool-")) {
+					continue;
+				}
+
+				const payload = asToolPart(part);
+				const toolCallId = payload.toolCallId;
+				if (!toolCallId) {
+					continue;
+				}
+
+				liveToolCallIds.add(toolCallId);
+
+				if (isTerminalToolState(payload.state)) {
+					if (toolCallId in next) {
+						delete next[toolCallId];
+						changed = true;
+					}
+					continue;
+				}
+
+				if (
+					payload.state === "approval-responded" &&
+					payload.approval?.approved === false &&
+					next[toolCallId]?.phase !== "denied"
+				) {
+					next[toolCallId] = {
+						phase: "denied",
+						startedAt: next[toolCallId]?.startedAt ?? Date.now(),
+					};
+					changed = true;
+				}
+			}
+
+			for (const toolCallId of Object.keys(next)) {
+				if (!liveToolCallIds.has(toolCallId)) {
+					delete next[toolCallId];
+					changed = true;
+				}
+			}
+
+			return changed ? next : current;
+		});
+	}, [message.parts]);
+
 	if (!message || !message.id) {
 		return null;
 	}
@@ -358,12 +518,13 @@ const PurePreviewMessage = ({
 		(part) => part.type === "file",
 	);
 
+	const hasDocumentToolPart = messageParts.some(
+		(part) =>
+			getNormalizedPartType(part) === "tool-createDocument" ||
+			getNormalizedPartType(part) === "tool-updateDocument",
+	);
 	const hasAnyArtifact =
-		messageParts.some(
-			(part) =>
-				getNormalizedPartType(part) === "tool-createDocument" ||
-				getNormalizedPartType(part) === "tool-updateDocument",
-		) ||
+		hasDocumentToolPart ||
 		message.annotations?.some((annotation) => {
 			const parsed =
 				typeof annotation === "object" && annotation !== null
@@ -420,22 +581,24 @@ const PurePreviewMessage = ({
 			Boolean(sanitizeText((part as { text?: string }).text ?? "").trim()),
 	);
 	const hasRenderableAnnotation = Boolean(
-		message.annotations?.some((annotation) => {
-			const parsed =
-				typeof annotation === "object" && annotation !== null
-					? (annotation as Record<string, unknown>)
-					: null;
+		!hasDocumentToolPart &&
+			message.annotations?.some((annotation) => {
+				const parsed =
+					typeof annotation === "object" && annotation !== null
+						? (annotation as Record<string, unknown>)
+						: null;
 
-			return (
-				parsed?.type === "create-document" || parsed?.type === "update-document"
-			);
-		}),
+				return (
+					parsed?.type === "create-document" || parsed?.type === "update-document"
+				);
+			}),
 	);
 	const shouldShowAssistantActions =
 		message.role === "user" ||
 		hasTextPart ||
 		Boolean(fallbackContent.trim()) ||
 		attachmentsFromMessage.length > 0;
+	const renderedAssistantTextFingerprints = new Set<string>();
 
 	if (
 		message.role === "assistant" &&
@@ -458,15 +621,9 @@ const PurePreviewMessage = ({
 					"mx-auto flex w-full max-w-[820px]",
 					message.role === "user"
 						? "justify-end"
-						: "items-start gap-3 group-data-[top=true]:mt-[6vh]",
+						: "group-data-[top=true]:mt-[6vh]",
 				)}
 			>
-				{message.role === "assistant" && (
-					<div className="mt-1 flex h-7 w-7 shrink-0 items-center justify-center rounded-full border border-white/[0.10] bg-white/[0.08] text-[11px] font-semibold text-white/55">
-						U
-					</div>
-				)}
-
 				<div
 					className={cn("flex flex-col min-w-0", {
 						"gap-2": messageParts.some(
@@ -535,6 +692,19 @@ const PurePreviewMessage = ({
 								const textPart = part as { text?: string };
 								if (mode === "view") {
 									const rawText = sanitizeText(textPart.text ?? "");
+									const normalizedTextFingerprint = rawText.replace(/\s+/g, " ").trim();
+									if (
+										message.role === "assistant" &&
+										isDuplicateAssistantText(
+											normalizedTextFingerprint,
+											renderedAssistantTextFingerprints,
+										)
+									) {
+										return null;
+									}
+									if (message.role === "assistant" && normalizedTextFingerprint) {
+										renderedAssistantTextFingerprints.add(normalizedTextFingerprint);
+									}
 									const MAX_MSG_CHARS = 15_000;
 									const isHuge = rawText.length > MAX_MSG_CHARS;
 
@@ -731,11 +901,29 @@ const PurePreviewMessage = ({
 										: "update";
 								const args = toolPart.input as DocumentToolCallArgs;
 								const title = args && "title" in args ? args.title : "dokumen";
+								const hasArtifactCompletionFallback =
+									artifactStream.lifecycle === "completed" &&
+									artifact.documentId !== "init" &&
+									artifact.content.trim().length > 0 &&
+									(state === "input-streaming" ||
+										state === "input-available" ||
+										state === "approval-responded");
+								const effectiveDocumentHeaderState = hasArtifactCompletionFallback
+									? "output-available"
+									: getSafeToolState(state);
+								const fallbackDocumentResult = hasArtifactCompletionFallback
+									? {
+										id: artifact.documentId,
+										title: artifact.title || title,
+										kind: artifact.kind,
+										content: artifact.content,
+									}
+									: null;
 
 								return (
 									<Tool defaultOpen={true} key={toolCallId}>
 										<ToolHeader
-											state={getSafeToolState(state)}
+											state={effectiveDocumentHeaderState}
 											type={normalizedType as `tool-${string}`}
 											title={
 												normalizedType === "tool-createDocument"
@@ -751,24 +939,25 @@ const PurePreviewMessage = ({
 											}
 										/>
 										<ToolContent>
-											{(state === "input-streaming" ||
-												state === "input-available") && (
-												<DocumentToolCall
-													type={toolType}
-													args={toolPart.input as DocumentToolCallArgs}
-													isReadonly={isReadonly}
-												/>
-											)}
-											{state === "output-available" && (
+											{!hasArtifactCompletionFallback &&
+												(state === "input-streaming" || state === "input-available") && (
+													<DocumentToolCall
+														type={toolType}
+														args={toolPart.input as DocumentToolCallArgs}
+														isReadonly={isReadonly}
+													/>
+												)}
+											{(state === "output-available" || hasArtifactCompletionFallback) && (
 												<DocumentToolResult
 													type={toolType}
 													result={
-														toolPart.output as {
-															id: string;
-															title: string;
-															kind: "image" | "text" | "code" | "sheet";
-															content?: string;
-														}
+														(fallbackDocumentResult ??
+															(toolPart.output as {
+																id: string;
+																title: string;
+																kind: "image" | "text" | "code" | "sheet";
+																content?: string;
+															}))
 													}
 													isReadonly={isReadonly}
 												/>
@@ -923,15 +1112,18 @@ const PurePreviewMessage = ({
 												</div>
 
 												{stepFiles.length > 0 && (
-													<div className="rounded-xl border bg-muted/40 p-3">
-														<div className="mb-2 flex items-center gap-2 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
+													<div
+														className="rounded-[10px] border border-white/[0.06] bg-white/[0.03] p-3"
+														style={{ borderWidth: "0.5px" }}
+													>
+														<div className="mb-2 flex items-center gap-2 text-[11px] font-semibold uppercase tracking-wide text-white/[0.3]">
 															<LucideSparklesIcon className="size-3.5" />
 															Files
 														</div>
 														<div className="flex flex-wrap gap-2">
 															{stepFiles.map((file) => (
 																<span
-																	className="rounded-full border bg-background px-2.5 py-1 font-mono text-xs text-foreground"
+																	className="rounded-full border border-white/[0.06] bg-white/[0.03] px-2.5 py-1 font-mono text-xs text-white/[0.58]"
 																	key={`${toolCallId}-${file}`}
 																>
 																	{file}
@@ -942,15 +1134,18 @@ const PurePreviewMessage = ({
 												)}
 
 												{stepPackages.length > 0 && (
-													<div className="rounded-xl border bg-muted/40 p-3">
-														<div className="mb-2 flex items-center gap-2 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
+													<div
+														className="rounded-[10px] border border-white/[0.06] bg-white/[0.03] p-3"
+														style={{ borderWidth: "0.5px" }}
+													>
+														<div className="mb-2 flex items-center gap-2 text-[11px] font-semibold uppercase tracking-wide text-white/[0.3]">
 															<PackageIcon className="size-3.5" />
 															Packages
 														</div>
 														<div className="flex flex-wrap gap-2">
 															{stepPackages.map((pkg) => (
 																<span
-																	className="rounded-full border bg-background px-2.5 py-1 text-xs text-foreground"
+																	className="rounded-full border border-white/[0.06] bg-white/[0.03] px-2.5 py-1 text-xs text-white/[0.58]"
 																	key={`${toolCallId}-${pkg}`}
 																>
 																	{pkg}
@@ -961,8 +1156,11 @@ const PurePreviewMessage = ({
 												)}
 
 												{stepCommand && (
-													<div className="rounded-xl border bg-zinc-950 px-3 py-2 font-mono text-xs text-zinc-100 dark:bg-zinc-900">
-														<div className="mb-1 flex items-center gap-2 text-[11px] font-semibold uppercase tracking-wide text-zinc-400">
+													<div
+														className="rounded-[10px] border border-white/[0.06] bg-white/[0.03] px-3 py-2 font-mono text-xs text-white/[0.62]"
+														style={{ borderWidth: "0.5px" }}
+													>
+														<div className="mb-1 flex items-center gap-2 text-[11px] font-semibold uppercase tracking-wide text-white/[0.3]">
 															<PlayIcon className="size-3.5" />
 															Action
 														</div>
@@ -1033,8 +1231,11 @@ const PurePreviewMessage = ({
 											/>
 											<ToolContent>
 												<div className="space-y-3 px-4 py-4">
-													<div className="rounded-xl border bg-zinc-950 px-3 py-3 font-mono text-xs text-zinc-100 dark:bg-zinc-900">
-														<div className="mb-2 flex items-center gap-2 text-[11px] font-semibold uppercase tracking-wide text-zinc-400">
+													<div
+														className="rounded-[10px] border border-white/[0.06] bg-white/[0.03] px-3 py-3 font-mono text-xs text-white/[0.62]"
+														style={{ borderWidth: "0.5px" }}
+													>
+														<div className="mb-2 flex items-center gap-2 text-[11px] font-semibold uppercase tracking-wide text-white/[0.3]">
 															<PlayIcon className="size-3.5" />
 															Virtual Command
 														</div>
@@ -1045,8 +1246,11 @@ const PurePreviewMessage = ({
 																: "Unavailable command",
 														)}
 													</div>
-													<div className="rounded-xl border bg-muted/40 p-3 text-sm text-foreground">
-														<div className="mb-1 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
+													<div
+														className="rounded-[10px] border border-white/[0.06] bg-white/[0.03] p-3 text-sm text-white/[0.62]"
+														style={{ borderWidth: "0.5px" }}
+													>
+														<div className="mb-1 text-[11px] font-semibold uppercase tracking-wide text-white/[0.3]">
 															Purpose
 														</div>
 														{getStringValue(
@@ -1057,8 +1261,11 @@ const PurePreviewMessage = ({
 													{(state === "output-available" ||
 														state === "output-error") &&
 													resultText ? (
-														<div className="rounded-xl border bg-background p-3 text-sm text-foreground">
-															<div className="mb-1 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
+														<div
+															className="rounded-[10px] border border-white/[0.06] bg-white/[0.03] p-3 text-sm text-white/[0.62]"
+															style={{ borderWidth: "0.5px" }}
+														>
+															<div className="mb-1 text-[11px] font-semibold uppercase tracking-wide text-white/[0.3]">
 																Result
 															</div>
 															{resultText}
@@ -1075,6 +1282,29 @@ const PurePreviewMessage = ({
 								)
 									? payload
 									: {};
+								const stableToolCallId = toolCallId ?? key;
+								const approvalId = toolPart.approval?.id;
+								const isDenied =
+									state === "output-denied" ||
+									(state === "approval-responded" &&
+										toolPart.approval?.approved === false);
+								const localApprovalState = localApprovalStates[stableToolCallId];
+								const visualStatus = isDenied || localApprovalState?.phase === "denied"
+									? "Denied"
+									: state === "output-available"
+										? "Done"
+										: state === "output-error"
+											? "Error"
+											: localApprovalState?.phase === "possibly-stuck"
+												? "Possibly stuck"
+												: localApprovalState?.phase === "approved"
+													? "Approved"
+													: localApprovalState?.phase === "running" ||
+														state === "approval-responded" ||
+														state === "input-available" ||
+														state === "input-streaming"
+														? "Running"
+														: "Waiting approval";
 								const workspaceFiles = getStringArray(workspacePayload.files);
 
 								const titleMap: Record<string, string> = {
@@ -1116,25 +1346,41 @@ const PurePreviewMessage = ({
 								};
 
 								return (
-									<Tool defaultOpen={true} key={toolCallId}>
+									<Tool defaultOpen={true} key={stableToolCallId}>
 										<ToolHeader
-											state={getSafeToolState(state)}
+											state={getApprovalAwareToolHeaderState(
+												state,
+												localApprovalState,
+											)}
 											type={normalizedType as `tool-${string}`}
 											title={titleMap[normalizedType] ?? "Aksi Workspace"}
 											icon={iconMap[normalizedType]}
 										/>
 										<ToolContent>
 											<div className="space-y-3 px-4 py-4">
-												<div className="flex items-center gap-2 text-sm font-medium text-foreground">
-													<LucideSparklesIcon className="size-4 text-cyan-500" />
-													<span>
+												<div className="flex items-center justify-between gap-3">
+													<div className="min-w-0 text-[12.5px] font-normal text-white/[0.6]">
 														{titleMap[normalizedType] ?? "Workspace Action"}
+													</div>
+													<span
+														className={cn(
+															"shrink-0 rounded-full border px-2.5 py-1 text-[10.5px]",
+															visualStatus === "Done"
+																? "border-[rgba(62,207,142,0.2)] bg-[rgba(62,207,142,0.07)] text-[rgba(62,207,142,0.8)]"
+																: "border-white/[0.08] bg-white/[0.05] text-white/[0.35]",
+														)}
+														style={{ borderWidth: "0.5px" }}
+													>
+														{visualStatus}
 													</span>
 												</div>
 
 												{typeof workspacePayload.path === "string" && (
-													<div className="rounded-xl border bg-background p-3 text-sm text-foreground">
-														<div className="mb-1 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
+													<div
+														className="rounded-[10px] border border-white/[0.06] bg-white/[0.03] p-3 text-sm text-white/[0.62]"
+														style={{ borderWidth: "0.5px" }}
+													>
+														<div className="mb-1 text-[11px] font-semibold uppercase tracking-wide text-white/[0.3]">
 															Path
 														</div>
 														<div className="font-mono text-xs">
@@ -1144,27 +1390,90 @@ const PurePreviewMessage = ({
 												)}
 
 												{typeof workspacePayload.count === "number" && (
-													<div className="rounded-xl border bg-muted/40 p-3 text-sm text-foreground">
+													<div
+														className="rounded-[10px] border border-white/[0.06] bg-white/[0.03] p-3 text-sm text-white/[0.62]"
+														style={{ borderWidth: "0.5px" }}
+													>
 														{workspacePayload.count} files available in the
 														virtual workspace.
 													</div>
 												)}
 
 												{workspaceFiles.length > 0 && (
-													<div className="rounded-xl border bg-muted/40 p-3">
-														<div className="mb-2 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
+													<div
+														className="rounded-[10px] border border-white/[0.06] bg-white/[0.03] p-3"
+														style={{ borderWidth: "0.5px" }}
+													>
+														<div className="mb-2 text-[11px] font-semibold uppercase tracking-wide text-white/[0.3]">
 															Files
 														</div>
 														<div className="flex flex-wrap gap-2">
 															{workspaceFiles.map((file) => (
 																<span
-																	className="rounded-full border bg-background px-2.5 py-1 font-mono text-xs text-foreground"
+																	className="rounded-full border border-white/[0.06] bg-white/[0.03] px-2.5 py-1 font-mono text-xs text-white/[0.58]"
 																	key={`${toolCallId}-${file}`}
 																>
 																	{file}
 																</span>
 															))}
 														</div>
+													</div>
+												)}
+
+												{visualStatus === "Possibly stuck" ? (
+													<div className="flex items-center justify-between gap-3 border-white/[0.06] border-t pt-3 text-[11.5px] text-white/35">
+														<span>Result belum sampai. Kamu bisa tunggu atau refresh chat.</span>
+														<button
+															className="rounded-[8px] border border-white/[0.08] px-2.5 py-1 text-white/45 transition-colors hover:bg-white/[0.04] hover:text-white/70"
+															onClick={() => window.location.reload()}
+															type="button"
+														>
+															Refresh
+														</button>
+													</div>
+												) : null}
+
+												{state === "approval-requested" && approvalId && !isDenied && (
+													<div className="flex items-center justify-end gap-2 border-white/[0.06] border-t pt-3">
+														<button
+															className="rounded-[8px] px-3 py-1.5 text-white/35 text-sm transition-colors hover:bg-white/[0.04] hover:text-white/65"
+															onClick={() => {
+																setLocalApprovalStates((current) => ({
+																	...current,
+																	[stableToolCallId]: {
+																		phase: "denied",
+																		startedAt: Date.now(),
+																	},
+																}));
+																addToolApprovalResponse({
+																	id: approvalId,
+																	approved: false,
+																	reason: "User denied workspace action",
+																});
+															}}
+															type="button"
+														>
+															Deny
+														</button>
+														<button
+															className="rounded-[8px] border border-white/[0.08] bg-white/[0.06] px-3 py-1.5 text-sm text-white/75 transition-colors hover:bg-white/[0.1]"
+															onClick={() => {
+																setLocalApprovalStates((current) => ({
+																	...current,
+																	[stableToolCallId]: {
+																		phase: "approved",
+																		startedAt: Date.now(),
+																	},
+																}));
+																addToolApprovalResponse({
+																	id: approvalId,
+																	approved: true,
+																});
+															}}
+															type="button"
+														>
+															Allow
+														</button>
 													</div>
 												)}
 											</div>
@@ -1244,7 +1553,7 @@ const PurePreviewMessage = ({
 					) : null}
 
 					{/* Render tool events injected via message annotations */}
-					{message.annotations?.map((annotation, index) => {
+					{!hasDocumentToolPart && message.annotations?.map((annotation, index) => {
 						const key = `message-${message.id}-annotation-${index}`;
 						const parsed =
 							typeof annotation === "object" && annotation !== null
@@ -1342,11 +1651,7 @@ export const ThinkingMessage = () => {
 			data-role="assistant"
 			data-testid="message-assistant-loading"
 		>
-			<div className="mx-auto flex w-full max-w-[680px] items-start gap-3">
-				<div className="mt-0.5 flex size-6 shrink-0 items-center justify-center rounded-full bg-white/[0.08] text-[10px] font-medium text-white/55">
-					U
-				</div>
-
+			<div className="mx-auto flex w-full max-w-[680px]">
 				<div className="min-w-0 flex-1">
 					<AgentThinkingPanel
 						status="thinking"

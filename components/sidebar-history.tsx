@@ -121,7 +121,9 @@ export function SidebarHistory({ user }: { user: User | undefined }) {
 			(paginatedChatHistory) => paginatedChatHistory.chats,
 		) || [];
 
-	const filteredChats = chatsFromHistory;
+	const filteredChats = Array.from(
+		new Map(chatsFromHistory.map((chat) => [chat.id, chat])).values(),
+	);
 
 	const pinnedChats = filteredChats.filter((chat) => chat.isPinned);
 	const groupedChats = groupChatsByDate(

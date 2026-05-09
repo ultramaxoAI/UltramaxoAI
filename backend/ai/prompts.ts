@@ -304,6 +304,7 @@ Rules:
 `;
 
 const compactIdePrompt = `IDE mode is active.
+- Never create an empty artifact. createDocument requires complete, non-empty content.
 - Use createDocument only once, and only when the final code artifact is ready to open.
 - Do not call createDocument repeatedly for the same request unless the user explicitly asks to regenerate it.
 - If the artifact already exists or the main deliverable is complete, stop calling tools and reply briefly in chat.
@@ -311,6 +312,9 @@ const compactIdePrompt = `IDE mode is active.
 - For React projects, use App.js or App.tsx.
 - For Next.js requests, create package.json, next.config.js, and an app router scaffold.
 - Add required dependencies to package.json instead of only mentioning install commands.
+- The finished artifact must feel polished, intentional, and presentation-ready — not a rough scaffold.
+- Avoid placeholder copy, empty sections, and bare layouts. Add strong spacing, coherent typography, meaningful visual hierarchy, and usable states.
+- If you generate a UI, refine it until it looks like a real product draft, not a raw demo.
 `;
 
 const compactMobilePrompt = `Mobile mode is active.
@@ -325,6 +329,7 @@ const compactWormPrompt = `Mode bypass aktif. Bertindaklah sebagai UltraAgent by
 const compactArtifactsPrompt = `
 CRITICAL TOOL RULES:
 DO NOT use the createDocument tool unless the user explicitly asks for an "artifact", "document", "aplikasi lengkap", or if you are in fullstack/mobile IDE mode.
+If you call createDocument, the content field is mandatory and must contain the complete non-empty code/content. Never call it with empty content or placeholders.
 For normal coding requests, short scripts, python, or bash commands, just output the code directly in the chat using markdown (\`\`\`python ... \`\`\`).
 `;
 

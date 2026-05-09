@@ -1,14 +1,9 @@
 "use client";
 
-import {
-	CheckCircle2Icon,
-	ChevronUpIcon,
-	CircleStopIcon,
-	Loader2Icon,
-	XCircleIcon,
-} from "lucide-react";
+import { ChevronUpIcon, CircleStopIcon } from "lucide-react";
 import { useMemo, useState } from "react";
 import { cn } from "@/lib/utils";
+import { AgentModeBar } from "./AgentModeBar";
 import { useDataStream } from "./data-stream-provider";
 
 function formatElapsed(startedAt: number | null, endedAt: number | null) {
@@ -29,26 +24,14 @@ function formatElapsed(startedAt: number | null, endedAt: number | null) {
 function getStatusLabel(status: string) {
 	switch (status) {
 		case "done":
-			return "Done";
+			return "done";
 		case "error":
-			return "Needs attention";
+			return "working";
 		case "executing":
-			return "Working";
+			return "working";
 		default:
-			return "Thinking";
+			return "working";
 	}
-}
-
-function StatusIcon({ status }: { status: string }) {
-	if (status === "done") {
-		return <CheckCircle2Icon className="size-3.5 text-white/55" />;
-	}
-
-	if (status === "error") {
-		return <XCircleIcon className="size-3.5 text-white/50" />;
-	}
-
-	return <Loader2Icon className="size-3.5 animate-spin text-white/55" />;
 }
 
 export function AgentDock({
@@ -72,52 +55,37 @@ export function AgentDock({
 
 	return (
 		<div className={cn("mx-auto w-full max-w-3xl px-1 sm:px-0", className)}>
-			<div className="overflow-hidden rounded-[22px] border border-white/[0.09] bg-[#151515]/95 text-white shadow-[0_18px_60px_rgba(0,0,0,0.22)] backdrop-blur-xl">
-				<div className="px-4 py-3">
-					<div className="flex items-center justify-between gap-3">
-						<div className="flex min-w-0 items-center gap-3">
-							<div className="flex size-8 shrink-0 items-center justify-center rounded-full border border-white/[0.10] bg-white/[0.04]">
-								<StatusIcon status={agentStream.status} />
-							</div>
-							<div className="min-w-0">
-								<div className="flex items-center gap-2">
-									<p className="truncate text-[13px] font-medium tracking-[-0.01em] text-white/88">
-										Agent mode
-									</p>
-									<span className="rounded-full border border-white/[0.08] bg-white/[0.04] px-2 py-0.5 text-[10px] text-white/45">
-										{getStatusLabel(agentStream.status)}
-									</span>
-								</div>
-								<p className="mt-0.5 truncate text-[11px] leading-5 text-white/38">
-									{latestStep?.label ?? "Working in the background"} ·{" "}
-									{formatElapsed(agentStream.startedAt, agentStream.endedAt)}
-								</p>
-							</div>
+			<div className="overflow-hidden rounded-[16px] border border-white/[0.08] bg-transparent text-white">
+				<div className="px-0 py-0">
+					<div className="flex items-center gap-2">
+						<div className="min-w-0 flex-1">
+							<AgentModeBar
+								status={getStatusLabel(agentStream.status)}
+								subtitles={visibleSteps.length > 0
+									? visibleSteps.map(
+										(step) => `${step.label} · ${formatElapsed(agentStream.startedAt, agentStream.endedAt)}`,
+									)
+									: [`${latestStep?.label ?? "Menyiapkan dokumen"} · ${formatElapsed(agentStream.startedAt, agentStream.endedAt)}`]}
+							/>
 						</div>
-
-						<div className="flex shrink-0 items-center gap-1.5">
+						<button
+							className="inline-flex size-[26px] shrink-0 items-center justify-center rounded-[7px] border border-white/[0.07] bg-white/[0.04] text-white/30 transition-colors hover:bg-white/[0.07]"
+							onClick={() => setExpanded((value) => !value)}
+							type="button"
+						>
+							<ChevronUpIcon
+								className={cn("size-3.5 transition-transform", !expanded && "rotate-180")}
+							/>
+						</button>
+						{stop && agentStream.status !== "done" ? (
 							<button
-								className="inline-flex size-8 items-center justify-center rounded-full border border-white/[0.08] bg-white/[0.03] text-white/42 transition-colors hover:bg-white/[0.07] hover:text-white/70"
-								onClick={() => setExpanded((value) => !value)}
+								className="inline-flex size-[26px] shrink-0 items-center justify-center rounded-[7px] border border-white/[0.07] bg-white/[0.04] text-white/30 transition-colors hover:bg-white/[0.07]"
+								onClick={stop}
 								type="button"
 							>
-								<ChevronUpIcon
-									className={cn(
-										"size-4 transition-transform",
-										!expanded && "rotate-180",
-									)}
-								/>
+								<CircleStopIcon className="size-3.5" />
 							</button>
-							{stop && agentStream.status !== "done" ? (
-								<button
-									className="inline-flex size-8 items-center justify-center rounded-full border border-white/[0.08] bg-white/[0.03] text-white/42 transition-colors hover:bg-white/[0.07] hover:text-white/70"
-									onClick={stop}
-									type="button"
-								>
-									<CircleStopIcon className="size-4" />
-								</button>
-							) : null}
-						</div>
+						) : null}
 					</div>
 				</div>
 

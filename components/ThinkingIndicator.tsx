@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import type { ThinkingEvent, ThinkingPhase } from "@/hooks/useThinkingState";
 import { useThinkingState } from "@/hooks/useThinkingState";
 import { cn } from "@/lib/utils";
@@ -60,18 +60,23 @@ export function ThinkingIndicator({
 		initialChunks: normalizedChunks,
 		initialPhase: derivedInitialPhase,
 	});
+	const [shouldRender, setShouldRender] = useState(true);
 
 	const emitEvent = useMemo(
 		() => (nextEvent: ThinkingEvent) => {
-			state.onEvent(nextEvent);
+			state.handleEvent(nextEvent);
 			onEvent?.(nextEvent);
 		},
-		[state.onEvent, onEvent],
+		[state.handleEvent, onEvent],
 	);
 
 	useEffect(() => {
+		if (listenToGlobalEvents && normalizedChunks.length === 0) {
+			return;
+		}
+
 		state.setThinkingChunks(normalizedChunks);
-	}, [normalizedChunks, state.setThinkingChunks]);
+	}, [listenToGlobalEvents, normalizedChunks, state.setThinkingChunks]);
 
 	useEffect(() => {
 		if (event) {
@@ -116,20 +121,38 @@ export function ThinkingIndicator({
 		}
 	}, [emitEvent, isActive, totalDurationMs]);
 
-	if (state.phase === "done" && !state.hasUpgraded) {
+	useEffect(() => {
+		if (state.phase === "done" && !state.hasUpgraded) {
+			const timeout = window.setTimeout(() => setShouldRender(false), 300);
+			return () => window.clearTimeout(timeout);
+		}
+
+		setShouldRender(true);
+	}, [state.hasUpgraded, state.phase]);
+
+	if (!shouldRender) {
 		return null;
 	}
 
 	return (
 		<div className={cn("relative w-full", className)}>
 			{state.showToast ? (
-				<div className="adaptive-thinking-toast pointer-events-none absolute -top-11 left-0 z-10 rounded-full border border-[#152035] bg-[#0a1525] px-3 py-1.5 text-[11px] font-medium text-[#8abfff] shadow-[0_12px_32px_rgba(0,0,0,0.28)]">
+				<div
+					className="adaptive-thinking-toast pointer-events-none absolute -top-11 left-0 z-10 rounded-[20px] border border-white/[0.08] bg-white/[0.03] px-3 py-1.5 text-[11px] font-normal text-white/[0.45] backdrop-blur-[8px]"
+					style={{
+						background: "rgba(255,255,255,0.03)",
+						borderWidth: "0.5px",
+						backdropFilter: "blur(8px)",
+					}}
+				>
 					⚡ Mode ditingkatkan ke UltraAgent
 				</div>
 			) : null}
 
-			{state.phase === "simple" || state.phase === "upgrading" ? (
-				<SimpleThinking isUpgrading={state.phase === "upgrading"} />
+			{state.phase === "simple" || (state.phase === "done" && !state.hasUpgraded) ? (
+				<SimpleThinking />
+			) : state.phase === "upgrading" ? (
+				<SimpleThinking isUpgrading />
 			) : (
 				<AgentThinking
 					durationMs={state.durationMs ?? totalDurationMs}

@@ -21,14 +21,10 @@ function PureArtifactCloseButton() {
 			className="h-10 w-10 rounded-full border-white/[0.08] bg-white/[0.04] p-0 text-white/65 backdrop-blur transition-colors hover:bg-white/[0.08] hover:text-white/90"
 			data-testid="artifact-close-button"
 			onClick={() => {
-				setArtifact((currentArtifact) =>
-					currentArtifact.status === "streaming"
-						? {
-								...currentArtifact,
-								isVisible: false,
-							}
-						: { ...initialArtifactData, status: "idle" },
-				);
+				setArtifact((currentArtifact) => ({
+					...(currentArtifact ?? initialArtifactData),
+					isVisible: false,
+				}));
 			}}
 			variant="outline"
 		>

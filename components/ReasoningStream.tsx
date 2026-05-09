@@ -73,7 +73,7 @@ function renderReasoningNodes(value: string) {
 
 		nodes.push(
 			<strong
-				className="text-[#525252] not-italic"
+				className="text-white/40 not-italic"
 				key={`strong-${match.index}`}
 			>
 				{match[1]}
@@ -121,7 +121,7 @@ export function ReasoningStream({
 		}
 
 		scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
-	});
+	}, [rendered]);
 
 	useEffect(() => {
 		if (!target || rendered === target || !target.startsWith(rendered)) {
@@ -151,28 +151,23 @@ export function ReasoningStream({
 
 	return (
 		<div
-			className="reasoning-stream-scroll max-h-[250px] overflow-y-auto px-4 py-3.5 pr-3"
+			className="reasoning-stream-scroll max-h-[180px] overflow-y-auto px-0 py-0"
 			ref={scrollRef}
 		>
-			<div className="reasoning-stream-text whitespace-pre-wrap break-words text-[12px] text-[#404040] italic leading-[1.8]">
+			<div className="reasoning-stream-text whitespace-pre-wrap break-words text-[11.5px] text-white/22 italic leading-[1.8]">
 				{renderedNodes}
 				{showCursor ? (
-					<span className="reasoning-stream-cursor ml-px inline-block h-3 w-[1.5px] rounded-[1px] bg-[#4a90e2] align-[-1px] opacity-80" />
+					<span className="reasoning-stream-cursor ml-px inline-block h-[11px] w-[1.5px] rounded-[1px] bg-white/40 align-[-1px] opacity-80" />
 				) : null}
 			</div>
 
 			<style jsx>{`
 				.reasoning-stream-scroll {
-					scrollbar-width: thin;
-					scrollbar-color: #1e1e1e transparent;
+					scrollbar-width: none;
 				}
 
 				.reasoning-stream-scroll::-webkit-scrollbar {
-					width: 2px;
-				}
-
-				.reasoning-stream-scroll::-webkit-scrollbar-thumb {
-					background: #1e1e1e;
+					display: none;
 				}
 
 				.reasoning-stream-cursor {

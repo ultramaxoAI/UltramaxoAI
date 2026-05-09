@@ -13,10 +13,8 @@ import { ChatContextHeader } from "@/components/chat-context-header";
 import { useArtifactSelector, useArtifactUiState } from "@/hooks/use-artifact";
 import { useAutoResume } from "@/hooks/use-auto-resume";
 import { useChatVisibility } from "@/hooks/use-chat-visibility";
-import { detectAgentMode, isAgenticToolName } from "@/lib/agent-mode-detector";
 import { detectTaskType } from "@/lib/detect-task-type";
 import { ChatSDKError } from "@/lib/errors";
-import { getThinkingSteps } from "@/lib/thinking-steps";
 import type { Attachment, ChatMessage, CustomUIDataTypes } from "@/lib/types";
 import {
 	cn,
@@ -127,6 +125,8 @@ export function Chat({
 		setDataStream,
 		setAgentStream,
 		setLiveThinking,
+		setActiveChatId,
+		resetStreamState,
 	} = useDataStream();
 	const { setUiState: setArtifactUiState } = useArtifactUiState();
 	const { setOpen: setSidebarOpen, setOpenMobile: setSidebarOpenMobile } =
@@ -154,6 +154,7 @@ export function Chat({
 	} | null>(null);
 	const currentModelIdRef = useRef(currentModelId);
 	const statusResetAtRef = useRef<number | null>(null);
+	const streamedResponseTextRef = useRef("");
 	const activeDocumentId = useArtifactSelector((state) => state.documentId);
 	const togglesRef = useRef({
 		wormgptEnabled,
@@ -295,6 +296,19 @@ export function Chat({
 			setLastChunkAt(Date.now());
 			setStreamError(null);
 
+			if (dataPart.type === "data-response_chunk") {
+				const payload = dataPart.data as { content?: string } | string | undefined;
+				const content =
+					typeof payload === "string"
+						? payload
+						: typeof payload?.content === "string"
+							? payload.content
+							: "";
+				if (content) {
+					streamedResponseTextRef.current += content;
+				}
+			}
+
 			if (
 				dataPart.type === "data-appendMessage" &&
 				typeof dataPart.data === "string"
@@ -434,31 +448,10 @@ export function Chat({
 					: false
 				: (pendingTurn?.hasAttachment ?? false);
 			const taskType = detectTaskType(userText);
-			const recentContext = messages
-				.filter((candidate) =>
-					lastUserMessage ? candidate.id !== lastUserMessage.id : true,
-				)
-				.slice(-4)
-				.map((candidate) => getTextFromMessage(candidate).trim())
-				.filter(Boolean);
-			const preflightDetection = detectAgentMode({
-				message: userText,
-				recentContext,
-				hasAttachment,
-			});
-			const initialSurface =
-				fullstackModeEnabled || mobileModeEnabled
-					? "agent-active"
-					: preflightDetection.uiSurface === "agent-active"
-						? "deep-thinking"
-						: deepThinkingEnabled &&
-								preflightDetection.uiSurface === "responding"
-							? "deep-thinking"
-							: preflightDetection.uiSurface;
-			const shouldShowLiveThinking = initialSurface !== "responding";
 
 			setStreamError(null);
 			setLastChunkAt(now);
+			streamedResponseTextRef.current = "";
 			setAgentStream({
 				status: "thinking",
 				steps: [],
@@ -466,13 +459,11 @@ export function Chat({
 				endedAt: null,
 			});
 			setLiveThinking({
-				enabled: shouldShowLiveThinking,
+				enabled: true,
 				taskType,
-				steps: shouldShowLiveThinking
-					? getThinkingSteps(taskType, userText)
-					: [],
-				startedAt: shouldShowLiveThinking ? now : null,
-				surface: initialSurface,
+				steps: [],
+				startedAt: now,
+				surface: "responding",
 				runtimeEscalated: false,
 			});
 		}
@@ -510,39 +501,6 @@ export function Chat({
 		}
 	}, [messages, setAgentStream, setLiveThinking, status]);
 
-	useEffect(() => {
-		if (status !== "submitted" && status !== "streaming") {
-			return;
-		}
-
-		const hasRuntimeAgentWork =
-			agentStream.steps.some((step) => {
-				if (step.type === "tool_call") {
-					return isAgenticToolName(step.label);
-				}
-
-				return agentStream.steps.length > 1;
-			}) ||
-			agentStream.steps.filter((step) => step.type === "tool_call").length > 1;
-
-		if (!hasRuntimeAgentWork) {
-			return;
-		}
-
-		setLiveThinking((current) => ({
-			...current,
-			enabled: true,
-			startedAt: current.startedAt ?? agentStream.startedAt ?? Date.now(),
-			surface: "agent-active",
-			runtimeEscalated: true,
-		}));
-	}, [
-		agentStream.startedAt,
-		agentStream.status,
-		agentStream.steps,
-		setLiveThinking,
-		status,
-	]);
 
 	useEffect(() => {
 		if (status !== "ready") {
@@ -605,9 +563,13 @@ export function Chat({
 		if (
 			hasRenderableAssistantAfterLastUser ||
 			hasAssistantToolOutputAfterLastUser ||
-			!hasAgentTrace ||
 			lastFallbackMessageForUserIdRef.current === lastUserMessage.id
 		) {
+			return;
+		}
+
+		const streamedResponseText = streamedResponseTextRef.current.trim();
+		if (!streamedResponseText && !hasAgentTrace) {
 			return;
 		}
 
@@ -620,7 +582,9 @@ export function Chat({
 				parts: [
 					{
 						type: "text",
-						text: "Proses sudah selesai, tapi respons akhir tidak sempat tampil di chat. Coba generate ulang atau lanjutkan dari hasil workspace yang sudah dibuat.",
+						text:
+							streamedResponseText ||
+							"Proses sudah selesai, tapi respons akhir tidak sempat tampil di chat. Coba generate ulang atau lanjutkan dari hasil workspace yang sudah dibuat.",
 					},
 				],
 				metadata: {
@@ -628,6 +592,7 @@ export function Chat({
 				},
 			},
 		]);
+		streamedResponseTextRef.current = "";
 	}, [
 		agentStream.steps.length,
 		liveThinking.steps.length,
@@ -737,12 +702,53 @@ export function Chat({
 	// Count user messages for contextual upgrade banner
 	const userMessageCount = messages.filter((m) => m.role === "user").length;
 
+	useEffect(() => {
+		setActiveChatId(id);
+		resetStreamState();
+		setStreamError(null);
+		setLastChunkAt(Date.now());
+		lastThinkingMessageIdRef.current = null;
+		lastFallbackMessageForUserIdRef.current = null;
+		streamedResponseTextRef.current = "";
+		pendingTurnRef.current = null;
+		statusResetAtRef.current = null;
+		setAttachments([]);
+		setInput("");
+		setMessages((currentMessages) =>
+			currentMessages.length > 0 ? currentMessages : safeInitialMessages,
+		);
+
+		return () => {
+			setActiveChatId((currentChatId) =>
+				currentChatId === id ? null : currentChatId,
+			);
+			resetStreamState();
+		};
+	}, [
+		id,
+		resetStreamState,
+		safeInitialMessages,
+		setActiveChatId,
+		setMessages,
+	]);
+
 	useAutoResume({
+		chatId: id,
 		autoResume,
 		initialMessages: safeInitialMessages,
 		resumeStream,
 		setMessages,
 	});
+
+	useEffect(() => {
+		setMessages((currentMessages) => {
+			if (currentMessages.length > 0) {
+				return currentMessages;
+			}
+
+			return safeInitialMessages;
+		});
+	}, [safeInitialMessages, setMessages]);
 
 	useEffect(() => {
 		if (isArtifactVisible) {

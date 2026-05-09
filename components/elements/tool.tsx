@@ -4,7 +4,6 @@ import type { ToolUIPart } from "ai";
 import {
 	CheckCircleIcon,
 	ChevronDownIcon,
-	ClockIcon,
 	Loader2Icon,
 	WrenchIcon,
 	XCircleIcon,
@@ -22,7 +21,15 @@ export type ToolProps = ComponentProps<typeof Collapsible>;
 
 export const Tool = ({ className, ...props }: ToolProps) => (
 	<Collapsible
-		className={cn("not-prose mb-4 w-full rounded-md border", className)}
+		className={cn(
+			"not-prose mb-4 w-full overflow-hidden rounded-[14px] border border-white/[0.08] bg-white/[0.03] backdrop-blur-[8px]",
+			className,
+		)}
+		style={{
+			background: "rgba(255,255,255,0.03)",
+			borderWidth: "0.5px",
+			backdropFilter: "blur(8px)",
+		}}
 		{...props}
 	/>
 );
@@ -36,37 +43,43 @@ export type ToolHeaderProps = {
 };
 
 const getStatusBadge = (status: ToolUIPart["state"]) => {
-	const labels: Record<ToolUIPart["state"], string> = {
-		"input-streaming": "Pending",
-		"input-available": "Running",
-		"approval-requested": "Pending",
-		"approval-responded": "Approved",
-		"output-available": "Completed",
-		"output-error": "Error",
-		"output-denied": "Denied",
-	};
+	const isDone = status === "output-available";
+	const isNeutralPending =
+		status === "input-streaming" ||
+		status === "input-available" ||
+		status === "approval-requested" ||
+		status === "approval-responded";
+	const label = isDone
+		? "Done"
+		: isNeutralPending
+			? status === "approval-requested" || status === "input-streaming"
+				? "Pending"
+				: "Running"
+			: status === "output-denied"
+				? "Denied"
+				: "Error";
 
-	const icons: Record<ToolUIPart["state"], ReactNode> = {
-		"input-streaming": (
-			<Loader2Icon className="size-4 animate-spin text-muted-foreground" />
-		),
-		"input-available": (
-			<Loader2Icon className="size-4 animate-spin text-primary" />
-		),
-		"approval-requested": <ClockIcon className="size-4 text-yellow-600" />,
-		"approval-responded": <CheckCircleIcon className="size-4 text-blue-600" />,
-		"output-available": <CheckCircleIcon className="size-4 text-green-600" />,
-		"output-error": <XCircleIcon className="size-4 text-red-600" />,
-		"output-denied": <XCircleIcon className="size-4 text-orange-600" />,
-	};
+	const icon: ReactNode = isDone ? (
+		<CheckCircleIcon className="size-[10px] text-[rgba(62,207,142,0.8)]" />
+	) : isNeutralPending ? (
+		<Loader2Icon className="size-[10px] animate-spin text-white/[0.4]" />
+	) : (
+		<XCircleIcon className="size-[10px] text-white/[0.4]" />
+	);
 
 	return (
 		<Badge
-			className="flex shrink-0 items-center gap-1 whitespace-nowrap rounded-full text-xs"
+			className={cn(
+				"flex shrink-0 items-center gap-[4px] whitespace-nowrap rounded-[20px] border px-[9px] py-[3px] text-[10.5px] font-normal",
+				isDone
+					? "border-[rgba(62,207,142,0.2)] bg-[rgba(62,207,142,0.07)] text-[rgba(62,207,142,0.8)]"
+					: "border-white/[0.08] bg-white/[0.05] text-white/[0.35]",
+			)}
+			style={{ borderWidth: "0.5px" }}
 			variant="secondary"
 		>
-			{icons[status]}
-			<span className="hidden sm:inline">{labels[status]}</span>
+			{icon}
+			<span className="hidden sm:inline">{label}</span>
 		</Badge>
 	);
 };
@@ -81,20 +94,25 @@ export const ToolHeader = ({
 }: ToolHeaderProps) => (
 	<CollapsibleTrigger
 		className={cn(
-			"flex w-full min-w-0 items-center justify-between gap-2 overflow-hidden p-3 transition-colors hover:bg-muted/50",
+			"flex w-full min-w-0 items-center justify-between gap-2 overflow-hidden px-[14px] py-[10px] transition-colors hover:bg-white/[0.02]",
 			className,
 		)}
 		{...props}
 	>
-		<div className="flex min-w-0 flex-1 items-center gap-2">
-			{icon || <WrenchIcon className="size-4 shrink-0 text-muted-foreground" />}
-			<span className="truncate font-medium text-sm text-foreground">
+		<div className="flex min-w-0 flex-1 items-center gap-[9px]">
+			<div
+				className="flex size-[22px] shrink-0 items-center justify-center rounded-[6px] border border-white/[0.08] bg-white/[0.05] text-white/[0.4]"
+				style={{ borderWidth: "0.5px" }}
+			>
+				{icon || <WrenchIcon className="size-[11px] shrink-0 text-white/[0.4]" />}
+			</div>
+			<span className="truncate text-[12.5px] font-normal text-white/[0.6]">
 				{title || type}
 			</span>
 		</div>
 		<div className="flex shrink-0 items-center gap-2 whitespace-nowrap">
 			{getStatusBadge(state)}
-			<ChevronDownIcon className="size-4 text-muted-foreground transition-transform group-data-[state=open]:rotate-180" />
+			<ChevronDownIcon className="size-4 text-white/[0.28] transition-transform group-data-[state=open]:rotate-180" />
 		</div>
 	</CollapsibleTrigger>
 );
@@ -104,9 +122,10 @@ export type ToolContentProps = ComponentProps<typeof CollapsibleContent>;
 export const ToolContent = ({ className, ...props }: ToolContentProps) => (
 	<CollapsibleContent
 		className={cn(
-			"data-[state=closed]:fade-out-0 data-[state=closed]:slide-out-to-top-2 data-[state=open]:slide-in-from-top-2 text-popover-foreground outline-hidden data-[state=closed]:animate-out data-[state=open]:animate-in",
+			"border-t border-white/[0.05] data-[state=closed]:fade-out-0 data-[state=closed]:slide-out-to-top-2 data-[state=open]:slide-in-from-top-2 text-white/[0.7] outline-hidden data-[state=closed]:animate-out data-[state=open]:animate-in",
 			className,
 		)}
+		style={{ borderTopWidth: "0.5px" }}
 		{...props}
 	/>
 );
@@ -117,10 +136,13 @@ export type ToolInputProps = ComponentProps<"div"> & {
 
 export const ToolInput = ({ className, input, ...props }: ToolInputProps) => (
 	<div className={cn("space-y-2 overflow-hidden p-4", className)} {...props}>
-		<h4 className="font-medium text-muted-foreground text-xs uppercase tracking-wide">
+		<h4 className="text-[11px] font-medium uppercase tracking-wide text-white/[0.3]">
 			Parameters
 		</h4>
-		<pre className="overflow-x-auto rounded-md bg-muted/50 p-3 font-mono text-xs">
+		<pre
+			className="overflow-x-auto rounded-[10px] border border-white/[0.06] bg-white/[0.03] p-3 font-mono text-xs text-white/[0.58]"
+			style={{ borderWidth: "0.5px" }}
+		>
 			{JSON.stringify(input, null, 2)}
 		</pre>
 	</div>
@@ -143,18 +165,14 @@ export const ToolOutput = ({
 
 	return (
 		<div className={cn("space-y-2 p-4", className)} {...props}>
-			<h4 className="font-medium text-muted-foreground text-xs uppercase tracking-wide">
+			<h4 className="text-[11px] font-medium uppercase tracking-wide text-white/[0.3]">
 				{errorText ? "Error" : "Result"}
 			</h4>
 			<div
-				className={cn(
-					"overflow-x-auto rounded-md text-xs [&_table]:w-full",
-					errorText
-						? "bg-destructive/10 text-destructive"
-						: "bg-muted/50 text-foreground",
-				)}
+				className="overflow-x-auto rounded-[10px] border border-white/[0.06] bg-white/[0.03] text-xs text-white/[0.65] [&_table]:w-full"
+				style={{ borderWidth: "0.5px" }}
 			>
-				{errorText && <div>{errorText}</div>}
+				{errorText && <div className="p-3 text-white/[0.45]">{errorText}</div>}
 				{output && <div>{output}</div>}
 			</div>
 		</div>

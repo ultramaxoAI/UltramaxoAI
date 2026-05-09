@@ -263,7 +263,7 @@ export const createCodeFile = ({
 			.string()
 			.nullish()
 			.describe("File path to create, like components/Hero.jsx"),
-		content: z.string().nullish().describe("Full file contents"),
+		content: z.string().min(1).describe("REQUIRED. Full non-empty file contents"),
 	}),
 	execute: async ({
 		documentId,
@@ -284,7 +284,12 @@ export const createCodeFile = ({
 			}
 
 			const safePath = path || "untitled.ts";
-			const safeContent = content || "";
+			const safeContent = content?.trim() || "";
+			if (!safeContent) {
+				throw new Error(
+					"createCodeFile requires non-empty content. Generate the full file content before calling this tool.",
+				);
+			}
 
 			console.log("[Tool createCodeFile] Started execution", {
 				documentId,
@@ -368,7 +373,10 @@ export const updateCodeFile = ({
 			.string()
 			.nullish()
 			.describe("File path to update, like components/Hero.jsx"),
-		content: z.string().nullish().describe("Full file contents after update"),
+		content: z
+			.string()
+			.min(1)
+			.describe("REQUIRED. Full non-empty file contents after update"),
 	}),
 	execute: async ({
 		documentId,
@@ -389,7 +397,12 @@ export const updateCodeFile = ({
 			}
 
 			const safePath = path || "untitled.ts";
-			const safeContent = content || "";
+			const safeContent = content?.trim() || "";
+			if (!safeContent) {
+				throw new Error(
+					"updateCodeFile requires non-empty content. Generate the full file content before calling this tool.",
+				);
+			}
 
 			console.log("[Tool updateCodeFile] Started execution", {
 				documentId,

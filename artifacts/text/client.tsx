@@ -28,7 +28,7 @@ export const textArtifact = new Artifact<"text", TextArtifactMetadata>({
 			suggestions,
 		});
 	},
-	onStreamPart: ({ streamPart, setMetadata, setArtifact }) => {
+	onStreamPart: ({ streamPart, setMetadata }) => {
 		if (streamPart.type === "data-suggestion") {
 			setMetadata((metadata) => {
 				return {
@@ -37,21 +37,6 @@ export const textArtifact = new Artifact<"text", TextArtifactMetadata>({
 			});
 		}
 
-		if (streamPart.type === "data-textDelta") {
-			setArtifact((draftArtifact) => {
-				return {
-					...draftArtifact,
-					content: draftArtifact.content + streamPart.data,
-					isVisible:
-						draftArtifact.status === "streaming" &&
-						draftArtifact.content.length > 400 &&
-						draftArtifact.content.length < 450
-							? true
-							: draftArtifact.isVisible,
-					status: "streaming",
-				};
-			});
-		}
 	},
 	content: ({
 		mode,

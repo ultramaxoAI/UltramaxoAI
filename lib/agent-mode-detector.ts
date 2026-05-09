@@ -27,16 +27,19 @@ type Signal = {
 };
 
 const COMPLEX_ACTION_REGEX =
-	/\b(build|buat|bikin|fix|benahi|rapihin|repair|debug|implement|integrate|install|setup|deploy|refactor|migrate|optimize|audit|review|analyze|analisis|research|riset|compare|bandingkan|generate|create|edit|ubah|tambah|hapus|run|jalankan|test|cek|inspect|periksa)\b/i;
+	/\b(build|buat|bikin|buatkan|fix|benahi|rapihin|repair|debug|implement|integrate|install|setup|deploy|refactor|migrate|optimize|audit|review|analyze|analisis|research|riset|compare|bandingkan|generate|create|edit|ubah|tambah|hapus|run|jalankan|test|cek|inspect|periksa|kirim|tulis|develop)\b/i;
 
 const PROJECT_CONTEXT_REGEX =
-	/\b(project|proyek|repo|repository|codebase|workspace|file|folder|backend|frontend|ui|ux|api|database|db|schema|migration|component|route|endpoint|server|terminal|command|package|dependency|build error|bug|error|stack trace)\b/i;
+	/\b(project|proyek|repo|repository|codebase|workspace|file|folder|backend|frontend|ui|ux|api|database|db|schema|migration|component|route|endpoint|server|terminal|command|package|dependency|build error|bug|error|stack trace|code|kode|script|flutter|react native|next\.?js|react|typescript|javascript|website|web app|landing page|dashboard)\b/i;
 
 const MULTI_STEP_REGEX =
 	/\b(step by step|langkah|rencana|plan|flow|alur|architecture|arsitektur|full|lengkap|end-to-end|e2e|production|siap pakai|autonomous|agent mode)\b/i;
 
 const SIMPLE_CHAT_REGEX =
-	/^(hai|halo|hello|hi|ping|oke|ok|ya|iya|thanks|makasih|siapa kamu|apa kabar)[.!?\s]*$/i;
+	/^(hai|halo|hello|hi|ping|oke|ok|ya|iya|thanks|makasih|siapa kamu|apa kabar|woi|woy|oy)[.!?\s]*$/i;
+
+const DIRECT_BUILD_REQUEST_REGEX =
+	/\b(buat|bikin|buatkan|generate|kirim|tulis|develop|build|fix|debug|refactor|implement)\b[\s\S]{0,80}\b(code|kode|script|tool|tools|app|aplikasi|website|web|landing page|dashboard|component|komponen|api|backend|frontend|bot)\b/i;
 
 const AGENTIC_TOOL_NAME_REGEX =
 	/\b(startAgentTask|reportAgentStep|listCodeFiles|createCodeFile|createFile|createFolder|updateCodeFile|editFile|deleteCodeFile|readFile|listFiles|runCommand|executeTerminalCommand|installPackage|installDependency|startPreviewServer|runWorkspaceCommand|createDocument|updateDocument)\b/i;
@@ -52,6 +55,10 @@ function collectSignals(input: Required<AgentModeDetectionInput>): Signal[] {
 
 	if (input.hasAttachment) {
 		signals.push({ weight: 2, reason: "has attachment/context file" });
+	}
+
+	if (DIRECT_BUILD_REQUEST_REGEX.test(text)) {
+		signals.push({ weight: 3, reason: "direct build/code request" });
 	}
 
 	if (COMPLEX_ACTION_REGEX.test(text)) {
@@ -137,6 +144,7 @@ export function detectAgentMode(
 		(taskType === "coding" && score >= 2) ||
 		text.length > 140;
 	const shouldUseAgent =
+		DIRECT_BUILD_REQUEST_REGEX.test(text) ||
 		score >= 4 ||
 		(score >= 3 &&
 			(taskType === "coding" || PROJECT_CONTEXT_REGEX.test(text))) ||

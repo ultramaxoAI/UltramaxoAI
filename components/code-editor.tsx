@@ -30,6 +30,12 @@ export type SupportedLanguage =
 	| "kotlin"
 	| "text";
 
+function isNearBottom(element: HTMLElement, threshold = 48) {
+	return (
+		element.scrollHeight - (element.scrollTop + element.clientHeight) <= threshold
+	);
+}
+
 type EditorProps = {
 	content: string;
 	onSaveContent: (updatedContent: string, debounce: boolean) => void;
@@ -230,6 +236,10 @@ function PureCodeEditor({
 			const currentContent = editorRef.current.state.doc.toString();
 
 			if (status === "streaming" || currentContent !== content) {
+				const scroller = editorRef.current.scrollDOM;
+				const shouldAutoFollow = isNearBottom(scroller);
+				const previousScrollTop = scroller.scrollTop;
+
 				const transaction = editorRef.current.state.update({
 					changes: {
 						from: 0,
@@ -240,6 +250,20 @@ function PureCodeEditor({
 				});
 
 				editorRef.current.dispatch(transaction);
+
+				requestAnimationFrame(() => {
+					if (!editorRef.current) {
+						return;
+					}
+
+					const nextScroller = editorRef.current.scrollDOM;
+					if (shouldAutoFollow) {
+						nextScroller.scrollTop = nextScroller.scrollHeight;
+						return;
+					}
+
+					nextScroller.scrollTop = previousScrollTop;
+				});
 			}
 		}
 	}, [content, status]);

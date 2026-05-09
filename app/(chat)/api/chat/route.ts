@@ -87,6 +87,28 @@ const MOBILE_MODE_INTENT_REGEX =
 const IDE_MODE_INTENT_REGEX =
 	/\b(fullstack|workspace|landing page|web app|website|aplikasi lengkap|project lengkap|proyek lengkap|buatkan (website|web|app|aplikasi)|build (website|web|app|aplikasi)|create (website|web|app|application)|coding|koding|kode|source code|kalkulator|calculator)\b/i;
 
+const COMPLEX_PATTERNS = [
+	/buat|create|generate|rancang|analisis|jelaskan|susun|tulis/i,
+	/7.day|step.by.step|panduan|tutorial|strategi|plan|launch/i,
+	/bandingkan|compare|pros.cons|kelebihan|kekurangan/i,
+];
+
+const COMPLEX_WORD_THRESHOLD = 8;
+
+function isComplexPrompt(prompt: string) {
+	const normalizedPrompt = prompt.trim();
+	if (!normalizedPrompt) {
+		return false;
+	}
+
+	const wordCount = normalizedPrompt.split(/\s+/).length;
+	if (wordCount >= COMPLEX_WORD_THRESHOLD) {
+		return true;
+	}
+
+	return COMPLEX_PATTERNS.some((pattern) => pattern.test(normalizedPrompt));
+}
+
 type StreamErrorDetails = Error & {
 	type?: string;
 	statusCode?: number;
@@ -122,6 +144,88 @@ function hasRenderableAssistantResponseMessage(
 
 		return false;
 	});
+}
+
+function hasRenderableAssistantUIMessage(
+	message: Pick<ChatMessage, "role" | "parts">,
+) {
+	if (message.role !== "assistant") {
+		return false;
+	}
+
+	const parts = Array.isArray(message.parts) ? message.parts : [];
+	return parts.some((part) => {
+		if (!part || typeof part !== "object" || !("type" in part)) {
+			return false;
+		}
+
+		if (part.type === "text" || part.type === "reasoning") {
+			return Boolean((part as { text?: string }).text?.trim());
+		}
+
+		return part.type === "file" || String(part.type).includes("tool");
+	});
+}
+
+function getAssistantPartsByType(
+	parts: ChatMessage["parts"] = [],
+	type: "text" | "reasoning",
+) {
+	return parts
+		.filter(
+			(part): part is ChatMessagePart & { type: "text" | "reasoning"; text: string } =>
+				Boolean(
+					part &&
+					typeof part === "object" &&
+					"type" in part &&
+					part.type === type &&
+					typeof (part as { text?: unknown }).text === "string",
+				),
+		)
+		.map((part) => part.text)
+		.join("\n")
+		.trim();
+}
+
+function getAssistantAuxiliaryParts(parts: ChatMessage["parts"] = []) {
+	return parts.filter((part): part is ChatMessagePart => {
+		if (!part || typeof part !== "object" || !("type" in part)) {
+			return false;
+		}
+
+		return part.type !== "text" && part.type !== "reasoning";
+	});
+}
+
+function buildCanonicalAssistantParts({
+	baseParts = [],
+	fallbackText,
+	streamedAssistantText,
+	streamedReasoningText,
+}: {
+	baseParts?: ChatMessage["parts"];
+	fallbackText?: string;
+	streamedAssistantText: string;
+	streamedReasoningText: string;
+}) {
+	const parts: ChatMessage["parts"] = [];
+	const reasoningText =
+		streamedReasoningText.trim() || getAssistantPartsByType(baseParts, "reasoning");
+	const assistantText =
+		streamedAssistantText.trim() ||
+		getAssistantPartsByType(baseParts, "text") ||
+		fallbackText;
+
+	if (reasoningText) {
+		parts.push({ type: "reasoning", text: reasoningText });
+	}
+
+	if (assistantText) {
+		parts.push({ type: "text", text: assistantText });
+	}
+
+	parts.push(...getAssistantAuxiliaryParts(baseParts));
+	return parts;
 }
 
 function hasApprovalContinuationState(parts: ChatMessage["parts"] = []) {
@@ -301,6 +405,7 @@ export async function POST(request: Request) {
 				!inferredFullstackModeEnabled &&
 				!inferredMobileModeEnabled &&
 				!htmlPreviewModeEnabled;
+			const complexPromptDetected = isComplexPrompt(latestUserText);
 
 			const session = await auth();
 
@@ -672,11 +777,133 @@ export async function POST(request: Request) {
 			}
 
 			let streamedFallbackAssistantMessage: ChatMessage | null = null;
+			let abortedAssistantMessagePersisted = false;
+			let streamedAssistantText = "";
+			let streamedReasoningText = "";
+			const fallbackAssistantText = latestUserText
+				? /\b(ddos|stress\s*-?test|botnet|malware|ransomware|exploit|phishing|payload|sqli|xss|keylogger)\b/i.test(
+						latestUserText,
+					)
+					? "Maaf, saya tidak bisa membantu membuat tool atau instruksi untuk serangan seperti DDoS, malware, atau eksploitasi. Kalau mau, saya bisa bantu bahas mitigasi, deteksi, rate limiting, WAF, atau stress testing yang aman dan legal."
+					: "Respons AI selesai diproses, tetapi hasil akhirnya tidak terbentuk dengan benar. Coba kirim ulang atau lanjutkan dengan prompt yang lebih spesifik."
+				: "Respons AI selesai diproses, tetapi hasil akhirnya tidak terbentuk dengan benar. Coba kirim ulang atau lanjutkan dengan prompt yang lebih spesifik.";
+
+			let streamingAssistantMessageId: string | null = null;
+			let assistantDraftSaved = false;
+			let lastAssistantPersistLength = 0;
+			let lastAssistantPersistAt = 0;
+			let assistantPersistChain: Promise<void> = Promise.resolve();
+
+			const buildAssistantDraftParts = (fallbackText?: string) => {
+				const parts: ChatMessage["parts"] = [];
+				const reasoning = streamedReasoningText.trim();
+				const text = streamedAssistantText.trim() || fallbackText;
+
+				if (reasoning) {
+					parts.push({ type: "reasoning", text: reasoning });
+				}
+
+				if (text) {
+					parts.push({ type: "text", text });
+				}
+
+				return parts;
+			};
+
+			const queueAssistantDraftPersist = (force = false, fallbackText?: string) => {
+				const nextLength = streamedAssistantText.length + streamedReasoningText.length;
+				const now = Date.now();
+				if (
+					!force &&
+					assistantDraftSaved &&
+					nextLength - lastAssistantPersistLength < 120 &&
+					now - lastAssistantPersistAt < 700
+				) {
+					return;
+				}
+
+				const parts = buildAssistantDraftParts(fallbackText);
+				if (parts.length === 0) {
+					return;
+				}
+
+				assistantPersistChain = assistantPersistChain.then(async () => {
+					if (!streamingAssistantMessageId) {
+						streamingAssistantMessageId = generateUUID();
+					}
+
+					if (!assistantDraftSaved) {
+						await saveMessages({
+							messages: [
+								{
+									id: streamingAssistantMessageId,
+									role: "assistant",
+									parts,
+									createdAt: new Date(),
+									attachments: [],
+									chatId: id,
+								},
+							],
+						});
+						assistantDraftSaved = true;
+					} else {
+						await updateMessage({
+							id: streamingAssistantMessageId,
+							parts,
+						});
+					}
+
+					lastAssistantPersistLength = nextLength;
+					lastAssistantPersistAt = Date.now();
+				});
+			};
+
+			const persistAbortedAssistantMessage = async () => {
+				if (abortedAssistantMessagePersisted) {
+					return;
+				}
+
+				abortedAssistantMessagePersisted = true;
+				queueAssistantDraftPersist(
+					true,
+					"Respons AI terhenti saat percakapan dipindah. Buka chat ini lagi lalu lanjutkan atau kirim ulang agar jawaban bisa diteruskan.",
+				);
+				await assistantPersistChain;
+			};
 
 			const stream = createUIMessageStream({
 				originalMessages: isToolApprovalFlow ? uiMessages : undefined,
 				execute: async ({ writer: dataStream }) => {
 					dataStream.write({ type: "data-thinking_start", data: null });
+
+					const shouldUpgradeThinking =
+						deepThinkingEnabled ||
+						inferredFullstackModeEnabled ||
+						inferredMobileModeEnabled ||
+						inferredGeneralAgentModeEnabled ||
+						complexPromptDetected;
+
+					if (shouldUpgradeThinking) {
+						await new Promise((resolve) => setTimeout(resolve, 800));
+						dataStream.write({ type: "data-upgrade_to_agent", data: null });
+
+						if (!inferredFullstackModeEnabled && !inferredMobileModeEnabled) {
+							const previewPrompt = latestUserText.trim();
+							const thinkingTexts = [
+								`User meminta: "${previewPrompt.slice(0, 60)}${previewPrompt.length > 60 ? "..." : ""}" — ini membutuhkan analisis mendalam. `,
+								"Perlu menyusun struktur yang komprehensif dan memastikan setiap bagian relevan. ",
+								"Akan saya breakdown secara sistematis agar mudah dipahami dan langsung actionable.",
+							];
+
+							for (const chunk of thinkingTexts) {
+								dataStream.write({
+									type: "data-thinking_chunk",
+									data: { content: chunk },
+								});
+								await new Promise((resolve) => setTimeout(resolve, 40));
+							}
+						}
+					}
 
 					let retryCount = 0;
 					const maxRetries = 1;
@@ -818,7 +1045,7 @@ export async function POST(request: Request) {
 							}
 
 							if (htmlPreviewModeEnabled) {
-								baseSystemPrompt += `\n\n[HTML PREVIEW MODE OVERRIDE]\n- This request should be fulfilled as a preview-first HTML artifact, not a full Next.js workspace.\n- Use createDocument exactly once with kind "code" and put the FULL deliverable inside it.\n- Prefer split files using markers like // filename: index.html, // filename: style.css, // filename: script.js.\n- Build a directly previewable landing page.\n- Do NOT use listCodeFiles, createCodeFile, updateCodeFile, terminal commands, package installation, or preview server tools unless the user explicitly asked for Next.js, React, or an app project.\n- The artifact must contain real HTML/CSS/JS content, not placeholders, and should be ready to preview immediately.`;
+								baseSystemPrompt += `\n\n[HTML PREVIEW MODE OVERRIDE]\n- This request should be fulfilled as a preview-first HTML artifact, not a full Next.js workspace.\n- Use createDocument exactly once with kind "code" and put the FULL deliverable inside it.\n- Prefer split files using markers like // filename: index.html, // filename: style.css, // filename: script.js.\n- Build a directly previewable landing page.\n- Do NOT use listCodeFiles, createCodeFile, updateCodeFile, terminal commands, package installation, or preview server tools unless the user explicitly asked for Next.js, React, or an app project.\n- The artifact must contain real HTML/CSS/JS content, not placeholders, and should be ready to preview immediately.\n- Default to a polished, high-contrast, production-looking result with strong spacing, refined typography, clear sections, hover states, and complete visual treatment.\n- Never stop at a wireframe or plain scaffold. Finish the styling so the preview feels launch-ready.`;
 							}
 
 							baseSystemPrompt += `\n\n[FINAL RESPONSE REQUIREMENT]\nAfter completing any task, tool call, or analysis, you MUST always write a clear final text response to the user explaining what you did, what was created or changed, and any next steps or how to use the result. Never finish with only tool calls. Never be silent after tool calls.`;
@@ -904,11 +1131,22 @@ export async function POST(request: Request) {
 											chunkRecord.text ??
 											chunkRecord.content;
 										if (typeof contentCandidate === "string") {
+											streamedReasoningText += contentCandidate;
+											queueAssistantDraftPersist();
 											dataStream.write({
 												type: "data-thinking_chunk",
 												data: { content: contentCandidate },
 											});
 										}
+									}
+
+									if (chunk.type === "text-delta") {
+										streamedAssistantText += chunk.text;
+										queueAssistantDraftPersist(!assistantDraftSaved);
+										dataStream.write({
+											type: "data-response_chunk",
+											data: { content: chunk.text },
+										});
 									}
 
 									if (!useTools) {
@@ -1015,6 +1253,9 @@ export async function POST(request: Request) {
 											);
 										}
 									: undefined,
+								onAbort: async () => {
+									await persistAbortedAssistantMessage();
+								},
 								onFinish: ({ response }) => {
 									if (shouldStreamAgentProgress) {
 										const htmlPreviewSucceeded =
@@ -1066,7 +1307,7 @@ export async function POST(request: Request) {
 										parts: [
 											{
 												type: "text",
-												text: "Proses sudah selesai, tapi respons akhir tidak sempat tampil di chat. Coba generate ulang atau lanjutkan dari hasil workspace yang sudah dibuat.",
+												text: fallbackAssistantText,
 											},
 										],
 										metadata: {
@@ -1386,11 +1627,95 @@ export async function POST(request: Request) {
 						finishReason,
 						messageCount: finishedMessages.length,
 					});
+					await assistantPersistChain;
+					const hasRenderableAssistantMessage = finishedMessages.some(
+						hasRenderableAssistantUIMessage,
+					);
+					if (!hasRenderableAssistantMessage && !streamedFallbackAssistantMessage) {
+						streamedFallbackAssistantMessage = {
+							id: generateUUID(),
+							role: "assistant",
+							parts: [
+								{
+									type: "text",
+									text: fallbackAssistantText,
+								},
+							],
+							metadata: {
+								createdAt: new Date().toISOString(),
+							},
+						};
+					}
 					if (streamedFallbackAssistantMessage) {
+						queueAssistantDraftPersist(true, fallbackAssistantText);
+						await assistantPersistChain;
 						finishedMessages = [
 							...finishedMessages,
 							streamedFallbackAssistantMessage,
 						];
+					}
+
+					let persistedAssistantMessageId: string | null = null;
+					if (!isToolApprovalFlow) {
+						const lastFinishedAssistantMessage = [...finishedMessages]
+							.reverse()
+							.find((currentMessage) => currentMessage.role === "assistant");
+						const canonicalAssistantParts = buildCanonicalAssistantParts({
+							baseParts: lastFinishedAssistantMessage?.parts,
+							fallbackText: streamedFallbackAssistantMessage
+								? fallbackAssistantText
+								: undefined,
+							streamedAssistantText,
+							streamedReasoningText,
+						});
+
+						if (canonicalAssistantParts.length > 0) {
+							const canonicalAssistantId =
+								streamingAssistantMessageId ??
+								lastFinishedAssistantMessage?.id ??
+								streamedFallbackAssistantMessage?.id ??
+								generateUUID();
+							const draftAlreadyExists =
+								assistantDraftSaved ||
+								messagesFromDb.some(
+									(currentMessage) => currentMessage.id === canonicalAssistantId,
+								);
+
+							if (draftAlreadyExists) {
+								await updateMessage({
+									id: canonicalAssistantId,
+									parts: canonicalAssistantParts,
+								});
+							} else {
+								await saveMessages({
+									messages: [
+										{
+											id: canonicalAssistantId,
+											role: "assistant",
+											parts: canonicalAssistantParts,
+											createdAt: new Date(),
+											attachments: [],
+											chatId: id,
+										},
+									],
+								});
+							}
+
+							persistedAssistantMessageId = canonicalAssistantId;
+							finishedMessages = [
+								...finishedMessages.filter(
+									(currentMessage) => currentMessage.role !== "assistant",
+								),
+								{
+									id: canonicalAssistantId,
+									role: "assistant",
+									parts: canonicalAssistantParts,
+									metadata: {
+										createdAt: new Date().toISOString(),
+									},
+								},
+							];
+						}
 					}
 
 					if (isToolApprovalFlow) {
@@ -1422,6 +1747,9 @@ export async function POST(request: Request) {
 						const existingMessageIds = new Set(messagesFromDb.map((m) => m.id));
 						if (message?.id) {
 							existingMessageIds.add(message.id);
+						}
+						if (persistedAssistantMessageId) {
+							existingMessageIds.add(persistedAssistantMessageId);
 						}
 
 						const existingMessages = finishedMessages.filter((currentMessage) =>

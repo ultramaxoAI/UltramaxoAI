@@ -80,6 +80,7 @@ async function ChatPage({ params }: { params: Promise<{ id: string }> }) {
 		return (
 			<ChatErrorBoundary>
 				<Chat
+					key={chat.id}
 					autoResume={true}
 					chatAnnouncement={announcement}
 					id={chat.id}
@@ -91,7 +92,7 @@ async function ChatPage({ params }: { params: Promise<{ id: string }> }) {
 					user={session?.user}
 					customModels={customModels}
 				/>
-				<DataStreamHandler />
+				<DataStreamHandler key={`stream-${chat.id}`} />
 			</ChatErrorBoundary>
 		);
 	}
@@ -99,6 +100,7 @@ async function ChatPage({ params }: { params: Promise<{ id: string }> }) {
 	return (
 		<ChatErrorBoundary>
 			<Chat
+				key={chat.id}
 				autoResume={true}
 				chatAnnouncement={announcement}
 				id={chat.id}
@@ -110,7 +112,7 @@ async function ChatPage({ params }: { params: Promise<{ id: string }> }) {
 				user={session?.user}
 				customModels={customModels}
 			/>
-			<DataStreamHandler />
+			<DataStreamHandler key={`stream-${chat.id}`} />
 		</ChatErrorBoundary>
 	);
 }

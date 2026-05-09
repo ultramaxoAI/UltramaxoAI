@@ -11,17 +11,78 @@ import { useDataStream } from "./data-stream-provider";
 import { getChatHistoryPaginationKey } from "./sidebar-history";
 import { useWebContainerOptional } from "./webcontainer-provider";
 
+type NormalizedArtifactEvent =
+	| { type: "artifact-id"; artifactId: string }
+	| { type: "artifact-title"; title: string }
+	| { type: "artifact-kind"; kind: ArtifactKind }
+	| { type: "artifact-clear"; kind?: ArtifactKind }
+	| { type: "artifact-partial"; kind: ArtifactKind; content: string }
+	| { type: "artifact-finish" };
+
+function inferArtifactKindFromDelta(
+	deltaType: string,
+	currentKind: ArtifactKind,
+): ArtifactKind {
+	if (deltaType === "data-codeDelta") return "code";
+	if (deltaType === "data-textDelta") return "text";
+	if (deltaType === "data-imageDelta") return "image";
+	if (deltaType === "data-sheetDelta") return "sheet";
+	return currentKind;
+}
+
+function normalizeArtifactEvent(
+	deltaType: string,
+	deltaData: unknown,
+	currentKind: ArtifactKind,
+): NormalizedArtifactEvent | null {
+	if (deltaType === "data-id" && typeof deltaData === "string") {
+		return { type: "artifact-id", artifactId: deltaData };
+	}
+
+	if (deltaType === "data-title" && typeof deltaData === "string") {
+		return { type: "artifact-title", title: deltaData };
+	}
+
+	if (deltaType === "data-kind") {
+		return { type: "artifact-kind", kind: deltaData as ArtifactKind };
+	}
+
+	if (deltaType === "data-clear") {
+		return { type: "artifact-clear", kind: currentKind };
+	}
+
+	if (
+		(deltaType === "data-codeDelta" ||
+			deltaType === "data-textDelta" ||
+			deltaType === "data-imageDelta" ||
+			deltaType === "data-sheetDelta") &&
+		typeof deltaData === "string"
+	) {
+		return {
+			type: "artifact-partial",
+			kind: inferArtifactKindFromDelta(deltaType, currentKind),
+			content: deltaData,
+		};
+	}
+
+	if (deltaType === "data-finish") {
+		return { type: "artifact-finish" };
+	}
+
+	return null;
+}
+
 export function DataStreamHandler() {
-	const { dataStream, setDataStream, setAgentStream } = useDataStream();
+	const {
+		dataStream,
+		setDataStream,
+		setAgentStream,
+		artifactStream,
+		setArtifactStream,
+	} = useDataStream();
 	const { mutate } = useSWRConfig();
 	const wc = useWebContainerOptional();
-
 	const { artifact, setArtifact, setMetadata } = useArtifact();
-	const artifactVisibilityTypes = [
-		"data-textDelta",
-		"data-imageDelta",
-		"data-sheetDelta",
-	];
 
 	useEffect(() => {
 		if (!dataStream?.length) {
@@ -34,11 +95,9 @@ export function DataStreamHandler() {
 		let currentKind = artifact?.kind ?? initialArtifactData.kind;
 
 		for (const delta of newDeltas) {
-			// Cast for custom event type comparisons
 			const deltaType = delta.type as string;
 			const deltaData = (delta as { data?: unknown }).data;
 
-			// Handle chat title updates
 			if (deltaType === "data-chat-title") {
 				mutate(unstable_serialize(getChatHistoryPaginationKey));
 				continue;
@@ -132,7 +191,6 @@ export function DataStreamHandler() {
 				continue;
 			}
 
-			// ── WebContainer terminal events ──────────────────────────────
 			if (deltaType === "data-terminal-command" && wc) {
 				try {
 					const { command, purpose } = JSON.parse(deltaData as string);
@@ -157,10 +215,117 @@ export function DataStreamHandler() {
 				wc.queueDevServer();
 				continue;
 			}
-			// ── End WebContainer events ───────────────────────────────────
 
-			if (delta.type === "data-kind") {
-				currentKind = delta.data as ArtifactKind;
+			currentKind = inferArtifactKindFromDelta(deltaType, currentKind);
+			const normalizedArtifactEvent = normalizeArtifactEvent(
+				deltaType,
+				deltaData,
+				currentKind,
+			);
+
+			if (normalizedArtifactEvent) {
+				setArtifactStream((currentStream) => {
+					switch (normalizedArtifactEvent.type) {
+						case "artifact-id":
+							return {
+								...currentStream,
+								artifactId: normalizedArtifactEvent.artifactId,
+								updatedAt: Date.now(),
+							};
+						case "artifact-title":
+							return {
+								...currentStream,
+								title: normalizedArtifactEvent.title,
+								updatedAt: Date.now(),
+							};
+						case "artifact-kind":
+							return {
+								...currentStream,
+								kind: normalizedArtifactEvent.kind,
+								updatedAt: Date.now(),
+							};
+						case "artifact-clear":
+							return {
+								...currentStream,
+								kind: normalizedArtifactEvent.kind ?? currentStream.kind,
+								content: "",
+								lifecycle: "pending",
+								updatedAt: Date.now(),
+								error: undefined,
+							};
+						case "artifact-partial":
+							return {
+								...currentStream,
+								kind: normalizedArtifactEvent.kind,
+								content:
+									normalizedArtifactEvent.kind === "text"
+										? `${currentStream.kind === "text" ? currentStream.content : ""}${normalizedArtifactEvent.content}`
+										: normalizedArtifactEvent.content,
+								lifecycle:
+									normalizedArtifactEvent.content.length > 0 ? "streaming" : "pending",
+								updatedAt: Date.now(),
+								error: undefined,
+							};
+						case "artifact-finish":
+							return {
+								...currentStream,
+								lifecycle:
+									currentStream.content.trim().length > 0 ? "completed" : "idle",
+								updatedAt: Date.now(),
+							};
+					}
+				});
+
+				setArtifact((currentArtifact) => {
+					const baseArtifact = currentArtifact ?? initialArtifactData;
+					switch (normalizedArtifactEvent.type) {
+						case "artifact-id":
+							return {
+								...baseArtifact,
+								documentId: normalizedArtifactEvent.artifactId,
+							};
+						case "artifact-title":
+							return {
+								...baseArtifact,
+								title: normalizedArtifactEvent.title,
+							};
+						case "artifact-kind":
+							return {
+								...baseArtifact,
+								kind: normalizedArtifactEvent.kind,
+							};
+						case "artifact-clear":
+							return {
+								...baseArtifact,
+								kind: normalizedArtifactEvent.kind ?? baseArtifact.kind,
+								content: "",
+								status: "streaming",
+								streamState: "pending",
+							};
+						case "artifact-partial": {
+							const nextContent =
+								normalizedArtifactEvent.kind === "text"
+									? `${baseArtifact.kind === "text" ? baseArtifact.content : ""}${normalizedArtifactEvent.content}`
+									: normalizedArtifactEvent.content;
+							return {
+								...baseArtifact,
+								kind: normalizedArtifactEvent.kind,
+								content: nextContent,
+								status: "streaming",
+								streamState: nextContent.trim().length > 0 ? "streaming" : "pending",
+							};
+						}
+						case "artifact-finish":
+							return {
+								...baseArtifact,
+								status: "idle",
+								streamState:
+									baseArtifact.content.trim().length > 0 ? "completed" : "idle",
+								isVisible:
+									baseArtifact.isVisible || Boolean(baseArtifact.content.trim()),
+							};
+					}
+				});
 			}
 
 			const artifactDefinition = artifactDefinitions.find(
@@ -179,76 +344,17 @@ export function DataStreamHandler() {
 					console.error("Failed to handle artifact stream part:", error, delta);
 				}
 			}
-
-			try {
-				setArtifact((draftArtifact) => {
-					if (!draftArtifact) {
-						return { ...initialArtifactData, status: "streaming" };
-					}
-					const shouldForceVisible = artifactVisibilityTypes.includes(
-						delta.type,
-					);
-
-					switch (delta.type) {
-						case "data-id":
-							return {
-								...draftArtifact,
-								documentId: delta.data,
-								status: "streaming",
-							};
-
-						case "data-title":
-							return {
-								...draftArtifact,
-								title: delta.data,
-								status: "streaming",
-							};
-
-						case "data-kind":
-							return {
-								...draftArtifact,
-								kind: delta.data,
-								status: "streaming",
-							};
-
-						case "data-clear":
-							return {
-								...draftArtifact,
-								content: "",
-								status: "streaming",
-							};
-
-						case "data-finish":
-							return {
-								...draftArtifact,
-								isVisible:
-									draftArtifact.isVisible ||
-									shouldForceVisible ||
-									Boolean(draftArtifact.content?.trim()),
-								status: "idle",
-							};
-
-						default:
-							return shouldForceVisible
-								? {
-										...draftArtifact,
-										isVisible: true,
-									}
-								: draftArtifact;
-					}
-				});
-			} catch (error) {
-				console.error("Failed to create artifact:", error, delta);
-			}
 		}
 	}, [
-		dataStream,
-		setArtifact,
-		setMetadata,
 		artifact,
-		setDataStream,
-		setAgentStream,
+		artifactStream.lifecycle,
+		dataStream,
 		mutate,
+		setAgentStream,
+		setArtifact,
+		setArtifactStream,
+		setDataStream,
+		setMetadata,
 		wc,
 	]);
 
@@ -355,7 +461,14 @@ function normalizeAdaptiveThinkingDataEvent(
 }
 
 function getAdaptiveContent(data: Record<string, unknown>) {
-	const content = data.content ?? data.text ?? data.thinking ?? data.detail;
+	const content =
+		data.content ??
+		data.text ??
+		data.thinking ??
+		data.detail ??
+		data.label ??
+		data.title ??
+		data.message;
 	return typeof content === "string" && content.length > 0 ? content : "";
 }
 

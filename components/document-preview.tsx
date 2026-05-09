@@ -186,6 +186,7 @@ const PureHitboxLayer = ({
 							documentId: result.id,
 							kind: result.kind,
 							isVisible: true,
+							streamState: "completed",
 							boundingBox: {
 								left: boundingBox.x,
 								top: boundingBox.y,

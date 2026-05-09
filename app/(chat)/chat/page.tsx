@@ -55,7 +55,7 @@ async function NewChatPage() {
 				user={session?.user}
 				customModels={customModels}
 			/>
-			<DataStreamHandler />
+			<DataStreamHandler key={`stream-${id}`} />
 		</>
 	);
 }

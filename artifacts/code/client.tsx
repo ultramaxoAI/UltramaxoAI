@@ -1,7 +1,8 @@
-import { Check, Copy, Eye, File, Files, TerminalSquare, X } from "lucide-react";
+import { Check, Copy, Eye, Files, TerminalSquare, X } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 import { CodeEditor, type SupportedLanguage } from "@/components/code-editor";
+import { FileExplorer } from "@/components/file-explorer";
 import {
 	Console,
 	type ConsoleOutput,
@@ -520,15 +521,9 @@ export const codeArtifact = new Artifact<"code", Metadata>({
 			parsedContentLength: 0,
 		});
 	},
-	onStreamPart: ({ streamPart, setArtifact, setMetadata }) => {
+	onStreamPart: ({ streamPart, setMetadata }) => {
 		if (streamPart.type === "data-codeDelta") {
 			const nextContent = streamPart.data ?? "";
-			setArtifact((draftArtifact) => ({
-				...draftArtifact,
-				content: nextContent,
-				isVisible: draftArtifact.isVisible,
-				status: "streaming",
-			}));
 
 			// Parse files and detect language when enough content is available
 			if (nextContent.length > 50) {
@@ -591,6 +586,8 @@ export const codeArtifact = new Artifact<"code", Metadata>({
 			activeFile?.language ||
 			metadata?.language ||
 			detectCodeLanguage(content || "");
+		const editorContent = activeFile?.content || content || "";
+		const isWaitingForCode = editorContent.trim().length === 0;
 
 		useEffect(() => {
 			if (!activeFile?.name) {
@@ -604,16 +601,8 @@ export const codeArtifact = new Artifact<"code", Metadata>({
 			);
 		}, [activeFile?.name]);
 
-		useEffect(() => {
-			if (isStaticHtmlArtifact(files)) {
-				setActiveTab("preview");
-				return;
-			}
-
-			if (wc?.devServer?.ready && isPreviewableWebProject(files)) {
-				setActiveTab("preview");
-			}
-		}, [wc?.devServer?.ready, files]);
+		// Keep the workspace lightweight while code is streaming.
+		// Preview/WebContainer should only run after the user explicitly opens Preview.
 
 		useEffect(() => {
 			if (!wc) {
@@ -749,62 +738,68 @@ export const codeArtifact = new Artifact<"code", Metadata>({
 		};
 
 		return (
-			<div className="flex h-full w-full overflow-hidden bg-[#0e0e0e]">
-				<div className="hidden w-10 shrink-0 flex-col items-center gap-1 border-r border-white/[0.06] bg-[#0a0a0a] py-2 md:flex">
-					<button
-						type="button"
-						className="flex h-8 w-8 items-center justify-center rounded-md text-white/50 transition-colors hover:bg-white/[0.05] hover:text-white/80"
-					>
-						<Files className="h-[15px] w-[15px]" />
-					</button>
+			<div className="flex h-full w-full overflow-hidden bg-[radial-gradient(circle_at_top_left,rgba(84,130,255,0.08),transparent_24%),#0d0f14]">
+				<div className="hidden w-[240px] shrink-0 flex-col border-r border-white/[0.06] bg-[linear-gradient(180deg,#0b0e14_0%,#090b10_100%)] md:flex">
+					<div className="border-b border-white/[0.06] px-4 py-4">
+						<div className="mb-3 flex items-center gap-2">
+							<div className="flex size-9 items-center justify-center rounded-2xl border border-white/[0.08] bg-white/[0.04] text-white/75 shadow-[0_10px_24px_rgba(0,0,0,0.18)]">
+								<Files className="h-4 w-4" />
+							</div>
+							<div>
+								<div className="text-[12px] font-medium text-white/82">Workspace files</div>
+								<div className="text-[10px] uppercase tracking-[0.18em] text-white/28">
+									{files.length} file{files.length === 1 ? "" : "s"}
+								</div>
+							</div>
+						</div>
+						<div className="rounded-2xl border border-white/[0.06] bg-white/[0.025] px-3 py-2 text-[11px] text-white/42">
+							Open files, inspect structure, and continue refining the artifact.
+						</div>
+					</div>
+					<div className="min-h-0 flex-1 overflow-hidden py-2">
+						<FileExplorer
+							files={files}
+							activeFileIndex={activeFileIndex}
+							onFileSelect={selectFile}
+							className="h-full"
+						/>
+					</div>
 				</div>
 
-				<div className="hidden w-[175px] shrink-0 flex-col border-r border-white/[0.06] bg-[#0a0a0a] md:flex">
-					<div className="border-b border-white/[0.05] px-3 py-2.5">
-						<span className="text-[10px] font-semibold uppercase tracking-[0.12em] text-white/22">
-							Files
-						</span>
-					</div>
-					<div className="flex-1 overflow-y-auto py-1">
-						{files.map((file, index) => (
+				<div className="flex min-w-0 flex-1 flex-col bg-transparent">
+					<div className="border-b border-white/[0.06] bg-[linear-gradient(180deg,rgba(255,255,255,0.035),rgba(255,255,255,0.015))] px-4 py-3">
+						<div className="flex items-center justify-between gap-3">
+							<div className="min-w-0">
+								<div className="truncate text-[14px] font-medium text-white/88">
+									{activeFile?.name || "index.tsx"}
+								</div>
+								<div className="mt-1 flex flex-wrap items-center gap-2 text-[11px] text-white/35">
+									<span className="rounded-full border border-white/[0.08] bg-white/[0.04] px-2 py-0.5 font-mono uppercase tracking-[0.18em] text-white/50">
+										{detectedLanguage}
+									</span>
+									<span className="rounded-full border border-white/[0.08] bg-white/[0.03] px-2 py-0.5 uppercase tracking-[0.18em] text-white/40">
+										{activeTab}
+									</span>
+									<span>{files.length} file{files.length === 1 ? "" : "s"} loaded</span>
+								</div>
+							</div>
 							<button
-								key={file.name}
 								type="button"
-								onClick={() => selectFile(index)}
-								className={cn(
-									"flex w-full items-center gap-1.5 px-3 py-1.5 text-left text-[12px] transition-colors",
-									index === activeFileIndex
-										? "bg-white/[0.05] text-white/82"
-										: "text-white/35 hover:bg-white/[0.03] hover:text-white/62",
-								)}
+								onClick={handleCopy}
+								className="inline-flex h-9 shrink-0 items-center gap-2 rounded-xl border border-white/[0.08] bg-white/[0.04] px-3 text-[12px] text-white/58 transition-all hover:border-white/[0.14] hover:bg-white/[0.06] hover:text-white/82"
 							>
-								<File className="h-3 w-3 shrink-0 text-white/18" />
-								<span className="truncate">{file.name}</span>
+								{copied ? (
+									<Check className="h-3.5 w-3.5 text-emerald-300" />
+								) : (
+									<Copy className="h-3.5 w-3.5" />
+								)}
+								{copied ? "Copied" : "Copy file"}
 							</button>
-						))}
-					</div>
-				</div>
-
-				<div className="flex min-w-0 flex-1 flex-col bg-[#0e0e0e]">
-					<div className="flex h-9 items-center justify-between border-b border-white/[0.06] bg-[#0a0a0a] pl-4 pr-2">
-						<span className="truncate text-[12px] text-white/38">
-							{activeFile?.name || "index.tsx"}
-						</span>
-						<button
-							type="button"
-							onClick={handleCopy}
-							className="flex h-6 w-6 items-center justify-center rounded text-white/22 transition-colors hover:text-white/55"
-						>
-							{copied ? (
-								<Check className="h-3 w-3 text-white/70" />
-							) : (
-								<Copy className="h-3 w-3" />
-							)}
-						</button>
+						</div>
 					</div>
 
 					{openTabs.length > 0 && (
-						<div className="flex shrink-0 overflow-x-auto border-b border-white/[0.06] bg-[#0a0a0a]">
+						<div className="flex shrink-0 overflow-x-auto border-b border-white/[0.06] bg-[#0a0d12]/90 px-2">
 							{openTabs.map((tab) => {
 								const isActive = activeFile?.name === tab;
 								return (
@@ -812,15 +807,13 @@ export const codeArtifact = new Artifact<"code", Metadata>({
 										key={tab}
 										aria-selected={isActive}
 										className={cn(
-											"flex h-9 shrink-0 cursor-pointer select-none items-center gap-1.5 border-r border-white/[0.05] px-3 text-[12px] transition-colors",
+											"my-1.5 mr-1.5 flex h-9 shrink-0 cursor-pointer select-none items-center gap-1.5 rounded-xl border px-3 text-[12px] transition-all",
 											isActive
-												? "border-t border-t-white/[0.35] bg-[#0e0e0e] text-white/80"
-												: "text-white/32 hover:text-white/58",
+												? "border-white/[0.1] bg-white/[0.06] text-white/84 shadow-[0_12px_26px_rgba(0,0,0,0.18)]"
+												: "border-transparent text-white/35 hover:border-white/[0.06] hover:bg-white/[0.035] hover:text-white/62",
 										)}
 										onClick={() => {
-											const nextIndex = files.findIndex(
-												(file) => file.name === tab,
-											);
+											const nextIndex = files.findIndex((file) => file.name === tab);
 											if (nextIndex >= 0) {
 												selectFile(nextIndex);
 											}
@@ -831,9 +824,7 @@ export const codeArtifact = new Artifact<"code", Metadata>({
 											}
 
 											event.preventDefault();
-											const nextIndex = files.findIndex(
-												(file) => file.name === tab,
-											);
+											const nextIndex = files.findIndex((file) => file.name === tab);
 											if (nextIndex >= 0) {
 												selectFile(nextIndex);
 											}
@@ -841,11 +832,11 @@ export const codeArtifact = new Artifact<"code", Metadata>({
 										role="tab"
 										tabIndex={0}
 									>
-										<span>{tab}</span>
+										<span className="truncate max-w-[220px]">{tab}</span>
 										<button
 											type="button"
 											onClick={(event) => closeTab(tab, event)}
-											className="text-white/18 transition-colors hover:text-white/55"
+											className="text-white/22 transition-colors hover:text-white/58"
 										>
 											<X className="h-2.5 w-2.5" />
 										</button>
@@ -855,7 +846,7 @@ export const codeArtifact = new Artifact<"code", Metadata>({
 						</div>
 					)}
 
-					<div className="flex shrink-0 items-center border-b border-white/[0.06] bg-[#0a0a0a]">
+					<div className="flex shrink-0 items-center border-b border-white/[0.06] bg-[#0a0d12]/90 px-2 py-1.5">
 						{(
 							[
 								{ id: "code", icon: Files, label: "Code" },
@@ -873,13 +864,13 @@ export const codeArtifact = new Artifact<"code", Metadata>({
 									type="button"
 									onClick={() => setActiveTab(id)}
 									className={cn(
-										"flex h-8 items-center gap-1.5 border-r border-white/[0.05] px-4 text-[11px] transition-colors",
+										"mr-1 inline-flex h-9 items-center gap-1.5 rounded-xl border px-3.5 text-[11px] uppercase tracking-[0.16em] transition-all",
 										activeTab === id
-											? "text-white/75"
-											: "text-white/28 hover:text-white/55",
+											? "border-white/[0.1] bg-white/[0.06] text-white/82 shadow-[0_10px_24px_rgba(0,0,0,0.16)]"
+											: "border-transparent text-white/34 hover:border-white/[0.06] hover:bg-white/[0.035] hover:text-white/58",
 									)}
 								>
-									<Icon className="h-3 w-3" />
+									<Icon className="h-3.5 w-3.5" />
 									{label}
 								</button>
 							))}
@@ -890,12 +881,12 @@ export const codeArtifact = new Artifact<"code", Metadata>({
 						className="flex flex-1 w-full relative"
 						style={{ height: "calc(100vh - 120px)" }}
 					>
-						{/* WebContainer Runner (headless) */}
-						{isPreviewableWebProject(files) && <WebContainerRunner />}
+						{/* WebContainer Runner (headless) — only start when Preview is open */}
+						{activeTab === "preview" && isPreviewableWebProject(files) && <WebContainerRunner />}
 
-						<div className="flex min-w-0 flex-1 flex-col bg-[#0e0e0e]">
+						<div className="flex min-w-0 flex-1 flex-col bg-transparent">
 							{/* Top Editor/Preview Section */}
-							<div className="flex-1 min-h-0 relative">
+							<div className="relative min-h-0 flex-1 rounded-tl-[22px] bg-[linear-gradient(180deg,rgba(255,255,255,0.02),rgba(255,255,255,0.01))]">
 								{activeTab === "terminal" ? (
 									<div className="h-full">
 										<WebTerminal
@@ -915,7 +906,7 @@ export const codeArtifact = new Artifact<"code", Metadata>({
 								) : activeTab === "preview" &&
 									isPreviewableWebProject(files) ? (
 									wc?.devServer?.ready ? (
-										<div className="w-full h-full bg-white rounded-tl-md overflow-hidden">
+										<div className="h-full w-full overflow-hidden rounded-tl-[22px] bg-white shadow-[inset_0_1px_0_rgba(255,255,255,0.5)]">
 											<iframe
 												title="WebContainer Preview"
 												src={wc.devServer.url}
@@ -924,39 +915,52 @@ export const codeArtifact = new Artifact<"code", Metadata>({
 											/>
 										</div>
 									) : (
-										// Fallback if dev server is still starting or failed
-										<SandpackViewer
-											dependencies={mergedDependencies}
-											files={files}
-											activeFileIndex={activeFileIndex}
-											onDependenciesChange={(nextDependencies) =>
-												setMetadata((currentMetadata) => ({
-													...currentMetadata,
-													userDependencies: nextDependencies,
-												}))
-											}
-											status={props.status}
-											userDependencies={userDependencies}
-											onSaveContent={(updatedFiles) => {
-												setMetadata({
-													...metadata,
-													files: updatedFiles,
-												});
-												props.onSaveContent(
-													serializeFilesToContent(updatedFiles),
-													true,
-												);
-											}}
-										/>
+										<div className="h-full rounded-tl-[22px] border border-white/[0.04] bg-[#0f131b] p-3">
+											<SandpackViewer
+												dependencies={mergedDependencies}
+												files={files}
+												activeFileIndex={activeFileIndex}
+												onDependenciesChange={(nextDependencies) =>
+													setMetadata((currentMetadata) => ({
+														...currentMetadata,
+														userDependencies: nextDependencies,
+													}))
+												}
+												status={props.status}
+												userDependencies={userDependencies}
+												onSaveContent={(updatedFiles) => {
+													setMetadata({
+														...metadata,
+														files: updatedFiles,
+													});
+													props.onSaveContent(
+														serializeFilesToContent(updatedFiles),
+														true,
+													);
+												}}
+											/>
+										</div>
 									)
 								) : (
-									<div className="w-full h-full flex flex-col">
+									<div className="relative flex h-full w-full flex-col rounded-tl-[22px] border border-white/[0.04] bg-[#0b0f15]">
 										<CodeEditor
 											{...props}
-											content={activeFile?.content || content || ""}
+											content={editorContent}
 											language={detectedLanguage}
 											onSaveContent={handleActiveFileContentChange}
 										/>
+										{isWaitingForCode ? (
+											<div className="pointer-events-none absolute inset-0 flex items-center justify-center bg-[#0b0f15]/92">
+												<div className="max-w-sm rounded-[16px] border border-white/[0.08] bg-white/[0.03] px-5 py-4 text-center">
+													<div className="text-[13px] font-medium text-white/62">
+														Waiting for code
+													</div>
+													<div className="mt-1.5 text-[11.5px] leading-5 text-white/32">
+														The workspace is ready. Code will appear here as soon as the model streams content.
+													</div>
+												</div>
+											</div>
+										) : null}
 										{!isPreviewableWebProject(files) &&
 											metadata?.outputs &&
 											metadata.outputs.length > 0 && (
@@ -974,24 +978,22 @@ export const codeArtifact = new Artifact<"code", Metadata>({
 								)}
 							</div>
 
-							<div className="flex h-6 shrink-0 items-center justify-between border-t border-white/[0.05] bg-[#0a0a0a] px-4">
-								<span className="font-mono text-[10px] text-white/22">
+							<div className="flex h-9 shrink-0 items-center justify-between border-t border-white/[0.05] bg-[#090c12] px-4">
+								<span className="font-mono text-[10px] uppercase tracking-[0.18em] text-white/24">
 									{detectedLanguage}
 								</span>
-								<div className="flex items-center gap-1.5">
+								<div className="flex items-center gap-2 text-[10px] uppercase tracking-[0.18em] text-white/24">
 									<div
 										className={cn(
 											"h-1.5 w-1.5 rounded-full",
 											wc?.status === "running"
-												? "bg-white/55"
+												? "bg-emerald-300"
 												: wc?.status === "error"
-													? "bg-white/30"
+													? "bg-rose-300"
 													: "bg-white/20",
 										)}
 									/>
-									<span className="text-[10px] text-white/22">
-										{wc?.status ?? "ready"}
-									</span>
+									<span>{wc?.status ?? "ready"}</span>
 								</div>
 							</div>
 						</div>

@@ -1,8 +1,8 @@
 import { memo } from "react";
 import { toast } from "sonner";
 import { useArtifact } from "@/hooks/use-artifact";
+import { ArtifactCard } from "./ArtifactCard";
 import type { ArtifactKind } from "./artifact";
-import { FileIcon, LoaderIcon, MessageIcon, PencilEditIcon } from "./icons";
 
 const getActionText = (
 	type: "create" | "update" | "request-suggestions",
@@ -22,6 +22,43 @@ const getActionText = (
 	}
 };
 
+function openArtifactWorkspace({
+	setArtifact,
+	result,
+	isReadonly,
+	rect,
+}: {
+	setArtifact: ReturnType<typeof useArtifact>["setArtifact"];
+	result: { id: string; title: string; kind: ArtifactKind; content?: string };
+	isReadonly: boolean;
+	rect?: DOMRect;
+}) {
+	if (isReadonly) {
+		toast.error("Viewing files in shared chats is currently not supported.");
+		return;
+	}
+
+	const boundingBox = rect
+		? {
+			top: rect.top,
+			left: rect.left,
+			width: rect.width,
+			height: rect.height,
+		}
+		: undefined;
+
+	setArtifact((currentArtifact) => ({
+		documentId: result.id,
+		kind: result.kind,
+		content: result.content ?? currentArtifact.content,
+		title: result.title,
+		isVisible: true,
+		status: "idle",
+		streamState: "completed",
+		boundingBox: boundingBox ?? currentArtifact.boundingBox,
+	}));
+}
+
 type DocumentToolResultProps = {
 	type: "create" | "update" | "request-suggestions";
 	result: { id: string; title: string; kind: ArtifactKind; content?: string };
@@ -36,61 +73,33 @@ function PureDocumentToolResult({
 	const { setArtifact } = useArtifact();
 
 	return (
-		<button
-			className="flex w-fit cursor-pointer flex-row items-start gap-3 rounded-xl border bg-background px-3 py-2"
-			onClick={(event) => {
-				if (isReadonly) {
-					toast.error(
-						"Viewing files in shared chats is currently not supported.",
-					);
-					return;
-				}
-
-				const rect = event.currentTarget.getBoundingClientRect();
-
-				const boundingBox = {
-					top: rect.top,
-					left: rect.left,
-					width: rect.width,
-					height: rect.height,
-				};
-
-				setArtifact((currentArtifact) => ({
-					documentId: result.id,
-					kind: result.kind,
-					content: result.content ?? currentArtifact.content,
-					title: result.title,
-					isVisible: true,
-					status: "idle",
-					boundingBox,
-				}));
-			}}
-			type="button"
-		>
-			<div className="mt-1 text-muted-foreground">
-				{type === "create" ? (
-					<FileIcon />
-				) : type === "update" ? (
-					<PencilEditIcon />
-				) : type === "request-suggestions" ? (
-					<MessageIcon />
-				) : null}
-			</div>
-			<div className="text-left">
-				{`${getActionText(type, "past")} "${result.title}"`}
-			</div>
-		</button>
+		<ArtifactCard
+			filename={result.title}
+			onOpen={() =>
+				openArtifactWorkspace({
+					setArtifact,
+					result,
+					isReadonly,
+				})
+			}
+			status="done"
+			subtitles={["Artifact siap dipakai", "Workspace siap dibuka"]}
+			title={`${getActionText(type, "past")} \"${result.title}\"`}
+		/>
 	);
 }
 
 export const DocumentToolResult = memo(PureDocumentToolResult, () => true);
 
+type DocumentToolCallArgs =
+	| { title?: string; kind?: ArtifactKind; content?: string | null }
+	| { id?: string; description?: string }
+	| { documentId?: string }
+	| undefined;
+
 type DocumentToolCallProps = {
 	type: "create" | "update" | "request-suggestions";
-	args:
-		| { title: string; kind: ArtifactKind } // for create
-		| { id: string; description: string } // for update
-		| { documentId: string }; // for request-suggestions
+	args: DocumentToolCallArgs;
 	isReadonly: boolean;
 };
 
@@ -100,61 +109,51 @@ function PureDocumentToolCall({
 	isReadonly,
 }: DocumentToolCallProps) {
 	const { setArtifact } = useArtifact();
+	const safeArgs = args ?? {};
+	const title =
+		type === "create" && "title" in safeArgs && typeof safeArgs.title === "string"
+			? safeArgs.title
+			: type === "update" &&
+				"description" in safeArgs &&
+				typeof safeArgs.description === "string"
+				? safeArgs.description
+				: "artifact";
+	const kind =
+		type === "create" && "kind" in safeArgs && safeArgs.kind
+			? safeArgs.kind
+			: "code";
+	const initialContent =
+		"content" in safeArgs && typeof safeArgs.content === "string"
+			? safeArgs.content
+			: "";
 
 	return (
-		<button
-			className="cursor pointer flex w-fit flex-row items-start justify-between gap-3 rounded-xl border px-3 py-2"
-			onClick={(event) => {
+		<ArtifactCard
+			filename={title}
+			onOpen={() => {
 				if (isReadonly) {
-					toast.error(
-						"Viewing files in shared chats is currently not supported.",
-					);
+					toast.error("Viewing files in shared chats is currently not supported.");
 					return;
 				}
 
-				const rect = event.currentTarget.getBoundingClientRect();
-
-				const boundingBox = {
-					top: rect.top,
-					left: rect.left,
-					width: rect.width,
-					height: rect.height,
-				};
-
 				setArtifact((currentArtifact) => ({
 					...currentArtifact,
+					title,
+					kind,
+					content: initialContent || currentArtifact.content,
 					isVisible: true,
-					boundingBox,
+					status: initialContent ? "idle" : "streaming",
+					streamState: initialContent ? "completed" : "pending",
 				}));
 			}}
-			type="button"
-		>
-			<div className="flex flex-row items-start gap-3">
-				<div className="mt-1 text-zinc-500">
-					{type === "create" ? (
-						<FileIcon />
-					) : type === "update" ? (
-						<PencilEditIcon />
-					) : type === "request-suggestions" ? (
-						<MessageIcon />
-					) : null}
-				</div>
-
-				<div className="text-left">
-					{`${getActionText(type, "present")} ${
-						type === "create" && args && "title" in args && args.title
-							? `"${args.title}"`
-							: type === "update" && args && "description" in args
-								? `"${args.description}"`
-								: type === "request-suggestions"
-									? "for document"
-									: ""
-					}`}
-				</div>
-			</div>
-
-			<div className="mt-1 animate-spin">{<LoaderIcon />}</div>
-		</button>
+			status="streaming"
+			subtitles={[
+				"Menyiapkan artifact surface",
+				"Menyusun struktur isi",
+				"Merangkai detail akhir",
+			]}
+			title={`${getActionText(type, "present")} \"${title}\"`}
+		/>
 	);
 }
 

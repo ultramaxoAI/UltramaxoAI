@@ -12,7 +12,7 @@ export function detectTaskType(message: string): TaskType {
 	}
 
 	if (
-		/\bcode\b|\bkode\b|\bprogram\b|\bfunction\b|\bdebug\b|\bfungsi\b|\bscript\b|\bapi\b|\bcomponent\b|\bkomponen\b|\breact\b|\bnext\.?js\b|\btypescript\b|\bjavascript\b|\blanding page\b|\bwebsite\b|\bweb\b|\bapp\b|\baplikasi\b|\bsaas\b|\bdashboard\b|\bfrontend\b|\bui\b|\bux\b/.test(
+		/\bcode\b|\bkode\b|\bprogram\b|\bfunction\b|\bdebug\b|\bfungsi\b|\bscript\b|\btool\b|\btools\b|\bapi\b|\bcomponent\b|\bkomponen\b|\breact\b|\bnext\.?js\b|\btypescript\b|\bjavascript\b|\bflutter\b|\breact native\b|\blanding page\b|\bwebsite\b|\bweb\b|\bapp\b|\baplikasi\b|\bsaas\b|\bdashboard\b|\bfrontend\b|\bbackend\b|\bui\b|\bux\b/.test(
 			lower,
 		)
 	) {

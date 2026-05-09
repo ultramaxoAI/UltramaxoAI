@@ -8,10 +8,10 @@ import { ReasoningStream } from "./ReasoningStream";
 const TIMER_MS = 100;
 const SUBTITLE_INTERVAL_MS = 2800;
 const SUBTITLES = [
-	"Analyzing request",
-	"Considering approach",
-	"Designing implementation",
-	"Verifying logic",
+	"Menganalisis permintaan",
+	"Mempertimbangkan pendekatan",
+	"Merancang implementasi",
+	"Memverifikasi logika",
 ];
 
 function formatSeconds(ms: number) {
@@ -36,12 +36,17 @@ export function AgentThinking({
 	const displayDuration = durationMs ?? elapsedMs;
 
 	useEffect(() => {
+		if (thinkingChunks.length === 0 && !isDone) {
+			setIsExpanded(false);
+			return;
+		}
+
 		const timeout = window.setTimeout(() => {
 			setIsExpanded(true);
-		}, 600);
+		}, isDone ? 0 : 420);
 
 		return () => window.clearTimeout(timeout);
-	}, []);
+	}, [isDone, thinkingChunks.length]);
 
 	useEffect(() => {
 		if (isDone) {
@@ -69,54 +74,50 @@ export function AgentThinking({
 
 	return (
 		<div
-			className={cn(
-				"agent-thinking-panel w-full max-w-[580px] font-sans",
-				className,
-			)}
+			className={cn("w-full max-w-[540px] font-sans", className)}
 			style={{
 				fontFamily:
-					"-apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif",
+					"-apple-system, BlinkMacSystemFont, 'Inter', sans-serif",
 			}}
 		>
-			<div className="overflow-hidden rounded-2xl border border-[#1e1e1e] bg-[#111]">
+			<div className="overflow-hidden rounded-none border-0 bg-transparent backdrop-blur-0">
 				<button
 					aria-expanded={isExpanded}
-					className="flex w-full select-none items-center gap-2.5 px-3.5 py-[11px] text-left transition-colors hover:bg-white/[0.012]"
+					className="flex w-full items-center gap-[11px] px-[14px] py-[10px] text-left transition-colors hover:bg-white/[0.02]"
 					onClick={() => setIsExpanded((value) => !value)}
 					type="button"
 				>
-					<span className="flex size-[30px] shrink-0 items-center justify-center rounded-full border border-[#222] bg-[#151515]">
-						{isDone ? (
-							<Check className="size-[15px] text-[#3ecf8e]" strokeWidth={1.8} />
-						) : (
-							<span className="agent-thinking-dots flex items-center gap-[3px]">
-								<span />
-								<span />
-								<span />
-							</span>
-						)}
-					</span>
+					{isDone ? (
+						<span
+							className="flex size-[30px] shrink-0 items-center justify-center rounded-[8px] border border-white/[0.07] bg-white/[0.04]"
+							style={{ borderWidth: "0.5px" }}
+						>
+							<Check className="size-[13px] text-white/50" strokeWidth={1.8} />
+						</span>
+					) : null}
 
 					<span className="min-w-0 flex-1">
-						<span className="flex items-center gap-1.5 text-[13px] font-semibold text-[#b0b0b0]">
-							{isDone ? "Finished thinking" : "Thinking..."}
-							{isDone ? null : <span className="agent-live-dot" />}
+						<span className="block min-w-0 truncate text-[13px] font-normal thinking-shimmer">
+							{isDone ? "Jawaban siap" : "Sedang berpikir"}
 						</span>
-						<span className="mt-0.5 block truncate text-[11px] text-[#484848] transition-opacity duration-200">
+						<span className="mt-[2px] block truncate text-[10px] text-white/[0.25] transition-opacity duration-200">
 							{isDone
-								? `in ${formatSeconds(displayDuration)}`
+								? `Selesai dalam ${formatSeconds(displayDuration)}`
 								: SUBTITLES[subtitleIndex]}
 						</span>
 					</span>
 
-					<span className="inline-flex items-center gap-1 rounded-full border border-[#1e1e1e] bg-[#141414] px-2 py-[3px] font-mono text-[10.5px] text-[#424242] tabular-nums">
-						<Clock3 className="size-2.5" strokeWidth={1.5} />
+					<span
+						className="inline-flex items-center gap-[3.5px] rounded-[20px] border border-white/[0.08] bg-white/[0.05] px-[8px] py-[3px] font-mono text-[10.5px] text-white/[0.35]"
+						style={{ borderWidth: "0.5px" }}
+					>
+						<Clock3 className="size-[9px]" strokeWidth={1.5} />
 						{formatSeconds(displayDuration)}
 					</span>
 
 					<ChevronDown
 						className={cn(
-							"size-3.5 shrink-0 text-[#333] transition-transform duration-200",
+							"size-[14px] shrink-0 text-white/20 transition-transform duration-200",
 							isExpanded && "rotate-180",
 						)}
 						strokeWidth={1.5}
@@ -125,77 +126,69 @@ export function AgentThinking({
 
 				<div
 					className={cn(
-						"overflow-hidden border-[#181818] border-t transition-[max-height,opacity] duration-300 ease-out",
-						isExpanded ? "max-h-[280px] opacity-100" : "max-h-0 opacity-0",
+						"overflow-hidden border-white/[0.05] border-t transition-[max-height,opacity] duration-300 ease-out",
+						isExpanded ? "max-h-[200px] opacity-100" : "max-h-0 opacity-0",
 					)}
+					style={{ borderTopWidth: isExpanded ? "0.5px" : "0px" }}
 				>
-					<ReasoningStream chunks={thinkingChunks} showCursor={!isDone} />
+					<div className="reasoning-shell px-[14px] py-[12px]">
+						<ReasoningStream chunks={thinkingChunks} showCursor={!isDone} />
+					</div>
 				</div>
 			</div>
 
 			<style jsx>{`
-				.agent-thinking-panel {
-					animation: agent-panel-in 0.4s ease forwards;
-					transform-origin: left top;
+				.thinking-shimmer {
+					background: linear-gradient(
+						90deg,
+						rgba(255,255,255,.2) 0%,
+						rgba(255,255,255,.7) 40%,
+						rgba(255,255,255,.9) 50%,
+						rgba(255,255,255,.7) 60%,
+						rgba(255,255,255,.2) 100%
+					);
+					background-size: 200% 100%;
+					-webkit-background-clip: text;
+					-webkit-text-fill-color: transparent;
+					background-clip: text;
+					animation: shimmer-text 2.8s ease-in-out infinite;
 				}
 
-				.agent-thinking-dots span {
-					width: 4.5px;
-					height: 4.5px;
-					border-radius: 999px;
-					background: #4a90e2;
-					animation: agent-dot-pulse 1.5s ease-in-out infinite;
+				.reasoning-shell :global(.reasoning-stream) {
+					max-height: 180px;
+					overflow-y: auto;
+					scrollbar-width: none;
 				}
 
-				.agent-thinking-dots span:nth-child(2) {
-					animation-delay: 0.18s;
+				.reasoning-shell :global(.reasoning-stream::-webkit-scrollbar) {
+					display: none;
 				}
 
-				.agent-thinking-dots span:nth-child(3) {
-					animation-delay: 0.36s;
+				.reasoning-shell :global(.reasoning-stream p),
+				.reasoning-shell :global(.reasoning-stream div),
+				.reasoning-shell :global(.reasoning-stream span) {
+					font-size: 11.5px;
+					line-height: 1.8;
+					color: rgba(255, 255, 255, 0.22);
+					font-style: italic;
 				}
 
-				.agent-live-dot {
-					width: 6px;
-					height: 6px;
-					border-radius: 999px;
-					background: #4a90e2;
-					box-shadow: 0 0 8px #4a90e2;
-					animation: agent-live-dot 2s ease-in-out infinite;
+				.reasoning-shell :global(.reasoning-stream strong),
+				.reasoning-shell :global(.reasoning-stream b) {
+					color: rgba(255, 255, 255, 0.35);
+					font-style: normal;
+					font-weight: 600;
 				}
 
-				@keyframes agent-panel-in {
-					0% {
-						opacity: 0;
-						transform: scale(0.97) translateY(4px);
-					}
-					100% {
-						opacity: 1;
-						transform: scale(1) translateY(0);
-					}
+				.reasoning-shell :global(.reasoning-cursor) {
+					width: 1.5px;
+					background: rgba(255, 255, 255, 0.4);
+					border-radius: 1px;
 				}
 
-				@keyframes agent-dot-pulse {
-					0%,
-					60%,
-					100% {
-						opacity: 0.2;
-						transform: scale(0.78);
-					}
-					30% {
-						opacity: 1;
-						transform: scale(1);
-					}
-				}
-
-				@keyframes agent-live-dot {
-					0%,
-					100% {
-						opacity: 0.4;
-					}
-					50% {
-						opacity: 1;
-					}
+				@keyframes shimmer-text {
+					0% { background-position: 200% center; }
+					100% { background-position: -200% center; }
 				}
 			`}</style>
 		</div>
