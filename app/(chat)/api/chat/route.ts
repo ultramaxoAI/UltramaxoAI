@@ -384,6 +384,10 @@ export async function POST(request: Request) {
 			);
 			const requestedMobileModeByText =
 				MOBILE_MODE_INTENT_REGEX.test(latestUserText);
+			const explicitlyRequestedWorkspace =
+				/\b(workspace|artifact|dokumen|document|editor|aplikasi lengkap|project lengkap|proyek lengkap|fullstack|mobile app|aplikasi mobile)\b/i.test(
+					latestUserText,
+				);
 			const requestedIdeModeByText =
 				requestedMobileModeByText ||
 				buildModeDetection.mode === "workspace-app" ||
@@ -397,6 +401,7 @@ export async function POST(request: Request) {
 				(requestedIdeModeByText && !inferredMobileModeEnabled);
 			const htmlPreviewModeEnabled =
 				buildModeDetection.mode === "html-preview" &&
+				explicitlyRequestedWorkspace &&
 				!inferredFullstackModeEnabled &&
 				!inferredMobileModeEnabled;
 			const inferredGeneralAgentModeEnabled =
@@ -637,9 +642,7 @@ export async function POST(request: Request) {
 				selectedChatModel.includes("deepseek-r1") ||
 				deepThinkingEnabled;
 			const isIdeAgentMode =
-				inferredFullstackModeEnabled ||
-				inferredMobileModeEnabled ||
-				inferredGeneralAgentModeEnabled;
+				inferredFullstackModeEnabled || inferredMobileModeEnabled;
 			const maxContextMessages = isIdeAgentMode ? 10 : 18;
 			const recentUiMessages = uiMessages.slice(-maxContextMessages);
 
@@ -915,9 +918,7 @@ export async function POST(request: Request) {
 						artifactContentLength: 0,
 						artifactKind: null as string | null,
 						buildMode:
-							inferredFullstackModeEnabled ||
-							inferredMobileModeEnabled ||
-							inferredGeneralAgentModeEnabled
+							inferredFullstackModeEnabled || inferredMobileModeEnabled
 								? "workspace-app"
 								: htmlPreviewModeEnabled
 									? "html-preview"
@@ -966,7 +967,7 @@ export async function POST(request: Request) {
 					}
 
 					// Backend-owned adaptive thinking upgrade signal.
-					if (isIdeAgentMode) {
+					if (isIdeAgentMode || inferredGeneralAgentModeEnabled) {
 						dataStream.write({ type: "data-upgrade_to_agent", data: null });
 						dataStream.write({
 							type: "data-agent-thinking",
@@ -987,14 +988,38 @@ export async function POST(request: Request) {
 						]);
 					}
 
+					const emitFallbackAssistantMessage = async (text: string) => {
+						if (streamedFallbackAssistantMessage || streamedAssistantText.trim()) {
+							return;
+						}
+
+						streamedFallbackAssistantMessage = {
+							id: generateUUID(),
+							role: "assistant",
+							parts: [
+								{
+									type: "text",
+									text,
+								},
+							],
+							metadata: {
+								createdAt: new Date().toISOString(),
+							},
+						};
+
+						dataStream.write({
+							type: "data-appendMessage",
+							data: JSON.stringify(streamedFallbackAssistantMessage),
+						});
+						queueAssistantDraftPersist(true, text);
+						await assistantPersistChain;
+					};
+
 					while (retryCount <= maxRetries) {
 						try {
 							const wantsArtifact =
-								htmlPreviewModeEnabled ||
-								/\b(artifact|dokumen|document|aplikasi lengkap|project lengkap|proyek lengkap)\b/i.test(
-									latestUserText,
-								);
-							const allowDocumentTools = isIdeAgentMode || wantsArtifact;
+								htmlPreviewModeEnabled || explicitlyRequestedWorkspace;
+							const allowDocumentTools = wantsArtifact;
 							const useTools =
 								isIdeAgentMode ||
 								webSearchEnabled ||
@@ -1622,12 +1647,14 @@ export async function POST(request: Request) {
 									error.message.includes("sensitive_content"));
 
 							if (isContentRefusal) {
-								throw new Error(
-									"Model AI nolak request karena content policy. Coba ulangi dengan cara berbeda atau ganti model.",
-								);
+								const refusalText =
+									"Aku nggak bisa membantu membuat tool DDoS atau alat serangan. Kalau mau, aku bisa bantu bikin load tester aman untuk server milik sendiri, rate-limit checker, atau rencana mitigasi DDoS.";
+								await emitFallbackAssistantMessage(refusalText);
+								throw new Error(refusalText);
 							}
 
-							// If we've exhausted retries or hit non-retryable error, throw
+							// If we've exhausted retries or hit non-retryable error, keep the chat from going blank.
+							await emitFallbackAssistantMessage(fallbackAssistantText);
 							throw error;
 						}
 					}
