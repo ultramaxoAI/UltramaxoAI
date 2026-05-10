@@ -1643,6 +1643,15 @@ export async function POST(request: Request) {
 								throw new Error(refusalText);
 							}
 
+							// If useful text already streamed, don't convert a late provider/tool error
+							// into a failed chat. Keep the partial answer visible and let the user continue.
+							if (streamedAssistantText.trim().length > 0) {
+								dataStream.write({ type: "data-thinking_done", data: {} });
+								queueAssistantDraftPersist(true);
+								await assistantPersistChain;
+								break;
+							}
+
 							// If we've exhausted retries or hit non-retryable error, keep the chat from going blank.
 							await emitFallbackAssistantMessage(fallbackAssistantText);
 							throw error;

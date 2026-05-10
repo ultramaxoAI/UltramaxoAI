@@ -30,7 +30,7 @@ function normalizeResults(results: TavilyResult[] = []) {
 			const url = result.url?.trim() ?? "";
 			const domain = getDomain(url);
 			return {
-				content: result.content,
+				content: result.content?.slice(0, 420),
 				domain,
 				publishedDate: result.published_date,
 				score: result.score,
@@ -104,7 +104,9 @@ export function createWebSearchTool(onProgress?: WebSearchProgress) {
 				}
 
 				return {
-					...data,
+					answer:
+						typeof data.answer === "string" ? data.answer.slice(0, 1200) : undefined,
+					query,
 					sources,
 				};
 			} catch (_error: any) {

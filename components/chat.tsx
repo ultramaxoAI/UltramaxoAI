@@ -394,6 +394,11 @@ export function Chat({
 		onError: (error) => {
 			const rawErrorMessage =
 				error instanceof Error ? error.message : String(error);
+			if (streamedResponseTextRef.current.trim().length > 0) {
+				setStreamError(null);
+				mutate(unstable_serialize(getChatHistoryPaginationKey));
+				return;
+			}
 			const errorFingerprint = `${status}:${rawErrorMessage}`;
 			if (lastHandledClientErrorRef.current === errorFingerprint) {
 				return;
