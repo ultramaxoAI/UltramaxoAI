@@ -1,7 +1,7 @@
 import type { UseChatHelpers } from "@ai-sdk/react";
 import type { Vote } from "@backend/db/schema";
 import equal from "fast-deep-equal";
-import { Braces, Copy, RefreshCw, ThumbsDown, ThumbsUp } from "lucide-react";
+import { Braces, Copy, Ellipsis, RefreshCw, Share, ThumbsDown, ThumbsUp } from "lucide-react";
 import { memo } from "react";
 import { toast } from "sonner";
 import { useSWRConfig } from "swr";
@@ -137,9 +137,10 @@ export function PureMessageActions({
 	}
 
 	return (
-		<div className="mt-2 flex flex-wrap items-center gap-1 opacity-100 transition-opacity duration-200 md:opacity-0 md:group-hover/message:opacity-100 md:focus-within:opacity-100">
+		<div className="mt-3 flex flex-wrap items-center gap-1.5 opacity-100 transition-opacity duration-200 md:opacity-0 md:group-hover/message:opacity-100 md:focus-within:opacity-100">
 			<button
-				className="inline-flex items-center gap-1.5 whitespace-nowrap rounded-full px-2 py-1 text-[11px] text-white/30 transition-colors hover:bg-white/6 hover:text-white/60 disabled:opacity-40"
+				aria-label="Like response"
+				className="inline-flex size-8 items-center justify-center rounded-full text-white/72 transition-colors hover:bg-white/10 hover:text-white disabled:opacity-35"
 				data-testid="message-upvote"
 				disabled={vote?.isUpvoted}
 				onClick={() => {
@@ -185,12 +186,12 @@ export function PureMessageActions({
 				}}
 				type="button"
 			>
-				<ThumbsUp className="size-3" />
-				Helpful
+				<ThumbsUp className="size-[18px]" />
 			</button>
 
 			<button
-				className="inline-flex items-center gap-1.5 whitespace-nowrap rounded-full px-2 py-1 text-[11px] text-white/30 transition-colors hover:bg-white/6 hover:text-white/60 disabled:opacity-40"
+				aria-label="Dislike response"
+				className="inline-flex size-8 items-center justify-center rounded-full text-white/72 transition-colors hover:bg-white/10 hover:text-white disabled:opacity-35"
 				data-testid="message-downvote"
 				disabled={vote && !vote.isUpvoted}
 				onClick={() => {
@@ -236,43 +237,59 @@ export function PureMessageActions({
 				}}
 				type="button"
 			>
-				<ThumbsDown className="size-3" />
-				Not helpful
+				<ThumbsDown className="size-[18px]" />
 			</button>
 
 			<button
-				className="inline-flex items-center gap-1.5 whitespace-nowrap rounded-full px-2 py-1 text-[11px] text-white/30 transition-colors hover:bg-white/6 hover:text-white/60"
+				aria-label="Copy response"
+				className="inline-flex size-8 items-center justify-center rounded-full text-white/72 transition-colors hover:bg-white/10 hover:text-white"
 				onClick={handleCopy}
 				type="button"
 			>
-				<Copy className="size-3" />
-				Copy
+				<Copy className="size-[18px]" />
+			</button>
+
+			<button
+				aria-label="Share response"
+				className="inline-flex size-8 items-center justify-center rounded-full text-white/72 transition-colors hover:bg-white/10 hover:text-white"
+				onClick={handleCopy}
+				type="button"
+			>
+				<Share className="size-[18px]" />
 			</button>
 
 			{workspaceCandidate ? (
 				<button
 					aria-label="Open workspace"
-					className="inline-flex size-7 items-center justify-center rounded-full text-white/28 transition-colors hover:bg-white/6 hover:text-white/62"
+					className="inline-flex size-8 items-center justify-center rounded-full text-white/72 transition-colors hover:bg-white/10 hover:text-white"
 					onClick={() => {
 						void handleOpenWorkspace();
 					}}
 					title="Open workspace"
 					type="button"
 				>
-					<Braces className="size-3.5" />
+					<Braces className="size-[18px]" />
 				</button>
 			) : null}
 
 			{regenerate ? (
 				<button
-					className="inline-flex items-center gap-1.5 whitespace-nowrap rounded-full px-2 py-1 text-[11px] text-white/30 transition-colors hover:bg-white/6 hover:text-white/60"
+					aria-label="Regenerate response"
+					className="inline-flex size-8 items-center justify-center rounded-full text-white/72 transition-colors hover:bg-white/10 hover:text-white"
 					onClick={() => regenerate()}
 					type="button"
 				>
-					<RefreshCw className="size-3" />
-					Regenerate
+					<RefreshCw className="size-[18px]" />
 				</button>
 			) : null}
+
+			<button
+				aria-label="More actions"
+				className="inline-flex size-8 items-center justify-center rounded-full text-white/72 transition-colors hover:bg-white/10 hover:text-white"
+				type="button"
+			>
+				<Ellipsis className="size-[18px]" />
+			</button>
 		</div>
 	);
 }

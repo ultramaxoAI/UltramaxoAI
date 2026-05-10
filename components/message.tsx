@@ -177,28 +177,28 @@ function WebSearchSources({ output, state }: { output: unknown; state?: string }
 
 	return (
 		<div className="mt-4 w-full max-w-[720px]">
-			<div className="mb-3 flex items-center gap-2 text-[13px] font-medium text-white/70">
+			<div className="mb-3 flex items-center gap-2 text-[14px] font-medium text-white/78">
 				<GlobeIcon className="size-3.5" />
 				<span>Sumber</span>
 			</div>
 			<div className="grid gap-3 sm:grid-cols-2">
 				{sources.map((source) => (
 					<a
-						className="group/source rounded-2xl border border-white/[0.09] bg-white/[0.035] p-4 transition-colors hover:border-white/[0.16] hover:bg-white/[0.055]"
+						className="group/source rounded-2xl border border-white/[0.12] bg-white/[0.045] p-4 transition-colors hover:border-white/[0.2] hover:bg-white/[0.075]"
 						href={source.url}
 						key={source.url}
 						rel="noreferrer"
 						target="_blank"
 					>
-						<div className="mb-2 flex items-center justify-between gap-3 text-[12.5px] text-white/48">
+						<div className="mb-2 flex items-center justify-between gap-3 text-[13px] text-white/62">
 							<span className="min-w-0 truncate">{source.domain}</span>
 							<ExternalLinkIcon className="size-3.5 shrink-0 opacity-45 transition-opacity group-hover/source:opacity-80" />
 						</div>
-						<div className="line-clamp-2 text-[14px] leading-[1.45] text-white/86">
+						<div className="line-clamp-2 text-[15px] leading-[1.45] text-white/90">
 							{source.title}
 						</div>
 						{source.content ? (
-							<div className="mt-2 line-clamp-2 text-[12.5px] leading-[1.55] text-white/45">
+							<div className="mt-2 line-clamp-2 text-[13px] leading-[1.55] text-white/58">
 								{source.content}
 							</div>
 						) : null}
@@ -426,7 +426,7 @@ function MessageTextPart({
 				className={cn("w-full", {
 					"ml-auto inline-flex w-auto max-w-full whitespace-pre-wrap break-words rounded-2xl bg-white/[0.07] px-4 py-3 text-left text-[15px] leading-[1.75] text-white/88 shadow-none":
 						messageRole === "user",
-					"w-full bg-transparent px-0 py-0 text-left text-[16px] leading-[1.85] text-white/85":
+					"w-full bg-transparent px-0 py-0 text-left text-[16px] leading-[1.78] text-white/90 md:text-[17px]":
 						messageRole === "assistant",
 				})}
 				data-testid="message-content"
