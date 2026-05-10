@@ -23,6 +23,19 @@ function getResultTitle(result: TavilyResult, domain: string) {
 	return result.title?.trim() || domain || "Sumber web";
 }
 
+function shouldForceFreshSearch(query: string) {
+	return /\b(terbaru|hari ini|sekarang|latest|current|recent|today|breaking|news|berita)\b/i.test(query);
+}
+
+function buildFreshQuery(query: string) {
+	if (!shouldForceFreshSearch(query)) {
+		return query;
+	}
+
+	const today = new Date().toISOString().slice(0, 10);
+	return `${query} terbaru hari ini ${today}`;
+}
+
 function normalizeResults(results: TavilyResult[] = []) {
 	return results
 		.filter((result) => typeof result.url === "string" && result.url.trim())
@@ -48,8 +61,10 @@ export function createWebSearchTool(onProgress?: WebSearchProgress) {
 			query: z.string().describe("The search query to look up on the web"),
 		}),
 		execute: async ({ query }: { query: string }) => {
-			console.log("[Web Search Tool] Calling Tavily API for query:", query);
-			onProgress?.(`Mencari web untuk: ${query}`);
+			const freshSearch = shouldForceFreshSearch(query);
+			const effectiveQuery = buildFreshQuery(query);
+			console.log("[Web Search Tool] Calling Tavily API for query:", effectiveQuery);
+			onProgress?.(`Mencari web untuk: ${effectiveQuery}`);
 			const tavilyKey = process.env.TAVILY_API_KEY;
 			if (!tavilyKey) {
 				console.warn("[Web Search Tool] Missing TAVILY_API_KEY");
@@ -68,10 +83,16 @@ export function createWebSearchTool(onProgress?: WebSearchProgress) {
 					headers: { "Content-Type": "application/json" },
 					body: JSON.stringify({
 						api_key: tavilyKey,
-						query,
+						query: effectiveQuery,
 						search_depth: "advanced",
 						max_results: 5,
 						include_answer: true,
+						...(freshSearch
+							? {
+									topic: "news",
+									time_range: "day",
+								}
+							: {}),
 					}),
 				});
 
@@ -106,7 +127,7 @@ export function createWebSearchTool(onProgress?: WebSearchProgress) {
 				return {
 					answer:
 						typeof data.answer === "string" ? data.answer.slice(0, 1200) : undefined,
-					query,
+					query: effectiveQuery,
 					sources,
 				};
 			} catch (_error: any) {
