@@ -189,8 +189,8 @@ export function Chat({
 	const [isAnnouncementOpen, setIsAnnouncementOpen] = useState(false);
 	const [streamError, setStreamError] = useState<string | null>(null);
 	const [lastChunkAt, setLastChunkAt] = useState(() => Date.now());
-	const streamStallTimeoutMs = 30_000;
-	const streamWatchdogTimeoutMs = 90_000;
+	const streamStallTimeoutMs = 120_000;
+	const streamWatchdogTimeoutMs = 240_000;
 	const lastThinkingMessageIdRef = useRef<string | null>(null);
 	const lastFallbackMessageForUserIdRef = useRef<string | null>(null);
 	const pendingTurnRef = useRef<{
@@ -757,7 +757,7 @@ export function Chat({
 				...current,
 				enabled: false,
 			}));
-			console.warn("Stream watchdog triggered after 45s", {
+			console.warn("Stream watchdog triggered after timeout", {
 				chatId: id,
 				status,
 				startedAt: statusResetAtRef.current,

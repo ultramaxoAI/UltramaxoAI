@@ -79,7 +79,7 @@ import { convertToUIMessages, generateUUID } from "@/lib/utils";
 import { generateTitleFromUserMessage } from "../../actions";
 import { type PostRequestBody, postRequestBodySchema } from "./schema";
 
-export const maxDuration = 60;
+export const maxDuration = 300;
 
 const MOBILE_MODE_INTENT_REGEX =
 	/\b(mobile app|aplikasi mobile|flutter|react native)\b/i;
@@ -1152,8 +1152,8 @@ export async function POST(request: Request) {
 								),
 								system: baseSystemPrompt,
 								messages: finalMessages,
-								stopWhen: stepCountIs(isIdeAgentMode ? 10 : 8),
-								maxOutputTokens: isIdeAgentMode ? 8192 : 8192,
+								stopWhen: stepCountIs(isIdeAgentMode ? 16 : 12),
+								maxOutputTokens: isIdeAgentMode ? 16_384 : 16_384,
 								onChunk: ({ chunk }) => {
 									const chunkRecord = chunk as Record<string, unknown>;
 									const chunkType =
