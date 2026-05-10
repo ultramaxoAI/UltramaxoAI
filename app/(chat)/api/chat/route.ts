@@ -87,28 +87,6 @@ const MOBILE_MODE_INTENT_REGEX =
 const IDE_MODE_INTENT_REGEX =
 	/\b(fullstack|workspace|landing page|web app|website|aplikasi lengkap|project lengkap|proyek lengkap|buatkan (website|web|app|aplikasi)|build (website|web|app|aplikasi)|create (website|web|app|application)|next\.?js|react|flutter|react native|backend|frontend|dashboard)\b/i;
 
-const COMPLEX_PATTERNS = [
-	/buat|create|generate|rancang|analisis|jelaskan|susun|tulis/i,
-	/7.day|step.by.step|panduan|tutorial|strategi|plan|launch/i,
-	/bandingkan|compare|pros.cons|kelebihan|kekurangan/i,
-];
-
-const COMPLEX_WORD_THRESHOLD = 8;
-
-function isComplexPrompt(prompt: string) {
-	const normalizedPrompt = prompt.trim();
-	if (!normalizedPrompt) {
-		return false;
-	}
-
-	const wordCount = normalizedPrompt.split(/\s+/).length;
-	if (wordCount >= COMPLEX_WORD_THRESHOLD) {
-		return true;
-	}
-
-	return COMPLEX_PATTERNS.some((pattern) => pattern.test(normalizedPrompt));
-}
-
 type StreamErrorDetails = Error & {
 	type?: string;
 	statusCode?: number;
@@ -410,7 +388,6 @@ export async function POST(request: Request) {
 				!inferredFullstackModeEnabled &&
 				!inferredMobileModeEnabled &&
 				!htmlPreviewModeEnabled;
-			const complexPromptDetected = isComplexPrompt(latestUserText);
 
 			const session = await auth();
 
@@ -877,38 +854,7 @@ export async function POST(request: Request) {
 			const stream = createUIMessageStream({
 				originalMessages: isToolApprovalFlow ? uiMessages : undefined,
 				execute: async ({ writer: dataStream }) => {
-					const emitSyntheticThinking = async (lines: string[]) => {
-						for (const line of lines) {
-							dataStream.write({
-								type: "data-thinking_chunk",
-								data: line,
-							});
-							await new Promise((resolve) => setTimeout(resolve, 40));
-						}
-					};
-
 					dataStream.write({ type: "data-thinking_start", data: null });
-
-					const shouldUpgradeThinking =
-						deepThinkingEnabled ||
-						inferredFullstackModeEnabled ||
-						inferredMobileModeEnabled ||
-						inferredGeneralAgentModeEnabled ||
-						complexPromptDetected;
-
-					if (shouldUpgradeThinking && !isIdeAgentMode) {
-						await new Promise((resolve) => setTimeout(resolve, 800));
-						dataStream.write({ type: "data-upgrade_to_agent", data: null });
-
-						if (!inferredFullstackModeEnabled && !inferredMobileModeEnabled) {
-							const previewPrompt = latestUserText.trim();
-							await emitSyntheticThinking([
-								`Menerima permintaan: "${previewPrompt.slice(0, 60)}${previewPrompt.length > 60 ? "..." : ""}".`,
-								"Menganalisis konteks percakapan dan hasil yang paling relevan untuk diberikan.",
-								"Menentukan pendekatan yang sistematis agar respons tetap jelas dan langsung bisa dipakai.",
-							]);
-						}
-					}
 
 					let retryCount = 0;
 					const maxRetries = 1;
@@ -966,26 +912,10 @@ export async function POST(request: Request) {
 						dataStream.write({ type: "data-kind", data: "code" });
 					}
 
-					// Backend-owned adaptive thinking upgrade signal.
-					if (isIdeAgentMode || inferredGeneralAgentModeEnabled) {
+					// Upgrade the visual thinking state for real tool/workspace runs only.
+					// Free-form reasoning text is promoted by real `thinking_chunk` events.
+					if (isIdeAgentMode) {
 						dataStream.write({ type: "data-upgrade_to_agent", data: null });
-						dataStream.write({
-							type: "data-agent-thinking",
-							data: {
-								label: "Menganalisis permintaan...",
-								status: "running",
-							},
-						});
-						await emitSyntheticThinking([
-							`Menerima permintaan: "${latestUserText.slice(0, 80)}${latestUserText.length > 80 ? "..." : ""}".`,
-							"Menganalisis konteks percakapan serta workspace yang sedang aktif.",
-							inferredFullstackModeEnabled
-								? "Mode fullstack aktif — menyiapkan struktur dan implementasi workspace."
-								: inferredMobileModeEnabled
-									? "Mode mobile aktif — menyesuaikan pendekatan untuk alur aplikasi mobile."
-									: "Mode agent aktif — menjalankan tugas secara bertahap dan terarah.",
-							"Menyiapkan langkah kerja dan mulai menjalankan rencana.",
-						]);
 					}
 
 					const emitFallbackAssistantMessage = async (text: string) => {

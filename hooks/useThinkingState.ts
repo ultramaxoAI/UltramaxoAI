@@ -105,6 +105,12 @@ export function useThinkingState({
 
 				case "thinking_chunk": {
 					if (event.content) {
+						if (phaseRef.current === "simple") {
+							phaseRef.current = "agent";
+							setHasUpgraded(true);
+							setPhase("agent");
+						}
+
 						const nextChunk = event.content as string;
 						setThinkingChunksState((currentChunks) =>
 							currentChunks[currentChunks.length - 1] === nextChunk
