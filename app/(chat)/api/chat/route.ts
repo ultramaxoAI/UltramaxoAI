@@ -87,6 +87,10 @@ const MOBILE_MODE_INTENT_REGEX =
 const IDE_MODE_INTENT_REGEX =
 	/\b(fullstack|workspace|landing page|web app|website|aplikasi lengkap|project lengkap|proyek lengkap|buatkan (website|web|app|aplikasi)|build (website|web|app|aplikasi)|create (website|web|app|application)|next\.?js|react|flutter|react native|backend|frontend|dashboard)\b/i;
 
+function isExplicitWebResearchRequest(prompt: string) {
+	return /\b(web\s*search|cari(?:kan)?\s+(?:di\s+)?(?:web|internet|google|berita|sumber|referensi)|berita|sumber|referensi|research|riset|terbaru|hari ini|latest|current|breaking|news)\b/i.test(prompt);
+}
+
 function getTaskThinkingLines(prompt: string) {
 	const text = prompt.toLowerCase();
 	const focus = prompt.trim().replace(/\s+/g, " ").slice(0, 90);
@@ -899,6 +903,7 @@ export async function POST(request: Request) {
 				execute: async ({ writer: dataStream }) => {
 					dataStream.write({ type: "data-thinking_start", data: null });
 
+					const explicitWebResearchRequest = isExplicitWebResearchRequest(latestUserText);
 					const taskThinkingLines = getTaskThinkingLines(latestUserText);
 					if (taskThinkingLines.length > 0 && !isIdeAgentMode) {
 						for (const line of taskThinkingLines) {
@@ -1352,11 +1357,14 @@ export async function POST(request: Request) {
 											requestClarification,
 											...(webSearchEnabled
 												? {
-														webSearch: createWebSearchTool((event) => {
-															dataStream.write({
-																type: "data-thinking_chunk",
-																data: event,
-															});
+														webSearch: createWebSearchTool({
+															exposeSources: explicitWebResearchRequest,
+															onProgress: (event) => {
+																dataStream.write({
+																	type: "data-thinking_chunk",
+																	data: event,
+																});
+															},
 														}),
 													}
 												: {}),

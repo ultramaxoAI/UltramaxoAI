@@ -3,6 +3,11 @@ import { z } from "zod";
 
 type WebSearchProgress = (message: string) => void;
 
+type WebSearchToolOptions = {
+	onProgress?: WebSearchProgress;
+	exposeSources?: boolean;
+};
+
 type TavilyResult = {
 	title?: string;
 	url?: string;
@@ -53,7 +58,9 @@ function normalizeResults(results: TavilyResult[] = []) {
 		});
 }
 
-export function createWebSearchTool(onProgress?: WebSearchProgress) {
+export function createWebSearchTool(options: WebSearchToolOptions = {}) {
+	const { exposeSources = true, onProgress } = options;
+
 	return tool({
 		description:
 			"Search the web for real-time information, news, and current events. Use this when user needs current/recent information that may not be in your training data.",
@@ -117,19 +124,27 @@ export function createWebSearchTool(onProgress?: WebSearchProgress) {
 					onProgress?.("Tidak menemukan sumber web yang cukup relevan.");
 				} else {
 					for (const source of sources.slice(0, 4)) {
-						onProgress?.(`Membaca ${source.domain}: ${source.title}`);
+						onProgress?.(`Membuka ${source.domain}`);
 					}
 					onProgress?.(
 						`Membandingkan ${sources.length} sumber dan memilih poin yang konsisten.`,
 					);
 				}
 
-				return {
-					answer:
-						typeof data.answer === "string" ? data.answer.slice(0, 1200) : undefined,
-					query: effectiveQuery,
-					sources,
-				};
+				const compactAnswer =
+					typeof data.answer === "string" ? data.answer.slice(0, 1200) : undefined;
+
+				return exposeSources
+					? {
+							answer: compactAnswer,
+							query: effectiveQuery,
+							sources,
+						}
+					: {
+							answer: compactAnswer,
+							query: effectiveQuery,
+							visitedDomains: sources.map((source) => source.domain),
+						};
 			} catch (_error: any) {
 				console.error("[Web Search Tool] Fetch exception:", _error.message);
 				onProgress?.("Pencarian web gagal, menjawab dari konteks yang tersedia.");
