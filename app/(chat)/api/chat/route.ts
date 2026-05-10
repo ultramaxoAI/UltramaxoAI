@@ -26,7 +26,7 @@ import { getWeather } from "@backend/ai/tools/get-weather";
 import { requestClarification } from "@backend/ai/tools/request-clarification";
 import { requestSuggestions } from "@backend/ai/tools/request-suggestions";
 import { updateDocument } from "@backend/ai/tools/update-document";
-import { webSearch } from "@backend/ai/tools/web-search";
+import { createWebSearchTool } from "@backend/ai/tools/web-search";
 import {
 	createStreamId,
 	deleteChatById,
@@ -86,6 +86,49 @@ const MOBILE_MODE_INTENT_REGEX =
 
 const IDE_MODE_INTENT_REGEX =
 	/\b(fullstack|workspace|landing page|web app|website|aplikasi lengkap|project lengkap|proyek lengkap|buatkan (website|web|app|aplikasi)|build (website|web|app|aplikasi)|create (website|web|app|application)|next\.?js|react|flutter|react native|backend|frontend|dashboard)\b/i;
+
+function getTaskThinkingLines(prompt: string) {
+	const text = prompt.toLowerCase();
+	const focus = prompt.trim().replace(/\s+/g, " ").slice(0, 90);
+	const hasMath = /\b(rumus|hitung|persamaan|integral|turunan|matematika|aljabar|geometry|kecepatan|jarak|waktu|luas|volume)\b|[=+\-*/^√]/i.test(text);
+	const hasCode = /\b(kode|coding|script|function|fungsi|debug|error|bug|implementasi|class|api|react|next|javascript|typescript|python|java|kotlin|php|html|css)\b|\.[a-z]{2,5}\b/i.test(text);
+	const hasTutorial = /\b(step\s*by\s*step|langkah|tutorial|panduan|cara|jelaskan|ajarin|guide)\b/i.test(text);
+	const hasPlan = /\b(rencana|strategi|roadmap|arsitektur|plan|susun|struktur)\b/i.test(text);
+
+	if (hasCode) {
+		return [
+			`Memetakan kebutuhan kode dari: ${focus}`,
+			"Menentukan struktur fungsi, input, output, dan edge case yang perlu aman.",
+			"Menyiapkan contoh implementasi yang bisa langsung diuji.",
+		];
+	}
+
+	if (hasMath) {
+		return [
+			`Mengidentifikasi variabel dan rumus yang relevan untuk: ${focus}`,
+			"Memilih persamaan yang sesuai lalu mengecek satuan dan langkah substitusi.",
+			"Menyiapkan penjelasan bertahap agar hasilnya mudah diverifikasi.",
+		];
+	}
+
+	if (hasTutorial) {
+		return [
+			`Menyusun alur tutorial untuk: ${focus}`,
+			"Memecah proses menjadi langkah kecil dari persiapan sampai hasil akhir.",
+			"Menandai bagian yang rawan salah agar instruksi lebih mudah diikuti.",
+		];
+	}
+
+	if (hasPlan) {
+		return [
+			`Membuat struktur rencana untuk: ${focus}`,
+			"Mengurutkan prioritas, dependensi, dan hasil yang harus dicapai.",
+			"Menyiapkan langkah eksekusi yang realistis dan bisa dicek progresnya.",
+		];
+	}
+
+	return [];
+}
 
 type StreamErrorDetails = Error & {
 	type?: string;
@@ -856,6 +899,14 @@ export async function POST(request: Request) {
 				execute: async ({ writer: dataStream }) => {
 					dataStream.write({ type: "data-thinking_start", data: null });
 
+					const taskThinkingLines = getTaskThinkingLines(latestUserText);
+					if (taskThinkingLines.length > 0 && !isIdeAgentMode) {
+						for (const line of taskThinkingLines) {
+							dataStream.write({ type: "data-thinking_chunk", data: line });
+							await new Promise((resolve) => setTimeout(resolve, 55));
+						}
+					}
+
 					let retryCount = 0;
 					const maxRetries = 1;
 					let activeAgentRunId: string | null = null;
@@ -1299,7 +1350,16 @@ export async function POST(request: Request) {
 									? {
 											getWeather,
 											requestClarification,
-											...(webSearchEnabled ? { webSearch } : {}),
+											...(webSearchEnabled
+												? {
+														webSearch: createWebSearchTool((event) => {
+															dataStream.write({
+																type: "data-thinking_chunk",
+																data: event,
+															});
+														}),
+													}
+												: {}),
 											...(isIdeAgentMode
 												? {
 														startAgentTask: startAgentTaskWithPersistence({

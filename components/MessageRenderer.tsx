@@ -512,7 +512,7 @@ function TextBlock({ block, blockKey }: { block: string; blockKey: string }) {
 
 					return (
 						<ListTag
-							className={`mb-4 pl-5 text-[13.5px] leading-[1.8] text-[#888] ${
+							className={`mb-4 pl-5 text-[15px] leading-[1.85] text-white/84 ${
 								unordered ? "list-disc" : "list-decimal"
 							}`}
 							key={key}
@@ -531,7 +531,7 @@ function TextBlock({ block, blockKey }: { block: string; blockKey: string }) {
 
 				return (
 					<p
-						className="mb-4 text-[13.5px] text-[#888] leading-[1.8] last:mb-0"
+						className="mb-4 text-[15px] text-white/84 leading-[1.85] last:mb-0"
 						key={key}
 					>
 						{renderInlineMarkdown(section, `p-${key}`)}
@@ -555,7 +555,7 @@ export function MessageRenderer({ content }: MessageRendererProps) {
 
 	return (
 		<div
-			className="w-full font-sans text-[#888]"
+			className="w-full font-sans text-white/84"
 			style={{
 				fontFamily:
 					"-apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif",

@@ -6,14 +6,17 @@ import {
 	CheckCircle2Icon,
 	Clock3Icon,
 	CloudRainIcon,
+	ExternalLinkIcon,
 	FileCodeIcon,
 	FileEditIcon,
 	FileTextIcon,
+	GlobeIcon,
 	LightbulbIcon,
 	SparklesIcon as LucideSparklesIcon,
 	MonitorSmartphoneIcon,
 	PackageIcon,
 	PlayIcon,
+	SearchIcon,
 	SmartphoneIcon,
 	TerminalIcon,
 	TrashIcon,
@@ -124,6 +127,86 @@ function getStringArray(value: unknown) {
 	}
 
 	return value.filter((item): item is string => typeof item === "string");
+}
+
+type WebSearchSource = {
+	title: string;
+	url: string;
+	domain: string;
+	content?: string;
+};
+
+function getHostname(url: string) {
+	try {
+		return new URL(url).hostname.replace(/^www\./, "");
+	} catch {
+		return url;
+	}
+}
+
+function getWebSearchSources(output: unknown): WebSearchSource[] {
+	const payload = isRecord(output) ? output : {};
+	const rawSources = Array.isArray(payload.sources)
+		? payload.sources
+		: Array.isArray(payload.results)
+			? payload.results
+			: [];
+
+	return rawSources
+		.filter(isRecord)
+		.map((source) => {
+			const url = getStringValue(source.url);
+			const domain = getStringValue(source.domain, url ? getHostname(url) : "web");
+			return {
+				content: getStringValue(source.content),
+				domain,
+				title: getStringValue(source.title, domain || "Sumber web"),
+				url,
+			};
+		})
+		.filter((source) => source.url)
+		.slice(0, 4);
+}
+
+function WebSearchSources({ output, state }: { output: unknown; state?: string }) {
+	const sources = getWebSearchSources(output);
+
+	if (state !== "output-available" || sources.length === 0) {
+		return null;
+	}
+
+	return (
+		<div className="mt-4 w-full max-w-[720px]">
+			<div className="mb-3 flex items-center gap-2 text-[13px] font-medium text-white/70">
+				<GlobeIcon className="size-3.5" />
+				<span>Sumber</span>
+			</div>
+			<div className="grid gap-3 sm:grid-cols-2">
+				{sources.map((source) => (
+					<a
+						className="group/source rounded-2xl border border-white/[0.09] bg-white/[0.035] p-4 transition-colors hover:border-white/[0.16] hover:bg-white/[0.055]"
+						href={source.url}
+						key={source.url}
+						rel="noreferrer"
+						target="_blank"
+					>
+						<div className="mb-2 flex items-center justify-between gap-3 text-[12.5px] text-white/48">
+							<span className="min-w-0 truncate">{source.domain}</span>
+							<ExternalLinkIcon className="size-3.5 shrink-0 opacity-45 transition-opacity group-hover/source:opacity-80" />
+						</div>
+						<div className="line-clamp-2 text-[14px] leading-[1.45] text-white/86">
+							{source.title}
+						</div>
+						{source.content ? (
+							<div className="mt-2 line-clamp-2 text-[12.5px] leading-[1.55] text-white/45">
+								{source.content}
+							</div>
+						) : null}
+					</a>
+				))}
+			</div>
+		</div>
+	);
 }
 
 function isValidMessagePart(
@@ -343,7 +426,7 @@ function MessageTextPart({
 				className={cn("w-full", {
 					"ml-auto inline-flex w-auto max-w-full whitespace-pre-wrap break-words rounded-2xl bg-white/[0.07] px-4 py-3 text-left text-[15px] leading-[1.75] text-white/88 shadow-none":
 						messageRole === "user",
-					"w-full bg-transparent px-0 py-0 text-left text-[16px] leading-[1.85] text-white/78":
+					"w-full bg-transparent px-0 py-0 text-left text-[16px] leading-[1.85] text-white/85":
 						messageRole === "assistant",
 				})}
 				data-testid="message-content"
@@ -1382,6 +1465,34 @@ const PurePreviewMessage = ({
 											</div>
 										</ToolContent>
 									</Tool>
+								);
+							}
+
+							if (normalizedType === "tool-webSearch") {
+								const toolPart = asToolPart(part);
+								const { toolCallId, state } = toolPart;
+								const query = isRecord(toolPart.input)
+									? getStringValue(toolPart.input.query, "web")
+									: "web";
+
+								if (state !== "output-available") {
+									return (
+										<div
+											className="flex items-center gap-2 text-[13.5px] text-white/52"
+											key={toolCallId ?? key}
+										>
+											<SearchIcon className="size-3.5 animate-pulse" />
+											<span>Mencari {query}</span>
+										</div>
+									);
+								}
+
+								return (
+									<WebSearchSources
+										key={toolCallId ?? key}
+										output={toolPart.output}
+										state={state}
+									/>
 								);
 							}
 

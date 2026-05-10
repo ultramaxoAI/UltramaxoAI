@@ -303,8 +303,8 @@ function PureMessages({
 	const shouldRenderThinking =
 		!hasApprovalResponse &&
 		lastUserIndex !== -1 &&
-		!hasRenderableAssistantAfterLastUser &&
-		(waitingForAssistantResponse || liveThinking.enabled);
+		(waitingForAssistantResponse ||
+			(liveThinking.enabled && !hasRenderableAssistantAfterLastUser));
 	const showToolAgentPanel =
 		shouldRenderThinking && agentStream.steps.length > 0;
 	const showSimpleThinking = shouldRenderThinking && !showToolAgentPanel;
