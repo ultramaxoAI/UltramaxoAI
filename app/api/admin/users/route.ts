@@ -7,6 +7,10 @@ import {
 	updateUserAdmin,
 } from "@backend/db/queries";
 import { auth } from "@/app/(auth)/auth";
+import {
+	isSafeFirstPartyMutation,
+	NO_STORE_HEADERS,
+} from "@/lib/auth-mutation-security";
 
 const ALLOWED_ROLES = new Set(["user", "admin"]);
 
@@ -88,6 +92,13 @@ export async function GET() {
 }
 
 export async function PATCH(request: Request) {
+	if (!isSafeFirstPartyMutation(request)) {
+		return NextResponse.json(
+			{ error: "Forbidden" },
+			{ headers: NO_STORE_HEADERS, status: 403 },
+		);
+	}
+
 	const session = await auth();
 	if (session?.user?.role !== "admin") {
 		return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -114,7 +125,7 @@ export async function PATCH(request: Request) {
 		}
 
 		await updateUserAdmin(id, safeUpdates);
-		return NextResponse.json({ success: true });
+		return NextResponse.json({ success: true }, { headers: NO_STORE_HEADERS });
 	} catch (error) {
 		console.error("API Error (admin/users/PATCH):", error);
 		const message =
@@ -126,6 +137,13 @@ export async function PATCH(request: Request) {
 }
 
 export async function DELETE(request: Request) {
+	if (!isSafeFirstPartyMutation(request)) {
+		return NextResponse.json(
+			{ error: "Forbidden" },
+			{ headers: NO_STORE_HEADERS, status: 403 },
+		);
+	}
+
 	const session = await auth();
 	if (session?.user?.role !== "admin") {
 		return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
