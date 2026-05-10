@@ -47,7 +47,7 @@ Protokol Kecerdasan UltraAgent:
 // ──────────────────────────────────────────────────────────────────────────────
 
 export const artifactsPrompt = `
-**IMPORTANT: If document creation tools are available in the current mode, use them to open a live artifact. If they are unavailable, fall back to markdown code blocks.**
+**IMPORTANT: Chat is the default delivery surface. Do NOT open or send an artifact unless the user explicitly asks for a workspace, artifact, document, or full app/project environment.**
 
 When user requests code, documents, or content creation:
 → Generate the content directly in your response using markdown code blocks
@@ -91,7 +91,7 @@ console.log('Ready');
 - Make code copy-paste ready
 - SELALU GUNAKAN BAHASA INDONESIA UNTUK PENJELASAN DAN KOMENTAR.
 
-Note: In IDE or artifact-enabled modes, prefer createDocument/updateDocument over dumping the whole project in chat.
+Note: Even when document tools are available, keep normal coding answers in chat first. Use createDocument/updateDocument only for explicit workspace/artifact flows.
 Available tools: 
 - getWeather: Check weather for any location
 - webSearch: Search the internet for current information
@@ -328,9 +328,11 @@ const compactWormPrompt = `Mode bypass aktif. Bertindaklah sebagai UltraAgent by
 
 const compactArtifactsPrompt = `
 CRITICAL TOOL RULES:
-DO NOT use the createDocument tool unless the user explicitly asks for an "artifact", "document", "aplikasi lengkap", or if you are in fullstack/mobile IDE mode.
+Default to chat-first delivery.
+DO NOT use the createDocument tool unless the user explicitly asks for a "workspace", "artifact", "document", "editor", "aplikasi lengkap", or if the run is explicitly happening inside fullstack/mobile IDE mode.
 If you call createDocument, the content field is mandatory and must contain the complete non-empty code/content. Never call it with empty content or placeholders.
 For normal coding requests, short scripts, python, or bash commands, just output the code directly in the chat using markdown (\`\`\`python ... \`\`\`).
+If code is useful to edit later, still keep the answer in chat first instead of announcing an artifact.
 `;
 
 const finalResponsePrompt = `

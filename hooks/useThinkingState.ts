@@ -38,6 +38,8 @@ export function useThinkingState({
 	const [hasUpgraded, setHasUpgraded] = useState(
 		initialPhase === "agent" || initialPhase === "upgrading",
 	);
+	const phaseRef = useRef<ThinkingPhase>(initialPhase);
+	const durationRef = useRef<number | undefined>(undefined);
 	const upgradeTimeoutRef = useRef<number | null>(null);
 	const toastTimeoutRef = useRef<number | null>(null);
 
@@ -61,8 +63,12 @@ export function useThinkingState({
 				case "thinking_start": {
 					clearUpgradeTimeout();
 					clearToastTimeout();
+					phaseRef.current = "simple";
+					durationRef.current = undefined;
 					setPhase("simple");
-					setThinkingChunksState([]);
+					setThinkingChunksState((currentChunks) =>
+						currentChunks.length === 0 ? currentChunks : [],
+					);
 					setDurationMs(undefined);
 					setShowToast(false);
 					setHasUpgraded(false);
@@ -70,17 +76,22 @@ export function useThinkingState({
 				}
 
 				case "upgrade_to_agent": {
-					if (phase === "agent" || phase === "upgrading") {
+					if (
+						phaseRef.current === "agent" ||
+						phaseRef.current === "upgrading"
+					) {
 						break;
 					}
 
 					clearUpgradeTimeout();
 					clearToastTimeout();
+					phaseRef.current = "upgrading";
 					setHasUpgraded(true);
 					setPhase("upgrading");
 					setShowToast(true);
 
 					upgradeTimeoutRef.current = window.setTimeout(() => {
+						phaseRef.current = "agent";
 						setPhase("agent");
 						upgradeTimeoutRef.current = null;
 					}, 400);
@@ -94,29 +105,41 @@ export function useThinkingState({
 
 				case "thinking_chunk": {
 					if (event.content) {
-						setThinkingChunksState((currentChunks) => [
-							...currentChunks,
-							event.content as string,
-						]);
+						const nextChunk = event.content as string;
+						setThinkingChunksState((currentChunks) =>
+							currentChunks[currentChunks.length - 1] === nextChunk
+								? currentChunks
+								: [...currentChunks, nextChunk],
+						);
 					}
 					break;
 				}
 
 				case "done": {
+					if (
+						phaseRef.current === "done" &&
+						(durationRef.current ?? undefined) === event.durationMs
+					) {
+						break;
+					}
+
 					clearUpgradeTimeout();
 					clearToastTimeout();
-					setDurationMs(event.durationMs);
+					phaseRef.current = "done";
+					durationRef.current = event.durationMs;
+					setDurationMs((current) =>
+						current === event.durationMs ? current : event.durationMs,
+					);
 					setPhase("done");
 					setShowToast(false);
 					break;
 				}
 
-				case "response_chunk":
 				default:
 					break;
 			}
 		},
-		[clearToastTimeout, clearUpgradeTimeout, phase],
+		[clearToastTimeout, clearUpgradeTimeout],
 	);
 
 	useEffect(() => {
@@ -133,6 +156,7 @@ export function useThinkingState({
 	}, []);
 
 	const forcePhase = useCallback((nextPhase: ThinkingPhase) => {
+		phaseRef.current = nextPhase;
 		setPhase(nextPhase);
 	}, []);
 

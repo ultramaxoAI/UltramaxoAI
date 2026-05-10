@@ -587,7 +587,8 @@ export const codeArtifact = new Artifact<"code", Metadata>({
 			metadata?.language ||
 			detectCodeLanguage(content || "");
 		const editorContent = activeFile?.content || content || "";
-		const isWaitingForCode = editorContent.trim().length === 0;
+		const isWaitingForCode =
+			editorContent.trim().length === 0 && files.length === 0 && (content || "").trim().length === 0;
 
 		useEffect(() => {
 			if (!activeFile?.name) {

@@ -45,6 +45,17 @@ function formatDuration(ms?: number) {
 	return `${Math.floor(seconds / 60)}m ${Math.round(seconds % 60)}s`;
 }
 
+function getLatestAgentLabel(steps: Step[]) {
+	for (let index = steps.length - 1; index >= 0; index -= 1) {
+		const label = steps[index]?.label?.trim();
+		if (label) {
+			return label;
+		}
+	}
+
+	return undefined;
+}
+
 export function AgentSummary({
 	steps,
 	finalDuration,
@@ -95,6 +106,7 @@ export function AgentThinkingPanel({
 
 	return (
 		<ThinkingIndicator
+			agentLabel={getLatestAgentLabel(steps)}
 			initialPhase={startsAsAgent ? "agent" : "simple"}
 			isActive={active}
 			listenToGlobalEvents={active}

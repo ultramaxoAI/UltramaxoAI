@@ -85,7 +85,7 @@ const MOBILE_MODE_INTENT_REGEX =
 	/\b(mobile app|aplikasi mobile|flutter|react native)\b/i;
 
 const IDE_MODE_INTENT_REGEX =
-	/\b(fullstack|workspace|landing page|web app|website|aplikasi lengkap|project lengkap|proyek lengkap|buatkan (website|web|app|aplikasi)|build (website|web|app|aplikasi)|create (website|web|app|application)|coding|koding|kode|source code|kalkulator|calculator)\b/i;
+	/\b(fullstack|workspace|landing page|web app|website|aplikasi lengkap|project lengkap|proyek lengkap|buatkan (website|web|app|aplikasi)|build (website|web|app|aplikasi)|create (website|web|app|application)|next\.?js|react|flutter|react native|backend|frontend|dashboard)\b/i;
 
 const COMPLEX_PATTERNS = [
 	/buat|create|generate|rancang|analisis|jelaskan|susun|tulis/i,
@@ -874,6 +874,16 @@ export async function POST(request: Request) {
 			const stream = createUIMessageStream({
 				originalMessages: isToolApprovalFlow ? uiMessages : undefined,
 				execute: async ({ writer: dataStream }) => {
+					const emitSyntheticThinking = async (lines: string[]) => {
+						for (const line of lines) {
+							dataStream.write({
+								type: "data-thinking_chunk",
+								data: line,
+							});
+							await new Promise((resolve) => setTimeout(resolve, 40));
+						}
+					};
+
 					dataStream.write({ type: "data-thinking_start", data: null });
 
 					const shouldUpgradeThinking =
@@ -883,25 +893,17 @@ export async function POST(request: Request) {
 						inferredGeneralAgentModeEnabled ||
 						complexPromptDetected;
 
-					if (shouldUpgradeThinking) {
+					if (shouldUpgradeThinking && !isIdeAgentMode) {
 						await new Promise((resolve) => setTimeout(resolve, 800));
 						dataStream.write({ type: "data-upgrade_to_agent", data: null });
 
 						if (!inferredFullstackModeEnabled && !inferredMobileModeEnabled) {
 							const previewPrompt = latestUserText.trim();
-							const thinkingTexts = [
-								`User meminta: "${previewPrompt.slice(0, 60)}${previewPrompt.length > 60 ? "..." : ""}" — ini membutuhkan analisis mendalam. `,
-								"Perlu menyusun struktur yang komprehensif dan memastikan setiap bagian relevan. ",
-								"Akan saya breakdown secara sistematis agar mudah dipahami dan langsung actionable.",
-							];
-
-							for (const chunk of thinkingTexts) {
-								dataStream.write({
-									type: "data-thinking_chunk",
-									data: { content: chunk },
-								});
-								await new Promise((resolve) => setTimeout(resolve, 40));
-							}
+							await emitSyntheticThinking([
+								`Menerima permintaan: "${previewPrompt.slice(0, 60)}${previewPrompt.length > 60 ? "..." : ""}".`,
+								"Menganalisis konteks percakapan dan hasil yang paling relevan untuk diberikan.",
+								"Menentukan pendekatan yang sistematis agar respons tetap jelas dan langsung bisa dipakai.",
+							]);
 						}
 					}
 
@@ -973,6 +975,16 @@ export async function POST(request: Request) {
 								status: "running",
 							},
 						});
+						await emitSyntheticThinking([
+							`Menerima permintaan: "${latestUserText.slice(0, 80)}${latestUserText.length > 80 ? "..." : ""}".`,
+							"Menganalisis konteks percakapan serta workspace yang sedang aktif.",
+							inferredFullstackModeEnabled
+								? "Mode fullstack aktif — menyiapkan struktur dan implementasi workspace."
+								: inferredMobileModeEnabled
+									? "Mode mobile aktif — menyesuaikan pendekatan untuk alur aplikasi mobile."
+									: "Mode agent aktif — menjalankan tugas secara bertahap dan terarah.",
+							"Menyiapkan langkah kerja dan mulai menjalankan rencana.",
+						]);
 					}
 
 					while (retryCount <= maxRetries) {
@@ -1135,7 +1147,7 @@ export async function POST(request: Request) {
 											queueAssistantDraftPersist();
 											dataStream.write({
 												type: "data-thinking_chunk",
-												data: { content: contentCandidate },
+												data: contentCandidate,
 											});
 										}
 									}

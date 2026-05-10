@@ -11,10 +11,7 @@ export async function GET(request: Request) {
 	const chatId = searchParams.get("chatId");
 
 	if (!chatId) {
-		return new ChatSDKError(
-			"bad_request:api",
-			"Parameter chatId is required.",
-		).toResponse();
+		return Response.json([], { status: 200 });
 	}
 
 	const session = await auth();

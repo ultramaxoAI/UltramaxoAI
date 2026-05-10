@@ -12,6 +12,7 @@ type ThinkingIndicatorProps = {
 	event?: ThinkingEvent;
 	events?: ThinkingEvent[];
 	thinkingChunks?: string[];
+	agentLabel?: string;
 	isActive?: boolean;
 	totalDurationMs?: number;
 	initialPhase?: ThinkingPhase;
@@ -43,6 +44,7 @@ export function ThinkingIndicator({
 	event,
 	events,
 	thinkingChunks = [],
+	agentLabel,
 	isActive = true,
 	totalDurationMs,
 	initialPhase,
@@ -56,6 +58,7 @@ export function ThinkingIndicator({
 	const derivedInitialPhase =
 		initialPhase ?? (normalizedChunks.length > 0 ? "agent" : "simple");
 	const eventCountRef = useRef(0);
+	const lastDoneSignatureRef = useRef<string | null>(null);
 	const state = useThinkingState({
 		initialChunks: normalizedChunks,
 		initialPhase: derivedInitialPhase,
@@ -116,19 +119,28 @@ export function ThinkingIndicator({
 	}, [emitEvent, listenToGlobalEvents]);
 
 	useEffect(() => {
-		if (!isActive) {
-			emitEvent({ durationMs: totalDurationMs, type: "done" });
+		if (isActive) {
+			lastDoneSignatureRef.current = null;
+			return;
 		}
+
+		const signature = `${totalDurationMs ?? "none"}`;
+		if (lastDoneSignatureRef.current === signature) {
+			return;
+		}
+
+		lastDoneSignatureRef.current = signature;
+		emitEvent({ durationMs: totalDurationMs, type: "done" });
 	}, [emitEvent, isActive, totalDurationMs]);
 
 	useEffect(() => {
-		if (state.phase === "done" && !state.hasUpgraded) {
-			const timeout = window.setTimeout(() => setShouldRender(false), 300);
+		if (state.phase === "done") {
+			const timeout = window.setTimeout(() => setShouldRender(false), 160);
 			return () => window.clearTimeout(timeout);
 		}
 
 		setShouldRender(true);
-	}, [state.hasUpgraded, state.phase]);
+	}, [state.phase]);
 
 	if (!shouldRender) {
 		return null;
@@ -136,49 +148,17 @@ export function ThinkingIndicator({
 
 	return (
 		<div className={cn("relative w-full", className)}>
-			{state.showToast ? (
-				<div
-					className="adaptive-thinking-toast pointer-events-none absolute -top-11 left-0 z-10 rounded-[20px] border border-white/[0.08] bg-white/[0.03] px-3 py-1.5 text-[11px] font-normal text-white/[0.45] backdrop-blur-[8px]"
-					style={{
-						background: "rgba(255,255,255,0.03)",
-						borderWidth: "0.5px",
-						backdropFilter: "blur(8px)",
-					}}
-				>
-					⚡ Mode ditingkatkan ke UltraAgent
-				</div>
-			) : null}
-
-			{state.phase === "simple" || (state.phase === "done" && !state.hasUpgraded) ? (
+			{state.phase === "simple" ? (
 				<SimpleThinking />
 			) : state.phase === "upgrading" ? (
 				<SimpleThinking isUpgrading />
 			) : (
 				<AgentThinking
-					durationMs={state.durationMs ?? totalDurationMs}
 					isDone={state.phase === "done"}
+					label={agentLabel}
 					thinkingChunks={state.thinkingChunks}
 				/>
 			)}
-
-			<style jsx>{`
-				.adaptive-thinking-toast {
-					animation: adaptive-toast-in 0.18s ease forwards;
-					font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui,
-						sans-serif;
-				}
-
-				@keyframes adaptive-toast-in {
-					0% {
-						opacity: 0;
-						transform: translateY(4px) scale(0.98);
-					}
-					100% {
-						opacity: 1;
-						transform: translateY(0) scale(1);
-					}
-				}
-			`}</style>
 		</div>
 	);
 }

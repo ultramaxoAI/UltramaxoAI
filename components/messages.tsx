@@ -278,17 +278,6 @@ function PureMessages({
 	const lastUserIndex = visibleMessages.findLastIndex(
 		(message) => message.role === "user",
 	);
-	const assistantsAfterLastUser =
-		lastUserIndex === -1
-			? []
-			: visibleMessages.filter(
-					(message, index) => index > lastUserIndex && message.role === "assistant",
-				);
-	const firstAssistantAfterLastUser = assistantsAfterLastUser[0];
-	const hasRenderableAssistantAfterLastUser = assistantsAfterLastUser.some(
-		(message) => hasRenderableAssistantAnswer(message),
-	);
-
 	const hasApprovalResponse = visibleMessages.some((msg) =>
 		(msg.parts ?? []).some((part) => getPartState(part) === "approval-responded"),
 	);
@@ -299,13 +288,12 @@ function PureMessages({
 				? Date.now() - agentStream.startedAt
 				: undefined;
 	const [thinkingDurationMs, setThinkingDurationMs] = useState<number | undefined>();
-	const waitingForFirstAssistantToken =
-		(status === "submitted" || status === "streaming") &&
-		(!firstAssistantAfterLastUser || !hasRenderableAssistantAfterLastUser);
+	const waitingForAssistantResponse =
+		status === "submitted" || status === "streaming";
 	const shouldRenderThinking =
 		!hasApprovalResponse &&
 		lastUserIndex !== -1 &&
-		(waitingForFirstAssistantToken || liveThinking.enabled);
+		(waitingForAssistantResponse || liveThinking.enabled);
 	const showToolAgentPanel =
 		shouldRenderThinking && agentStream.steps.length > 0;
 	const showSimpleThinking = shouldRenderThinking && !showToolAgentPanel;

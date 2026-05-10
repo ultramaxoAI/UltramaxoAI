@@ -20,8 +20,6 @@ import {
 	WandSparklesIcon,
 } from "lucide-react";
 import { useEffect, useState } from "react";
-import { useArtifact } from "@/hooks/use-artifact";
-import { useDataStream } from "./data-stream-provider";
 import type { ChatMessage } from "@/lib/types";
 import { cn, sanitizeText } from "@/lib/utils";
 import { DocumentToolCall, DocumentToolResult } from "./document";
@@ -44,11 +42,6 @@ import {
 import { PreviewAttachment } from "./preview-attachment";
 import { ResponseViewer } from "./response-viewer";
 import { Weather, type WeatherAtLocation } from "./weather";
-
-type DocumentToolCallArgs =
-	| { title: string; kind: "image" | "text" | "code" | "sheet" }
-	| { id: string; description: string }
-	| { documentId: string };
 
 type DocumentToolResultData = {
 	id: string;
@@ -332,14 +325,12 @@ function MessageTextPart({
 	maxChars,
 	messageRole,
 	isLoading,
-	hasAnyArtifact,
 }: {
 	rawText: string;
 	isHuge: boolean;
 	maxChars: number;
 	messageRole: string;
 	isLoading: boolean;
-	hasAnyArtifact: boolean;
 }) {
 	const [expanded, setExpanded] = useState(false);
 
@@ -360,7 +351,7 @@ function MessageTextPart({
 				{messageRole === "assistant" ? (
 					<ResponseViewer
 						className={cn(isLoading && "streaming-cursor")}
-						hideCodeBlocks={hasAnyArtifact}
+						hideCodeBlocks={false}
 						text={displayText}
 						isLoading={isLoading}
 					/>
@@ -411,9 +402,6 @@ const PurePreviewMessage = ({
 	const [localApprovalStates, setLocalApprovalStates] = useState<
 		Record<string, LocalApprovalState>
 	>({});
-	const { artifact } = useArtifact();
-	const { artifactStream } = useDataStream();
-
 	useEffect(() => {
 		const interval = window.setInterval(() => {
 			const now = Date.now();
@@ -523,19 +511,6 @@ const PurePreviewMessage = ({
 			getNormalizedPartType(part) === "tool-createDocument" ||
 			getNormalizedPartType(part) === "tool-updateDocument",
 	);
-	const hasAnyArtifact =
-		hasDocumentToolPart ||
-		message.annotations?.some((annotation) => {
-			const parsed =
-				typeof annotation === "object" && annotation !== null
-					? (annotation as Record<string, unknown>)
-					: null;
-
-			return (
-				parsed?.type === "create-document" || parsed?.type === "update-document"
-			);
-		}) ||
-		false;
 	const agentThinkingSteps = getAgentThinkingSteps(messageParts);
 	const hasAgentThinkingPanel =
 		message.role === "assistant" && agentThinkingSteps.length > 0;
@@ -716,7 +691,6 @@ const PurePreviewMessage = ({
 											maxChars={MAX_MSG_CHARS}
 											messageRole={message.role}
 											isLoading={isLoading}
-											hasAnyArtifact={hasAnyArtifact}
 										/>
 									);
 								}
@@ -893,78 +867,7 @@ const PurePreviewMessage = ({
 								normalizedType === "tool-createDocument" ||
 								normalizedType === "tool-updateDocument"
 							) {
-								const toolPart = asToolPart(part);
-								const { toolCallId, state } = toolPart;
-								const toolType =
-									normalizedType === "tool-createDocument"
-										? "create"
-										: "update";
-								const args = toolPart.input as DocumentToolCallArgs;
-								const title = args && "title" in args ? args.title : "dokumen";
-								const hasArtifactCompletionFallback =
-									artifactStream.lifecycle === "completed" &&
-									artifact.documentId !== "init" &&
-									artifact.content.trim().length > 0 &&
-									(state === "input-streaming" ||
-										state === "input-available" ||
-										state === "approval-responded");
-								const effectiveDocumentHeaderState = hasArtifactCompletionFallback
-									? "output-available"
-									: getSafeToolState(state);
-								const fallbackDocumentResult = hasArtifactCompletionFallback
-									? {
-										id: artifact.documentId,
-										title: artifact.title || title,
-										kind: artifact.kind,
-										content: artifact.content,
-									}
-									: null;
-
-								return (
-									<Tool defaultOpen={true} key={toolCallId}>
-										<ToolHeader
-											state={effectiveDocumentHeaderState}
-											type={normalizedType as `tool-${string}`}
-											title={
-												normalizedType === "tool-createDocument"
-													? `Membuat dokumen: ${title}`
-													: `Memperbarui dokumen: ${title}`
-											}
-											icon={
-												normalizedType === "tool-createDocument" ? (
-													<FileTextIcon className="size-4 shrink-0 text-muted-foreground" />
-												) : (
-													<FileEditIcon className="size-4 shrink-0 text-muted-foreground" />
-												)
-											}
-										/>
-										<ToolContent>
-											{!hasArtifactCompletionFallback &&
-												(state === "input-streaming" || state === "input-available") && (
-													<DocumentToolCall
-														type={toolType}
-														args={toolPart.input as DocumentToolCallArgs}
-														isReadonly={isReadonly}
-													/>
-												)}
-											{(state === "output-available" || hasArtifactCompletionFallback) && (
-												<DocumentToolResult
-													type={toolType}
-													result={
-														(fallbackDocumentResult ??
-															(toolPart.output as {
-																id: string;
-																title: string;
-																kind: "image" | "text" | "code" | "sheet";
-																content?: string;
-															}))
-													}
-													isReadonly={isReadonly}
-												/>
-											)}
-										</ToolContent>
-									</Tool>
-								);
+								return null;
 							}
 
 							if (normalizedType === "tool-startAgentTask") {
@@ -1548,7 +1451,6 @@ const PurePreviewMessage = ({
 							maxChars={15_000}
 							messageRole={message.role}
 							isLoading={isLoading}
-							hasAnyArtifact={hasAnyArtifact}
 						/>
 					) : null}
 

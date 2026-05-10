@@ -224,6 +224,20 @@ export function DataStreamHandler() {
 			);
 
 			if (normalizedArtifactEvent) {
+				if (normalizedArtifactEvent.type === "artifact-kind") {
+					currentKind = normalizedArtifactEvent.kind;
+				}
+
+				if (
+					normalizedArtifactEvent.type === "artifact-clear" &&
+					normalizedArtifactEvent.kind
+				) {
+					currentKind = normalizedArtifactEvent.kind;
+				}
+
+				if (normalizedArtifactEvent.type === "artifact-partial") {
+					currentKind = normalizedArtifactEvent.kind;
+				}
 				setArtifactStream((currentStream) => {
 					switch (normalizedArtifactEvent.type) {
 						case "artifact-id":
@@ -266,13 +280,19 @@ export function DataStreamHandler() {
 								updatedAt: Date.now(),
 								error: undefined,
 							};
-						case "artifact-finish":
+						case "artifact-finish": {
+							const normalizedContent = currentStream.content.trim();
+							const shouldCompleteCodeWorkspace =
+								currentStream.kind === "code" && Boolean(currentStream.artifactId);
 							return {
 								...currentStream,
 								lifecycle:
-									currentStream.content.trim().length > 0 ? "completed" : "idle",
+									normalizedContent.length > 0 || shouldCompleteCodeWorkspace
+										? "completed"
+										: "idle",
 								updatedAt: Date.now(),
 							};
+						}
 					}
 				});
 
@@ -315,15 +335,23 @@ export function DataStreamHandler() {
 								streamState: nextContent.trim().length > 0 ? "streaming" : "pending",
 							};
 						}
-						case "artifact-finish":
+						case "artifact-finish": {
+							const normalizedContent = baseArtifact.content.trim();
+							const shouldCompleteCodeWorkspace =
+								baseArtifact.kind === "code" && baseArtifact.documentId !== "init";
 							return {
 								...baseArtifact,
 								status: "idle",
 								streamState:
-									baseArtifact.content.trim().length > 0 ? "completed" : "idle",
+									normalizedContent.length > 0 || shouldCompleteCodeWorkspace
+										? "completed"
+										: "idle",
 								isVisible:
-									baseArtifact.isVisible || Boolean(baseArtifact.content.trim()),
+									baseArtifact.isVisible ||
+									normalizedContent.length > 0 ||
+									shouldCompleteCodeWorkspace,
 							};
+						}
 					}
 				});
 			}

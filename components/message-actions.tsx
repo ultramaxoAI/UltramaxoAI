@@ -1,12 +1,15 @@
 import type { UseChatHelpers } from "@ai-sdk/react";
 import type { Vote } from "@backend/db/schema";
 import equal from "fast-deep-equal";
-import { Copy, RefreshCw, ThumbsDown, ThumbsUp } from "lucide-react";
+import { Braces, Copy, RefreshCw, ThumbsDown, ThumbsUp } from "lucide-react";
 import { memo } from "react";
 import { toast } from "sonner";
 import { useSWRConfig } from "swr";
 import { useCopyToClipboard } from "usehooks-ts";
+import { useArtifact } from "@/hooks/use-artifact";
 import type { ChatMessage } from "@/lib/types";
+import { fetchWithErrorHandlers, generateUUID } from "@/lib/utils";
+import { getWorkspaceEntryCandidate } from "@/lib/workspace-entry";
 import { Action, Actions } from "./elements/actions";
 import { CopyIcon, PencilEditIcon } from "./icons";
 
@@ -26,6 +29,7 @@ export function PureMessageActions({
 	regenerate?: UseChatHelpers<ChatMessage>["regenerate"];
 }) {
 	const { mutate } = useSWRConfig();
+	const { setArtifact } = useArtifact();
 	const [_, copyToClipboard] = useCopyToClipboard();
 
 	if (isLoading) {
@@ -37,6 +41,8 @@ export function PureMessageActions({
 		.map((part) => part.text)
 		.join("\n")
 		.trim();
+	const workspaceCandidate =
+		message.role === "assistant" ? getWorkspaceEntryCandidate(message) : null;
 
 	const handleCopy = async () => {
 		if (!textFromParts) {
@@ -69,6 +75,42 @@ export function PureMessageActions({
 
 		await copyToClipboard(textToCopy);
 		toast.success("Copied to clipboard!");
+	};
+
+	const handleOpenWorkspace = async () => {
+		if (!workspaceCandidate) {
+			toast.error("Belum ada konten yang cocok dibuka di workspace.");
+			return;
+		}
+
+		const documentId = workspaceCandidate.existingArtifactId ?? generateUUID();
+
+		if (!workspaceCandidate.existingArtifactId) {
+			await fetchWithErrorHandlers(`/api/document?id=${documentId}`, {
+				body: JSON.stringify({
+					content: workspaceCandidate.content,
+					kind: workspaceCandidate.kind,
+					title: workspaceCandidate.title,
+				}),
+				headers: {
+					"Content-Type": "application/json",
+				},
+				method: "POST",
+			});
+		}
+
+		setArtifact((currentArtifact) => ({
+			...currentArtifact,
+			content: workspaceCandidate.content,
+			documentId,
+			isVisible: true,
+			kind: workspaceCandidate.kind,
+			status: "idle",
+			streamState: "completed",
+			title: workspaceCandidate.title,
+		}));
+
+		toast.success("Workspace siap dibuka.");
 	};
 
 	// User messages get edit (on hover) and copy actions
@@ -207,6 +249,20 @@ export function PureMessageActions({
 				Copy
 			</button>
 
+			{workspaceCandidate ? (
+				<button
+					aria-label="Open workspace"
+					className="inline-flex size-7 items-center justify-center rounded-full text-white/28 transition-colors hover:bg-white/6 hover:text-white/62"
+					onClick={() => {
+						void handleOpenWorkspace();
+					}}
+					title="Open workspace"
+					type="button"
+				>
+					<Braces className="size-3.5" />
+				</button>
+			) : null}
+
 			{regenerate ? (
 				<button
 					className="inline-flex items-center gap-1.5 whitespace-nowrap rounded-full px-2 py-1 text-[11px] text-white/30 transition-colors hover:bg-white/6 hover:text-white/60"
@@ -228,6 +284,12 @@ export const MessageActions = memo(
 			return false;
 		}
 		if (prevProps.isLoading !== nextProps.isLoading) {
+			return false;
+		}
+		if (!equal(prevProps.message.parts, nextProps.message.parts)) {
+			return false;
+		}
+		if (prevProps.message.id !== nextProps.message.id) {
 			return false;
 		}
 

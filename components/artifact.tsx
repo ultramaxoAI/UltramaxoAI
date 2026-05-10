@@ -129,18 +129,31 @@ function PureArtifact({
 			const mostRecentDocument = documents.at(-1);
 
 			if (mostRecentDocument) {
-				setDocument(mostRecentDocument);
-				setCurrentVersionIndex(documents.length - 1);
+				setDocument((currentDocument) =>
+					currentDocument?.id === mostRecentDocument.id &&
+					currentDocument?.content === mostRecentDocument.content
+						? currentDocument
+						: mostRecentDocument,
+				);
+				setCurrentVersionIndex((currentIndex) =>
+					currentIndex === documents.length - 1
+						? currentIndex
+						: documents.length - 1,
+				);
 				setArtifact((currentArtifact) => {
-					const currentContent = currentArtifact?.content ?? "";
+					const baseArtifact = currentArtifact ?? initialArtifactData;
+					const currentContent = baseArtifact.content ?? "";
 					const nextContent = mostRecentDocument.content ?? "";
 
-					if (currentContent.trim().length > nextContent.trim().length) {
-						return currentArtifact;
+					if (
+						currentContent === nextContent ||
+						currentContent.trim().length > nextContent.trim().length
+					) {
+						return baseArtifact;
 					}
 
 					return {
-						...currentArtifact,
+						...baseArtifact,
 						content: nextContent,
 					};
 				});
@@ -149,8 +162,12 @@ function PureArtifact({
 	}, [documents, setArtifact]);
 
 	useEffect(() => {
+		if (safeArtifact.documentId === "init") {
+			return;
+		}
+
 		mutateDocuments();
-	}, [mutateDocuments]);
+	}, [mutateDocuments, safeArtifact.documentId]);
 
 	const { mutate } = useSWRConfig();
 	const [isContentDirty, setIsContentDirty] = useState(false);

@@ -144,6 +144,49 @@ function getTextContentFromParts(parts: unknown): string {
 		.join("\n");
 }
 
+function getDocumentContentPart(
+	parts: UIMessagePart<CustomUIDataTypes, ChatTools>[],
+) {
+	for (const part of parts) {
+		if (!isRecord(part)) {
+			continue;
+		}
+
+		const partRecord = part as Record<string, unknown>;
+		const rawType =
+			typeof partRecord.type === "string" ? String(partRecord.type) : "";
+		const toolName =
+			typeof partRecord.toolName === "string"
+				? String(partRecord.toolName)
+				: "";
+		const normalizedType = rawType === "dynamic-tool" ? toolName : rawType;
+
+		if (
+			normalizedType !== "createDocument" &&
+			normalizedType !== "tool-createDocument"
+		) {
+			continue;
+		}
+
+		const source = isRecord(partRecord.output)
+			? partRecord.output
+			: isRecord(partRecord.input)
+				? partRecord.input
+				: null;
+		const content =
+			typeof source?.content === "string" ? source.content.trim() : "";
+		const kind = typeof source?.kind === "string" ? source.kind : "text";
+
+		if (!content) {
+			continue;
+		}
+
+		return kind === "code" ? `\`\`\`\n${content}\n\`\`\`` : content;
+	}
+
+	return "";
+}
+
 function sanitizeMessagePart(part: unknown) {
 	if (!isRecord(part) || typeof part.type !== "string") {
 		return null;
@@ -204,12 +247,25 @@ export function convertToUIMessages(messages: DBMessage[]): ChatMessage[] {
 							part !== null,
 					)
 			: [];
+		const hasTextPart = safeParts.some(
+			(part) =>
+				part.type === "text" && Boolean(toDisplayText(part.text).trim()),
+		);
+		const documentContentText = hasTextPart
+			? ""
+			: getDocumentContentPart(safeParts);
+		const displayParts = documentContentText
+			? ([
+					{ type: "text", text: documentContentText },
+					...safeParts,
+				] as UIMessagePart<CustomUIDataTypes, ChatTools>[])
+			: safeParts;
 
 		return {
 			id: message.id,
 			role: message.role as "user" | "assistant" | "system",
-			content: getTextContentFromParts(safeParts),
-			parts: safeParts,
+			content: getTextContentFromParts(displayParts),
+			parts: displayParts,
 			metadata: {
 				createdAt: formatISO(message.createdAt),
 			},

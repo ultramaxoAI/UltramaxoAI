@@ -19,7 +19,7 @@ const HTML_PREVIEW_REGEX =
 	/\b(landing page|homepage|home page|portfolio|company profile|company website|promo page|marketing page|website|web page|halaman promo|halaman promosi|landingpage|landing|homepage modern)\b/i;
 
 const WORKSPACE_APP_REGEX =
-	/\b(next\.?js|react|vue|svelte|app router|typescript project|tailwind config|dashboard app|web app|aplikasi|admin panel|admin dashboard|fullstack|repo|repository|workspace|package\.json|npm|terminal|dependency|deploy|routing|api|database|db|flutter|react native|backend|frontend|component|route|endpoint|server|script|tool|tools|kode|code)\b/i;
+	/\b(next\.?js|react|vue|svelte|app router|typescript project|tailwind config|dashboard app|web app|admin panel|admin dashboard|fullstack|repo|repository|workspace|package\.json|npm|terminal|dependency|deploy|routing|api|database|db|flutter|react native|backend|frontend|component|route|endpoint|server)\b/i;
 
 const HTML_ONLY_HINT_REGEX =
 	/\b(html|css|javascript|vanilla js|plain html|single page|one pager|one-page|static page|static website)\b/i;
@@ -46,7 +46,11 @@ export function detectBuildMode(
 		};
 	}
 
-	if (/\b(buat|bikin|buatkan|generate|kirim|tulis|bangun|develop|build|fix|debug|refactor|rapihin|implement)\b[\s\S]{0,60}\b(code|kode|script|tool|tools|app|aplikasi|website|web|component|komponen|api|backend|frontend)\b/i.test(text)) {
+	if (
+		/\b(buat|bikin|buatkan|generate|bangun|develop|build|fix|debug|refactor|rapihin|implement)\b[\s\S]{0,60}\b(app|aplikasi|website|web|component|komponen|api|backend|frontend|dashboard|landing page)\b/i.test(
+			text,
+		)
+	) {
 		return {
 			mode: "workspace-app",
 			confidence: "high",

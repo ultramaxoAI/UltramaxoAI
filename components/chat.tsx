@@ -10,7 +10,12 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import useSWR, { useSWRConfig } from "swr";
 import { unstable_serialize } from "swr/infinite";
 import { ChatContextHeader } from "@/components/chat-context-header";
-import { useArtifactSelector, useArtifactUiState } from "@/hooks/use-artifact";
+import {
+	initialArtifactData,
+	useArtifact,
+	useArtifactSelector,
+	useArtifactUiState,
+} from "@/hooks/use-artifact";
 import { useAutoResume } from "@/hooks/use-auto-resume";
 import { useChatVisibility } from "@/hooks/use-chat-visibility";
 import { detectTaskType } from "@/lib/detect-task-type";
@@ -65,6 +70,44 @@ function isApprovalGranted(part: unknown) {
 	}
 
 	return (record.approval as { approved?: unknown }).approved === true;
+}
+
+function hasRenderableAssistantAfterLastUser(messages: ChatMessage[]) {
+	const lastUserIndex = messages.findLastIndex((message) => message.role === "user");
+	if (lastUserIndex === -1) {
+		return false;
+	}
+
+	return messages.slice(lastUserIndex + 1).some((message) => {
+		if (message.role !== "assistant") {
+			return false;
+		}
+
+		const parts = Array.isArray(message.parts) ? message.parts : [];
+		const hasTextPart = parts.some((part) => {
+			if (!part || typeof part !== "object" || !("type" in part)) {
+				return false;
+			}
+
+			if (part.type === "text") {
+				return Boolean((part as { text?: string }).text?.trim());
+			}
+
+			return part.type === "file" || String(part.type).includes("tool");
+		});
+
+		const hasFallbackContent =
+			typeof (message as { content?: unknown }).content === "string" &&
+			Boolean(((message as { content?: string }).content ?? "").trim());
+
+		return hasTextPart || hasFallbackContent;
+	});
+}
+
+function isValidUuid(value: string) {
+	return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(
+		value,
+	);
 }
 
 export function Chat({
@@ -122,12 +165,15 @@ export function Chat({
 	const {
 		agentStream,
 		liveThinking,
+		artifactStream,
 		setDataStream,
 		setAgentStream,
 		setLiveThinking,
 		setActiveChatId,
+		setArtifactStream,
 		resetStreamState,
 	} = useDataStream();
+	const { setArtifact } = useArtifact();
 	const { setUiState: setArtifactUiState } = useArtifactUiState();
 	const { setOpen: setSidebarOpen, setOpenMobile: setSidebarOpenMobile } =
 		useSidebar();
@@ -155,6 +201,7 @@ export function Chat({
 	const currentModelIdRef = useRef(currentModelId);
 	const statusResetAtRef = useRef<number | null>(null);
 	const streamedResponseTextRef = useRef("");
+	const lastHandledClientErrorRef = useRef<string | null>(null);
 	const activeDocumentId = useArtifactSelector((state) => state.documentId);
 	const togglesRef = useRef({
 		wormgptEnabled,
@@ -345,6 +392,68 @@ export function Chat({
 			mutate(unstable_serialize(getChatHistoryPaginationKey));
 		},
 		onError: (error) => {
+			const rawErrorMessage =
+				error instanceof Error ? error.message : String(error);
+			const errorFingerprint = `${status}:${rawErrorMessage}`;
+			if (lastHandledClientErrorRef.current === errorFingerprint) {
+				return;
+			}
+			lastHandledClientErrorRef.current = errorFingerprint;
+
+			const isMaximumDepthError = rawErrorMessage.includes(
+				"Maximum update depth exceeded",
+			);
+
+			if (isMaximumDepthError) {
+				if (process.env.NODE_ENV === "development") {
+					console.groupCollapsed("[Chat] Client error");
+					console.log("Error Type:", error instanceof Error ? error.constructor.name : typeof error);
+					console.log("Error Message:", rawErrorMessage);
+					console.log("Chat ID:", id);
+					console.log("Current Model:", currentModelId);
+					console.groupEnd();
+				}
+				toast({
+					type: "error",
+					description:
+						process.env.NODE_ENV === "development"
+							? rawErrorMessage
+							: "Terjadi kesalahan saat berkomunikasi dengan AI. Silakan coba lagi.",
+				});
+				return;
+			}
+
+			setArtifactStream((current) =>
+				current.lifecycle === "pending" || current.lifecycle === "streaming"
+					? {
+							...current,
+							lifecycle: "error",
+							error:
+								error instanceof Error
+									? error.message
+									: "Client stream error",
+							updatedAt: Date.now(),
+						}
+					: current,
+			);
+			setArtifact((current) => {
+				const baseArtifact = current ?? initialArtifactData;
+				if (
+					baseArtifact.streamState !== "pending" &&
+					baseArtifact.streamState !== "streaming"
+				) {
+					return baseArtifact;
+				}
+
+				return {
+					...baseArtifact,
+					status: "idle",
+					streamState: "error",
+					isVisible:
+						baseArtifact.isVisible || baseArtifact.documentId !== "init",
+				};
+			});
+
 			if (process.env.NODE_ENV === "development") {
 				console.groupCollapsed("[Chat] Client error");
 				console.log(
@@ -373,7 +482,7 @@ export function Chat({
 			}
 
 			// Detect rate limit errors and trigger upgrade banner instead of just showing a toast
-			const errorMsg = error instanceof Error ? error.message : String(error);
+			const errorMsg = rawErrorMessage;
 			const isRateLimitError =
 				errorMsg.includes("rate_limit") ||
 				errorMsg.includes("Rate limit") ||
@@ -401,27 +510,33 @@ export function Chat({
 					});
 				}
 			} else {
-				if (
-					error instanceof Error &&
-					error.message.includes("Insufficient credits")
-				) {
+				if (rawErrorMessage.includes("Insufficient credits")) {
 					toast({
 						type: "error",
-						description: error.message,
+						description: rawErrorMessage,
 					});
 				} else {
 					toast({
 						type: "error",
 						description:
-							"Terjadi kesalahan saat berkomunikasi dengan AI. Silakan coba lagi.",
+							process.env.NODE_ENV === "development"
+								? rawErrorMessage ||
+									"Terjadi kesalahan saat berkomunikasi dengan AI."
+								: "Terjadi kesalahan saat berkomunikasi dengan AI. Silakan coba lagi.",
 					});
 				}
 			}
 		},
 	});
 
+	const hasFinalAssistantAnswer = useMemo(
+		() => hasRenderableAssistantAfterLastUser(messages),
+		[messages],
+	);
+
 	useEffect(() => {
 		if (status === "submitted") {
+			lastHandledClientErrorRef.current = null;
 			const now = Date.now();
 			statusResetAtRef.current = now;
 			const lastUserMessage = messages
@@ -689,8 +804,23 @@ export function Chat({
 		}
 	}, [query, sendMessage, hasAppendedQuery, id, primeThinkingSurface]);
 
+	useEffect(() => {
+		if (!hasFinalAssistantAnswer) {
+			return;
+		}
+
+		setLiveThinking((current) =>
+			current.enabled ? { ...current, enabled: false } : current,
+		);
+		setAgentStream((current) =>
+			current.startedAt && current.status !== "done" && current.status !== "error"
+				? { ...current, status: "done", endedAt: current.endedAt ?? Date.now() }
+				: current,
+		);
+	}, [hasFinalAssistantAnswer, setAgentStream, setLiveThinking]);
+
 	const { data: votes } = useSWR<Vote[]>(
-		messages.length >= 2 ? `/api/vote?chatId=${id}` : null,
+		messages.length >= 2 && isValidUuid(id) ? `/api/vote?chatId=${id}` : null,
 		fetcher,
 	);
 
@@ -698,6 +828,11 @@ export function Chat({
 	const isArtifactVisible = useArtifactSelector((state) => state.isVisible);
 	const artifactUiState = useArtifactUiState();
 	const isIdeArtifactLocked = artifactUiState?.uiState?.isIdeLocked ?? false;
+	const shouldShowAgentDock =
+		agentStream.steps.length > 0 &&
+		status !== "streaming" &&
+		status !== "submitted" &&
+		!hasFinalAssistantAnswer;
 
 	// Count user messages for contextual upgrade banner
 	const userMessageCount = messages.filter((m) => m.role === "user").length;
@@ -976,7 +1111,7 @@ export function Chat({
 									</div>
 								) : (
 									<div className="relative flex flex-col gap-2">
-										<AgentDock stop={stop} />
+										{shouldShowAgentDock ? <AgentDock stop={stop} /> : null}
 										<MultimodalInput
 											attachments={attachments}
 											chatId={id}
