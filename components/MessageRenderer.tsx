@@ -1,5 +1,6 @@
 "use client";
 
+import katex from "katex";
 import type { ReactNode } from "react";
 import { useMemo, useState } from "react";
 
@@ -172,9 +173,21 @@ function splitWithBreaks(text: string, keyPrefix: string) {
 	});
 }
 
+function renderMath(value: string, displayMode: boolean) {
+	try {
+		return katex.renderToString(value, {
+			displayMode,
+			output: "html",
+			throwOnError: false,
+		});
+	} catch {
+		return value;
+	}
+}
+
 function renderInlineMarkdown(text: string, keyPrefix: string) {
 	const nodes: ReactNode[] = [];
-	const pattern = /(`[^`]+`|\*\*[\s\S]+?\*\*)/g;
+	const pattern = /(`[^`]+`|\$[^$\n]+\$|\*\*[\s\S]+?\*\*)/g;
 	let lastIndex = 0;
 	let match = pattern.exec(text);
 
@@ -198,6 +211,17 @@ function renderInlineMarkdown(text: string, keyPrefix: string) {
 				>
 					{token.slice(1, -1)}
 				</code>,
+			);
+		} else if (token.startsWith("$")) {
+			const key = stableKey("math", token, match.index);
+			nodes.push(
+				<span
+					className="text-white/75"
+					dangerouslySetInnerHTML={{
+						__html: renderMath(token.slice(1, -1), false),
+					}}
+					key={key}
+				/>,
 			);
 		} else {
 			const key = stableKey("bold", token, match.index);
@@ -380,6 +404,27 @@ function CodeBlock({ code, language }: { code: string; language: string }) {
 	);
 }
 
+function parseTable(section: string) {
+	const lines = section.split("\n").map((line) => line.trim());
+	if (lines.length < 2 || !lines.every((line) => /^\|.+\|$/.test(line))) {
+		return null;
+	}
+
+	if (!/^\|?\s*:?-{3,}:?\s*(\|\s*:?-{3,}:?\s*)+\|?$/.test(lines[1])) {
+		return null;
+	}
+
+	return lines
+		.filter((_, index) => index !== 1)
+		.map((line) =>
+			line
+				.replace(/^\|/, "")
+				.replace(/\|$/, "")
+				.split("|")
+				.map((cell) => cell.trim()),
+		);
+}
+
 function TextBlock({ block, blockKey }: { block: string; blockKey: string }) {
 	const normalized = block.replace(/\r\n/g, "\n").trim();
 	if (!normalized) {
@@ -399,6 +444,53 @@ function TextBlock({ block, blockKey }: { block: string; blockKey: string }) {
 				const unordered = lines.every((line) => /^\s*[-*]\s+/.test(line));
 				const ordered = lines.every((line) => /^\s*\d+[.)]\s+/.test(line));
 				const heading = section.match(/^(#{1,3})\s+(.+)$/);
+				const displayMath = section.match(/^\$\$([\s\S]+)\$\$$/);
+				const tableRows = parseTable(section);
+
+				if (displayMath) {
+					return (
+						<div
+							className="my-4 overflow-x-auto rounded-xl border border-white/[0.07] bg-white/[0.03] px-4 py-3 text-white/75"
+							dangerouslySetInnerHTML={{
+								__html: renderMath(displayMath[1].trim(), true),
+							}}
+							key={key}
+						/>
+					);
+				}
+
+				if (tableRows) {
+					const [header, ...bodyRows] = tableRows;
+					return (
+						<div
+							className="my-4 max-w-full overflow-x-auto rounded-xl border border-white/[0.08] bg-white/[0.025]"
+							key={key}
+						>
+							<table className="w-full min-w-[420px] border-collapse text-left text-[13px]">
+								<thead className="border-white/[0.08] border-b bg-white/[0.04] text-white/70">
+									<tr>
+										{header.map((cell, index) => (
+											<th className="px-3 py-2 font-medium" key={stableKey("th", cell, index)}>
+												{renderInlineMarkdown(cell, `${key}-th-${index}`)}
+											</th>
+										))}
+									</tr>
+								</thead>
+								<tbody className="divide-y divide-white/[0.06] text-[#8f8f8f]">
+									{bodyRows.map((row, rowIndex) => (
+										<tr className="transition-colors hover:bg-white/[0.025]" key={stableKey("tr", row.join("|"), rowIndex)}>
+											{row.map((cell, cellIndex) => (
+												<td className="px-3 py-2 align-top" key={stableKey("td", cell, cellIndex)}>
+													{renderInlineMarkdown(cell, `${key}-td-${rowIndex}-${cellIndex}`)}
+												</td>
+											))}
+										</tr>
+									))}
+								</tbody>
+							</table>
+						</div>
+					);
+				}
 
 				if (heading) {
 					return (
