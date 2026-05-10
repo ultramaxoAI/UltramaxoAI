@@ -1,7 +1,7 @@
 import type { UseChatHelpers } from "@ai-sdk/react";
 import type { Vote } from "@backend/db/schema";
 import equal from "fast-deep-equal";
-import { Braces, Copy, Ellipsis, RefreshCw, Share, ThumbsDown, ThumbsUp } from "lucide-react";
+import { Braces, Copy, RefreshCw, Share, ThumbsDown, ThumbsUp } from "lucide-react";
 import { memo } from "react";
 import { toast } from "sonner";
 import { useSWRConfig } from "swr";
@@ -282,14 +282,6 @@ export function PureMessageActions({
 					<RefreshCw className="size-[18px]" />
 				</button>
 			) : null}
-
-			<button
-				aria-label="More actions"
-				className="inline-flex size-8 items-center justify-center rounded-full text-white/72 transition-colors hover:bg-white/10 hover:text-white"
-				type="button"
-			>
-				<Ellipsis className="size-[18px]" />
-			</button>
 		</div>
 	);
 }

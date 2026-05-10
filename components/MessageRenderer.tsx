@@ -226,7 +226,7 @@ function renderInlineMarkdown(text: string, keyPrefix: string) {
 		} else {
 			const key = stableKey("bold", token, match.index);
 			nodes.push(
-				<strong className="font-semibold text-[#bbb]" key={key}>
+				<strong className="font-semibold text-white" key={key}>
 					{token.slice(2, -2)}
 				</strong>,
 			);
@@ -495,7 +495,7 @@ function TextBlock({ block, blockKey }: { block: string; blockKey: string }) {
 				if (heading) {
 					return (
 						<h3
-							className="mb-2 mt-4 text-[14px] font-semibold text-[#bbb]"
+							className="mb-2 mt-5 text-[17px] font-semibold text-white md:text-[18px]"
 							key={key}
 						>
 							{renderInlineMarkdown(heading[2], `heading-${key}`)}
