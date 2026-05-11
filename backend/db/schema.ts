@@ -659,3 +659,25 @@ export const modelCatalogRefreshLog = pgTable("model_catalog_refresh_log", {
 export type ModelCatalogRefreshLog = InferSelectModel<
 	typeof modelCatalogRefreshLog
 >;
+
+// ============================================================
+// Email Inbox & Customer Support (Resend Inbound)
+// ============================================================
+export const inboxMessage = pgTable("inbox_message", {
+	id: uuid("id").primaryKey().notNull().defaultRandom(),
+	messageId: text("messageId").notNull().unique(), // Resend/SMTP message ID
+	fromEmail: text("fromEmail").notNull(),
+	fromName: text("fromName"),
+	toEmail: text("toEmail").notNull(),
+	subject: text("subject"),
+	textBody: text("textBody"),
+	htmlBody: text("htmlBody"),
+	status: varchar("status", { enum: ["unread", "read", "replied", "archived"] })
+		.notNull()
+		.default("unread"),
+	threadId: text("threadId"), // To group conversations
+	replyToMessageId: text("replyToMessageId"), // Which message this replies to
+	receivedAt: timestamp("receivedAt").notNull().defaultNow(),
+});
+
+export type InboxMessage = InferSelectModel<typeof inboxMessage>;

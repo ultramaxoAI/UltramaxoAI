@@ -28,6 +28,7 @@ export function AdminSidebar() {
 		{ name: "Feedback", href: "/admin/feedback", icon: MessageSquareQuote },
 		{ name: "API Billing", href: "/admin/api-billing", icon: CreditCard },
 		{ name: "Email Studio", href: "/admin/emails", icon: Mail },
+		{ name: "Support Inbox", href: "/admin/inbox", icon: MessageSquareQuote },
 		{ name: "Settings", href: "/admin/settings", icon: Settings2 },
 	];
 
