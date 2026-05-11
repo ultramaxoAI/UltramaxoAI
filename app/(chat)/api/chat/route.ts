@@ -1586,7 +1586,7 @@ export async function POST(request: Request) {
 								(error instanceof Error &&
 									error.message.includes("support tool use"));
 
-							// Check if error is Invalid API Key
+							// Check if error is Invalid or Missing API Key
 							const isInvalidKey =
 								(error instanceof Error &&
 									error.message.includes("Invalid API Key")) ||
@@ -1594,7 +1594,11 @@ export async function POST(request: Request) {
 									error.message.includes("invalid_api_key")) ||
 								(error instanceof Error &&
 									error.message.includes("Unauthorized")) ||
-								(error as { statusCode?: number })?.statusCode === 401;
+								(error as { statusCode?: number })?.statusCode === 401 ||
+								(error instanceof Error &&
+									error.message.includes("API key configured")) ||
+								(error instanceof Error &&
+									error.message.includes("API key provided"));
 
 							// Check if error is rate limit or API error
 							const isRateLimit =
@@ -1609,13 +1613,12 @@ export async function POST(request: Request) {
 
 							if (isInvalidKey) {
 								console.error(
-									"[Chat API] Invalid API Key detected - check configuration",
+									"[Chat API] Invalid or Missing API Key detected - check configuration",
 								);
 								// markKeyFailed("primary"); // Function removed
 								// setTimeout(() => resetFailureTracking(), 30_000); // Function removed
-								throw new Error(
-									"Invalid API Key. Please contact the administrator to check the API key configuration.",
-								);
+								const errorMsg = error instanceof Error ? error.message : "Invalid API Key. Please contact the administrator to check the API key configuration.";
+								throw new Error(errorMsg);
 							}
 
 							if (isFunctionError && retryCount < maxRetries) {

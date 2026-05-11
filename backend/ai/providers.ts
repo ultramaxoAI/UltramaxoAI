@@ -5,9 +5,9 @@ import { createOpenAI } from "@ai-sdk/openai";
 // ============================================================
 // Default API Keys Setup
 // ============================================================
-const maiaApiKey = (process.env.MAIAROUTER_API_KEY || process.env.OPENROUTER_API_KEY_1 || "").trim();
+const maiaApiKey = (process.env.MAIAROUTER_API_KEY || process.env.OPENROUTER_API_KEY_1 || process.env.OPENROUTER_API_KEY || "").trim();
 const swiftRouterApiKey = (process.env.SWIFTROUTER_API_KEY || process.env.SUMOPOD_API_KEY || "").trim();
-const sumoPodApiKey = (process.env.SUMOPOD_API_KEY || "").trim();
+const sumoPodApiKey = (process.env.SUMOPOD_API_KEY || process.env.SWIFTROUTER_API_KEY || process.env.MAIAROUTER_API_KEY || process.env.OPENROUTER_API_KEY || "").trim();
 
 // ============================================================
 // Model IDs
