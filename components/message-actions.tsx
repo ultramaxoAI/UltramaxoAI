@@ -116,11 +116,11 @@ export function PureMessageActions({
 	// User messages get edit (on hover) and copy actions
 	if (message.role === "user") {
 		return (
-			<Actions className="-mr-0.5 mt-1 justify-end opacity-100 md:opacity-0 md:transition-opacity md:group-hover/message:opacity-100 md:focus-within:opacity-100">
+			<Actions className="-mr-0.5 mt-2 justify-end opacity-100 md:opacity-0 md:transition-opacity md:group-hover/message:opacity-100 md:focus-within:opacity-100">
 				<div className="relative">
 					{setMode && (
 						<Action
-							className="absolute top-0 -left-9 opacity-100 md:opacity-0 md:transition-opacity md:focus-visible:opacity-100 md:group-hover/message:opacity-100"
+							className="absolute top-0 -left-8 opacity-100 md:opacity-0 md:transition-opacity md:focus-visible:opacity-100 md:group-hover/message:opacity-100"
 							data-testid="message-edit-button"
 							onClick={() => setMode("edit")}
 							tooltip="Edit"
@@ -137,10 +137,28 @@ export function PureMessageActions({
 	}
 
 	return (
-		<div className="mt-3 flex flex-wrap items-center gap-1.5 opacity-100 transition-opacity duration-200 md:opacity-0 md:group-hover/message:opacity-100 md:focus-within:opacity-100">
+		<div className="mt-2 flex flex-wrap items-center gap-1 opacity-100 transition-opacity duration-200 md:opacity-0 md:group-hover/message:opacity-100 md:focus-within:opacity-100">
+			<button
+				aria-label="Copy response"
+				className="inline-flex size-7 items-center justify-center rounded-md text-white/40 transition-colors hover:bg-white/10 hover:text-white/80"
+				onClick={handleCopy}
+				type="button"
+			>
+				<Copy className="size-[14.5px]" />
+			</button>
+
+			<button
+				aria-label="Regenerate response"
+				className="inline-flex size-7 items-center justify-center rounded-md text-white/40 transition-colors hover:bg-white/10 hover:text-white/80"
+				onClick={() => regenerate?.()}
+				type="button"
+			>
+				<RefreshCw className="size-[14.5px]" />
+			</button>
+
 			<button
 				aria-label="Like response"
-				className="inline-flex size-8 items-center justify-center rounded-full text-white/72 transition-colors hover:bg-white/10 hover:text-white disabled:opacity-35"
+				className="inline-flex size-7 items-center justify-center rounded-md text-white/40 transition-colors hover:bg-white/10 hover:text-white/80 disabled:opacity-35"
 				data-testid="message-upvote"
 				disabled={vote?.isUpvoted}
 				onClick={() => {
@@ -186,12 +204,12 @@ export function PureMessageActions({
 				}}
 				type="button"
 			>
-				<ThumbsUp className="size-[18px]" />
+				<ThumbsUp className="size-[14.5px]" />
 			</button>
 
 			<button
 				aria-label="Dislike response"
-				className="inline-flex size-8 items-center justify-center rounded-full text-white/72 transition-colors hover:bg-white/10 hover:text-white disabled:opacity-35"
+				className="inline-flex size-7 items-center justify-center rounded-md text-white/40 transition-colors hover:bg-white/10 hover:text-white/80 disabled:opacity-35"
 				data-testid="message-downvote"
 				disabled={vote && !vote.isUpvoted}
 				onClick={() => {
@@ -237,49 +255,29 @@ export function PureMessageActions({
 				}}
 				type="button"
 			>
-				<ThumbsDown className="size-[18px]" />
-			</button>
-
-			<button
-				aria-label="Copy response"
-				className="inline-flex size-8 items-center justify-center rounded-full text-white/72 transition-colors hover:bg-white/10 hover:text-white"
-				onClick={handleCopy}
-				type="button"
-			>
-				<Copy className="size-[18px]" />
+				<ThumbsDown className="size-[14.5px]" />
 			</button>
 
 			<button
 				aria-label="Share response"
-				className="inline-flex size-8 items-center justify-center rounded-full text-white/72 transition-colors hover:bg-white/10 hover:text-white"
+				className="inline-flex size-7 items-center justify-center rounded-md text-white/40 transition-colors hover:bg-white/10 hover:text-white/80"
 				onClick={handleCopy}
 				type="button"
 			>
-				<Share className="size-[18px]" />
+				<Share className="size-[14.5px]" />
 			</button>
 
 			{workspaceCandidate ? (
 				<button
 					aria-label="Open workspace"
-					className="inline-flex size-8 items-center justify-center rounded-full text-white/72 transition-colors hover:bg-white/10 hover:text-white"
+					className="inline-flex size-7 items-center justify-center rounded-md text-white/40 transition-colors hover:bg-white/10 hover:text-white/80"
 					onClick={() => {
 						void handleOpenWorkspace();
 					}}
 					title="Open workspace"
 					type="button"
 				>
-					<Braces className="size-[18px]" />
-				</button>
-			) : null}
-
-			{regenerate ? (
-				<button
-					aria-label="Regenerate response"
-					className="inline-flex size-8 items-center justify-center rounded-full text-white/72 transition-colors hover:bg-white/10 hover:text-white"
-					onClick={() => regenerate()}
-					type="button"
-				>
-					<RefreshCw className="size-[18px]" />
+					<Braces className="size-[14.5px]" />
 				</button>
 			) : null}
 		</div>

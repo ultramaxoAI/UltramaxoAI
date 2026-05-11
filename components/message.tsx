@@ -486,12 +486,12 @@ function MessageTextPart({
 		isHuge && !expanded ? rawText.slice(0, maxChars) : rawText;
 
 	return (
-		<div className={cn(messageRole === "user" && "max-w-full")}>
+		<div className={cn(messageRole === "user" ? "max-w-full flex justify-end" : "max-w-full")}>
 			<MessageContent
 				className={cn("w-full", {
-					"ml-auto inline-flex w-auto max-w-full whitespace-pre-wrap break-words rounded-2xl bg-white/[0.07] px-4 py-3 text-left text-[15px] leading-[1.75] text-white/88 shadow-none":
+					"ml-auto inline-flex w-auto max-w-[90%] md:max-w-[75%] whitespace-pre-wrap break-words rounded-[22px] bg-[#2f2f2f] px-5 py-2.5 text-left text-[15px] leading-[1.6] text-white/95 shadow-none":
 						messageRole === "user",
-					"w-full bg-transparent px-0 py-0 text-left text-[16px] leading-[1.78] text-white/90 md:text-[17px]":
+					"w-full bg-transparent px-0 py-0 text-left text-[15.5px] leading-[1.7] text-white/90 md:text-[16px]":
 						messageRole === "assistant",
 				})}
 				data-testid="message-content"
@@ -735,13 +735,16 @@ const PurePreviewMessage = ({
 
 	return (
 		<div
-			className="group/message fade-in w-full animate-in duration-200"
+			className={cn(
+				"group/message fade-in w-full animate-in duration-200",
+				message.role === "user" ? "py-4 md:py-5" : "py-4 md:py-5"
+			)}
 			data-role={message.role}
 			data-testid={`message-${message.role}`}
 		>
 			<div
 				className={cn(
-					"mx-auto flex w-full max-w-[820px]",
+					"mx-auto flex w-full max-w-[768px] px-4 md:px-5",
 					message.role === "user"
 						? "justify-end"
 						: "group-data-[top=true]:mt-[6vh]",
