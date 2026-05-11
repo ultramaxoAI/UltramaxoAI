@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
-import { db } from "@/backend/db";
-import { inboxMessage } from "@/backend/db/schema";
+import { db } from "@backend/db/queries";
+import { inboxMessage } from "@backend/db/schema";
 import { headers } from "next/headers";
 
 // Required to parse raw body if we want to verify signature,

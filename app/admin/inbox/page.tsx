@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { format } from "date-fns";
 import { toast } from "sonner";
-import { MailIcon, ReplyIcon, CheckCircle2Icon, ArchiveIcon, Loader2, RefreshCcw } from "lucide-react";
+import { MailIcon, ReplyIcon, CheckCircle2Icon, ArchiveIcon, Loader2, RefreshCcw, SendIcon } from "lucide-react";
 
 type InboxMessage = {
 	id: string;
