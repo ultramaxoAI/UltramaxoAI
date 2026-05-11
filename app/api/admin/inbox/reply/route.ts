@@ -19,7 +19,7 @@ export async function POST(req: Request) {
 
 		// Send email using Resend
 		const data = await resend.emails.send({
-			from: process.env.RESEND_FROM || "Ultramaxo Support <support@ultramaxo.tech>",
+			from: "Ultramaxo Support <support@ultramaxo.tech>",
 			to: toEmail,
 			subject: subject,
 			text: textBody,
