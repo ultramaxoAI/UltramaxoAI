@@ -93,10 +93,8 @@ export function UpgradeProButton({
 			// Redirect directly to YoBasePay checkout URL
 			if (data.checkoutUrl) {
 				window.location.href = data.checkoutUrl;
-			} else if (data.requestId) {
-				// Fallback to whatsapp if somehow there is no checkout URL but we have a request ID
-				const whatsappUrl = `https://wa.me/6285191689131?text=Halo,%20saya%20ingin%20bayar%20invoice%20upgrade%20Pro%20dengan%20ID%20${data.requestId}`;
-				window.open(whatsappUrl, "_blank");
+			} else {
+				toast.error("Checkout URL tidak tersedia. Silakan coba lagi.");
 			}
 		} catch (err) {
 			console.error("Payment error:", err);

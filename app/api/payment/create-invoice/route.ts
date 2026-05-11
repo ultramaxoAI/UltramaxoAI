@@ -398,13 +398,13 @@ export async function POST(request: Request) {
 			});
 		} catch (yobaseErr) {
 			console.error("[YoBasePay] Failed to create transaction:", yobaseErr);
-			// Fallback to manual WhatsApp flow if payment gateway is down
-			return NextResponse.json({
-				success: false,
-				fallback: true,
-				requestId: purchaseReq.id,
-				error: "Payment gateway unavailable",
-			});
+			return NextResponse.json(
+				{
+					error: "Payment gateway sedang tidak tersedia. Silakan coba lagi dalam beberapa menit.",
+					requestId: purchaseReq.id,
+				},
+				{ status: 502 },
+			);
 		}
 	} catch (error) {
 		console.error("[Payment API] FATAL error:", error);
