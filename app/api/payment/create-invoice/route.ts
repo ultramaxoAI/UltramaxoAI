@@ -145,6 +145,7 @@ function buildPaymentNote({
 	qrImage,
 	providerRef,
 	rawResponse,
+	userNote,
 }: {
 	planId: string;
 	months: number;
@@ -154,6 +155,7 @@ function buildPaymentNote({
 	qrImage: string | null;
 	providerRef: string | null;
 	rawResponse: unknown;
+	userNote?: string | null;
 }) {
 	return JSON.stringify({
 		provider: "yobasepay",
@@ -165,6 +167,7 @@ function buildPaymentNote({
 		qrImage,
 		providerRef,
 		rawResponse,
+		userNote,
 		createdAt: new Date().toISOString(),
 	});
 }
@@ -180,7 +183,7 @@ export async function POST(request: Request) {
 
 		// 2. Parse body
 		const body = await request.json();
-		const { planId, price, months } = body;
+		const { planId, price, months, note } = body;
 		if (isDevelopment) {
 			console.log(
 				"[Payment] Plan:",
@@ -240,6 +243,7 @@ export async function POST(request: Request) {
 			months: effectiveMonths,
 			price: validPrice,
 			method: "yobasepay",
+			note: note || undefined,
 		});
 
 		const purchaseReq = Array.isArray(purchaseReqRaw)
@@ -285,6 +289,7 @@ export async function POST(request: Request) {
 							qrImage,
 							providerRef,
 							rawResponse: yobaseV3Result,
+							userNote: note,
 						}),
 						updatedAt: new Date(),
 					})
@@ -325,7 +330,7 @@ export async function POST(request: Request) {
 				amount: validPrice,
 				customerName: dbUser.name || dbUser.username || "User",
 				customerEmail: dbUser.email || undefined,
-				description: `Upgrade ${planId} - ${effectiveMonths} bulan`,
+				description: `Upgrade ${planId} - ${effectiveMonths} bulan${note ? ` (${note})` : ""}`,
 			});
 
 			const checkoutUrl =
@@ -367,6 +372,7 @@ export async function POST(request: Request) {
 						qrImage,
 						providerRef,
 						rawResponse: yobaseResult,
+						userNote: note,
 					}),
 					updatedAt: new Date(),
 				})
@@ -392,10 +398,13 @@ export async function POST(request: Request) {
 			});
 		} catch (yobaseErr) {
 			console.error("[YoBasePay] Failed to create transaction:", yobaseErr);
-			return NextResponse.json(
-				{ error: "Gagal membuat transaksi YoBasePay" },
-				{ status: 502 },
-			);
+			// Fallback to manual WhatsApp flow if payment gateway is down
+			return NextResponse.json({
+				success: false,
+				fallback: true,
+				requestId: purchaseReq.id,
+				error: "Payment gateway unavailable",
+			});
 		}
 	} catch (error) {
 		console.error("[Payment API] FATAL error:", error);

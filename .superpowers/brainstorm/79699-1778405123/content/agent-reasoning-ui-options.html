@@ -1,0 +1,57 @@
+<h2>Agent reasoning + web search UI</h2>
+<p class="subtitle">Aku bikin 3 arah desain. Pilih yang paling cocok buat Ultramaxo: reasoning muncul untuk math/coding/tutorial, dan web search menunjukkan progress sesuai sumber yang dikunjungi.</p>
+
+<div class="cards">
+  <div class="card" data-choice="a" onclick="toggleSelect(this)">
+    <div class="card-image" style="background:#050505;color:white;padding:22px;min-height:360px;font-family:Inter,system-ui;border-radius:18px">
+      <div style="font-size:15px;line-height:1.7;color:rgba(255,255,255,.86);max-width:520px">Berikut implementasi Kotlin untuk...<br><br><code style="color:#d8b4fe">class AdminReceiver : DeviceAdminReceiver()</code></div>
+      <div style="margin-top:30px;border-left:1px solid rgba(255,255,255,.12);padding-left:14px;color:rgba(255,255,255,.55);font-size:13px">
+        <div style="color:rgba(255,255,255,.86);font-size:14px;margin-bottom:10px">Menyusun struktur class dan permission Android</div>
+        <div>• Memetakan komponen DeviceAdminReceiver</div>
+        <div>• Mengecek bagian manifest yang dibutuhkan</div>
+        <div>• Menyiapkan contoh kode yang bisa langsung diuji</div>
+      </div>
+      <div style="margin-top:24px;display:flex;gap:10px;color:white;font-size:13px;align-items:center">
+        <span>⧉</span><span>👍</span><span>👎</span><span>↗</span><span>⋯</span>
+      </div>
+    </div>
+    <div class="card-body"><h3>A. Inline reasoning tetap di bawah jawaban berjalan</h3><p>Reasoning muncul sebagai panel kecil saat streaming, otomatis hilang/selesai saat jawaban final. Minimal dan tidak mengganggu.</p></div>
+  </div>
+
+  <div class="card" data-choice="b" onclick="toggleSelect(this)">
+    <div class="card-image" style="background:#050505;color:white;padding:22px;min-height:360px;font-family:Inter,system-ui;border-radius:18px">
+      <div style="font-size:15px;line-height:1.65;color:rgba(255,255,255,.88);max-width:520px">Aku cek berita terbaru dari beberapa sumber, lalu rangkum isu paling penting.</div>
+      <div style="margin-top:22px;border:1px solid rgba(255,255,255,.1);border-radius:16px;padding:14px;background:rgba(255,255,255,.035)">
+        <div style="font-size:14px;color:rgba(255,255,255,.86);margin-bottom:12px">Mencari dan membaca sumber</div>
+        <div style="color:rgba(255,255,255,.58);font-size:13px;line-height:1.8">
+          <div>🔎 Mencari “global news latest Reuters AP Guardian”</div>
+          <div>🌐 Membaca reuters.com tentang Iran dan pasar minyak</div>
+          <div>🌐 Membaca theguardian.com soal negosiasi Timur Tengah</div>
+          <div>✓ Membandingkan klaim antar sumber</div>
+        </div>
+      </div>
+      <div style="margin-top:18px;display:grid;grid-template-columns:1fr 1fr;gap:12px">
+        <div style="border:1px solid rgba(255,255,255,.12);border-radius:14px;padding:12px;font-size:13px"><b>Reuters</b><br><span style="color:rgba(255,255,255,.62)">Iran fighting flares...</span></div>
+        <div style="border:1px solid rgba(255,255,255,.12);border-radius:14px;padding:12px;font-size:13px"><b>theguardian.com</b><br><span style="color:rgba(255,255,255,.62)">Middle East negotiations...</span></div>
+      </div>
+      <div style="margin-top:18px;display:flex;gap:10px;align-items:center;font-size:13px"><span>⧉</span><span>👍</span><span>👎</span><span>↗</span><span>↻</span><button style="border:0;border-radius:999px;background:#2b2b2b;color:white;padding:8px 14px">Sumber</button></div>
+    </div>
+    <div class="card-body"><h3>B. GPT-style web search panel + source cards</h3><p>Untuk web search, reasoning jadi progress nyata: query, domain yang dibaca, lalu source cards dan tombol Sumber.</p></div>
+  </div>
+
+  <div class="card" data-choice="c" onclick="toggleSelect(this)">
+    <div class="card-image" style="background:#050505;color:white;padding:22px;min-height:360px;font-family:Inter,system-ui;border-radius:18px">
+      <div style="font-size:15px;line-height:1.65;color:rgba(255,255,255,.88);max-width:520px">Kita pecahkan rumus ini langkah demi langkah.</div>
+      <div style="margin-top:22px;display:flex;align-items:center;gap:10px;color:rgba(255,255,255,.82)"><span style="width:7px;height:7px;background:#9ca3af;border-radius:50%;display:inline-block"></span><span style="font-size:14px">Mengecek variabel dan bentuk persamaan</span><button style="margin-left:auto;border:1px solid rgba(255,255,255,.12);background:transparent;color:#aaa;border-radius:8px">↕</button></div>
+      <div style="margin-top:12px;color:rgba(255,255,255,.48);font-size:13px;border-left:1px solid rgba(255,255,255,.09);padding-left:14px;line-height:1.9">
+        <div>• Mengidentifikasi diketahui dan ditanya</div>
+        <div>• Memilih rumus yang sesuai</div>
+        <div>• Mengecek satuan agar tidak salah substitusi</div>
+      </div>
+      <div style="margin-top:28px;color:rgba(255,255,255,.86);font-size:15px;line-height:1.7">Jika \(v = s/t\), maka...</div>
+    </div>
+    <div class="card-body"><h3>C. Smart reasoning trigger untuk math/coding/tutorial</h3><p>Reasoning aktif otomatis untuk rumus, coding, step-by-step, debugging, tutorial; tidak aktif untuk chat santai.</p></div>
+  </div>
+</div>
+
+<p class="subtitle">Rekomendasi: gabungkan B + C. Web search punya progress sumber nyata; math/coding/tutorial punya reasoning ringkas berbasis task, bukan template generik.</p>

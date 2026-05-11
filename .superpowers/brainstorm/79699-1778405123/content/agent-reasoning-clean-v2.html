@@ -1,0 +1,85 @@
+<h2>Versi lebih clean: Agent Reasoning Ultramaxo</h2>
+<p class="subtitle">Aku sederhanakan jadi 2 state utama: reasoning untuk tugas serius, dan web search dengan sumber. Tidak perlu kartu besar yang berantakan.</p>
+
+<div class="split">
+  <div class="mockup">
+    <div class="mockup-header">Math / Coding / Tutorial</div>
+    <div class="mockup-body" style="background:#050505;color:white;padding:28px;font-family:Inter,system-ui;min-height:520px">
+      <div style="max-width:620px;margin:0 auto">
+        <div style="font-size:15.5px;line-height:1.75;color:rgba(255,255,255,.86)">
+          Buat fungsi JavaScript untuk validasi email dan jelaskan step-by-step.
+        </div>
+
+        <div style="margin-top:34px;width:100%">
+          <div style="display:flex;align-items:center;gap:10px;color:rgba(255,255,255,.82);font-size:14px">
+            <span style="width:6px;height:6px;border-radius:50%;background:#a3a3a3;box-shadow:0 0 12px #888;display:inline-block"></span>
+            <span>Menentukan pola validasi dan edge case email</span>
+            <button style="margin-left:auto;border:1px solid rgba(255,255,255,.1);background:#111;color:#aaa;border-radius:8px;padding:3px 7px">↕</button>
+          </div>
+          <div style="margin-top:12px;margin-left:3px;border-left:1px solid rgba(255,255,255,.08);padding-left:17px;color:rgba(255,255,255,.46);font-size:13.5px;line-height:1.9">
+            <div>Mengecek format umum: nama, @, domain, dan TLD.</div>
+            <div>Menghindari regex terlalu agresif agar validasi tetap praktis.</div>
+            <div>Menyiapkan contoh penggunaan dan test sederhana.</div>
+          </div>
+        </div>
+
+        <div style="margin-top:36px;font-size:15.5px;line-height:1.75;color:rgba(255,255,255,.88)">
+          Berikut fungsi yang bisa kamu pakai:
+        </div>
+        <pre style="margin-top:14px;background:#0d0d0d;border:1px solid rgba(255,255,255,.08);border-radius:14px;padding:18px;color:#d8b4fe;font-size:13.5px;line-height:1.6;overflow:hidden">function isValidEmail(email) {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+}</pre>
+      </div>
+    </div>
+  </div>
+
+  <div class="mockup">
+    <div class="mockup-header">Web Search</div>
+    <div class="mockup-body" style="background:#050505;color:white;padding:28px;font-family:Inter,system-ui;min-height:520px">
+      <div style="max-width:620px;margin:0 auto">
+        <div style="font-size:15.5px;line-height:1.75;color:rgba(255,255,255,.88)">
+          Aku cek berita global terbaru dari beberapa sumber tepercaya, lalu pilih isu yang paling relevan.
+        </div>
+
+        <div style="margin-top:30px;border-left:1px solid rgba(255,255,255,.08);padding-left:17px;color:rgba(255,255,255,.5);font-size:13.5px;line-height:2">
+          <div style="color:rgba(255,255,255,.82);font-size:14px;margin-bottom:4px">Mencari berita global terbaru</div>
+          <div>🔎 Query: latest global news Reuters AP Guardian</div>
+          <div>🌐 Membaca reuters.com tentang konflik Iran dan pasar minyak</div>
+          <div>🌐 Membaca theguardian.com tentang negosiasi Timur Tengah</div>
+          <div>✓ Membandingkan sumber dan memilih poin yang konsisten</div>
+        </div>
+
+        <div style="margin-top:28px;font-size:15.5px;line-height:1.75;color:rgba(255,255,255,.88)">
+          Ringkasnya, isu utama hari ini adalah konflik Iran, pergerakan pasar energi, dan negosiasi Timur Tengah...
+        </div>
+
+        <div style="margin-top:24px;display:grid;grid-template-columns:1fr 1fr;gap:12px">
+          <div style="border:1px solid rgba(255,255,255,.1);border-radius:16px;padding:13px;background:#0a0a0a">
+            <div style="font-size:12px;color:rgba(255,255,255,.52);margin-bottom:7px">Reuters</div>
+            <div style="font-size:14px;line-height:1.45;color:rgba(255,255,255,.86)">Iran fighting flares, oil bets...</div>
+          </div>
+          <div style="border:1px solid rgba(255,255,255,.1);border-radius:16px;padding:13px;background:#0a0a0a">
+            <div style="font-size:12px;color:rgba(255,255,255,.52);margin-bottom:7px">theguardian.com</div>
+            <div style="font-size:14px;line-height:1.45;color:rgba(255,255,255,.86)">Middle East negotiations...</div>
+          </div>
+        </div>
+
+        <div style="margin-top:22px;display:flex;align-items:center;gap:15px;color:rgba(255,255,255,.78);font-size:14px">
+          <span>⧉</span><span>👍</span><span>👎</span><span>↗</span><span>↻</span><span>⋯</span>
+          <button style="border:0;border-radius:999px;background:#242424;color:white;padding:8px 14px;margin-left:2px">Sumber</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="options">
+  <div class="option" data-choice="clean" onclick="toggleSelect(this)">
+    <div class="letter">✓</div>
+    <div class="content"><h3>Pakai versi clean ini</h3><p>Reasoning ringkas, teks lebih besar/terang, web search punya progress domain + source cards.</p></div>
+  </div>
+  <div class="option" data-choice="more-gpt" onclick="toggleSelect(this)">
+    <div class="letter">G</div>
+    <div class="content"><h3>Bikin lebih mirip GPT lagi</h3><p>Footer/action row dan tombol Sumber dibuat makin mirip ChatGPT.</p></div>
+  </div>
+</div>
