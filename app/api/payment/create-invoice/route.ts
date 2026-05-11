@@ -382,12 +382,13 @@ export async function POST(request: Request) {
 
 			if (!checkoutUrl && !qris && !qrImage) {
 				console.warn("[YoBasePay] Unknown response format:", yobaseResult);
-				return NextResponse.json(
-					{
-						error: "YoBasePay tidak mengembalikan metode pembayaran yang valid",
-					},
-					{ status: 502 },
-				);
+				const telegramUrl = `https://t.me/ultramaxoai?text=Halo,%20saya%20ingin%20bayar%20invoice%20upgrade%20Pro%20dengan%20ID%20${purchaseReq.id}`;
+				return NextResponse.json({
+					success: true,
+					requestId: purchaseReq.id,
+					checkoutUrl: telegramUrl,
+					provider: "telegram_fallback",
+				});
 			}
 
 			return NextResponse.json({
@@ -400,13 +401,13 @@ export async function POST(request: Request) {
 			});
 		} catch (yobaseErr) {
 			console.error("[YoBasePay] Failed to create transaction:", yobaseErr);
-			return NextResponse.json(
-				{
-					error: "Payment gateway sedang tidak tersedia. Silakan coba lagi dalam beberapa menit.",
-					requestId: purchaseReq.id,
-				},
-				{ status: 502 },
-			);
+			const telegramUrl = `https://t.me/ultramaxoai?text=Halo,%20saya%20ingin%20bayar%20invoice%20upgrade%20Pro%20dengan%20ID%20${purchaseReq.id}`;
+			return NextResponse.json({
+				success: true,
+				requestId: purchaseReq.id,
+				checkoutUrl: telegramUrl,
+				provider: "telegram_fallback",
+			});
 		}
 	} catch (error) {
 		console.error("[Payment API] FATAL error:", error);
