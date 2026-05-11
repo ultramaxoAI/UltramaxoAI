@@ -27,7 +27,6 @@ import type { ChatMessage } from "@/lib/types";
 import { cn, sanitizeText } from "@/lib/utils";
 import { DocumentToolCall, DocumentToolResult } from "./document";
 import { MessageContent } from "./elements/message";
-import { Response } from "./elements/response";
 import {
 	Tool,
 	ToolContent,
@@ -400,6 +399,72 @@ function getAgentThinkingSteps(parts: ChatMessage["parts"]) {
 }
 
 // ============================================================
+// UserTextWithLinks — renders user text with auto-linked URLs
+// ============================================================
+function UserTextWithLinks({ text }: { text: string }) {
+	const urlPattern = /https?:\/\/[^\s<>"'`\]\)]+/g;
+	const parts: Array<{ type: "text" | "link"; value: string }> = [];
+	let lastIndex = 0;
+	let match = urlPattern.exec(text);
+
+	while (match !== null) {
+		if (match.index > lastIndex) {
+			parts.push({ type: "text", value: text.slice(lastIndex, match.index) });
+		}
+		// Clean trailing punctuation
+		let url = match[0].replace(/[.,;:!?)]+$/, "");
+		const openParens = (url.match(/\(/g) || []).length;
+		const closeParens = (url.match(/\)/g) || []).length;
+		if (closeParens > openParens && url.endsWith(")")) {
+			url = url.slice(0, -1);
+		}
+		parts.push({ type: "link", value: url });
+		lastIndex = match.index + url.length;
+		urlPattern.lastIndex = lastIndex;
+		match = urlPattern.exec(text);
+	}
+	if (lastIndex < text.length) {
+		parts.push({ type: "text", value: text.slice(lastIndex) });
+	}
+
+	if (parts.length === 0) {
+		return <>{text}</>;
+	}
+
+	return (
+		<>
+			{parts.map((part, index) => {
+				if (part.type === "link") {
+					let displayUrl: string;
+					try {
+						const parsed = new URL(part.value);
+						const domain = parsed.hostname.replace(/^www\./, "");
+						const path = parsed.pathname === "/" ? "" : parsed.pathname;
+						const truncatedPath = path.length > 30 ? `${path.slice(0, 27)}...` : path;
+						displayUrl = domain + truncatedPath;
+					} catch {
+						displayUrl = part.value.length > 50 ? `${part.value.slice(0, 47)}...` : part.value;
+					}
+					return (
+						<a
+							className="inline-flex items-center gap-1 text-[#60a5fa] underline decoration-[#60a5fa]/30 underline-offset-[3px] transition-all hover:text-[#93c5fd] hover:decoration-[#93c5fd]/50"
+							href={part.value}
+							key={`user-link-${index}-${part.value}`}
+							rel="noopener noreferrer"
+							target="_blank"
+						>
+							{displayUrl}
+							<ExternalLinkIcon className="inline-block size-3 shrink-0 opacity-50" />
+						</a>
+					);
+				}
+				return <span key={`user-text-${index}`}>{part.value}</span>;
+			})}
+		</>
+	);
+}
+
+// ============================================================
 // MessageTextPart — renders text with OOM-safe truncation
 // ============================================================
 function MessageTextPart({
@@ -439,9 +504,9 @@ function MessageTextPart({
 						isLoading={isLoading}
 					/>
 				) : (
-					<Response className="text-[15px] leading-[1.75] text-white/88 [&_p]:mb-0">
-						{displayText}
-					</Response>
+					<div className="text-[15px] leading-[1.75] text-white/88">
+						<UserTextWithLinks text={displayText} />
+					</div>
 				)}
 			</MessageContent>
 			{isHuge && !expanded && (

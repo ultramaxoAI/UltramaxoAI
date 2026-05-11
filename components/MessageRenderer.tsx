@@ -1,5 +1,6 @@
 "use client";
 
+import { ExternalLinkIcon } from "lucide-react";
 import katex from "katex";
 import type { ReactNode } from "react";
 import { useMemo, useState } from "react";
@@ -185,9 +186,79 @@ function renderMath(value: string, displayMode: boolean) {
 	}
 }
 
+function renderPlainTextWithLinks(text: string, keyPrefix: string): ReactNode[] {
+	const nodes: ReactNode[] = [];
+	// Match raw URLs in plain text
+	const urlPattern = /https?:\/\/[^\s<>"'`\]\)]+/g;
+	let lastIndex = 0;
+	let urlMatch = urlPattern.exec(text);
+
+	while (urlMatch !== null) {
+		if (urlMatch.index > lastIndex) {
+			nodes.push(
+				...splitWithBreaks(
+					text.slice(lastIndex, urlMatch.index),
+					`${keyPrefix}-plain-${lastIndex}`,
+				),
+			);
+		}
+
+		// Clean trailing punctuation from URL
+		let url = urlMatch[0].replace(/[.,;:!?)]+$/, "");
+		// Remove trailing parenthesis if unbalanced
+		const openParens = (url.match(/\(/g) || []).length;
+		const closeParens = (url.match(/\)/g) || []).length;
+		if (closeParens > openParens && url.endsWith(")")) {
+			url = url.slice(0, -1);
+		}
+
+		let displayUrl: string;
+		try {
+			const parsed = new URL(url);
+			// Show clean domain + short path
+			const domain = parsed.hostname.replace(/^www\./, "");
+			const path = parsed.pathname === "/" ? "" : parsed.pathname;
+			const truncatedPath = path.length > 30 ? `${path.slice(0, 27)}...` : path;
+			displayUrl = domain + truncatedPath;
+		} catch {
+			displayUrl = url.length > 45 ? `${url.slice(0, 42)}...` : url;
+		}
+
+		const key = stableKey("link", url, urlMatch.index);
+		nodes.push(
+			<a
+				className="inline-flex items-center gap-1 text-[#60a5fa] underline decoration-[#60a5fa]/30 underline-offset-[3px] transition-all hover:text-[#93c5fd] hover:decoration-[#93c5fd]/50"
+				href={url}
+				key={key}
+				rel="noopener noreferrer"
+				target="_blank"
+			>
+				{displayUrl}
+				<ExternalLinkIcon className="inline-block size-3 shrink-0 opacity-50" />
+			</a>,
+		);
+
+		lastIndex = urlMatch.index + url.length;
+		urlPattern.lastIndex = lastIndex;
+		urlMatch = urlPattern.exec(text);
+	}
+
+	if (lastIndex < text.length) {
+		nodes.push(
+			...splitWithBreaks(
+				text.slice(lastIndex),
+				`${keyPrefix}-plain-${lastIndex}`,
+			),
+		);
+	}
+
+	return nodes;
+}
+
 function renderInlineMarkdown(text: string, keyPrefix: string) {
 	const nodes: ReactNode[] = [];
-	const pattern = /(`[^`]+`|\$[^$\n]+\$|\*\*[\s\S]+?\*\*)/g;
+	// Match: inline code, math, bold, markdown links [text](url), and raw URLs
+	const pattern = /(`[^`]+`|\$[^$\n]+\$|\*\*[\s\S]+?\*\*|\[([^\]]+)\]\((https?:\/\/[^)]+)\)|https?:\/\/[^\s<>"'`\]\)]+)/g;
 	let lastIndex = 0;
 	let match = pattern.exec(text);
 
@@ -202,7 +273,70 @@ function renderInlineMarkdown(text: string, keyPrefix: string) {
 		}
 
 		const token = match[0];
-		if (token.startsWith("`")) {
+
+		// Markdown link [text](url)
+		if (match[2] && match[3]) {
+			const linkText = match[2];
+			const linkUrl = match[3];
+			const key = stableKey("md-link", linkUrl, match.index);
+			nodes.push(
+				<a
+					className="inline-flex items-center gap-1 text-[#60a5fa] underline decoration-[#60a5fa]/30 underline-offset-[3px] transition-all hover:text-[#93c5fd] hover:decoration-[#93c5fd]/50"
+					href={linkUrl}
+					key={key}
+					rel="noopener noreferrer"
+					target="_blank"
+				>
+					{linkText}
+					<ExternalLinkIcon className="inline-block size-3 shrink-0 opacity-50" />
+				</a>,
+			);
+		}
+		// Raw URL
+		else if (token.startsWith("http")) {
+			// Clean trailing punctuation from URL
+			let url = token.replace(/[.,;:!?)]+$/, "");
+			const openParens = (url.match(/\(/g) || []).length;
+			const closeParens = (url.match(/\)/g) || []).length;
+			if (closeParens > openParens && url.endsWith(")")) {
+				url = url.slice(0, -1);
+			}
+
+			let displayUrl: string;
+			try {
+				const parsed = new URL(url);
+				const domain = parsed.hostname.replace(/^www\./, "");
+				const path = parsed.pathname === "/" ? "" : parsed.pathname;
+				const truncatedPath = path.length > 30 ? `${path.slice(0, 27)}...` : path;
+				displayUrl = domain + truncatedPath;
+			} catch {
+				displayUrl = url.length > 45 ? `${url.slice(0, 42)}...` : url;
+			}
+
+			const key = stableKey("link", url, match.index);
+			nodes.push(
+				<a
+					className="inline-flex items-center gap-1 text-[#60a5fa] underline decoration-[#60a5fa]/30 underline-offset-[3px] transition-all hover:text-[#93c5fd] hover:decoration-[#93c5fd]/50"
+					href={url}
+					key={key}
+					rel="noopener noreferrer"
+					target="_blank"
+				>
+					{displayUrl}
+					<ExternalLinkIcon className="inline-block size-3 shrink-0 opacity-50" />
+				</a>,
+			);
+
+			// Adjust lastIndex if we trimmed the URL
+			if (url.length < token.length) {
+				lastIndex = match.index + url.length;
+				pattern.lastIndex = lastIndex;
+				match = pattern.exec(text);
+				continue;
+			}
+		}
+		// Inline code
+		else if (token.startsWith("`")) {
 			const key = stableKey("inline-code", token, match.index);
 			nodes.push(
 				<code
@@ -212,7 +346,9 @@ function renderInlineMarkdown(text: string, keyPrefix: string) {
 					{token.slice(1, -1)}
 				</code>,
 			);
-		} else if (token.startsWith("$")) {
+		}
+		// Math
+		else if (token.startsWith("$")) {
 			const key = stableKey("math", token, match.index);
 			nodes.push(
 				<span
@@ -223,7 +359,9 @@ function renderInlineMarkdown(text: string, keyPrefix: string) {
 					key={key}
 				/>,
 			);
-		} else {
+		}
+		// Bold
+		else {
 			const key = stableKey("bold", token, match.index);
 			nodes.push(
 				<strong className="font-semibold text-white" key={key}>

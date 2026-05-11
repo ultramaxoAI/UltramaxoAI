@@ -330,7 +330,7 @@ function PureMessages({
 						className="absolute inset-0 touch-pan-y overflow-y-auto"
 						ref={messagesContainerRef}
 					>
-						<div className="mx-auto flex min-w-0 w-full max-w-[820px] flex-col space-y-8 px-6 py-10">
+						<div className="mx-auto flex min-w-0 w-full max-w-[820px] flex-col space-y-5 px-6 py-8">
 							{recoveredFromHiddenMessages ? (
 								<div className="rounded-2xl border border-amber-400/15 bg-amber-400/8 px-4 py-3 text-[12px] text-amber-100/80">
 									Memulihkan percakapan dari data tersimpan. Beberapa bubble yang tidak lengkap tetap ditampilkan agar chat tidak kosong.

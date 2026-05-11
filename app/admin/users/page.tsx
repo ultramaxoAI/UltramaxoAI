@@ -1,7 +1,7 @@
 "use client";
 
 import { formatDistanceToNow } from "date-fns";
-import { Crown, Search, ShieldAlert, Sparkles, Trash2 } from "lucide-react";
+import { ChevronLeft, ChevronRight, Crown, Search, ShieldAlert, Sparkles, Trash2 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
@@ -18,10 +18,13 @@ interface AdminUser {
 	todayMessageCount: number;
 }
 
+const USERS_PER_PAGE = 15;
+
 export default function AdminUsersPage() {
 	const [users, setUsers] = useState<AdminUser[]>([]);
 	const [searchQuery, setSearchQuery] = useState("");
 	const [loading, setLoading] = useState(true);
+	const [currentPage, setCurrentPage] = useState(1);
 
 	useEffect(() => {
 		const fetchUsers = async () => {
@@ -42,6 +45,11 @@ export default function AdminUsersPage() {
 		};
 		fetchUsers();
 	}, []);
+
+	// Reset to page 1 when search changes
+	useEffect(() => {
+		setCurrentPage(1);
+	}, [searchQuery]);
 
 	const handleDeleteUser = async (userId: string) => {
 		if (!window.confirm("Are you sure you want to delete this user?")) return;
@@ -122,6 +130,13 @@ export default function AdminUsersPage() {
 			u.name?.toLowerCase().includes(searchQuery.toLowerCase()),
 	);
 
+	// Pagination
+	const totalPages = Math.max(1, Math.ceil(filteredUsers.length / USERS_PER_PAGE));
+	const safePage = Math.min(currentPage, totalPages);
+	const startIndex = (safePage - 1) * USERS_PER_PAGE;
+	const endIndex = startIndex + USERS_PER_PAGE;
+	const paginatedUsers = filteredUsers.slice(startIndex, endIndex);
+
 	return (
 		<div className="p-8 max-w-6xl mx-auto space-y-8">
 			<div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
@@ -130,7 +145,9 @@ export default function AdminUsersPage() {
 						Users
 					</h1>
 					<p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
-						Manage and monitor user accounts.
+						{loading
+							? "Loading..."
+							: `${filteredUsers.length} user${filteredUsers.length !== 1 ? "s" : ""} total`}
 					</p>
 				</div>
 				<div className="relative">
@@ -168,7 +185,7 @@ export default function AdminUsersPage() {
 										Loading user data...
 									</td>
 								</tr>
-							) : filteredUsers.length === 0 ? (
+							) : paginatedUsers.length === 0 ? (
 								<tr>
 									<td
 										colSpan={6}
@@ -178,7 +195,7 @@ export default function AdminUsersPage() {
 									</td>
 								</tr>
 							) : (
-								filteredUsers.map((user) => {
+								paginatedUsers.map((user) => {
 									const today = user.todayMessageCount ?? 0;
 									const bonus = user.limitCount ?? 0;
 									const dailyLimit = 10;
@@ -294,6 +311,39 @@ export default function AdminUsersPage() {
 						</tbody>
 					</table>
 				</div>
+
+				{/* Pagination */}
+				{!loading && filteredUsers.length > USERS_PER_PAGE && (
+					<div className="flex items-center justify-between border-t border-gray-200 dark:border-white/10 px-6 py-4">
+						<p className="text-xs text-gray-500 dark:text-gray-400">
+							Showing {startIndex + 1}–{Math.min(endIndex, filteredUsers.length)} of{" "}
+							{filteredUsers.length} users
+						</p>
+						<div className="flex items-center gap-2">
+							<button
+								type="button"
+								onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+								disabled={safePage <= 1}
+								className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg border border-gray-200 dark:border-white/10 bg-white dark:bg-white/5 text-gray-700 dark:text-gray-300 transition-colors hover:bg-gray-50 dark:hover:bg-white/10 disabled:opacity-40 disabled:pointer-events-none"
+							>
+								<ChevronLeft size={14} />
+								Previous
+							</button>
+							<span className="text-xs font-medium text-gray-500 dark:text-gray-400 tabular-nums min-w-[80px] text-center">
+								Page {safePage} of {totalPages}
+							</span>
+							<button
+								type="button"
+								onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+								disabled={safePage >= totalPages}
+								className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg border border-gray-200 dark:border-white/10 bg-white dark:bg-white/5 text-gray-700 dark:text-gray-300 transition-colors hover:bg-gray-50 dark:hover:bg-white/10 disabled:opacity-40 disabled:pointer-events-none"
+							>
+								Next
+								<ChevronRight size={14} />
+							</button>
+						</div>
+					</div>
+				)}
 			</div>
 		</div>
 	);

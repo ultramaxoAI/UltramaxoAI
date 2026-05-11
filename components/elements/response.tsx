@@ -30,7 +30,7 @@ export function Response({
 				"[&_h3]:mb-2 [&_h3]:mt-5 [&_h3]:text-[15px] [&_h3]:font-semibold [&_h3]:text-white/90",
 				"[&_h4]:mb-2 [&_h4]:mt-5 [&_h4]:text-[15px] [&_h4]:font-semibold [&_h4]:text-white/90",
 				"[&_strong]:font-semibold [&_strong]:text-white/85",
-				"[&_a]:text-indigo-300/85 [&_a]:underline [&_a]:underline-offset-2 [&_a]:decoration-indigo-300/35 hover:[&_a]:decoration-indigo-300/70",
+				"[&_a]:text-[#60a5fa] [&_a]:underline [&_a]:underline-offset-[3px] [&_a]:decoration-[#60a5fa]/30 hover:[&_a]:text-[#93c5fd] hover:[&_a]:decoration-[#93c5fd]/50",
 				"[&_blockquote]:my-4 [&_blockquote]:border-l-2 [&_blockquote]:border-white/20 [&_blockquote]:pl-4 [&_blockquote]:italic [&_blockquote]:text-white/50",
 				"[&_hr]:my-8 [&_hr]:border-white/5",
 				"[&_code]:whitespace-pre-wrap [&_code]:break-words [&_pre]:max-w-full [&_pre]:overflow-x-auto",
