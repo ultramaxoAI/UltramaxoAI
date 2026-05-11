@@ -4,6 +4,7 @@ import {
 	saveMessages,
 	spendCreditsForUser,
 } from "@backend/db/queries";
+import { checkRateLimit, getClientIp } from "@backend/rateLimiter";
 import { type NextRequest, NextResponse } from "next/server";
 import { auth } from "@/app/(auth)/auth";
 import { generateTitleFromUserMessage } from "@/app/(chat)/actions";
@@ -185,6 +186,17 @@ export async function POST(request: NextRequest) {
 			return NextResponse.json(
 				{ error: "Image generation is a PRO feature. Upgrade to access." },
 				{ status: 403 },
+			);
+		}
+
+		// Rate limiting (SEC-007)
+		const ip = getClientIp(request);
+		const userRate = checkRateLimit(`img:${session.user.id}`, 5, 60_000);
+		const ipRate = checkRateLimit(`img:ip:${ip}`, 10, 60_000);
+		if (!userRate.allowed || !ipRate.allowed) {
+			return NextResponse.json(
+				{ error: "Too many image generation requests. Please wait a moment." },
+				{ status: 429 },
 			);
 		}
 

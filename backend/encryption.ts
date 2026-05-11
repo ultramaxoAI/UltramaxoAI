@@ -10,8 +10,8 @@ const ALGORITHM = "aes-256-gcm";
 function getKey(): Buffer {
 	const secret = process.env.AUTH_SECRET;
 	if (!secret) throw new Error("AUTH_SECRET is not set");
-	// FIX #7: Salt dari environment variable
-	const salt = process.env.ENCRYPTION_SALT || "ultramaxo-salt";
+	const salt = process.env.ENCRYPTION_SALT;
+	if (!salt) throw new Error("ENCRYPTION_SALT is not set");
 	return scryptSync(secret, salt, 32);
 }
 

@@ -7,7 +7,7 @@ import { createOpenAI } from "@ai-sdk/openai";
 // ============================================================
 const maiaApiKey = (process.env.MAIAROUTER_API_KEY || process.env.OPENROUTER_API_KEY_1 || "").trim();
 const swiftRouterApiKey = (process.env.SWIFTROUTER_API_KEY || process.env.SUMOPOD_API_KEY || "").trim();
-const sumoPodApiKey = (process.env.SUMOPOD_API_KEY || "sk-xH8PVl2onLyLIs-6esUn9g").trim();
+const sumoPodApiKey = (process.env.SUMOPOD_API_KEY || "").trim();
 
 // ============================================================
 // Model IDs

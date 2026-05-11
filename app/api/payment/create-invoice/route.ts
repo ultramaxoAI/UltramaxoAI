@@ -1,6 +1,7 @@
 import { createHmac } from "node:crypto";
 import { createPurchaseRequest, db } from "@backend/db/queries";
 import { purchaseRequest, user } from "@backend/db/schema";
+import { checkRateLimit, getClientIp } from "@backend/rateLimiter";
 import { eq } from "drizzle-orm";
 import { NextResponse } from "next/server";
 import { auth } from "@/app/(auth)/auth";
@@ -181,6 +182,17 @@ export async function POST(request: Request) {
 
 		if (!session?.user?.id) {
 			return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+		}
+
+		// Rate limiting (SEC-008)
+		const ip = getClientIp(request);
+		const userRate = checkRateLimit(`invoice:${session.user.id}`, 3, 60_000);
+		const ipRate = checkRateLimit(`invoice:ip:${ip}`, 5, 60_000);
+		if (!userRate.allowed || !ipRate.allowed) {
+			return NextResponse.json(
+				{ error: "Terlalu banyak request. Harap tunggu sebentar." },
+				{ status: 429 },
+			);
 		}
 
 		// 2. Parse body
