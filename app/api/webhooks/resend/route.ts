@@ -9,16 +9,12 @@ export async function POST(req: Request) {
 	try {
 		const body = await req.json();
 
-		// Resend Inbound Payload
+		// Resend Inbound Payload is wrapped in 'data' object
 		// https://resend.com/docs/dashboard/webhooks/inbound
-		const { from, to, subject, text, html, messageId } = body;
-
-		if (!messageId) {
-			return NextResponse.json(
-				{ error: "Invalid payload: missing messageId" },
-				{ status: 400 },
-			);
-		}
+		const payload = body.data || body;
+		const { from, to, subject, text, html, id } = payload;
+		
+		const messageId = id || body.created_at || new Date().getTime().toString();
 
 		// Extract email from "Name <email@domain.com>" format
 		const extractEmail = (str: string) => {
