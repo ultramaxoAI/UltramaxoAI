@@ -34,7 +34,7 @@ export function AdminSidebar() {
 	return (
 		<>
 			{/* Desktop Sidebar */}
-			<aside className="hidden md:flex w-[260px] border-r border-gray-200 dark:border-white/10 bg-white dark:bg-[#0a0a0a] flex-col shrink-0 sticky top-0 h-screen overflow-y-auto">
+			<aside className="hidden md:flex w-[260px] border-r border-gray-200 dark:border-white/10 bg-white dark:bg-[#0a0a0a] flex-col shrink-0 fixed top-0 left-0 h-screen overflow-y-auto z-40">
 				<div className="h-14 flex items-center px-4 border-b border-gray-200 dark:border-white/10">
 					<div className="flex items-center gap-2">
 						<div className="flex items-center justify-center size-6 rounded-md bg-black dark:bg-white text-white dark:text-black">

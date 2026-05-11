@@ -24,7 +24,7 @@ export default async function AdminLayout({
 				}
 			`}</style>
 			<AdminSidebar />
-			<main className="flex-1 min-w-0 pb-20 md:pb-0">
+			<main className="flex-1 min-w-0 pb-20 md:pb-0 md:ml-[260px]">
 				{children}
 			</main>
 		</div>
