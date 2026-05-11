@@ -1,6 +1,19 @@
 import { ArrowLeft } from "lucide-react";
+import type { Metadata } from "next";
 import Link from "next/link";
 
+export const metadata: Metadata = {
+	title: "Careers",
+	description:
+		"Join UltramaxoAI — we're hiring exceptional engineers and designers to build the most advanced AI workspace.",
+	alternates: { canonical: "/careers" },
+	openGraph: {
+		title: "Careers | UltramaxoAI",
+		description:
+			"Join UltramaxoAI — we're hiring exceptional engineers and designers to build the most advanced AI workspace.",
+		url: "https://ultramaxo.tech/careers",
+	},
+};
 export default function CareersPage() {
 	return (
 		<div className="min-h-screen bg-[#050505] text-white selection:bg-white/20 font-body flex flex-col relative overflow-hidden">

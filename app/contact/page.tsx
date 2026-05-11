@@ -1,5 +1,19 @@
 import { ArrowLeft, Mail, Send, Users } from "lucide-react";
+import type { Metadata } from "next";
 import Link from "next/link";
+
+export const metadata: Metadata = {
+	title: "Contact Us",
+	description:
+		"Get in touch with the UltramaxoAI team. Reach us via email or social media for support, sales, or partnership inquiries.",
+	alternates: { canonical: "/contact" },
+	openGraph: {
+		title: "Contact Us | UltramaxoAI",
+		description:
+			"Get in touch with the UltramaxoAI team for support, sales, or partnership inquiries.",
+		url: "https://ultramaxo.tech/contact",
+	},
+};
 
 export default function ContactPage() {
 	return (
@@ -27,7 +41,7 @@ export default function ContactPage() {
 						href="mailto:support@ultramaxo.tech"
 						className="flex-1 flex w-full items-center justify-center gap-3 bg-white/5 border border-white/10 px-6 py-4 rounded-2xl hover:bg-white/10 transition-colors"
 					>
-						<Mail className="w-5 h-5" />
+						<Mail className="w-5 h-5 end-5" />
 						<span className="font-medium">support@ultramaxo.tech</span>
 					</a>
 					<a

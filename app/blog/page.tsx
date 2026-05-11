@@ -1,6 +1,19 @@
 import { ArrowLeft } from "lucide-react";
+import type { Metadata } from "next";
 import Link from "next/link";
 
+export const metadata: Metadata = {
+	title: "Blog",
+	description:
+		"Engineering notes, product updates, and insights on the future of AI workspaces from the UltramaxoAI team.",
+	alternates: { canonical: "/blog" },
+	openGraph: {
+		title: "Blog | UltramaxoAI",
+		description:
+			"Engineering notes, product updates, and insights on the future of AI workspaces.",
+		url: "https://ultramaxo.tech/blog",
+	},
+};
 export default function BlogPage() {
 	return (
 		<div className="min-h-screen bg-[#050505] text-white selection:bg-white/20 font-body flex flex-col relative overflow-hidden">

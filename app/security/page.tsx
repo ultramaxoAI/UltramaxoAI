@@ -1,5 +1,19 @@
 import { ArrowLeft, Lock, Server, Shield } from "lucide-react";
+import type { Metadata } from "next";
 import Link from "next/link";
+
+export const metadata: Metadata = {
+	title: "Security",
+	description:
+		"UltramaxoAI takes data security seriously. Enterprise-grade encryption, isolated infrastructure, and secure API key handling protect your workspace.",
+	alternates: { canonical: "/security" },
+	openGraph: {
+		title: "Security | UltramaxoAI",
+		description:
+			"Enterprise-grade security built into the foundation of your AI workspace.",
+		url: "https://ultramaxo.tech/security",
+	},
+};
 
 export default function SecurityPage() {
 	return (

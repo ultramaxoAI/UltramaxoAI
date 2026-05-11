@@ -1,5 +1,19 @@
 import { ArrowLeft } from "lucide-react";
+import type { Metadata } from "next";
 import Link from "next/link";
+
+export const metadata: Metadata = {
+	title: "Terms of Service",
+	description:
+		"Read UltramaxoAI's Terms of Service. Rules for using the chat, workspace, API Console, billing, premium features, and generated content.",
+	alternates: { canonical: "/terms" },
+	openGraph: {
+		title: "Terms of Service | UltramaxoAI",
+		description:
+			"Rules for using UltramaxoAI's chat, workspace, API Console, and premium features.",
+		url: "https://ultramaxo.tech/terms",
+	},
+};
 
 const sections = [
 	{

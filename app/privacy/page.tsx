@@ -1,5 +1,19 @@
 import { ArrowLeft } from "lucide-react";
+import type { Metadata } from "next";
 import Link from "next/link";
+
+export const metadata: Metadata = {
+	title: "Privacy Policy",
+	description:
+		"Read UltramaxoAI's Privacy Policy. Learn how we handle your account data, chat content, API Console activity, billing records, and connected model providers.",
+	alternates: { canonical: "/privacy" },
+	openGraph: {
+		title: "Privacy Policy | UltramaxoAI",
+		description:
+			"How UltramaxoAI handles your data, chat content, and account information.",
+		url: "https://ultramaxo.tech/privacy",
+	},
+};
 
 const sections = [
 	{
