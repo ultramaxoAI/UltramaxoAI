@@ -487,9 +487,9 @@ function MessageTextPart({
 
 	return (
 		<div className={cn(messageRole === "user" ? "max-w-full flex justify-end" : "max-w-full")}>
-			<MessageContent
-				className={cn("w-full", {
-					"ml-auto inline-flex w-auto max-w-[90%] md:max-w-[75%] whitespace-pre-wrap break-words rounded-[22px] bg-[#2f2f2f] px-5 py-2.5 text-left text-[15px] leading-[1.6] text-white/95 shadow-none":
+			<div
+				className={cn({
+					"inline-block w-auto max-w-[90%] md:max-w-[75%] whitespace-pre-wrap break-words rounded-[22px] bg-[#2f2f2f] px-5 py-2.5 text-left text-[15px] leading-[1.6] text-white/95 shadow-none":
 						messageRole === "user",
 					"w-full bg-transparent px-0 py-0 text-left text-[15.5px] leading-[1.7] text-white/90 md:text-[16px]":
 						messageRole === "assistant",
@@ -504,11 +504,9 @@ function MessageTextPart({
 						isLoading={isLoading}
 					/>
 				) : (
-					<div className="text-[15px] leading-[1.75] text-white/88">
-						<UserTextWithLinks text={displayText} />
-					</div>
+					<UserTextWithLinks text={displayText} />
 				)}
-			</MessageContent>
+			</div>
 			{isHuge && !expanded && (
 				<div className="mt-2 text-center">
 					<button
