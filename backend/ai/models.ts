@@ -13,14 +13,14 @@ export const chatModels: ChatModel[] = [
 		id: "ultramaxo/ultra-agent",
 		name: "UltraAgent",
 		provider: "ultramaxo",
-		description: "Fast and capable AI assistant powered by Qwen 3.6 Plus",
+		description: "Fast and capable AI assistant powered by MiniMax-M2.7-highspeed",
 	},
 	{
 		id: "ultramaxo/ultra-agent-pro",
 		name: "UltraAgent Pro",
 		provider: "ultramaxo",
 		description:
-			"Advanced AI with superior reasoning, deep thinking, and expert-level coding powered by Qwen 3.6 Plus",
+			"Advanced AI with superior reasoning, deep thinking, and expert-level coding powered by Kimi K2.6",
 		isPro: true,
 	},
 	{

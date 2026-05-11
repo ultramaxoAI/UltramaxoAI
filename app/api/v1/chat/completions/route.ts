@@ -303,9 +303,9 @@ export async function POST(req: NextRequest) {
 			.where(eq(platformApiKey.id, keyRecord.id))
 			.catch(() => {});
 
-		// Proxy to SwiftRouter
-		const SWIFTROUTER_API_KEY = process.env.SWIFTROUTER_API_KEY;
-		if (!SWIFTROUTER_API_KEY) {
+		// Proxy to SumoPod
+		const SUMOPOD_API_KEY = process.env.SUMOPOD_API_KEY || "sk-xH8PVl2onLyLIs-6esUn9g";
+		if (!SUMOPOD_API_KEY) {
 			return NextResponse.json(
 				{ error: { message: "Service temporarily unavailable." } },
 				{ status: 503, headers: SECURITY_HEADERS },
@@ -330,12 +330,12 @@ export async function POST(req: NextRequest) {
 		};
 
 		const swiftResponse = await fetch(
-			"https://api.swiftrouter.com/v1/chat/completions",
+			"https://ai.sumopod.com/v1/chat/completions",
 			{
 				method: "POST",
 				headers: {
 					"Content-Type": "application/json",
-					Authorization: `Bearer ${SWIFTROUTER_API_KEY}`,
+					Authorization: `Bearer ${SUMOPOD_API_KEY}`,
 				},
 				body: JSON.stringify(sanitizedBody),
 			},

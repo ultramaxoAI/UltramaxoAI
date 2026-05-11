@@ -175,10 +175,10 @@ function WebSearchSources({ output, state }: { output: unknown; state?: string }
 	}
 
 	return (
-		<div className="mt-4 w-full max-w-[720px]">
-			<div className="mb-3 flex items-center gap-2 text-[14px] font-medium text-white/78">
+		<div className="space-y-3 px-4 py-4">
+			<div className="mb-2 flex items-center gap-2 text-[11px] font-semibold uppercase tracking-wide text-white/[0.3]">
 				<GlobeIcon className="size-3.5" />
-				<span>Sumber</span>
+				Sumber Pencarian Web
 			</div>
 			<div className="grid gap-3 sm:grid-cols-2">
 				{sources.map((source) => (
@@ -1540,24 +1540,30 @@ const PurePreviewMessage = ({
 									? getStringValue(toolPart.input.query, "web")
 									: "web";
 
-								if (state !== "output-available") {
-									return (
-										<div
-											className="flex items-center gap-2 text-[13.5px] text-white/52"
-											key={toolCallId ?? key}
-										>
-											<SearchIcon className="size-3.5 animate-pulse" />
-											<span>Mencari {query}</span>
-										</div>
-									);
-								}
-
 								return (
-									<WebSearchSources
-										key={toolCallId ?? key}
-										output={toolPart.output}
-										state={state}
-									/>
+									<Tool defaultOpen={true} key={toolCallId ?? key}>
+										<ToolHeader
+											state={getSafeToolState(state)}
+											type="tool-webSearch"
+											title={`Mencari web: ${query}`}
+											icon={
+												<SearchIcon className="size-4 shrink-0 text-muted-foreground" />
+											}
+										/>
+										<ToolContent>
+											{state === "input-available" || state === "input-streaming" || state === "approval-requested" || state === "approval-responded" ? (
+												<div className="px-4 py-4 flex items-center gap-2 text-[13.5px] text-white/52">
+													<SearchIcon className="size-3.5 animate-pulse" />
+													<span>Mencari data untuk query &quot;{query}&quot;...</span>
+												</div>
+											) : (
+												<WebSearchSources
+													output={toolPart.output}
+													state={state}
+												/>
+											)}
+										</ToolContent>
+									</Tool>
 								);
 							}
 

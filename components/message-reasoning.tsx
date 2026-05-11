@@ -36,6 +36,8 @@ export function MessageReasoning({
 	isLoading: boolean;
 	reasoning: string;
 }) {
+	if (!isLoading) return null;
+
 	return (
 		<ThinkingIndicator
 			agentLabel={toReasoningLabel(reasoning)}

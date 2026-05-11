@@ -421,6 +421,16 @@ export const MODEL_METADATA: Record<string, ModelMeta> = {
 		priceOut: 1.2,
 		displayName: "MiniMax M2.7",
 	},
+	"MiniMax-M2.7-highspeed": {
+		provider: "MiniMax",
+		capabilities: ["text", "vision", "tools"],
+		context: 205000,
+		maxTokens: null,
+		priceIn: 0.0,
+		priceOut: 0.0,
+		displayName: "MiniMax M2.7 Highspeed",
+		isFree: true,
+	},
 
 	// ─── NVIDIA ───────────────────────────────────────────────
 	"nemotron-3-nano-30b-a3b": {

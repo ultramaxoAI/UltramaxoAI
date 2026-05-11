@@ -6,14 +6,15 @@ import { createOpenAI } from "@ai-sdk/openai";
 // Default API Keys Setup
 // ============================================================
 const maiaApiKey = (process.env.MAIAROUTER_API_KEY || process.env.OPENROUTER_API_KEY_1 || "").trim();
-const swiftRouterApiKey = (process.env.SWIFTROUTER_API_KEY || "").trim();
+const swiftRouterApiKey = (process.env.SWIFTROUTER_API_KEY || process.env.SUMOPOD_API_KEY || "").trim();
+const sumoPodApiKey = (process.env.SUMOPOD_API_KEY || "sk-xH8PVl2onLyLIs-6esUn9g").trim();
 
 // ============================================================
 // Model IDs
 // ============================================================
-const DEFAULT_MODEL = "moonshot/kimi-k2.5";
-const PRO_MODEL = "moonshot/kimi-k2.6";
-const FALLBACK_MODEL = "moonshot/kimi-k2.5";
+const DEFAULT_MODEL = "MiniMax-M2.7-highspeed";
+const PRO_MODEL = "kimi-k2.6";
+const FALLBACK_MODEL = "MiniMax-M2.7-highspeed";
 
 export interface CustomKeyConfig {
 	provider: string;
@@ -66,6 +67,24 @@ function getMaiaRouterModel(modelId: string, customKey?: string) {
 				}
 			}
 			return fetch(url, options);
+		},
+	});
+	return client.chat(modelId);
+}
+
+function getSumoPodModel(modelId: string, customKey?: string) {
+	const key = customKey || sumoPodApiKey;
+	if (!key) {
+		throw new Error(
+			"No SumoPod API key configured. Set SUMOPOD_API_KEY in .env.local",
+		);
+	}
+	const client = createOpenAI({
+		baseURL: "https://ai.sumopod.com/v1",
+		apiKey: key,
+		headers: {
+			"HTTP-Referer": "https://ultramaxo.com",
+			"X-Title": "Ultramaxo AI",
 		},
 	});
 	return client.chat(modelId);
@@ -176,6 +195,8 @@ export const getLanguageModel = (
 					return getAnthropicModel(actualModelId, customConfig.apiKey);
 				case "maia":
 					return getMaiaRouterModel(actualModelId, customConfig.apiKey);
+				case "sumopod":
+					return getSumoPodModel(actualModelId, customConfig.apiKey);
 				case "swiftrouter":
 					return getSwiftRouterModel(actualModelId, customConfig.apiKey);
 				default:
@@ -194,11 +215,11 @@ export const getLanguageModel = (
 		normalized.includes("pro") ||
 		normalized.includes("ultramaxo/")
 	) {
-		console.log("[AI Provider] -> UltraAgent (MaiaRouter Fallback):", modelId);
+		console.log("[AI Provider] -> UltraAgent (SumoPod Fallback):", modelId);
 		const targetModel = normalized.includes("ultra-agent-pro")
 			? PRO_MODEL
 			: DEFAULT_MODEL;
-		return getMaiaRouterModel(targetModel);
+		return getSumoPodModel(targetModel);
 	}
 
 	if (normalized.startsWith("maia/") || normalized.startsWith("xai/")) {
@@ -206,26 +227,26 @@ export const getLanguageModel = (
 		return getMaiaRouterModel(modelId);
 	}
 
-	console.log("[AI Provider] -> Default MaiaRouter Fallback:", DEFAULT_MODEL);
-	return getMaiaRouterModel(DEFAULT_MODEL);
+	console.log("[AI Provider] -> Default SumoPod Passthrough:", modelId);
+	return getSumoPodModel(modelId);
 };
 
 // ============================================================
-// Internal Utility Models (using MAIA Default)
+// Internal Utility Models (using SumoPod Default)
 // ============================================================
 export function getTitleModel() {
-	return getMaiaRouterModel(FALLBACK_MODEL);
+	return getSumoPodModel(FALLBACK_MODEL);
 }
 
 export function getArtifactModel() {
-	return getMaiaRouterModel(FALLBACK_MODEL);
+	return getSumoPodModel(FALLBACK_MODEL);
 }
 
 export function getImageModel() {
-	return getMaiaRouterModel(FALLBACK_MODEL);
+	return getSumoPodModel(FALLBACK_MODEL);
 }
 
 export function getFallbackModel() {
 	console.log("[AI Provider] -> Using FALLBACK model:", FALLBACK_MODEL);
-	return getMaiaRouterModel(FALLBACK_MODEL);
+	return getSumoPodModel(FALLBACK_MODEL);
 }

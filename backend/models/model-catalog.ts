@@ -4,8 +4,8 @@ import { db } from "@backend/db/queries";
 import { modelCatalog, modelCatalogRefreshLog } from "@backend/db/schema";
 import { and, eq, sql } from "drizzle-orm";
 
-const SWIFTROUTER_BASE_URL = "https://api.swiftrouter.com/v1";
-const FREE_MODEL_HINT = "gpt-5.3";
+const SUMOPOD_BASE_URL = "https://ai.sumopod.com/v1";
+const FREE_MODEL_HINT = "minimax-m2.7-highspeed";
 
 const CAPABILITY_OVERRIDES: Record<string, string[]> = {
 	"gpt-5.3": ["text"],
@@ -129,20 +129,20 @@ export async function getModelCatalogById(modelId: string) {
 }
 
 export async function refreshModelCatalog() {
-	const apiKey = process.env.SWIFTROUTER_API_KEY;
+	const apiKey = process.env.SUMOPOD_API_KEY || "sk-xH8PVl2onLyLIs-6esUn9g";
 	if (!apiKey) {
 		await db.insert(modelCatalogRefreshLog).values({
 			status: "error",
-			message: "Missing SWIFTROUTER_API_KEY",
+			message: "Missing SUMOPOD_API_KEY",
 			count: 0,
 		});
-		throw new Error("Missing SWIFTROUTER_API_KEY");
+		throw new Error("Missing SUMOPOD_API_KEY");
 	}
 
 	// Import enrichModel lazily to avoid circular deps
 	const { enrichModel } = await import("@backend/models/model-metadata");
 
-	const response = await fetch(`${SWIFTROUTER_BASE_URL}/models`, {
+	const response = await fetch(`${SUMOPOD_BASE_URL}/models`, {
 		redirect: "follow",
 		headers: {
 			Authorization: `Bearer ${apiKey}`,
@@ -157,7 +157,7 @@ export async function refreshModelCatalog() {
 			message: errorText.slice(0, 500),
 			count: 0,
 		});
-		throw new Error("Failed to fetch SwiftRouter models");
+		throw new Error("Failed to fetch SumoPod models");
 	}
 
 	const models = Array.isArray(payload)

@@ -60,6 +60,8 @@ import {
 	generateId,
 	stepCountIs,
 	streamText,
+	wrapLanguageModel,
+	extractReasoningMiddleware,
 } from "ai";
 import { after } from "next/server";
 import { createResumableStreamContext } from "resumable-stream";
@@ -1132,10 +1134,13 @@ export async function POST(request: Request) {
 
 							const result = streamText({
 								// Use smarter model for Deep Thinking mode
-								model: getLanguageModel(
-									effectiveModel,
-									customConfig, // Pass custom key config
-								),
+								model: wrapLanguageModel({
+									model: getLanguageModel(
+										effectiveModel,
+										customConfig, // Pass custom key config
+									),
+									middleware: extractReasoningMiddleware({ tagName: "think" }),
+								}),
 								system: baseSystemPrompt,
 								messages: finalMessages,
 								stopWhen: stepCountIs(isIdeAgentMode ? 16 : 12),

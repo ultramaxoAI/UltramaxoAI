@@ -1,0 +1,88 @@
+
+ name                               value               environments                        created     
+ REDIS_URL                          Encrypted           Preview, Production                 5d ago      
+ RATE_LIMIT_WINDOW                  Encrypted           Production                          13d ago     
+ RATE_LIMIT_MAX                     Encrypted           Production                          13d ago     
+ YOBASEPAY_SUCCESS_URL              Encrypted           Production                          13d ago     
+ YOBASEPAY_BASE_URL                 Encrypted           Production                          13d ago     
+ YOBASEPAY_WEBHOOK_SECRET           Encrypted           Production                          13d ago     
+ YOBASEPAY_API_KEY                  Encrypted           Production                          13d ago     
+ ADMIN_USERNAME                     Encrypted           Production                          13d ago     
+ ADMIN_EMAIL                        Encrypted           Production                          13d ago     
+ ENABLE_FILE_UPLOAD                 Encrypted           Production                          13d ago     
+ ENABLE_ADMIN_PANEL                 Encrypted           Production                          13d ago     
+ APP_ENV                            Encrypted           Production                          13d ago     
+ NEXT_PUBLIC_APP_URL                Encrypted           Production                          13d ago     
+ NEXTAUTH_URL                       Encrypted           Production                          13d ago     
+ SWIFTROUTER_API_KEY                Encrypted           Production                          18d ago     
+ CRON_SECRET                        Encrypted           Development, Preview, Production    33d ago     
+ SMTP_PORT                          Encrypted           Development, Preview, Production    37d ago     
+ QRIS_CEPAT_API_KEY                 Encrypted           Production                          50d ago     
+ AUTH_REDIRECT_PROXY_URL            Encrypted           Production                          65d ago     
+ DOMPETX_API_KEY                    Encrypted           Production                          78d ago     
+ DOMPETX_MERCHANT_ID                Encrypted           Production                          78d ago     
+ OPENROUTER_API_KEY_1               Encrypted           Production                          80d ago     
+ SMTP_HOST                          Encrypted           Production                          83d ago     
+ SMTP_USER                          Encrypted           Production                          83d ago     
+ SMTP_PASS                          Encrypted           Production                          83d ago     
+ EMAIL_FROM                         Encrypted           Production                          83d ago     
+ GROQ_API_KEY_1                     Encrypted           Production, Preview, Development    99d ago     
+ AUTH_GITHUB_ID                     Encrypted           Production, Preview, Development    99d ago     
+ AUTH_GITHUB_SECRET                 Encrypted           Production, Preview, Development    99d ago     
+ AUTH_GOOGLE_ID                     Encrypted           Development, Preview, Production    100d ago    
+ AUTH_GOOGLE_SECRET                 Encrypted           Development, Preview, Production    100d ago    
+ VITE_NEON_AUTH_URL                 Encrypted           Production, Preview, Development    100d ago    
+ PGPASSWORD                         Encrypted           Production, Preview, Development    100d ago    
+ NEON_PROJECT_ID                    Encrypted           Production, Preview, Development    100d ago    
+ POSTGRES_DATABASE                  Encrypted           Production, Preview, Development    100d ago    
+ PGHOST_UNPOOLED                    Encrypted           Production, Preview, Development    100d ago    
+ PGUSER                             Encrypted           Production, Preview, Development    100d ago    
+ PGHOST                             Encrypted           Production, Preview, Development    100d ago    
+ POSTGRES_URL_NO_SSL                Encrypted           Production, Preview, Development    100d ago    
+ POSTGRES_URL_NON_POOLING           Encrypted           Production, Preview, Development    100d ago    
+ POSTGRES_PASSWORD                  Encrypted           Production, Preview, Development    100d ago    
+ NEON_AUTH_BASE_URL                 Encrypted           Production, Preview, Development    100d ago    
+ POSTGRES_URL                       Encrypted           Production, Preview, Development    100d ago    
+ POSTGRES_PRISMA_URL                Encrypted           Production, Preview, Development    100d ago    
+ DATABASE_URL                       Encrypted           Production, Preview, Development    100d ago    
+ POSTGRES_HOST                      Encrypted           Production, Preview, Development    100d ago    
+ DATABASE_URL_UNPOOLED              Encrypted           Production, Preview, Development    100d ago    
+ PGDATABASE                         Encrypted           Production, Preview, Development    100d ago    
+ POSTGRES_USER                      Encrypted           Production, Preview, Development    100d ago    
+ AUTH_SECRET                        Encrypted           Development, Preview, Production    100d ago    
+ WORMGPT_API_KEY_BACKUP_3           Encrypted           Production                          114d ago    
+ TAVILY_API_KEY                     Encrypted           Production                          131d ago    
+ GROQ_API_KEY                       Encrypted           Production                          134d ago    
+ GROQ_API_KEY_2                     Encrypted           Production                          134d ago    
+ GEMINI_API_KEY_1                   Encrypted           Production                          134d ago    
+ GEMINI_API_KEY_2                   Encrypted           Production                          134d ago    
+ GEMINI_API_KEY_3                   Encrypted           Production                          134d ago    
+ GEMINI_API_KEY_4                   Encrypted           Production                          134d ago    
+ GEMINI_API_KEY_5                   Encrypted           Production                          134d ago    
+ OPENROUTER_API_KEY_3               Encrypted           Production                          134d ago    
+ NEXT_PUBLIC_TURNSTILE_SITE_KEY     Encrypted           Production                          134d ago    
+ TURNSTILE_SECRET_KEY               Encrypted           Production                          134d ago    
+ NEXT_PUBLIC_ADMIN_EMAIL            Encrypted           Production                          134d ago    
+ ADMIN_PASSWORD                     Encrypted           Production                          134d ago    
+ RESEND_API_KEY                     Encrypted           Development, Preview, Production    134d ago    
+ RESEND_FROM                        Encrypted           Development, Preview, Production    134d ago    
+ OPENROUTER_API_KEY                 Encrypted           Production, Preview, Development    134d ago    
+ OPENROUTER_API_KEY_BACKUP          Encrypted           Development, Preview, Production    134d ago    
+ JWT_SECRET                         Encrypted           Development, Preview, Production    134d ago    
+ NEXTAUTH_SECRET                    Encrypted           Development, Preview, Production    134d ago    
+ NEXTAUTH_URL                       Encrypted           Preview, Development                134d ago    
+ APP_ENV                            Encrypted           Development, Preview                134d ago    
+ APP_NAME                           Encrypted           Production, Preview, Development    134d ago    
+ APP_VERSION                        Encrypted           Development, Preview, Production    134d ago    
+ ENCRYPTION_KEY                     Encrypted           Development, Preview, Production    134d ago    
+ ADMIN_USERNAME                     Encrypted           Development, Preview                134d ago    
+ ADMIN_EMAIL                        Encrypted           Preview, Development                134d ago    
+ RATE_LIMIT_MAX                     Encrypted           Development, Preview                134d ago    
+ RATE_LIMIT_WINDOW                  Encrypted           Development, Preview                134d ago    
+ ENABLE_FILE_UPLOAD                 Encrypted           Development, Preview                134d ago    
+ ENABLE_EMAIL_VERIFICATION          Encrypted           Development, Preview, Production    134d ago    
+ ENABLE_ADMIN_PANEL                 Encrypted           Development, Preview                134d ago    
+ WORMGPT_API_KEY                    Encrypted           Development, Preview, Production    134d ago    
+ WORMGPT_API_KEY_BACKUP_1           Encrypted           Development, Preview, Production    134d ago    
+ WORMGPT_API_KEY_BACKUP_2           Encrypted           Development, Preview, Production    134d ago    
+
