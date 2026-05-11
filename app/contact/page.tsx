@@ -1,6 +1,7 @@
 import { ArrowLeft, Mail, Send, Users } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
+import { EmailButton } from "@/components/contact/email-button";
 
 export const metadata: Metadata = {
 	title: "Contact Us",
@@ -37,13 +38,7 @@ export default function ContactPage() {
 					channels below.
 				</p>
 				<div className="flex w-full max-w-2xl flex-col sm:flex-row gap-4 justify-center items-center">
-					<a
-						href="mailto:support@ultramaxo.tech"
-						className="flex-1 flex w-full items-center justify-center gap-3 bg-white/5 border border-white/10 px-6 py-4 rounded-2xl hover:bg-white/10 transition-colors"
-					>
-						<Mail className="w-5 h-5 end-5" />
-						<span className="font-medium">support@ultramaxo.tech</span>
-					</a>
+					<EmailButton />
 					<a
 						href="https://whatsapp.com/channel/0029VbCYCY6HltYHdOeG660L"
 						target="_blank"
