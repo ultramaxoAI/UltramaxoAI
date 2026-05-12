@@ -305,9 +305,24 @@ function PureMessages({
 		lastUserIndex !== -1 &&
 		(waitingForAssistantResponse ||
 			(liveThinking.enabled && !hasRenderableAssistantAfterLastUser));
+
+	// Check if the last assistant message already has its own reasoning-based
+	// AgentThinkingPanel to avoid rendering a duplicate at the list level
+	const lastAssistantMessage = assistantsAfterLastUser[assistantsAfterLastUser.length - 1];
+	const lastMessageHasReasoningPanel = (() => {
+		if (!lastAssistantMessage) return false;
+		const parts = Array.isArray(lastAssistantMessage.parts) ? lastAssistantMessage.parts : [];
+		return parts.some((part) => {
+			if (!part || typeof part !== "object" || !("type" in part)) return false;
+			if (part.type === "reasoning" && (part as { text?: string }).text?.trim()) return true;
+			if (String(part.type).includes("tool")) return true;
+			return false;
+		});
+	})();
+
 	const showToolAgentPanel =
-		shouldRenderThinking && agentStream.steps.length > 0;
-	const showSimpleThinking = shouldRenderThinking && !showToolAgentPanel;
+		shouldRenderThinking && agentStream.steps.length > 0 && !lastMessageHasReasoningPanel;
+	const showSimpleThinking = shouldRenderThinking && !showToolAgentPanel && !lastMessageHasReasoningPanel;
 
 	useEffect(() => {
 		if (shouldRenderThinking) {
