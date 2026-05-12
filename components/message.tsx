@@ -673,6 +673,13 @@ const PurePreviewMessage = ({
 			: hasRunningAgentStep || isLoading
 				? "thinking"
 				: "done";
+	// When agent mode is actively running, delay showing text/output parts
+	// so the agent thinking panel finishes its animation first
+	const agentStillRunning =
+		hasAgentThinkingPanel &&
+		isLoading &&
+		(agentPanelStatus === "thinking" || agentPanelStatus === "executing");
+
 	const timestamp = formatMessageTimestamp(message);
 	const hasRenderablePart = messageParts.some((part) => {
 		const normalizedType = getNormalizedPartType(part);
@@ -813,6 +820,10 @@ const PurePreviewMessage = ({
 							}
 
 							if (normalizedType === "text") {
+								// Hide text output while agent mode is actively thinking
+								if (agentStillRunning && message.role === "assistant") {
+									return null;
+								}
 								const textPart = part as { text?: string };
 								if (mode === "view") {
 									const rawText = sanitizeText(textPart.text ?? "");
@@ -1627,7 +1638,7 @@ const PurePreviewMessage = ({
 						}
 					})}
 
-					{!hasTextPart && fallbackContent.trim() ? (
+					{!hasTextPart && !agentStillRunning && fallbackContent.trim() ? (
 						<MessageTextPart
 							rawText={sanitizeText(fallbackContent)}
 							isHuge={fallbackContent.length > 15_000}

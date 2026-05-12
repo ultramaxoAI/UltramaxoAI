@@ -542,13 +542,21 @@ function CodeBlock({ code, language }: { code: string; language: string }) {
 	);
 }
 
+function isTableRow(line: string) {
+	return /^\|.+\|$/.test(line.trim());
+}
+
+function isTableSeparator(line: string) {
+	return /^\|?\s*:?-{1,}:?\s*(\|\s*:?-{1,}:?\s*)+\|?$/.test(line.trim());
+}
+
 function parseTable(section: string) {
 	const lines = section.split("\n").map((line) => line.trim());
-	if (lines.length < 2 || !lines.every((line) => /^\|.+\|$/.test(line))) {
+	if (lines.length < 2 || !lines.every((line) => isTableRow(line))) {
 		return null;
 	}
 
-	if (!/^\|?\s*:?-{3,}:?\s*(\|\s*:?-{3,}:?\s*)+\|?$/.test(lines[1])) {
+	if (!isTableSeparator(lines[1])) {
 		return null;
 	}
 
@@ -563,13 +571,88 @@ function parseTable(section: string) {
 		);
 }
 
+/**
+ * Extract table regions from a section that might contain mixed content.
+ * Returns an array of { type: 'text' | 'table', content: string } segments.
+ */
+function splitTableFromText(section: string): Array<{ type: "text" | "table"; content: string }> {
+	const lines = section.split("\n");
+	const segments: Array<{ type: "text" | "table"; content: string }> = [];
+	const textBuffer: string[] = [];
+	const tableBuffer: string[] = [];
+	let inTable = false;
+
+	const flushText = () => {
+		if (textBuffer.length > 0) {
+			segments.push({ type: "text", content: textBuffer.join("\n") });
+			textBuffer.length = 0;
+		}
+	};
+
+	const flushTable = () => {
+		if (tableBuffer.length > 0) {
+			segments.push({ type: "table", content: tableBuffer.join("\n") });
+			tableBuffer.length = 0;
+		}
+		inTable = false;
+	};
+
+	for (let i = 0; i < lines.length; i++) {
+		const line = lines[i];
+		const trimmed = line.trim();
+
+		if (inTable) {
+			if (isTableRow(trimmed)) {
+				tableBuffer.push(trimmed);
+			} else {
+				flushTable();
+				textBuffer.push(line);
+			}
+			continue;
+		}
+
+		// Check if this line starts a table: current line is a table row,
+		// and next line is a separator
+		if (
+			isTableRow(trimmed) &&
+			i + 1 < lines.length &&
+			isTableSeparator(lines[i + 1].trim())
+		) {
+			flushText();
+			inTable = true;
+			tableBuffer.push(trimmed);
+			continue;
+		}
+
+		textBuffer.push(line);
+	}
+
+	if (inTable) {
+		flushTable();
+	}
+	flushText();
+
+	return segments;
+}
+
 function TextBlock({ block, blockKey }: { block: string; blockKey: string }) {
 	const normalized = block.replace(/\r\n/g, "\n").trim();
 	if (!normalized) {
 		return null;
 	}
 
-	const sections = normalized.split(/\n{2,}/).filter(Boolean);
+	// First split by double newlines into raw sections
+	const rawSections = normalized.split(/\n{2,}/).filter(Boolean);
+	// Then split out any inline tables from each section
+	const sections: string[] = [];
+	for (const raw of rawSections) {
+		const segments = splitTableFromText(raw);
+		for (const seg of segments) {
+			if (seg.content.trim()) {
+				sections.push(seg.content);
+			}
+		}
+	}
 	const keyedSections = sections.map((section, sectionIndex) => ({
 		key: stableKey("section", `${blockKey}-${section}`, sectionIndex),
 		section,
