@@ -460,12 +460,21 @@ export async function POST(request: Request) {
 				});
 			}
 
-			// Per-account rate limiting: 10 chat requests per minute per user
+			// Per-account rate limiting
 			const clientIp = getClientIp(request);
 			const userKey = `user:${session.user.id}:chat`;
 			const ipKey = `ip:${clientIp}:chat`;
 
-			const userRate = checkRateLimit(userKey, 10, 60_000); // 10 requests per minute
+			let isProLimit = false;
+			try {
+				const [user] = await getUserById(session.user.id);
+				isProLimit = user?.isPro === true;
+			} catch (_) {
+				// Fallback to free limit on error
+			}
+			const userLimit = isProLimit ? 15 : 10;
+
+			const userRate = checkRateLimit(userKey, userLimit, 60_000); // Dynamic limit based on Pro status
 			const ipRate = checkRateLimit(ipKey, 30, 60_000);
 
 			if (!userRate.allowed || !ipRate.allowed) {
