@@ -176,32 +176,35 @@ function WebSearchSources({ output, state }: { output: unknown; state?: string }
 	}
 
 	return (
-		<div className="space-y-3 px-4 py-4">
-			<div className="mb-2 flex items-center gap-2 text-[11px] font-semibold uppercase tracking-wide text-white/[0.3]">
+		<div className="px-4 py-3">
+			<div className="mb-3 flex items-center gap-2 text-[10.5px] font-medium uppercase tracking-[0.08em] text-white/40">
 				<GlobeIcon className="size-3.5" />
-				Sumber Pencarian Web
+				Sources
 			</div>
-			<div className="grid gap-3 sm:grid-cols-2">
-				{sources.map((source) => (
+			<div className="flex flex-wrap gap-2">
+				{sources.map((source, i) => (
 					<a
-						className="group/source rounded-2xl border border-white/[0.12] bg-white/[0.045] p-4 transition-colors hover:border-white/[0.2] hover:bg-white/[0.075]"
+						className="group/source flex items-center gap-2.5 rounded-full border border-white/[0.08] bg-white/[0.02] py-1.5 pl-1.5 pr-3.5 transition-all duration-300 hover:border-white/[0.2] hover:bg-white/[0.06]"
 						href={source.url}
 						key={source.url}
 						rel="noreferrer"
 						target="_blank"
+						title={source.title}
 					>
-						<div className="mb-2 flex items-center justify-between gap-3 text-[13px] text-white/62">
-							<span className="min-w-0 truncate">{source.domain}</span>
-							<ExternalLinkIcon className="size-3.5 shrink-0 opacity-45 transition-opacity group-hover/source:opacity-80" />
+						<div className="flex size-[22px] shrink-0 items-center justify-center rounded-full bg-white/[0.08] overflow-hidden">
+							{/* eslint-disable-next-line @next/next/no-img-element */}
+							<img src={`https://www.google.com/s2/favicons?domain=${source.domain}&sz=32`} alt="" className="size-3.5" />
 						</div>
-						<div className="line-clamp-2 text-[15px] leading-[1.45] text-white/90">
-							{source.title}
+						<div className="flex max-w-[150px] flex-col justify-center">
+							<span className="truncate text-[12.5px] font-medium leading-[1.2] text-white/80 transition-colors group-hover/source:text-white">
+								{source.domain}
+							</span>
+							{source.title && (
+								<span className="truncate text-[10px] leading-[1.2] text-white/40 transition-colors group-hover/source:text-white/60">
+									{source.title}
+								</span>
+							)}
 						</div>
-						{source.content ? (
-							<div className="mt-2 line-clamp-2 text-[13px] leading-[1.55] text-white/58">
-								{source.content}
-							</div>
-						) : null}
 					</a>
 				))}
 			</div>
