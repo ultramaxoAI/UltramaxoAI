@@ -5,6 +5,7 @@ import { Fragment, useEffect, useState } from "react";
 import { useMessages } from "@/hooks/use-messages";
 import type { ChatMessage } from "@/lib/types";
 import { AgentThinkingPanel } from "./agent-thinking-panel";
+import { ReasoningBlock, ToolBlock } from "./AgentUI"; // <--- Tambah ini
 import { useDataStream } from "./data-stream-provider";
 import { Greeting } from "./greeting";
 import { PreviewMessage } from "./message";

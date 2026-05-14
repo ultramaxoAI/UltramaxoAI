@@ -41,6 +41,7 @@ import {
 	type AgentThinkingStep,
 	MessageReasoning,
 } from "./message-reasoning";
+import { ReasoningBlock } from "./AgentUI";
 import { PreviewAttachment } from "./preview-attachment";
 import { ResponseViewer } from "./response-viewer";
 import { Weather, type WeatherAtLocation } from "./weather";
@@ -708,6 +709,12 @@ const PurePreviewMessage = ({
 			getNormalizedPartType(part) === "text" &&
 			Boolean(sanitizeText((part as { text?: string }).text ?? "").trim()),
 	);
+	const hasToolPart = messageParts.some((part) =>
+		getNormalizedPartType(part).startsWith("tool-")
+	);
+	const hasReasoningPart = messageParts.some(
+		(part) => getNormalizedPartType(part) === "reasoning"
+	);
 	const hasRenderableAnnotation = Boolean(
 		!hasDocumentToolPart &&
 			message.annotations?.some((annotation) => {
@@ -721,6 +728,8 @@ const PurePreviewMessage = ({
 				);
 			}),
 	);
+
+	const isReasoningFinished = !isLoading || hasTextPart || hasToolPart || hasRenderableAnnotation || hasDocumentToolPart;
 	const shouldShowAssistantActions =
 		message.role === "user" ||
 		hasTextPart ||
@@ -801,27 +810,30 @@ const PurePreviewMessage = ({
 						const key = `message-${message.id}-part-${index}`;
 
 						try {
+// ... (di bagian rendering message parts, tambahkan)
 							if (normalizedType === "reasoning") {
 								const reasoningPart = part as { text?: string };
+								
+								// Don't render reasoning block if there's no content yet
+								if (!reasoningPart.text || reasoningPart.text.trim().length === 0) {
+									return null;
+								}
+
 								if (hasAgentThinkingPanel) {
 									return null;
 								}
-								const hasContent = (reasoningPart.text?.trim().length ?? 0) > 0;
-								const isStreaming = getPartState(part) === "streaming";
-								if (hasContent || isStreaming) {
-									return (
-										<MessageReasoning
-											isLoading={isLoading || isStreaming}
-											key={key}
-											reasoning={reasoningPart.text || ""}
-										/>
-									);
-								}
+								// Gunakan ReasoningBlock baru kita
+								return <ReasoningBlock key={key} content={reasoningPart.text || ""} isFinished={isReasoningFinished} />;
+							}
+
+							// HIDE ALL NON-REASONING PARTS IF REASONING IS STILL ACTIVE
+							if (!isReasoningFinished) {
+								return null;
 							}
 
 							if (normalizedType === "text") {
 								// Hide text output while agent mode is actively thinking
-								if (agentStillRunning && message.role === "assistant") {
+								if ((agentStillRunning || isLoading) && message.role === "assistant" && !hasTextPart) {
 									return null;
 								}
 								const textPart = part as { text?: string };
@@ -1649,7 +1661,7 @@ const PurePreviewMessage = ({
 					) : null}
 
 					{/* Render tool events injected via message annotations */}
-					{!hasDocumentToolPart && message.annotations?.map((annotation, index) => {
+					{!hasDocumentToolPart && isReasoningFinished && message.annotations?.map((annotation, index) => {
 						const key = `message-${message.id}-annotation-${index}`;
 						const parsed =
 							typeof annotation === "object" && annotation !== null
