@@ -16,19 +16,6 @@ function toReasoningChunks(reasoning: string) {
 	return normalized.trim() ? [normalized] : [];
 }
 
-function toReasoningLabel(reasoning: string) {
-	const cleaned = reasoning
-		.replace(/\*\*([\s\S]+?)\*\*/g, "$1")
-		.replace(/\s+/g, " ")
-		.trim();
-
-	if (!cleaned) {
-		return undefined;
-	}
-
-	return cleaned.length > 72 ? `${cleaned.slice(0, 69)}...` : cleaned;
-}
-
 export function MessageReasoning({
 	isLoading,
 	reasoning,
@@ -40,7 +27,6 @@ export function MessageReasoning({
 
 	return (
 		<ThinkingIndicator
-			agentLabel={toReasoningLabel(reasoning)}
 			isActive={isLoading}
 			thinkingChunks={toReasoningChunks(reasoning)}
 		/>

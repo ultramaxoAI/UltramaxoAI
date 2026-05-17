@@ -30,15 +30,15 @@ type Message = {
 };
 
 // ── Tool label map ─────────────────────────────────────────────────────
-const TOOL_META: Record<string, { label: string; icon: string; color: string }> = {
-  web_search:    { label: "Searching the web",     icon: "🔍", color: "#3B82F6" },
-  generate_chart:{ label: "Generating chart",      icon: "📊", color: "#8B5CF6" },
-  analyze_file:  { label: "Analyzing file",        icon: "📄", color: "#10B981" },
+const TOOL_META: Record<string, string> = {
+  web_search: "web_search",
+  generate_chart: "generate_chart",
+  analyze_file: "analyze_file",
 };
 
 // ── Mini chart renderer (Canvas-free, SVG) ─────────────────────────────
 function MiniChart({ chart }: { chart: ChartData }) {
-  const COLORS = ["#3B82F6","#8B5CF6","#10B981","#F59E0B","#EF4444","#06B6D4"];
+  const COLORS = ["#3B82F6", "rgba(255,255,255,0.56)", "rgba(255,255,255,0.42)", "rgba(255,255,255,0.30)", "rgba(255,255,255,0.22)"];
   const total = chart.data.reduce((s, d) => s + d.value, 0);
 
   if (chart.type === "pie") {
@@ -56,8 +56,8 @@ function MiniChart({ chart }: { chart: ChartData }) {
     });
 
     return (
-      <div style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 12, padding: "16px", marginTop: 8 }}>
-        <p style={{ margin: "0 0 12px", fontSize: 13, fontWeight: 600, color: "#fff" }}>{chart.title}</p>
+      <div style={{ background: "rgba(255,255,255,0.04)", border: "0.5px solid rgba(255,255,255,0.09)", borderRadius: 8, padding: "16px", marginTop: 8 }}>
+        <p style={{ margin: "0 0 12px", fontSize: 13, fontWeight: 500, color: "rgba(255,255,255,0.85)" }}>{chart.title}</p>
         <div style={{ display: "flex", gap: 20, alignItems: "center", flexWrap: "wrap" }}>
           <svg width={160} height={160} viewBox="0 0 160 160">
             {slices.map((s, i) => <path key={i} d={s.d} fill={s.color} stroke="#0a0a0a" strokeWidth={2} />)}
@@ -66,7 +66,7 @@ function MiniChart({ chart }: { chart: ChartData }) {
             {slices.map((s, i) => (
               <div key={i} style={{ display: "flex", alignItems: "center", gap: 8 }}>
                 <span style={{ width: 10, height: 10, borderRadius: 2, background: s.color, flexShrink: 0 }} />
-                <span style={{ fontSize: 12, color: "rgba(255,255,255,0.7)" }}>{s.label}</span>
+                <span style={{ fontSize: 12, color: "rgba(255,255,255,0.85)" }}>{s.label}</span>
                 <span style={{ fontSize: 12, color: "rgba(255,255,255,0.4)", marginLeft: "auto" }}>{((s.value / total) * 100).toFixed(1)}%</span>
               </div>
             ))}
@@ -79,14 +79,14 @@ function MiniChart({ chart }: { chart: ChartData }) {
   if (chart.type === "bar") {
     const max = Math.max(...chart.data.map(d => d.value));
     return (
-      <div style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 12, padding: "16px", marginTop: 8 }}>
-        <p style={{ margin: "0 0 16px", fontSize: 13, fontWeight: 600, color: "#fff" }}>{chart.title}</p>
+      <div style={{ background: "rgba(255,255,255,0.04)", border: "0.5px solid rgba(255,255,255,0.09)", borderRadius: 8, padding: "16px", marginTop: 8 }}>
+        <p style={{ margin: "0 0 16px", fontSize: 13, fontWeight: 500, color: "rgba(255,255,255,0.85)" }}>{chart.title}</p>
         <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
           {chart.data.map((d, i) => (
             <div key={i} style={{ display: "flex", alignItems: "center", gap: 10 }}>
               <span style={{ fontSize: 12, color: "rgba(255,255,255,0.5)", width: 90, flexShrink: 0, textAlign: "right" }}>{d.label}</span>
               <div style={{ flex: 1, height: 24, background: "rgba(255,255,255,0.06)", borderRadius: 4, overflow: "hidden" }}>
-                <div style={{ width: `${(d.value / max) * 100}%`, height: "100%", background: COLORS[i % COLORS.length], borderRadius: 4, transition: "width 0.8s cubic-bezier(0.16,1,0.3,1)" }} />
+                <div style={{ width: `${(d.value / max) * 100}%`, height: "100%", background: COLORS[i % COLORS.length], borderRadius: 4 }} />
               </div>
               <span style={{ fontSize: 12, color: "rgba(255,255,255,0.6)", minWidth: 36, textAlign: "right" }}>{d.value}</span>
             </div>
@@ -101,58 +101,20 @@ function MiniChart({ chart }: { chart: ChartData }) {
 
 // ── Tool block ─────────────────────────────────────────────────────────
 export function ToolBlock({ toolCall }: { toolCall: ToolCall }) {
-  const [expanded, setExpanded] = useState(toolCall.status === "running");
-  const meta = TOOL_META[toolCall.tool] ?? { label: toolCall.tool, icon: "⚙️", color: "#888" };
-
-  useEffect(() => {
-    if (toolCall.status === "done") {
-      setExpanded(false);
-    }
-  }, [toolCall.status]);
+  const label = TOOL_META[toolCall.tool] ?? toolCall.tool;
 
   return (
-    <div style={{ margin: "6px 0", borderRadius: 8, overflow: "hidden", border: "1px solid rgba(255,255,255,0.08)" }}>
-      <button
-        onClick={() => setExpanded(e => !e)}
-        style={{
-          width: "100%", display: "flex", alignItems: "center", gap: 10,
-          padding: "8px 12px", background: "rgba(255,255,255,0.04)",
-          border: "none", cursor: "pointer", textAlign: "left",
-        }}
-      >
-        <span style={{ fontSize: 14 }}>{meta.icon}</span>
-        <span style={{ fontSize: 12, color: meta.color, fontWeight: 500 }}>{meta.label}</span>
-        {toolCall.status === "running" && (
-          <span style={{ marginLeft: "auto", display: "flex", gap: 3 }}>
-            {[0,1,2].map(i => (
-              <span key={i} style={{
-                width: 4, height: 4, borderRadius: "50%", background: meta.color,
-                animation: `bounce 1.2s ${i * 0.2}s infinite`,
-              }} />
-            ))}
-          </span>
-        )}
-        {toolCall.status === "done" && <span style={{ marginLeft: "auto", fontSize: 11, color: "#10B981" }}>✓ done</span>}
-        <span style={{ marginLeft: toolCall.status === "running" ? 4 : "auto", fontSize: 10, color: "rgba(255,255,255,0.3)" }}>
-          {expanded ? "▲" : "▼"}
-        </span>
-      </button>
-      {expanded && (
-        <div style={{ padding: "10px 12px", background: "rgba(0,0,0,0.2)", borderTop: "1px solid rgba(255,255,255,0.06)" }}>
-          <p style={{ fontSize: 11, color: "rgba(255,255,255,0.4)", margin: "0 0 6px" }}>Input</p>
-          <pre style={{ fontSize: 11, color: "rgba(255,255,255,0.7)", margin: 0, whiteSpace: "pre-wrap", wordBreak: "break-all" }}>
-            {JSON.stringify(toolCall.args, null, 2)}
-          </pre>
-          {toolCall.result && (
-            <>
-              <p style={{ fontSize: 11, color: "rgba(255,255,255,0.4)", margin: "10px 0 6px" }}>Output</p>
-              <pre style={{ fontSize: 11, color: "rgba(255,255,255,0.7)", margin: 0, whiteSpace: "pre-wrap", wordBreak: "break-all" }}>
-                {JSON.stringify(toolCall.result, null, 2)}
-              </pre>
-            </>
-          )}
-        </div>
-      )}
+    <div style={{
+      margin: "6px 0",
+      color: "rgba(255,255,255,0.35)",
+      fontFamily: "ui-monospace, SFMono-Regular, Menlo, Consolas, monospace",
+      fontSize: 12,
+      lineHeight: 1.5,
+    }}>
+      <span>{label}</span>
+      <span style={{ marginLeft: 8 }}>
+        {toolCall.status === "done" ? <span style={{ color: "#10B981" }}>✓ done</span> : `${toolCall.status}...`}
+      </span>
     </div>
   );
 }
@@ -170,22 +132,29 @@ export function ReasoningBlock({ content, isFinished }: { content: string, isFin
   if (!content && isFinished) return null;
 
   return (
-    <div style={{ margin: "12px 0", borderRadius: 8, overflow: "hidden", border: "1px solid rgba(255,255,255,0.08)", background: "rgba(0,0,0,0.2)" }}>
+    <div style={{ margin: "12px 0", borderRadius: 8, overflow: "hidden", border: "0.5px solid rgba(255,255,255,0.09)", background: "rgba(255,255,255,0.04)" }}>
       <button
         onClick={() => setExpanded(e => !e)}
         style={{
-          width: "100%", display: "flex", alignItems: "center", gap: 10,
-          padding: "8px 12px", background: "rgba(255,255,255,0.02)",
-          border: "none", borderBottom: expanded && content ? "1px solid rgba(255,255,255,0.04)" : "none",
-          cursor: "pointer", textAlign: "left", fontSize: 12, color: "rgba(255,255,255,0.6)"
+          width: "100%", display: "flex", alignItems: "center", gap: 8,
+          padding: "9px 12px", background: "transparent",
+          border: "none", borderBottom: expanded && content ? "1px solid rgba(255,255,255,0.08)" : "none",
+          cursor: "pointer", textAlign: "left", fontSize: 12, color: "rgba(255,255,255,0.85)", fontWeight: 500,
+          fontFamily: "inherit",
         }}
       >
-        <span>✦</span>
-        {isFinished ? "Thinking Process (Completed)" : "Thinking..."}
-        <span style={{ marginLeft: "auto", fontSize: 10, opacity: 0.5 }}>{expanded ? "▲" : "▼"}</span>
+        <span>Thinking{isFinished ? "" : "..."}</span>
+        <span style={{ marginLeft: "auto", fontSize: 11, opacity: 0.45 }}>{expanded ? "↓" : "→"}</span>
       </button>
       {expanded && content && (
-        <div style={{ padding: "12px 14px", fontSize: 13, color: "rgba(255,255,255,0.7)", whiteSpace: "pre-wrap", fontFamily: "monospace", lineHeight: 1.6 }}>
+        <div style={{
+          padding: "12px 14px",
+          fontSize: 13,
+          color: "rgba(255,255,255,0.85)",
+          whiteSpace: "pre-wrap",
+          fontFamily: "ui-monospace, SFMono-Regular, Menlo, Consolas, monospace",
+          lineHeight: 1.65,
+        }}>
           {content}
         </div>
       )}
@@ -200,21 +169,20 @@ function MessageView({ msg }: { msg: Message }) {
     <div style={{ display: "flex", flexDirection: "column", alignItems: isUser ? "flex-end" : "flex-start", gap: 4, marginBottom: 20 }}>
       {!isUser && (
         <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
-          <div style={{ width: 24, height: 24, borderRadius: "50%", background: "linear-gradient(135deg,#3B82F6,#8B5CF6)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 12 }}>✦</div>
-          <span style={{ fontSize: 12, color: "rgba(255,255,255,0.4)", fontWeight: 500 }}>Agent</span>
+          <span style={{ fontSize: 12, color: "rgba(255,255,255,0.35)", fontWeight: 500 }}>Ultramaxo Agent</span>
         </div>
       )}
 
       {isUser ? (
         <div style={{
-          maxWidth: "72%", padding: "10px 14px", borderRadius: "16px 16px 4px 16px",
-          background: "rgba(59,130,246,0.15)", border: "1px solid rgba(59,130,246,0.25)",
-          fontSize: 14, color: "rgba(255,255,255,0.9)", lineHeight: 1.6,
+          maxWidth: "72%", padding: "10px 14px", borderRadius: 8,
+          background: "rgba(255,255,255,0.04)", border: "0.5px solid rgba(255,255,255,0.09)",
+          fontSize: 14, color: "rgba(255,255,255,0.85)", lineHeight: 1.65,
         }}>
           {msg.fileAttachment && (
-            <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 8, padding: "6px 10px", background: "rgba(255,255,255,0.05)", borderRadius: 6 }}>
-              <span>📎</span>
-              <span style={{ fontSize: 12, color: "rgba(255,255,255,0.6)" }}>{msg.fileAttachment.name}</span>
+            <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 8, padding: "6px 0" }}>
+              <span style={{ fontSize: 12, color: "rgba(255,255,255,0.35)" }}>File</span>
+              <span style={{ fontSize: 12, color: "rgba(255,255,255,0.85)" }}>{msg.fileAttachment.name}</span>
             </div>
           )}
           {msg.blocks.map((b, i) => b.kind === "text" ? <span key={i}>{b.content}</span> : null)}
@@ -400,10 +368,6 @@ export default function AgentUI() {
       <style>{`
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body { background: #080808; }
-        @keyframes bounce {
-          0%,80%,100% { transform: translateY(0); opacity: 0.4; }
-          40% { transform: translateY(-4px); opacity: 1; }
-        }
         textarea:focus { outline: none; }
         ::-webkit-scrollbar { width: 4px; }
         ::-webkit-scrollbar-track { background: transparent; }
@@ -412,21 +376,20 @@ export default function AgentUI() {
 
       <div style={{
         display: "flex", flexDirection: "column", height: "100vh",
-        background: "#080808", color: "#fff", fontFamily: "'Inter', system-ui, sans-serif",
+        background: "#080808", color: "rgba(255,255,255,0.85)", fontFamily: "'Inter', system-ui, sans-serif",
       }}>
         {/* Header */}
         <div style={{
-          padding: "14px 20px", borderBottom: "1px solid rgba(255,255,255,0.06)",
+          padding: "14px 20px", borderBottom: "1px solid rgba(255,255,255,0.09)",
           display: "flex", alignItems: "center", gap: 12, flexShrink: 0,
         }}>
-          <div style={{ width: 32, height: 32, borderRadius: "50%", background: "linear-gradient(135deg,#3B82F6,#8B5CF6)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 16 }}>✦</div>
           <div>
-            <p style={{ fontSize: 14, fontWeight: 600, color: "#fff" }}>Ultramaxo Agent</p>
-            <p style={{ fontSize: 11, color: "rgba(255,255,255,0.4)" }}>Search · Chart · Analyze</p>
+            <p style={{ fontSize: 14, fontWeight: 500, color: "rgba(255,255,255,0.85)" }}>Ultramaxo Agent</p>
+            <p style={{ fontSize: 11, color: "rgba(255,255,255,0.35)" }}>Search · Chart · Analyze</p>
           </div>
           <div style={{ marginLeft: "auto", display: "flex", alignItems: "center", gap: 6 }}>
             <span style={{ width: 6, height: 6, borderRadius: "50%", background: "#10B981" }} />
-            <span style={{ fontSize: 11, color: "rgba(255,255,255,0.4)" }}>Online</span>
+            <span style={{ fontSize: 11, color: "rgba(255,255,255,0.35)" }}>Online</span>
           </div>
         </div>
 
@@ -434,17 +397,16 @@ export default function AgentUI() {
         <div style={{ flex: 1, overflowY: "auto", padding: "20px 20px 0" }}>
           {messages.length === 0 && (
             <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", height: "60%", gap: 12 }}>
-              <div style={{ fontSize: 40 }}>✦</div>
-              <p style={{ fontSize: 18, fontWeight: 600, color: "rgba(255,255,255,0.7)" }}>Ultramaxo Agent</p>
+              <p style={{ fontSize: 18, fontWeight: 500, color: "rgba(255,255,255,0.85)" }}>Ultramaxo Agent</p>
               <p style={{ fontSize: 13, color: "rgba(255,255,255,0.3)", textAlign: "center", maxWidth: 340, lineHeight: 1.6 }}>
                 Tanya apa aja — aku bisa search web, bikin chart, dan analisis file kamu secara otomatis.
               </p>
               <div style={{ display: "flex", gap: 8, flexWrap: "wrap", justifyContent: "center", marginTop: 8 }}>
                 {["Cari berita ekonomi terbaru", "Buat pie chart pangsa pasar", "Analisis file ini"].map(s => (
                   <button key={s} onClick={() => setInput(s)} style={{
-                    padding: "8px 14px", borderRadius: 20, border: "1px solid rgba(255,255,255,0.1)",
-                    background: "rgba(255,255,255,0.04)", color: "rgba(255,255,255,0.6)",
-                    fontSize: 12, cursor: "pointer",
+                    padding: "7px 0", borderRadius: 0, border: "none",
+                    background: "transparent", color: "rgba(255,255,255,0.35)",
+                    fontSize: 12, cursor: "pointer", fontFamily: "inherit",
                   }}>{s}</button>
                 ))}
               </div>
@@ -456,10 +418,10 @@ export default function AgentUI() {
 
         {/* File preview */}
         {file && (
-          <div style={{ margin: "0 20px 8px", padding: "8px 12px", background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 8, display: "flex", alignItems: "center", gap: 8 }}>
-            <span>📎</span>
-            <span style={{ fontSize: 13, color: "rgba(255,255,255,0.7)", flex: 1 }}>{file.name}</span>
-            <button onClick={() => setFile(null)} style={{ background: "none", border: "none", color: "rgba(255,255,255,0.4)", cursor: "pointer", fontSize: 16 }}>×</button>
+          <div style={{ margin: "0 20px 8px", padding: "8px 12px", background: "rgba(255,255,255,0.04)", border: "0.5px solid rgba(255,255,255,0.09)", borderRadius: 8, display: "flex", alignItems: "center", gap: 8 }}>
+            <span style={{ fontSize: 12, color: "rgba(255,255,255,0.35)" }}>File</span>
+            <span style={{ fontSize: 13, color: "rgba(255,255,255,0.85)", flex: 1 }}>{file.name}</span>
+            <button onClick={() => setFile(null)} style={{ background: "none", border: "none", color: "rgba(255,255,255,0.35)", cursor: "pointer", fontSize: 16 }}>×</button>
           </div>
         )}
 
@@ -467,8 +429,8 @@ export default function AgentUI() {
         <div style={{ padding: "12px 20px 20px", flexShrink: 0 }}>
           <div style={{
             display: "flex", alignItems: "flex-end", gap: 8,
-            background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.1)",
-            borderRadius: 14, padding: "10px 12px",
+            background: "rgba(255,255,255,0.04)", border: "0.5px solid rgba(255,255,255,0.09)",
+            borderRadius: 8, padding: "10px 12px",
             transition: "border-color 0.2s",
           }}>
             <input
@@ -479,9 +441,9 @@ export default function AgentUI() {
             />
             <button
               onClick={() => fileInputRef.current?.click()}
-              style={{ background: "none", border: "none", color: "rgba(255,255,255,0.35)", cursor: "pointer", fontSize: 18, lineHeight: 1, padding: "2px 4px", flexShrink: 0 }}
+              style={{ background: "none", border: "none", color: "rgba(255,255,255,0.35)", cursor: "pointer", fontSize: 12, lineHeight: 1.5, padding: "2px 4px", flexShrink: 0, fontFamily: "inherit" }}
               title="Upload file"
-            >📎</button>
+            >File</button>
             <textarea
               value={input}
               onChange={e => setInput(e.target.value)}
@@ -489,7 +451,7 @@ export default function AgentUI() {
               placeholder="Ketik perintah di sini..."
               rows={1}
               style={{
-                flex: 1, background: "none", border: "none", color: "#fff",
+                flex: 1, background: "none", border: "none", color: "rgba(255,255,255,0.85)",
                 fontSize: 14, resize: "none", lineHeight: 1.5,
                 maxHeight: 120, overflowY: "auto",
               }}
@@ -503,25 +465,23 @@ export default function AgentUI() {
               onClick={send}
               disabled={isStreaming || (!input.trim() && !file)}
               style={{
-                width: 32, height: 32, borderRadius: "50%", flexShrink: 0,
-                background: isStreaming || (!input.trim() && !file) ? "rgba(255,255,255,0.08)" : "linear-gradient(135deg,#3B82F6,#8B5CF6)",
-                border: "none", cursor: isStreaming ? "not-allowed" : "pointer",
+                width: 32, height: 32, borderRadius: 8, flexShrink: 0,
+                background: "transparent",
+                border: "0.5px solid rgba(255,255,255,0.09)", cursor: isStreaming ? "not-allowed" : "pointer",
                 display: "flex", alignItems: "center", justifyContent: "center",
-                fontSize: 14, color: "#fff", transition: "background 0.2s",
+                fontSize: 14, color: isStreaming || (!input.trim() && !file) ? "rgba(255,255,255,0.35)" : "#3B82F6", transition: "color 0.2s, border-color 0.2s",
               }}
             >
               {isStreaming ? (
-                <span style={{ width: 14, height: 14, borderRadius: "50%", border: "2px solid rgba(255,255,255,0.3)", borderTopColor: "#fff", animation: "spin 0.8s linear infinite", display: "block" }} />
-              ) : "↑"}
+                <span style={{ color: "rgba(255,255,255,0.35)", fontSize: 12 }}>...</span>
+              ) : "→"}
             </button>
           </div>
           <p style={{ textAlign: "center", fontSize: 11, color: "rgba(255,255,255,0.2)", marginTop: 8 }}>
-            Enter untuk kirim · Shift+Enter baris baru · Attach file dengan 📎
+            Enter untuk kirim · Shift+Enter baris baru · Attach file dengan File
           </p>
         </div>
       </div>
-
-      <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
     </>
   );
 }

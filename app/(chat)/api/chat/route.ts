@@ -919,7 +919,7 @@ export async function POST(request: Request) {
 					if (taskThinkingLines.length > 0 && !isIdeAgentMode) {
 						for (const line of taskThinkingLines) {
 							dataStream.write({ type: "data-thinking_chunk", data: line });
-							await new Promise((resolve) => setTimeout(resolve, 55));
+							await new Promise((resolve) => setTimeout(resolve, 12));
 						}
 					}
 

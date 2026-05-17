@@ -1,6 +1,5 @@
 "use client";
 
-import { CheckCircle2 } from "lucide-react";
 import { ThinkingIndicator } from "@/components/ThinkingIndicator";
 import { formatToolCallForUser } from "@/lib/format-tool-calls";
 import type { ThinkingStep } from "@/lib/thinking-steps";
@@ -45,17 +44,6 @@ function formatDuration(ms?: number) {
 	return `${Math.floor(seconds / 60)}m ${Math.round(seconds % 60)}s`;
 }
 
-function getLatestAgentLabel(steps: Step[]) {
-	for (let index = steps.length - 1; index >= 0; index -= 1) {
-		const label = steps[index]?.label?.trim();
-		if (label) {
-			return label;
-		}
-	}
-
-	return undefined;
-}
-
 export function AgentSummary({
 	steps,
 	finalDuration,
@@ -79,7 +67,9 @@ export function AgentSummary({
 			<div className="space-y-1.5">
 				{toolCalls.map((step) => (
 					<div className="flex items-start gap-2 text-[12px]" key={step.id}>
-						<CheckCircle2 className="mt-0.5 size-3.5 shrink-0 text-[#6d8f72]" />
+						<span className="mt-0.5 shrink-0 font-mono text-[#10B981] text-[11px]">
+							✓
+						</span>
 						<span className="leading-relaxed text-[#777]">
 							{formatToolCallForUser(step)}
 						</span>
@@ -103,12 +93,23 @@ export function AgentThinkingPanel({
 }: AgentThinkingPanelProps) {
 	const active = isActive ?? (status === "thinking" || status === "executing");
 	const startsAsAgent = steps.length > 0;
+	const thinkingChunks = steps
+		.map((step) => {
+			const label = step.label.trim();
+			if (!label) {
+				return "";
+			}
+
+			return step.type === "tool_call" ? `${label} ${step.status}` : label;
+		})
+		.filter(Boolean);
 
 	return (
 		<ThinkingIndicator
-			agentLabel={getLatestAgentLabel(steps)}
 			initialPhase={startsAsAgent ? "agent" : "simple"}
 			isActive={active}
+			thinkingChunks={thinkingChunks}
+			keepVisibleOnDone={startsAsAgent}
 			listenToGlobalEvents={active}
 			totalDurationMs={totalDurationMs ?? totalDuration}
 		/>

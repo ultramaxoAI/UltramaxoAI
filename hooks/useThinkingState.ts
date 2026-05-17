@@ -94,12 +94,12 @@ export function useThinkingState({
 						phaseRef.current = "agent";
 						setPhase("agent");
 						upgradeTimeoutRef.current = null;
-					}, 400);
+					}, 120);
 
 					toastTimeoutRef.current = window.setTimeout(() => {
 						setShowToast(false);
 						toastTimeoutRef.current = null;
-					}, 2200);
+					}, 900);
 					break;
 				}
 

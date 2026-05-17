@@ -1,8 +1,14 @@
 import OpenAI from "openai";
 
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-});
+function getOpenAI() {
+  const apiKey = process.env.OPENAI_API_KEY;
+
+  if (!apiKey) {
+    throw new Error("OPENAI_API_KEY is not configured");
+  }
+
+  return new OpenAI({ apiKey });
+}
 
 // Tool definitions
 const tools: OpenAI.Chat.ChatCompletionTool[] = [
@@ -119,8 +125,17 @@ export async function POST(req: Request) {
 When working on complex tasks:
 1. Break down the task into clear steps
 2. Use tools proactively — search for data, generate charts when comparing numbers, analyze files when provided
-3. Show your reasoning at each step
+3. Keep visible reasoning concise and operational
 4. Be conversational but precise
+
+UI output style:
+- No emoji.
+- No purple accents or colorful gradients.
+- Prefer a premium minimal dark interface: #080808 background, rgba(255,255,255,0.04) surfaces, rgba(255,255,255,0.09) borders.
+- Use #3B82F6 only for links or active states.
+- Use #10B981 only for done states.
+- Buttons should be small text controls with no filled background unless hovered.
+- Thinking labels should be plain "Thinking" with dots or a subtle underline.
 
 ${fileContent ? `A file has been uploaded with the following content:\n${fileContent}` : ""}`;
 
@@ -146,9 +161,9 @@ ${fileContent ? `A file has been uploaded with the following content:\n${fileCon
         };
 
         while (continueLoop) {
-          // Tambahkan logika untuk mengirim "Sedang berpikir..." via notifyReasoning
-          notifyReasoning("Sedang menganalisis kebutuhan tugas...");
+          notifyReasoning("Thinking");
 
+          const openai = getOpenAI();
           const response = await openai.chat.completions.create({
             model: "gpt-4o",
             messages: allMessages,
@@ -210,18 +225,17 @@ ${fileContent ? `A file has been uploaded with the following content:\n${fileCon
 
                 // Notify frontend: tool start
                 send({
-                  type: "tool_call",
-                  name: tc.name,
-                  status: "running",
+                  type: "tool_start",
+                  tool: tc.name,
+                  args: parsedArgs,
                 });
 
                 const result = await executeTool(tc.name, parsedArgs);
 
                 // Notify frontend: tool done
                 send({
-                  type: "tool_call",
-                  name: tc.name,
-                  status: "done",
+                  type: "tool_result",
+                  tool: tc.name,
                   result: JSON.parse(result),
                 });
 

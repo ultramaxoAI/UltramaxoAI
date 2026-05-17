@@ -96,6 +96,16 @@ export interface MultimodalInputProps {
 	}) => void;
 }
 
+type SubmissionPayload = {
+	text: string;
+	attachments: Attachment[];
+	imageGenerationMode: boolean;
+};
+
+type QueuedSubmission = SubmissionPayload & {
+	id: string;
+};
+
 function PureMultimodalInput({
 	chatId,
 	input,
@@ -128,7 +138,11 @@ function PureMultimodalInput({
 	const { width } = useWindowSize();
 	const [imageGenerationOpen, setImageGenerationOpen] = useState(false);
 	const [imageGenerationMode, setImageGenerationMode] = useState(false);
-	const inputDisabled = status === "submitted" || status === "streaming";
+	const isResponding = status === "submitted" || status === "streaming";
+	const [queuedSubmissions, setQueuedSubmissions] = useState<
+		QueuedSubmission[]
+	>([]);
+	const [queuedSubmissionSending, setQueuedSubmissionSending] = useState(false);
 
 	// Grant image gen access to PRO users and admins
 	const isPro =
@@ -203,6 +217,8 @@ function PureMultimodalInput({
 		mobileModeEnabled,
 		imageGenerationMode,
 	].filter(Boolean).length;
+	const submitDisabled =
+		uploadQueue.length > 0 || (!input.trim() && attachments.length === 0);
 
 	const toggleFullstackMode = () => {
 		if (isFullstackModeInMaintenance) {
@@ -224,151 +240,225 @@ function PureMultimodalInput({
 		setMobileModeEnabled(!mobileModeEnabled);
 	};
 
-	const submitForm = useCallback(async () => {
-		window.history.pushState({}, "", `/chat/${chatId}`);
+	const sendChatSubmission = useCallback(
+		({ text, attachments: submissionAttachments }: SubmissionPayload) => {
+			onWillSendMessage?.({
+				text,
+				hasAttachment: submissionAttachments.length > 0,
+			});
 
-		if (imageGenerationMode) {
-			const userMessageId = nanoid();
-			const loadingMessageId = nanoid();
-			const currentInput = input;
+			return sendMessage({
+				role: "user",
+				parts: [
+					...submissionAttachments.map((attachment) => ({
+						type: "file" as const,
+						url: attachment.url,
+						name: attachment.name,
+						mediaType: attachment.contentType,
+					})),
+					{
+						type: "text",
+						text,
+					},
+				],
+			});
+		},
+		[onWillSendMessage, sendMessage],
+	);
 
-			// 1. Append user message
-			setMessages((messages: ChatMessage[]) => [
-				...messages,
-				{
-					id: userMessageId,
-					role: "user",
-					content: currentInput,
-					parts: [{ type: "text", text: currentInput }],
-				},
-			]);
+	const submitForm = useCallback(
+		async (submission?: SubmissionPayload) => {
+			const currentInput = submission?.text ?? input;
+			const currentAttachments = submission?.attachments ?? attachments;
+			const shouldGenerateImage =
+				submission?.imageGenerationMode ?? imageGenerationMode;
 
-			// Handle UI reset
+			window.history.pushState({}, "", `/chat/${chatId}`);
+
+			if (shouldGenerateImage) {
+				const userMessageId = nanoid();
+				const loadingMessageId = nanoid();
+
+				// 1. Append user message
+				setMessages((messages: ChatMessage[]) => [
+					...messages,
+					{
+						id: userMessageId,
+						role: "user",
+						content: currentInput,
+						parts: [{ type: "text", text: currentInput }],
+					},
+				]);
+
+				// Handle UI reset
+				setAttachments([]);
+				setLocalStorageInput("");
+				resetHeight();
+				setInput("");
+				setImageGenerationMode(false); // Disable image mode after use
+
+				// 2. Append loading message
+				setMessages((messages: ChatMessage[]) => [
+					...messages,
+					{
+						id: loadingMessageId,
+						role: "assistant",
+						content: "Generating your image...",
+						parts: [{ type: "text", text: "Generating your image..." }],
+					},
+				]);
+
+				try {
+					const res = await fetch("/api/generate-image", {
+						method: "POST",
+						headers: { "Content-Type": "application/json" },
+						body: JSON.stringify({
+							prompt: currentInput,
+							chatId,
+							userMessageId,
+							assistantMessageId: loadingMessageId,
+							selectedVisibilityType,
+						}),
+					});
+
+					if (!res.ok) {
+						throw new Error("Failed to generate image");
+					}
+
+					const data = await res.json();
+					const assistantMessage = data.assistantMessage;
+
+					// 3. Replace loading message with image
+					setMessages((messages: ChatMessage[]) =>
+						messages.map((m: ChatMessage) =>
+							m.id === loadingMessageId
+								? {
+										...m,
+										role: assistantMessage?.role ?? m.role,
+										parts: assistantMessage?.parts ?? [
+											{
+												type: "file",
+												url: data.imageUrl,
+												mediaType: "image/png",
+												filename: `generated-image-${loadingMessageId}.png`,
+											},
+											{ type: "text", text: "Generated image" },
+										],
+									}
+								: m,
+						),
+					);
+				} catch (_error) {
+					setMessages((messages: ChatMessage[]) =>
+						messages.map((m: ChatMessage) =>
+							m.id === loadingMessageId
+								? {
+										...m,
+										content: "Failed to generate image. Please try again.",
+										parts: [
+											{
+												type: "text",
+												text: "Failed to generate image. Please try again.",
+											},
+										],
+									}
+								: m,
+						),
+					);
+				}
+
+				if (width && width > 768) {
+					textareaRef.current?.focus();
+				}
+				return;
+			}
+
+			sendChatSubmission({
+				text: currentInput,
+				attachments: currentAttachments,
+				imageGenerationMode: false,
+			});
 			setAttachments([]);
 			setLocalStorageInput("");
 			resetHeight();
 			setInput("");
-			setImageGenerationMode(false); // Disable image mode after use
-
-			// 2. Append loading message
-			setMessages((messages: ChatMessage[]) => [
-				...messages,
-				{
-					id: loadingMessageId,
-					role: "assistant",
-					content: "Generating your image...",
-					parts: [{ type: "text", text: "Generating your image..." }],
-				},
-			]);
-
-			try {
-				const res = await fetch("/api/generate-image", {
-					method: "POST",
-					headers: { "Content-Type": "application/json" },
-					body: JSON.stringify({
-						prompt: currentInput,
-						chatId,
-						userMessageId,
-						assistantMessageId: loadingMessageId,
-						selectedVisibilityType,
-					}),
-				});
-
-				if (!res.ok) {
-					throw new Error("Failed to generate image");
-				}
-
-				const data = await res.json();
-				const assistantMessage = data.assistantMessage;
-
-				// 3. Replace loading message with image
-				setMessages((messages: ChatMessage[]) =>
-					messages.map((m: ChatMessage) =>
-						m.id === loadingMessageId
-							? {
-									...m,
-									role: assistantMessage?.role ?? m.role,
-									parts: assistantMessage?.parts ?? [
-										{
-											type: "file",
-											url: data.imageUrl,
-											mediaType: "image/png",
-											filename: `generated-image-${loadingMessageId}.png`,
-										},
-										{ type: "text", text: "Generated image" },
-									],
-								}
-							: m,
-					),
-				);
-			} catch (_error) {
-				setMessages((messages: ChatMessage[]) =>
-					messages.map((m: ChatMessage) =>
-						m.id === loadingMessageId
-							? {
-									...m,
-									content: "Failed to generate image. Please try again.",
-									parts: [
-										{
-											type: "text",
-											text: "Failed to generate image. Please try again.",
-										},
-									],
-								}
-							: m,
-					),
-				);
-			}
 
 			if (width && width > 768) {
 				textareaRef.current?.focus();
 			}
-			return;
-		}
+		},
+		[
+			input,
+			setInput,
+			attachments,
+			setAttachments,
+			setLocalStorageInput,
+			width,
+			chatId,
+			resetHeight,
+			imageGenerationMode,
+			selectedVisibilityType,
+			setMessages,
+			sendChatSubmission,
+		],
+	);
 
-		onWillSendMessage?.({
-			text: input,
-			hasAttachment: attachments.length > 0,
-		});
-
-		sendMessage({
-			role: "user",
-			parts: [
-				...attachments.map((attachment) => ({
-					type: "file" as const,
-					url: attachment.url,
-					name: attachment.name,
-					mediaType: attachment.contentType,
-				})),
-				{
-					type: "text",
-					text: input,
-				},
-			],
-		});
+	const queueSubmission = useCallback(() => {
+		setQueuedSubmissions((current) => [
+			...current,
+			{
+				id: nanoid(),
+				text: input,
+				attachments: [...attachments],
+				imageGenerationMode,
+			},
+		]);
 		setAttachments([]);
 		setLocalStorageInput("");
 		resetHeight();
 		setInput("");
+		setImageGenerationMode(false);
+		toast.success("Pesan masuk antrean.");
 
 		if (width && width > 768) {
 			textareaRef.current?.focus();
 		}
 	}, [
-		input,
-		setInput,
 		attachments,
-		sendMessage,
+		imageGenerationMode,
+		input,
+		resetHeight,
 		setAttachments,
+		setInput,
 		setLocalStorageInput,
 		width,
-		chatId,
-		resetHeight,
-		imageGenerationMode,
-		selectedVisibilityType,
-		setMessages,
-		onWillSendMessage,
 	]);
+
+	useEffect(() => {
+		if (
+			status !== "ready" ||
+			queuedSubmissions.length === 0 ||
+			queuedSubmissionSending
+		) {
+			return;
+		}
+
+		const [nextSubmission] = queuedSubmissions;
+		setQueuedSubmissionSending(true);
+		setQueuedSubmissions((current) =>
+			current.filter((submission) => submission.id !== nextSubmission.id),
+		);
+
+		void Promise.resolve(submitForm(nextSubmission))
+			.catch((error) => {
+				console.error("Failed to send queued submission", error);
+				setQueuedSubmissions((current) => [nextSubmission, ...current]);
+				toast.error("Gagal mengirim pesan antrean.");
+			})
+			.finally(() => {
+				setQueuedSubmissionSending(false);
+			});
+	}, [queuedSubmissions, queuedSubmissionSending, status, submitForm]);
 
 	const uploadFile = useCallback(async (file: File) => {
 		const formData = new FormData();
@@ -543,11 +633,14 @@ function PureMultimodalInput({
 				className="w-full rounded-[20px] border border-white/[0.08] bg-[#141518] p-0 text-white/85 outline-none transition-colors duration-150 hover:border-white/[0.12] focus-within:border-white/[0.15]"
 				onSubmit={(event) => {
 					event.preventDefault();
-					if (!input.trim() && attachments.length === 0) {
+					if (
+						uploadQueue.length > 0 ||
+						(!input.trim() && attachments.length === 0)
+					) {
 						return;
 					}
-					if (inputDisabled) {
-						toast.error("Please wait for the model to finish its response!");
+					if (isResponding) {
+						queueSubmission();
 					} else {
 						submitForm();
 					}
@@ -586,53 +679,43 @@ function PureMultimodalInput({
 						))}
 					</div>
 				)}
-					{activeModeCount > 0 ? (
-						<div className="flex max-w-full flex-row gap-1.5 overflow-x-auto px-4 pt-4 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-							{deepThinkingEnabled ? (
-								<span className="inline-flex shrink-0 items-center gap-1 whitespace-nowrap rounded-md border border-white/[0.08] bg-white/[0.04] px-2 py-1 text-[11px] font-medium text-white/55">
-									<CpuIcon className="size-3" />
-									Deep Thinking
-								</span>
-							) : null}
-							{fullstackModeEnabled ? (
-								<span className="inline-flex shrink-0 items-center gap-1 whitespace-nowrap rounded-md border border-white/[0.08] bg-white/[0.04] px-2 py-1 text-[11px] font-medium text-white/55">
-									<FileTextIcon className="size-3" />
-									Fullstack
-								</span>
-							) : null}
-							{mobileModeEnabled ? (
-								<span className="inline-flex shrink-0 items-center gap-1 whitespace-nowrap rounded-md border border-white/[0.08] bg-white/[0.04] px-2 py-1 text-[11px] font-medium text-white/55">
-									<CheckIcon className="size-3" />
-									Mobile Dev
-								</span>
-							) : null}
-							{imageGenerationMode ? (
-								<span className="inline-flex shrink-0 items-center gap-1 whitespace-nowrap rounded-md border border-white/[0.08] bg-white/[0.04] px-2 py-1 text-[11px] font-medium text-white/55">
-									<Wand2Icon className="size-3" />
-									Image Gen
-								</span>
+				{activeModeCount > 0 ? (
+					<div className="flex max-w-full flex-row gap-1.5 overflow-x-auto px-4 pt-4 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+						{deepThinkingEnabled ? (
+							<span className="inline-flex shrink-0 items-center gap-1 whitespace-nowrap rounded-md border border-white/[0.08] bg-white/[0.04] px-2 py-1 text-[11px] font-medium text-white/55">
+								<CpuIcon className="size-3" />
+								Deep Thinking
+							</span>
+						) : null}
+						{fullstackModeEnabled ? (
+							<span className="inline-flex shrink-0 items-center gap-1 whitespace-nowrap rounded-md border border-white/[0.08] bg-white/[0.04] px-2 py-1 text-[11px] font-medium text-white/55">
+								<FileTextIcon className="size-3" />
+								Fullstack
+							</span>
+						) : null}
+						{mobileModeEnabled ? (
+							<span className="inline-flex shrink-0 items-center gap-1 whitespace-nowrap rounded-md border border-white/[0.08] bg-white/[0.04] px-2 py-1 text-[11px] font-medium text-white/55">
+								<CheckIcon className="size-3" />
+								Mobile Dev
+							</span>
+						) : null}
+						{imageGenerationMode ? (
+							<span className="inline-flex shrink-0 items-center gap-1 whitespace-nowrap rounded-md border border-white/[0.08] bg-white/[0.04] px-2 py-1 text-[11px] font-medium text-white/55">
+								<Wand2Icon className="size-3" />
+								Image Gen
+							</span>
 						) : null}
 					</div>
 				) : null}
-						<div
-							className={cn(
-							"flex flex-row items-start px-5 pt-0 pb-0",
-							inputDisabled && "opacity-70",
-						)}
-					>
-						<PromptInputTextarea
-							className="grow resize-none border-0! bg-transparent px-0 pt-5 pb-3 text-[14.5px] leading-relaxed text-white/80 outline-none ring-0 [-ms-overflow-style:none] [scrollbar-width:none] placeholder:text-white/22 focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 [&::-webkit-scrollbar]:hidden"
-							data-testid="multimodal-input"
-							disableAutoResize={true}
-							disabled={inputDisabled}
-							maxHeight={260}
-							minHeight={64}
-							onChange={handleInput}
-							placeholder={
-								inputDisabled
-									? "Tunggu sampai respons selesai..."
-									: "Ketik sesuatu..."
-							}
+				<div className={cn("flex flex-row items-start px-5 pt-0 pb-0")}>
+					<PromptInputTextarea
+						className="grow resize-none border-0! bg-transparent px-0 pt-5 pb-3 text-[14.5px] leading-relaxed text-white/80 outline-none ring-0 [-ms-overflow-style:none] [scrollbar-width:none] placeholder:text-white/22 focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 [&::-webkit-scrollbar]:hidden"
+						data-testid="multimodal-input"
+						disableAutoResize={true}
+						maxHeight={260}
+						minHeight={64}
+						onChange={handleInput}
+						placeholder="Ketik sesuatu..."
 						ref={textareaRef}
 						rows={1}
 						value={input}
@@ -651,24 +734,22 @@ function PureMultimodalInput({
 									<Paperclip className="h-[14px] w-[14px]" />
 								</Button>
 							</DropdownMenuTrigger>
-								<DropdownMenuContent
-									align="start"
-									className="w-56 rounded-xl border border-white/[0.08] bg-[#111111] text-white/75 shadow-[0_20px_40px_rgba(0,0,0,0.35)]"
-								>
+							<DropdownMenuContent
+								align="start"
+								className="w-56 rounded-xl border border-white/[0.08] bg-[#111111] text-white/75 shadow-[0_20px_40px_rgba(0,0,0,0.35)]"
+							>
 								{/* File Upload Options */}
 								<DropdownMenuItem
-										className="cursor-pointer rounded-lg hover:bg-white/[0.04] focus:bg-white/[0.04]"
-										disabled={inputDisabled}
-										onClick={() => fileInputRef.current?.click()}
-									>
+									className="cursor-pointer rounded-lg hover:bg-white/[0.04] focus:bg-white/[0.04]"
+									onClick={() => fileInputRef.current?.click()}
+								>
 									<FileTextIcon className="mr-2 h-4 w-4" />
 									<span>Upload files</span>
 								</DropdownMenuItem>
 								<DropdownMenuItem
-										className="cursor-pointer rounded-lg hover:bg-white/[0.04] focus:bg-white/[0.04]"
-										disabled={inputDisabled}
-										onClick={() => {
-											if (fileInputRef.current && !inputDisabled) {
+									className="cursor-pointer rounded-lg hover:bg-white/[0.04] focus:bg-white/[0.04]"
+									onClick={() => {
+										if (fileInputRef.current) {
 											fileInputRef.current.accept = "image/*";
 											fileInputRef.current.click();
 											setTimeout(() => {
@@ -683,48 +764,48 @@ function PureMultimodalInput({
 									<span>Photos</span>
 								</DropdownMenuItem>
 
-									<DropdownMenuSeparator className="bg-white/[0.08]" />
-									<DropdownMenuItem
-										className="cursor-pointer rounded-lg hover:bg-white/[0.04] focus:bg-white/[0.04]"
-										onClick={() => setDeepThinkingEnabled(!deepThinkingEnabled)}
-									>
+								<DropdownMenuSeparator className="bg-white/[0.08]" />
+								<DropdownMenuItem
+									className="cursor-pointer rounded-lg hover:bg-white/[0.04] focus:bg-white/[0.04]"
+									onClick={() => setDeepThinkingEnabled(!deepThinkingEnabled)}
+								>
 									<CpuIcon className="mr-2 h-4 w-4" />
 									<span>Deep Thinking</span>
 									{deepThinkingEnabled ? (
-											<CheckIcon className="ml-auto h-4 w-4 text-white/65" />
-										) : null}
-									</DropdownMenuItem>
-									<DropdownMenuItem
-										className="cursor-pointer rounded-lg hover:bg-white/[0.04] focus:bg-white/[0.04]"
-										onClick={toggleFullstackMode}
-									>
+										<CheckIcon className="ml-auto h-4 w-4 text-white/65" />
+									) : null}
+								</DropdownMenuItem>
+								<DropdownMenuItem
+									className="cursor-pointer rounded-lg hover:bg-white/[0.04] focus:bg-white/[0.04]"
+									onClick={toggleFullstackMode}
+								>
 									<FileTextIcon className="mr-2 h-4 w-4" />
 									<span>
 										Fullstack Web
 										{isFullstackModeInMaintenance ? " (Maintenance)" : ""}
 									</span>
 									{fullstackModeEnabled ? (
-											<CheckIcon className="ml-auto h-4 w-4 text-white/65" />
-										) : null}
-									</DropdownMenuItem>
-									<DropdownMenuItem
-										className="cursor-pointer rounded-lg hover:bg-white/[0.04] focus:bg-white/[0.04]"
-										onClick={toggleMobileMode}
-									>
+										<CheckIcon className="ml-auto h-4 w-4 text-white/65" />
+									) : null}
+								</DropdownMenuItem>
+								<DropdownMenuItem
+									className="cursor-pointer rounded-lg hover:bg-white/[0.04] focus:bg-white/[0.04]"
+									onClick={toggleMobileMode}
+								>
 									<CheckIcon className="mr-2 h-4 w-4" />
 									<span>
 										Mobile Dev
 										{isMobileModeInMaintenance ? " (Maintenance)" : ""}
 									</span>
 									{mobileModeEnabled ? (
-											<CheckIcon className="ml-auto h-4 w-4 text-white/65" />
-										) : null}
-									</DropdownMenuItem>
-									<DropdownMenuItem
-										className={cn(
-											"cursor-pointer rounded-lg hover:bg-white/[0.04] focus:bg-white/[0.04]",
-											!isPro && "cursor-not-allowed opacity-40",
-										)}
+										<CheckIcon className="ml-auto h-4 w-4 text-white/65" />
+									) : null}
+								</DropdownMenuItem>
+								<DropdownMenuItem
+									className={cn(
+										"cursor-pointer rounded-lg hover:bg-white/[0.04] focus:bg-white/[0.04]",
+										!isPro && "cursor-not-allowed opacity-40",
+									)}
 									disabled={!isPro}
 									onClick={() => {
 										if (isPro) {
@@ -733,11 +814,11 @@ function PureMultimodalInput({
 									}}
 								>
 									<Wand2Icon className="mr-2 h-4 w-4" />
-										<span>Image Gen (Pro)</span>
-										{imageGenerationMode && (
-											<CheckIcon className="ml-auto h-4 w-4 text-white/65" />
-										)}
-									</DropdownMenuItem>
+									<span>Image Gen (Pro)</span>
+									{imageGenerationMode && (
+										<CheckIcon className="ml-auto h-4 w-4 text-white/65" />
+									)}
+								</DropdownMenuItem>
 							</DropdownMenuContent>
 						</DropdownMenu>
 
@@ -760,28 +841,41 @@ function PureMultimodalInput({
 							customModels={customModels}
 						/>
 
-						{inputDisabled ? (
-							<StopButton
-								className="size-8 rounded-xl"
-								setMessages={setMessages}
-								stop={stop}
-							/>
+						{isResponding ? (
+							<>
+								{queuedSubmissions.length > 0 ? (
+									<span className="hidden text-[11px] text-white/35 sm:inline">
+										{queuedSubmissions.length} antrean
+									</span>
+								) : null}
+								<StopButton
+									className="size-8 rounded-xl"
+									setMessages={setMessages}
+									stop={stop}
+								/>
+								<PromptInputSubmit
+									className={cn(
+										"flex h-8 w-8 items-center justify-center rounded-xl border border-white/[0.08] bg-transparent text-white/60 transition-all hover:bg-white/[0.05] hover:text-white/85",
+										submitDisabled &&
+											"cursor-not-allowed border-transparent text-white/18 hover:bg-transparent hover:text-white/18",
+									)}
+									data-testid="send-button"
+									disabled={submitDisabled}
+									status="ready"
+								>
+									<ArrowUpIcon size={14} />
+								</PromptInputSubmit>
+							</>
 						) : (
 							<PromptInputSubmit
 								className={cn(
 									"flex h-8 w-8 items-center justify-center rounded-xl border border-transparent transition-all",
-										!input.trim() &&
-										uploadQueue.length === 0 &&
-										attachments.length === 0
-											? "cursor-not-allowed bg-white/[0.05] text-white/18"
-											: "bg-white text-black hover:bg-white/90",
-									)}
+									submitDisabled
+										? "cursor-not-allowed bg-white/[0.05] text-white/18"
+										: "bg-white text-black hover:bg-white/90",
+								)}
 								data-testid="send-button"
-								disabled={
-									!input.trim() &&
-									uploadQueue.length === 0 &&
-									attachments.length === 0
-								}
+								disabled={submitDisabled}
 								status={status}
 							>
 								<ArrowUpIcon size={14} />
@@ -917,19 +1011,19 @@ function PureModelSelectorCompact({
 		rawSelectedModel,
 	]);
 
-		return (
-			<DropdownMenu onOpenChange={setOpen} open={open}>
-				<DropdownMenuTrigger asChild>
-					<Button
-						className="h-8 min-w-[9rem] max-w-[14rem] justify-between gap-1.5 rounded-xl border border-transparent bg-transparent px-3 text-[12.5px] font-medium text-white/30 shadow-none transition-all hover:bg-white/[0.05] hover:text-white/60"
-						variant="ghost"
-					>
-						<div className="flex min-w-0 items-center gap-2">
-							<div className="h-1.5 w-1.5 shrink-0 rounded-full bg-white/28" />
-							<span className="truncate text-left text-[12.5px] font-medium">
-								{selectedModel.name}
-							</span>
-						</div>
+	return (
+		<DropdownMenu onOpenChange={setOpen} open={open}>
+			<DropdownMenuTrigger asChild>
+				<Button
+					className="h-8 min-w-[9rem] max-w-[14rem] justify-between gap-1.5 rounded-xl border border-transparent bg-transparent px-3 text-[12.5px] font-medium text-white/30 shadow-none transition-all hover:bg-white/[0.05] hover:text-white/60"
+					variant="ghost"
+				>
+					<div className="flex min-w-0 items-center gap-2">
+						<div className="h-1.5 w-1.5 shrink-0 rounded-full bg-white/28" />
+						<span className="truncate text-left text-[12.5px] font-medium">
+							{selectedModel.name}
+						</span>
+					</div>
 					<ChevronDownIcon
 						className={cn(
 							"size-3.5 shrink-0 text-white/30 transition-transform duration-200",

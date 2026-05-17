@@ -667,6 +667,32 @@ const PurePreviewMessage = ({
 	const hasRunningAgentStep = agentThinkingSteps.some(
 		(step) => step.status === "running" || step.status === "pending",
 	);
+	const hasTextPart = messageParts.some(
+		(part) =>
+			getNormalizedPartType(part) === "text" &&
+			Boolean(sanitizeText((part as { text?: string }).text ?? "").trim()),
+	);
+	const hasToolPart = messageParts.some((part) =>
+		getNormalizedPartType(part).startsWith("tool-")
+	);
+	const hasRenderableAnnotation = Boolean(
+		!hasDocumentToolPart &&
+			message.annotations?.some((annotation) => {
+				const parsed =
+					typeof annotation === "object" && annotation !== null
+						? (annotation as Record<string, unknown>)
+						: null;
+
+				return (
+					parsed?.type === "create-document" || parsed?.type === "update-document"
+				);
+			}),
+	);
+	const shouldHoldAssistantText =
+		message.role === "assistant" &&
+		(isLoading || hasAgentThinkingPanel || hasRunningAgentStep);
+	const isReasoningFinished =
+		!hasAgentThinkingPanel || !hasRunningAgentStep || !isLoading;
 	const agentPanelStatus = agentThinkingSteps.some(
 		(step) => step.status === "error",
 	)
@@ -674,7 +700,7 @@ const PurePreviewMessage = ({
 		: hasRunningAgentStep &&
 				agentThinkingSteps.some((step) => step.type === "tool_call")
 			? "executing"
-			: hasRunningAgentStep || isLoading
+		: hasRunningAgentStep || isLoading
 				? "thinking"
 				: "done";
 	// When agent mode is actively running, delay showing text/output parts
@@ -707,32 +733,9 @@ const PurePreviewMessage = ({
 
 		return normalizedType.startsWith("tool-");
 	});
-	const hasTextPart = messageParts.some(
-		(part) =>
-			getNormalizedPartType(part) === "text" &&
-			Boolean(sanitizeText((part as { text?: string }).text ?? "").trim()),
-	);
-	const hasToolPart = messageParts.some((part) =>
-		getNormalizedPartType(part).startsWith("tool-")
-	);
 	const hasReasoningPart = messageParts.some(
 		(part) => getNormalizedPartType(part) === "reasoning"
 	);
-	const hasRenderableAnnotation = Boolean(
-		!hasDocumentToolPart &&
-			message.annotations?.some((annotation) => {
-				const parsed =
-					typeof annotation === "object" && annotation !== null
-						? (annotation as Record<string, unknown>)
-						: null;
-
-				return (
-					parsed?.type === "create-document" || parsed?.type === "update-document"
-				);
-			}),
-	);
-
-	const isReasoningFinished = !isLoading || hasTextPart || hasToolPart || hasRenderableAnnotation || hasDocumentToolPart;
 	const shouldShowAssistantActions =
 		message.role === "user" ||
 		hasTextPart ||
@@ -829,14 +832,9 @@ const PurePreviewMessage = ({
 								return <ReasoningBlock key={key} content={reasoningPart.text || ""} isFinished={isReasoningFinished} />;
 							}
 
-							// HIDE ALL NON-REASONING PARTS IF REASONING IS STILL ACTIVE
-							if (!isReasoningFinished) {
-								return null;
-							}
-
 							if (normalizedType === "text") {
 								// Hide text output while agent mode is actively thinking
-								if ((agentStillRunning || isLoading) && message.role === "assistant" && !hasTextPart) {
+								if (shouldHoldAssistantText) {
 									return null;
 								}
 								const textPart = part as { text?: string };

@@ -324,6 +324,20 @@ function PureMessages({
 	const showToolAgentPanel =
 		shouldRenderThinking && agentStream.steps.length > 0 && !lastMessageHasReasoningPanel;
 	const showSimpleThinking = shouldRenderThinking && !showToolAgentPanel && !lastMessageHasReasoningPanel;
+	const fallbackThinkingSteps = [
+		{
+			id: "understand",
+			label: "Memahami permintaan",
+			status: "running" as const,
+			type: "thought" as const,
+		},
+		{
+			id: "respond",
+			label: "Menyusun respons",
+			status: "pending" as const,
+			type: "thought" as const,
+		},
+	];
 
 	useEffect(() => {
 		if (shouldRenderThinking) {
@@ -385,7 +399,18 @@ function PureMessages({
 								>
 									<div className="mx-auto flex w-full max-w-[820px]">
 										<div className="min-w-0 flex-1">
-											<AgentThinkingPanel isActive status="thinking" />
+											<AgentThinkingPanel
+												isActive
+												status="thinking"
+												steps={liveThinking.steps.length > 0
+													? liveThinking.steps.map((step) => ({
+															id: step.id,
+															label: step.label,
+															status: step.status,
+															type: "thought" as const,
+														}))
+													: fallbackThinkingSteps}
+											/>
 										</div>
 									</div>
 								</div>

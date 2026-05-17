@@ -12,10 +12,10 @@ type ThinkingIndicatorProps = {
 	event?: ThinkingEvent;
 	events?: ThinkingEvent[];
 	thinkingChunks?: string[];
-	agentLabel?: string;
 	isActive?: boolean;
 	totalDurationMs?: number;
 	initialPhase?: ThinkingPhase;
+	keepVisibleOnDone?: boolean;
 	listenToGlobalEvents?: boolean;
 	className?: string;
 };
@@ -44,10 +44,10 @@ export function ThinkingIndicator({
 	event,
 	events,
 	thinkingChunks = [],
-	agentLabel,
 	isActive = true,
 	totalDurationMs,
 	initialPhase,
+	keepVisibleOnDone = false,
 	listenToGlobalEvents = false,
 	className,
 }: ThinkingIndicatorProps) {
@@ -134,13 +134,18 @@ export function ThinkingIndicator({
 	}, [emitEvent, isActive, totalDurationMs]);
 
 	useEffect(() => {
+		if (state.phase === "done" && keepVisibleOnDone) {
+			setShouldRender(true);
+			return;
+		}
+
 		if (state.phase === "done") {
-			const timeout = window.setTimeout(() => setShouldRender(false), 160);
+			const timeout = window.setTimeout(() => setShouldRender(false), 90);
 			return () => window.clearTimeout(timeout);
 		}
 
 		setShouldRender(true);
-	}, [state.phase]);
+	}, [keepVisibleOnDone, state.phase]);
 
 	if (!shouldRender) {
 		return null;
@@ -155,7 +160,6 @@ export function ThinkingIndicator({
 			) : (
 				<AgentThinking
 					isDone={state.phase === "done"}
-					label={agentLabel}
 					thinkingChunks={state.thinkingChunks}
 				/>
 			)}
