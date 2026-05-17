@@ -64,9 +64,14 @@ function isDuplicateOrOverlappingText(value: string, seen: Set<string>) {
 	}
 
 	for (const previous of seen) {
-		const shorter = previous.length < fingerprint.length ? previous : fingerprint;
-		const longer = previous.length < fingerprint.length ? fingerprint : previous;
-		if (previous === fingerprint || (shorter.length > 32 && longer.includes(shorter))) {
+		const shorter =
+			previous.length < fingerprint.length ? previous : fingerprint;
+		const longer =
+			previous.length < fingerprint.length ? fingerprint : previous;
+		if (
+			previous === fingerprint ||
+			(shorter.length > 32 && longer.includes(shorter))
+		) {
 			return true;
 		}
 	}
@@ -82,7 +87,12 @@ function hasAssistantText(message: ChatMessage | undefined) {
 function hasToolPart(message: ChatMessage | undefined) {
 	const parts = Array.isArray(message?.parts) ? message.parts : [];
 	return parts.some((part) =>
-		Boolean(part && typeof part === "object" && "type" in part && String(part.type).includes("tool")),
+		Boolean(
+			part &&
+				typeof part === "object" &&
+				"type" in part &&
+				String(part.type).includes("tool"),
+		),
 	);
 }
 
@@ -120,7 +130,11 @@ function compactAssistantMessages(messages: ChatMessage[]) {
 			}
 
 			// Hide stale thinking/reasoning shells when a final assistant answer exists in the same turn.
-			if (lastAssistantTextIndex !== -1 && index < lastAssistantTextIndex && !hasToolPart(message)) {
+			if (
+				lastAssistantTextIndex !== -1 &&
+				index < lastAssistantTextIndex &&
+				!hasToolPart(message)
+			) {
 				continue;
 			}
 
@@ -269,8 +283,8 @@ function PureMessages({
 	const visibleMessages = compactAssistantMessages(
 		filteredVisibleMessages.length > 0
 			? filteredVisibleMessages
-			: safeMessages.filter(
-					(message) => Boolean(message && message.id && message.role),
+			: safeMessages.filter((message) =>
+					Boolean(message && message.id && message.role),
 				),
 	);
 	const recoveredFromHiddenMessages =
@@ -290,7 +304,9 @@ function PureMessages({
 		(message) => hasRenderableAssistantAnswer(message),
 	);
 	const hasApprovalResponse = visibleMessages.some((msg) =>
-		(msg.parts ?? []).some((part) => getPartState(part) === "approval-responded"),
+		(msg.parts ?? []).some(
+			(part) => getPartState(part) === "approval-responded",
+		),
 	);
 	const totalAgentDuration =
 		agentStream.startedAt && agentStream.endedAt
@@ -298,7 +314,9 @@ function PureMessages({
 			: agentStream.startedAt
 				? Date.now() - agentStream.startedAt
 				: undefined;
-	const [thinkingDurationMs, setThinkingDurationMs] = useState<number | undefined>();
+	const [thinkingDurationMs, setThinkingDurationMs] = useState<
+		number | undefined
+	>();
 	const waitingForAssistantResponse =
 		status === "submitted" || status === "streaming";
 	const shouldRenderThinking =
@@ -309,35 +327,36 @@ function PureMessages({
 
 	// Check if the last assistant message already has its own reasoning-based
 	// AgentThinkingPanel to avoid rendering a duplicate at the list level
-	const lastAssistantMessage = assistantsAfterLastUser[assistantsAfterLastUser.length - 1];
+	const lastAssistantMessage =
+		assistantsAfterLastUser[assistantsAfterLastUser.length - 1];
 	const lastMessageHasReasoningPanel = (() => {
 		if (!lastAssistantMessage) return false;
-		const parts = Array.isArray(lastAssistantMessage.parts) ? lastAssistantMessage.parts : [];
+		const parts = Array.isArray(lastAssistantMessage.parts)
+			? lastAssistantMessage.parts
+			: [];
 		return parts.some((part) => {
 			if (!part || typeof part !== "object" || !("type" in part)) return false;
-			if (part.type === "reasoning" && (part as { text?: string }).text?.trim()) return true;
+			if (part.type === "reasoning" && (part as { text?: string }).text?.trim())
+				return true;
 			if (String(part.type).includes("tool")) return true;
 			return false;
 		});
 	})();
 
 	const showToolAgentPanel =
-		shouldRenderThinking && agentStream.steps.length > 0 && !lastMessageHasReasoningPanel;
-	const showSimpleThinking = shouldRenderThinking && !showToolAgentPanel && !lastMessageHasReasoningPanel;
-	const fallbackThinkingSteps = [
-		{
-			id: "understand",
-			label: "Memahami permintaan",
-			status: "running" as const,
-			type: "thought" as const,
-		},
-		{
-			id: "respond",
-			label: "Menyusun respons",
-			status: "pending" as const,
-			type: "thought" as const,
-		},
-	];
+		shouldRenderThinking &&
+		agentStream.steps.length > 0 &&
+		!lastMessageHasReasoningPanel;
+	const showLiveThinkingPanel =
+		shouldRenderThinking &&
+		!showToolAgentPanel &&
+		!lastMessageHasReasoningPanel &&
+		liveThinking.thinkingChunks.length > 0;
+	const showSimpleThinking =
+		shouldRenderThinking &&
+		!showToolAgentPanel &&
+		!showLiveThinkingPanel &&
+		!lastMessageHasReasoningPanel;
 
 	useEffect(() => {
 		if (shouldRenderThinking) {
@@ -363,7 +382,8 @@ function PureMessages({
 						<div className="mx-auto flex min-w-0 w-full max-w-[820px] flex-col space-y-5 px-6 py-8">
 							{recoveredFromHiddenMessages ? (
 								<div className="rounded-2xl border border-amber-400/15 bg-amber-400/8 px-4 py-3 text-[12px] text-amber-100/80">
-									Memulihkan percakapan dari data tersimpan. Beberapa bubble yang tidak lengkap tetap ditampilkan agar chat tidak kosong.
+									Memulihkan percakapan dari data tersimpan. Beberapa bubble
+									yang tidak lengkap tetap ditampilkan agar chat tidak kosong.
 								</div>
 							) : null}
 							{visibleMessages.map((message, index) => (
@@ -399,17 +419,24 @@ function PureMessages({
 								>
 									<div className="mx-auto flex w-full max-w-[820px]">
 										<div className="min-w-0 flex-1">
+											<AgentThinkingPanel isActive status="thinking" />
+										</div>
+									</div>
+								</div>
+							)}
+
+							{showLiveThinkingPanel && (
+								<div
+									className="group/message fade-in w-full animate-in duration-300"
+									data-role="assistant"
+									data-testid="message-assistant-live-thinking"
+								>
+									<div className="mx-auto flex w-full max-w-[820px]">
+										<div className="min-w-0 flex-1">
 											<AgentThinkingPanel
 												isActive
 												status="thinking"
-												steps={liveThinking.steps.length > 0
-													? liveThinking.steps.map((step) => ({
-															id: step.id,
-															label: step.label,
-															status: step.status,
-															type: "thought" as const,
-														}))
-													: fallbackThinkingSteps}
+												thinkingChunks={liveThinking.thinkingChunks}
 											/>
 										</div>
 									</div>

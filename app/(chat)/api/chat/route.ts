@@ -90,50 +90,9 @@ const IDE_MODE_INTENT_REGEX =
 	/\b(fullstack|workspace|landing page|web app|website|aplikasi lengkap|project lengkap|proyek lengkap|buatkan (website|web|app|aplikasi)|build (website|web|app|aplikasi)|create (website|web|app|application)|next\.?js|react|flutter|react native|backend|frontend|dashboard)\b/i;
 
 function isExplicitWebResearchRequest(prompt: string) {
-	return /\b(web\s*search|cari(?:kan)?\s+(?:di\s+)?(?:web|internet|google|berita|sumber|referensi)|berita|sumber|referensi|research|riset|terbaru|hari ini|latest|current|breaking|news)\b/i.test(prompt);
-}
-
-function getTaskThinkingLines(prompt: string) {
-	const text = prompt.toLowerCase();
-	const focus = prompt.trim().replace(/\s+/g, " ").slice(0, 90);
-	const hasMath = /\b(rumus|hitung|persamaan|integral|turunan|matematika|aljabar|geometry|kecepatan|jarak|waktu|luas|volume)\b|[=+\-*/^√]/i.test(text);
-	const hasCode = /\b(kode|coding|script|function|fungsi|debug|error|bug|implementasi|class|api|react|next|javascript|typescript|python|java|kotlin|php|html|css)\b|\.[a-z]{2,5}\b/i.test(text);
-	const hasTutorial = /\b(step\s*by\s*step|langkah|tutorial|panduan|cara|jelaskan|ajarin|guide)\b/i.test(text);
-	const hasPlan = /\b(rencana|strategi|roadmap|arsitektur|plan|susun|struktur)\b/i.test(text);
-
-	if (hasCode) {
-		return [
-			`Memetakan kebutuhan kode dari: ${focus}`,
-			"Menentukan struktur fungsi, input, output, dan edge case yang perlu aman.",
-			"Menyiapkan contoh implementasi yang bisa langsung diuji.",
-		];
-	}
-
-	if (hasMath) {
-		return [
-			`Mengidentifikasi variabel dan rumus yang relevan untuk: ${focus}`,
-			"Memilih persamaan yang sesuai lalu mengecek satuan dan langkah substitusi.",
-			"Menyiapkan penjelasan bertahap agar hasilnya mudah diverifikasi.",
-		];
-	}
-
-	if (hasTutorial) {
-		return [
-			`Menyusun alur tutorial untuk: ${focus}`,
-			"Memecah proses menjadi langkah kecil dari persiapan sampai hasil akhir.",
-			"Menandai bagian yang rawan salah agar instruksi lebih mudah diikuti.",
-		];
-	}
-
-	if (hasPlan) {
-		return [
-			`Membuat struktur rencana untuk: ${focus}`,
-			"Mengurutkan prioritas, dependensi, dan hasil yang harus dicapai.",
-			"Menyiapkan langkah eksekusi yang realistis dan bisa dicek progresnya.",
-		];
-	}
-
-	return [];
+	return /\b(web\s*search|cari(?:kan)?\s+(?:di\s+)?(?:web|internet|google|berita|sumber|referensi)|berita|sumber|referensi|research|riset|terbaru|hari ini|latest|current|breaking|news)\b/i.test(
+		prompt,
+	);
 }
 
 type StreamErrorDetails = Error & {
@@ -200,13 +159,18 @@ function getAssistantPartsByType(
 ) {
 	return parts
 		.filter(
-			(part): part is ChatMessagePart & { type: "text" | "reasoning"; text: string } =>
+			(
+				part,
+			): part is ChatMessagePart & {
+				type: "text" | "reasoning";
+				text: string;
+			} =>
 				Boolean(
 					part &&
-					typeof part === "object" &&
-					"type" in part &&
-					part.type === type &&
-					typeof (part as { text?: unknown }).text === "string",
+						typeof part === "object" &&
+						"type" in part &&
+						part.type === type &&
+						typeof (part as { text?: unknown }).text === "string",
 				),
 		)
 		.map((part) => part.text)
@@ -237,7 +201,8 @@ function buildCanonicalAssistantParts({
 }) {
 	const parts: ChatMessage["parts"] = [];
 	const reasoningText =
-		streamedReasoningText.trim() || getAssistantPartsByType(baseParts, "reasoning");
+		streamedReasoningText.trim() ||
+		getAssistantPartsByType(baseParts, "reasoning");
 	const assistantText =
 		streamedAssistantText.trim() ||
 		getAssistantPartsByType(baseParts, "text") ||
@@ -848,8 +813,12 @@ export async function POST(request: Request) {
 				return parts;
 			};
 
-			const queueAssistantDraftPersist = (force = false, fallbackText?: string) => {
-				const nextLength = streamedAssistantText.length + streamedReasoningText.length;
+			const queueAssistantDraftPersist = (
+				force = false,
+				fallbackText?: string,
+			) => {
+				const nextLength =
+					streamedAssistantText.length + streamedReasoningText.length;
 				const now = Date.now();
 				if (
 					!force &&
@@ -914,14 +883,8 @@ export async function POST(request: Request) {
 				execute: async ({ writer: dataStream }) => {
 					dataStream.write({ type: "data-thinking_start", data: null });
 
-					const explicitWebResearchRequest = isExplicitWebResearchRequest(latestUserText);
-					const taskThinkingLines = getTaskThinkingLines(latestUserText);
-					if (taskThinkingLines.length > 0 && !isIdeAgentMode) {
-						for (const line of taskThinkingLines) {
-							dataStream.write({ type: "data-thinking_chunk", data: line });
-							await new Promise((resolve) => setTimeout(resolve, 12));
-						}
-					}
+					const explicitWebResearchRequest =
+						isExplicitWebResearchRequest(latestUserText);
 
 					let retryCount = 0;
 					const maxRetries = 1;
@@ -986,7 +949,10 @@ export async function POST(request: Request) {
 					}
 
 					const emitFallbackAssistantMessage = async (text: string) => {
-						if (streamedFallbackAssistantMessage || streamedAssistantText.trim()) {
+						if (
+							streamedFallbackAssistantMessage ||
+							streamedAssistantText.trim()
+						) {
 							return;
 						}
 
@@ -1626,7 +1592,10 @@ export async function POST(request: Request) {
 								);
 								// markKeyFailed("primary"); // Function removed
 								// setTimeout(() => resetFailureTracking(), 30_000); // Function removed
-								const errorMsg = error instanceof Error ? error.message : "Invalid API Key. Please contact the administrator to check the API key configuration.";
+								const errorMsg =
+									error instanceof Error
+										? error.message
+										: "Invalid API Key. Please contact the administrator to check the API key configuration.";
 								throw new Error(errorMsg);
 							}
 
@@ -1694,7 +1663,10 @@ export async function POST(request: Request) {
 					const hasRenderableAssistantMessage = finishedMessages.some(
 						hasRenderableAssistantUIMessage,
 					);
-					if (!hasRenderableAssistantMessage && !streamedFallbackAssistantMessage) {
+					if (
+						!hasRenderableAssistantMessage &&
+						!streamedFallbackAssistantMessage
+					) {
 						streamedFallbackAssistantMessage = {
 							id: generateUUID(),
 							role: "assistant",
@@ -1741,7 +1713,8 @@ export async function POST(request: Request) {
 							const draftAlreadyExists =
 								assistantDraftSaved ||
 								messagesFromDb.some(
-									(currentMessage) => currentMessage.id === canonicalAssistantId,
+									(currentMessage) =>
+										currentMessage.id === canonicalAssistantId,
 								);
 
 							if (draftAlreadyExists) {

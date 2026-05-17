@@ -73,7 +73,9 @@ function isApprovalGranted(part: unknown) {
 }
 
 function hasRenderableAssistantAfterLastUser(messages: ChatMessage[]) {
-	const lastUserIndex = messages.findLastIndex((message) => message.role === "user");
+	const lastUserIndex = messages.findLastIndex(
+		(message) => message.role === "user",
+	);
 	if (lastUserIndex === -1) {
 		return false;
 	}
@@ -344,7 +346,10 @@ export function Chat({
 			setStreamError(null);
 
 			if (dataPart.type === "data-response_chunk") {
-				const payload = dataPart.data as { content?: string } | string | undefined;
+				const payload = dataPart.data as
+					| { content?: string }
+					| string
+					| undefined;
 				const content =
 					typeof payload === "string"
 						? payload
@@ -412,7 +417,10 @@ export function Chat({
 			if (isMaximumDepthError) {
 				if (process.env.NODE_ENV === "development") {
 					console.groupCollapsed("[Chat] Client error");
-					console.log("Error Type:", error instanceof Error ? error.constructor.name : typeof error);
+					console.log(
+						"Error Type:",
+						error instanceof Error ? error.constructor.name : typeof error,
+					);
 					console.log("Error Message:", rawErrorMessage);
 					console.log("Chat ID:", id);
 					console.log("Current Model:", currentModelId);
@@ -434,9 +442,7 @@ export function Chat({
 							...current,
 							lifecycle: "error",
 							error:
-								error instanceof Error
-									? error.message
-									: "Client stream error",
+								error instanceof Error ? error.message : "Client stream error",
 							updatedAt: Date.now(),
 						}
 					: current,
@@ -582,6 +588,7 @@ export function Chat({
 				enabled: true,
 				taskType,
 				steps: [],
+				thinkingChunks: [],
 				startedAt: now,
 				surface: "responding",
 				runtimeEscalated: false,
@@ -620,7 +627,6 @@ export function Chat({
 			}));
 		}
 	}, [messages, setAgentStream, setLiveThinking, status]);
-
 
 	useEffect(() => {
 		if (status !== "ready") {
@@ -666,7 +672,9 @@ export function Chat({
 			});
 
 		const hasAgentTrace =
-			agentStream.steps.length > 0 || liveThinking.steps.length > 0;
+			agentStream.steps.length > 0 ||
+			liveThinking.steps.length > 0 ||
+			liveThinking.thinkingChunks.length > 0;
 		const hasAssistantToolOutputAfterLastUser =
 			assistantMessagesAfterLastUser.some((message) =>
 				(message.parts ?? []).some((part) => {
@@ -715,6 +723,7 @@ export function Chat({
 		streamedResponseTextRef.current = "";
 	}, [
 		agentStream.steps.length,
+		liveThinking.thinkingChunks.length,
 		liveThinking.steps.length,
 		messages,
 		setMessages,
@@ -818,7 +827,9 @@ export function Chat({
 			current.enabled ? { ...current, enabled: false } : current,
 		);
 		setAgentStream((current) =>
-			current.startedAt && current.status !== "done" && current.status !== "error"
+			current.startedAt &&
+			current.status !== "done" &&
+			current.status !== "error"
 				? { ...current, status: "done", endedAt: current.endedAt ?? Date.now() }
 				: current,
 		);
@@ -864,13 +875,7 @@ export function Chat({
 			);
 			resetStreamState();
 		};
-	}, [
-		id,
-		resetStreamState,
-		safeInitialMessages,
-		setActiveChatId,
-		setMessages,
-	]);
+	}, [id, resetStreamState, safeInitialMessages, setActiveChatId, setMessages]);
 
 	useAutoResume({
 		chatId: id,

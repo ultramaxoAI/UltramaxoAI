@@ -24,6 +24,7 @@ export interface AgentThinkingPanelProps {
 	isActive?: boolean;
 	totalDurationMs?: number;
 	liveSteps?: ThinkingStep[];
+	thinkingChunks?: string[];
 	variant?: "responding" | "deep-thinking" | "agent-active";
 }
 
@@ -89,10 +90,12 @@ export function AgentThinkingPanel({
 	totalDuration,
 	isActive,
 	totalDurationMs,
+	thinkingChunks: explicitThinkingChunks,
 	variant: _variant,
 }: AgentThinkingPanelProps) {
 	const active = isActive ?? (status === "thinking" || status === "executing");
-	const startsAsAgent = steps.length > 0;
+	const startsAsAgent =
+		steps.length > 0 || Boolean(explicitThinkingChunks?.length);
 	const thinkingChunks = steps
 		.map((step) => {
 			const label = step.label.trim();
@@ -103,12 +106,15 @@ export function AgentThinkingPanel({
 			return step.type === "tool_call" ? `${label} ${step.status}` : label;
 		})
 		.filter(Boolean);
+	const visibleThinkingChunks = explicitThinkingChunks?.length
+		? explicitThinkingChunks
+		: thinkingChunks;
 
 	return (
 		<ThinkingIndicator
 			initialPhase={startsAsAgent ? "agent" : "simple"}
 			isActive={active}
-			thinkingChunks={thinkingChunks}
+			thinkingChunks={visibleThinkingChunks}
 			keepVisibleOnDone={startsAsAgent}
 			listenToGlobalEvents={active}
 			totalDurationMs={totalDurationMs ?? totalDuration}

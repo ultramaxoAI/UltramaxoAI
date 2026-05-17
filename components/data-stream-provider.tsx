@@ -2,7 +2,13 @@
 
 import type { DataUIPart } from "ai";
 import type React from "react";
-import { createContext, useCallback, useContext, useMemo, useState } from "react";
+import {
+	createContext,
+	useCallback,
+	useContext,
+	useMemo,
+	useState,
+} from "react";
 import type { TaskType } from "@/lib/detect-task-type";
 import type { ThinkingStep } from "@/lib/thinking-steps";
 import type { CustomUIDataTypes } from "@/lib/types";
@@ -48,6 +54,7 @@ type DataStreamContextValue = {
 		enabled: boolean;
 		taskType: TaskType;
 		steps: ThinkingStep[];
+		thinkingChunks: string[];
 		startedAt: number | null;
 		surface: "responding" | "deep-thinking" | "agent-active";
 		runtimeEscalated: boolean;
@@ -97,6 +104,7 @@ export function DataStreamProvider({
 		enabled: false,
 		taskType: "general",
 		steps: [],
+		thinkingChunks: [],
 		startedAt: null,
 		surface: "responding",
 		runtimeEscalated: false,
@@ -118,6 +126,7 @@ export function DataStreamProvider({
 			enabled: false,
 			taskType: "general",
 			steps: [],
+			thinkingChunks: [],
 			startedAt: null,
 			surface: "responding",
 			runtimeEscalated: false,

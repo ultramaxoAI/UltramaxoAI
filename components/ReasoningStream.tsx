@@ -37,7 +37,12 @@ function splitStrongTags(value: string) {
 
 function normalizeChunks(chunks: string[]) {
 	const cleaned = chunks
-		.flatMap(splitStrongTags)
+		.map((chunk) => chunk.trim())
+		.filter((chunk) => chunk.length > 0)
+		.map((chunk) => (/[.!?)]$/.test(chunk) ? chunk : `${chunk}.`))
+		.flatMap((chunk, index) =>
+			splitStrongTags(index === chunks.length - 1 ? chunk : `${chunk}\n`),
+		)
 		.filter((chunk) => chunk.length > 0);
 	return cleaned;
 }

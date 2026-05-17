@@ -77,6 +77,7 @@ export function DataStreamHandler() {
 		dataStream,
 		setDataStream,
 		setAgentStream,
+		setLiveThinking,
 		artifactStream,
 		setArtifactStream,
 	} = useDataStream();
@@ -109,6 +110,27 @@ export function DataStreamHandler() {
 			);
 			if (adaptiveThinkingEvent) {
 				dispatchAdaptiveThinkingEventObject(adaptiveThinkingEvent);
+				if (adaptiveThinkingEvent.type === "thinking_chunk") {
+					setLiveThinking((current) => {
+						const content = adaptiveThinkingEvent.content.trim();
+						if (!content) {
+							return current;
+						}
+
+						const lastChunk =
+							current.thinkingChunks[current.thinkingChunks.length - 1];
+						if (lastChunk === content) {
+							return current;
+						}
+
+						return {
+							...current,
+							enabled: true,
+							startedAt: current.startedAt ?? Date.now(),
+							thinkingChunks: [...current.thinkingChunks, content],
+						};
+					});
+				}
 				continue;
 			}
 
@@ -276,14 +298,17 @@ export function DataStreamHandler() {
 										? `${currentStream.kind === "text" ? currentStream.content : ""}${normalizedArtifactEvent.content}`
 										: normalizedArtifactEvent.content,
 								lifecycle:
-									normalizedArtifactEvent.content.length > 0 ? "streaming" : "pending",
+									normalizedArtifactEvent.content.length > 0
+										? "streaming"
+										: "pending",
 								updatedAt: Date.now(),
 								error: undefined,
 							};
 						case "artifact-finish": {
 							const normalizedContent = currentStream.content.trim();
 							const shouldCompleteCodeWorkspace =
-								currentStream.kind === "code" && Boolean(currentStream.artifactId);
+								currentStream.kind === "code" &&
+								Boolean(currentStream.artifactId);
 							return {
 								...currentStream,
 								lifecycle:
@@ -332,13 +357,15 @@ export function DataStreamHandler() {
 								kind: normalizedArtifactEvent.kind,
 								content: nextContent,
 								status: "streaming",
-								streamState: nextContent.trim().length > 0 ? "streaming" : "pending",
+								streamState:
+									nextContent.trim().length > 0 ? "streaming" : "pending",
 							};
 						}
 						case "artifact-finish": {
 							const normalizedContent = baseArtifact.content.trim();
 							const shouldCompleteCodeWorkspace =
-								baseArtifact.kind === "code" && baseArtifact.documentId !== "init";
+								baseArtifact.kind === "code" &&
+								baseArtifact.documentId !== "init";
 							return {
 								...baseArtifact,
 								status: "idle",
