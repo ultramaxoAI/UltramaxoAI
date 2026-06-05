@@ -7,20 +7,19 @@ import { generateHashedPassword } from "./backend/db/utils";
 
 dotenv.config({ path: ".env.local" });
 
+import dns from "dns";
+dns.setDefaultResultOrder("ipv4first");
+
 const postgresUrl = process.env.POSTGRES_URL;
 if (!postgresUrl) {
 	throw new Error("POSTGRES_URL must be set");
 }
 
-const url = new URL(postgresUrl);
-const originalHost = url.hostname;
-url.hostname = "18.215.6.120"; // Force IPv4
-
-const client = postgres(url.toString(), {
-	ssl: { servername: originalHost, rejectUnauthorized: true },
+const client = postgres(postgresUrl, {
 	prepare: false,
 });
 const db = drizzle(client, { schema });
+
 
 async function updateAdmin() {
 	try {

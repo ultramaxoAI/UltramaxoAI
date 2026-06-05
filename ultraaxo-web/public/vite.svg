@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="100" height="100">
+  <defs>
+    <linearGradient id="glow" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#a855f7" />
+      <stop offset="100%" stop-color="#06b6d4" />
+    </linearGradient>
+  </defs>
+  <circle cx="50" cy="50" r="45" fill="#09090b" stroke="url(#glow)" stroke-width="4" />
+  <path d="M50 20 L65 48 L45 48 L55 80 L35 48 L55 48 Z" fill="url(#glow)" />
+</svg>

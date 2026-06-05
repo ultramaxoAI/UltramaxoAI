@@ -1,6 +1,6 @@
 "use client";
 
-import { PanelLeft, Search, Sliders, SquarePen } from "lucide-react";
+import { PanelLeft, Search, Sliders, SquarePen, Cpu } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import type { User } from "next-auth";
@@ -218,6 +218,39 @@ export function AppSidebar({ user }: { user: User | undefined }) {
 												className="rounded-lg border border-white/[0.08] bg-[#111111] px-3 py-1.5 text-xs font-medium text-white/85 shadow-xl"
 											>
 												<span>Settings</span>
+											</TooltipContent>
+										)}
+									</Tooltip>
+
+									<Tooltip>
+										<TooltipTrigger asChild>
+											<Button
+												className={cn(
+													"cursor-pointer font-normal text-white/38 transition-colors hover:bg-white/[0.04] hover:text-white/75",
+													isSidebarOpen
+														? "h-9 w-full justify-start gap-3 rounded-md px-3"
+														: "mx-auto h-8 w-8 rounded-md p-0",
+												)}
+												onClick={() => {
+													setOpenMobile(false);
+													router.push("/builder");
+												}}
+												type="button"
+												variant="ghost"
+											>
+												<Cpu className="h-[17px] w-[17px] shrink-0 text-purple-400" />
+												{isSidebarOpen && (
+													<span className="text-[13px]">App Builder</span>
+												)}
+											</Button>
+										</TooltipTrigger>
+										{!isSidebarOpen && (
+											<TooltipContent
+												side="right"
+												sideOffset={12}
+												className="rounded-lg border border-white/[0.08] bg-[#111111] px-3 py-1.5 text-xs font-medium text-white/85 shadow-xl"
+											>
+												<span>App Builder</span>
 											</TooltipContent>
 										)}
 									</Tooltip>

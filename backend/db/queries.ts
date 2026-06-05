@@ -94,15 +94,14 @@ function getNestedErrorCode(error: unknown): string | undefined {
 // use the Drizzle adapter for Auth.js / NextAuth
 // https://authjs.dev/reference/adapter/drizzle
 
-// biome-ignore lint: Forbidden non-null assertion.
-const url = new URL(process.env.POSTGRES_URL!);
-const originalHost = url.hostname;
-// Hardcode IPv4 to bypass Node.js IPv6 resolution issues on local dev
-url.hostname = "18.215.6.120";
+import dns from "dns";
+dns.setDefaultResultOrder("ipv4first");
 
-const client = postgres(url.toString(), {
+const connectionString = process.env.POSTGRES_URL || "postgresql://dummy:dummy@localhost:5432/dummy";
+
+// biome-ignore lint: Forbidden non-null assertion.
+const client = postgres(connectionString, {
 	prepare: false,
-	ssl: { servername: originalHost, rejectUnauthorized: true },
 	connect_timeout: 10,
 	idle_timeout: 60,
 	max_lifetime: 60 * 10,
@@ -110,6 +109,8 @@ const client = postgres(url.toString(), {
 	keep_alive: 30,
 });
 export const db = drizzle(client);
+
+
 
 export async function getUser(email: string): Promise<User[]> {
 	try {

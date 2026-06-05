@@ -681,3 +681,32 @@ export const inboxMessage = pgTable("inbox_message", {
 });
 
 export type InboxMessage = InferSelectModel<typeof inboxMessage>;
+
+// ============================================================
+// Website Builder (Phase 2 - Website Builder Sandbox)
+// ============================================================
+export const builderProject = pgTable("builder_project", {
+	id: uuid("id").primaryKey().notNull().defaultRandom(),
+	name: text("name").notNull(),
+	description: text("description"),
+	userId: uuid("userId")
+		.notNull()
+		.references(() => user.id, { onDelete: "cascade" }),
+	createdAt: timestamp("createdAt").notNull().defaultNow(),
+	updatedAt: timestamp("updatedAt").notNull().defaultNow(),
+});
+
+export type BuilderProject = InferSelectModel<typeof builderProject>;
+
+export const builderFile = pgTable("builder_file", {
+	id: uuid("id").primaryKey().notNull().defaultRandom(),
+	path: text("path").notNull(),
+	content: text("content").notNull(),
+	projectId: uuid("projectId")
+		.notNull()
+		.references(() => builderProject.id, { onDelete: "cascade" }),
+	createdAt: timestamp("createdAt").notNull().defaultNow(),
+	updatedAt: timestamp("updatedAt").notNull().defaultNow(),
+});
+
+export type BuilderFile = InferSelectModel<typeof builderFile>;

@@ -6,22 +6,21 @@ config({
 	path: ".env.local",
 });
 
+import dns from "dns";
+dns.setDefaultResultOrder("ipv4first");
+
 const runMigrate = async () => {
 	if (!process.env.POSTGRES_URL) {
 		console.log("⏭️  POSTGRES_URL not defined, skipping migrations");
 		process.exit(0);
 	}
 
-	const url = new URL(process.env.POSTGRES_URL);
-	const originalHost = url.hostname;
-	url.hostname = "18.215.6.120";
-
-	const connection = postgres(url.toString(), {
+	const connection = postgres(process.env.POSTGRES_URL, {
 		max: 1,
 		prepare: false,
-		ssl: { servername: originalHost, rejectUnauthorized: true },
 	});
 	const db = drizzle(connection);
+
 
 	console.log("⏳ Running manual migration...");
 
